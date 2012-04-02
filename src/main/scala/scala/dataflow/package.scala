@@ -7,7 +7,7 @@ package scala
 
 package object dataflow {
   
-  def thread[U](body: =>U) {
+  def task[U](body: =>U) {
   }
   
 }
