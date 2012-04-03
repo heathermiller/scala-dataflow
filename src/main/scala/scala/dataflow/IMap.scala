@@ -5,7 +5,7 @@ package scala.dataflow
 
 
 
-trait IMap[K, V] {
+trait FlowMap[K, V] {
   
   def value(key: K): V
   
@@ -13,7 +13,7 @@ trait IMap[K, V] {
   
   def update(key: K, value: V): Unit
   
-  def seal(): IMap[K, V]
+  def seal(): FlowMap[K, V]
   
   def foreach[U](f: (K, V) => U): Unit
   
@@ -23,19 +23,21 @@ trait IMap[K, V] {
 
 
 trait Future[T] {
-  def foreach[U](f: T => U)
+  def foreach[U](f: T => U): Unit
+  
+  def andThen[U](body: =>U): Future[T]
 }
 
 
-object IMap {
+object FlowMap {
   
-  def apply[K, V]: IMap[K, V] = null
+  def apply[K, V]: FlowMap[K, V] = null
   
   def dynamicProgrammingBlocking() {
     val dictionary = Set("go", "got", "here", "there")
     val longest = dictionary.maxBy(_.length).length
     val text: String = "gothere"
-    val solutions = IMap[String, Seq[List[String]]]
+    val solutions = FlowMap[String, Seq[List[String]]]
     solutions("") = Nil
     
     def interpret(suffix: String) {
@@ -60,7 +62,7 @@ object IMap {
     val dictionary = Set("go", "got", "here", "there")
     val longest = dictionary.maxBy(_.length).length
     val text: String = "gothere"
-    val solutions = IMap[String, Seq[List[String]]]
+    val solutions = FlowMap[String, Seq[List[String]]]
     solutions("") = Nil
     
     def interpret(suffix: String) {
@@ -84,23 +86,119 @@ object IMap {
     }
   }
   
-  // TODO knapsack
-  
 }
 
 
-trait IQueue[T] {
+trait FlowStream[T] {
   
   def head: T
   
-  def tail: IQueue[T]
+  def tail: FlowStream[T]
   
-  def foreach[U](f: T => U): Unit
+  def isEmpty: Boolean
   
-  def seal(): IQueue[T]
+  def <<(x: T): FlowStream[T]
+  
+  def foreach[U](f: T => U): Future[T]
+  
+  def seal(): FlowStream[T]
+  
+  def onBind[U](fs: FlowStream[T] => U): Unit
   
 }
 
+
+object << {
+  
+  def unapply[T](fs: FlowStream[T]): Option[(T, FlowStream[T])] =
+    if (fs.isEmpty) None
+    else Some((fs.head, fs.tail))
+  
+}
+
+
+object Seal {
+  
+  def unapply[T](fs: FlowStream[T]): Boolean = fs.isEmpty
+  
+}
+
+
+object FlowStream {
+  
+  def apply[T](): FlowStream[T] = null
+  
+  def producerConsumerBlocking() {
+    val channel = FlowStream[Int]()
+    
+    val producer = task {
+      def produce100(ch: FlowStream[Int], i: Int) {
+        if (i == 100) ch.seal()
+        else {
+          ch << i
+          produce100(ch.tail, i + 1)
+        }
+      }
+      produce100(channel, 0)
+    }
+    
+    val consumer = task {
+      def consume(ch: FlowStream[Int]) {
+        if (!ch.isEmpty) {
+          println(ch.head)
+          consume(ch.tail)
+        } else println("done!")
+      }
+      consume(channel)
+    }
+    
+    val matchingConsumer = task {
+      def consume(ch: FlowStream[Int]): Unit = ch match {
+        case c << cs =>
+          println(c)
+          consume(cs)
+        case Seal() =>
+          println("done")
+      }
+      consume(channel)
+    }
+  }
+  
+  def producerConsumerMonadic() {
+    val channel = FlowStream[Int]()
+    
+    val producer = task {
+      def produce100(ch: FlowStream[Int], i: Int) {
+        if (i == 100) ch.seal()
+        else {
+          ch << i
+          produce100(ch.tail, i + 1)
+        }
+      }
+      produce100(channel, 0)
+    }
+    
+    val consumer = task {
+      def consume(ch: FlowStream[Int]): Unit = ch onBind {
+        case c << cs =>
+          println(c)
+          consume(cs)
+        case Seal() =>
+          println("done")
+      }
+      consume(channel)
+    }
+    
+    val foreachConsumer = task {
+      channel foreach {
+        println
+      } andThen {
+        println("done")
+      }
+    }
+  }
+  
+}
 
 
 
