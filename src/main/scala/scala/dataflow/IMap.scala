@@ -5,21 +5,26 @@ package scala.dataflow
 
 
 
-trait FlowMap[K, V] {
+trait FlowMapLike[K, V, Async[X]] {
   
-  def value(key: K): V
+  def apply(key: K): Async[V]
   
-  def apply(key: K): Future[V]
+  def get(key: K): Async[Option[V]]
   
   def update(key: K, value: V): Unit
   
-  def seal(): FlowMap[K, V]
+  def seal(): FlowMap.Blocking[K, V]
   
-  def foreach[U](f: (K, V) => U): Unit
+  def foreach[U](f: (K, V) => U): Future[Unit]
   
   def onKey[U](key: K)(body: V => U): Unit
   
+  def blocking: FlowMap.Blocking[K, V]
+  
 }
+
+
+trait FlowMap[K, V] extends FlowMapLike[K, V, Future]
 
 
 trait Future[T] {
@@ -29,7 +34,7 @@ trait Future[T] {
 }
 
 
-object FlowMap {
+object FlowMap extends FlowMapFactory[FlowMapLike] {
   
   def apply[K, V]: FlowMap[K, V] = null
   
@@ -45,7 +50,7 @@ object FlowMap {
         length <- 0 until (longest min suffix.length)
         val firstword = suffix.substring(0, length)
         if dictionary(firstword)
-        solution <- solutions.value(suffix.substring(length, suffix.length))
+        solution <- solutions.blocking(suffix.substring(length, suffix.length))
       } yield firstword :: solution
       
       solutions(suffix) = possibilities
@@ -89,28 +94,33 @@ object FlowMap {
 }
 
 
-trait FlowStream[T] {
+trait FlowStreamLike[T, Async[X]] {
   
-  def head: T
+  def head: Async[T]
   
-  def tail: FlowStream[T]
+  def tail: Async[FlowStream[T]]
   
-  def isEmpty: Boolean
+  def isEmpty: Async[Boolean]
   
-  def <<(x: T): FlowStream[T]
+  def <<(x: T): FlowStream.Blocking[T]
   
-  def foreach[U](f: T => U): Future[T]
+  def foreach[U](f: T => U): Future[Unit]
   
-  def seal(): FlowStream[T]
+  def seal(): FlowStream.Blocking[T]
   
-  def onBind[U](fs: FlowStream[T] => U): Unit
+  def onBind[U](fs: FlowStream.Blocking[T] => U): Unit
+  
+  def blocking: FlowStream.Blocking[T]
   
 }
 
 
+trait FlowStream[T] extends FlowStreamLike[T, Future]
+
+
 object << {
   
-  def unapply[T](fs: FlowStream[T]): Option[(T, FlowStream[T])] =
+  def unapply[T](fs: FlowStream.Blocking[T]): Option[(T, FlowStream[T])] =
     if (fs.isEmpty) None
     else Some((fs.head, fs.tail))
   
@@ -119,78 +129,92 @@ object << {
 
 object Seal {
   
-  def unapply[T](fs: FlowStream[T]): Boolean = fs.isEmpty
+  def unapply[T](fs: FlowStream.Blocking[T]): Boolean = fs.isEmpty
   
 }
 
 
-object FlowStream {
+trait FlowFactory[Flow[X, Z[_]]] {
+  
+  type Blocking[T] = Flow[T, Id]
+  
+}
+
+
+trait FlowMapFactory[Flow[X, Y, Z[_]]] {
+  
+  type Blocking[K, V] = Flow[K, V, Id]
+  
+}
+
+
+object FlowStream extends FlowFactory[FlowStreamLike] {
   
   def apply[T](): FlowStream[T] = null
   
   def producerConsumerBlocking() {
-    val channel = FlowStream[Int]()
+    val stream = FlowStream[Int]()
     
     val producer = task {
-      def produce100(ch: FlowStream[Int], i: Int) {
-        if (i == 100) ch.seal()
+      def produce100(fs: FlowStream[Int], i: Int) {
+        if (i == 100) fs.seal()
         else {
-          ch << i
-          produce100(ch.tail, i + 1)
+          fs << i
+          produce100(fs.blocking.tail, i + 1)
         }
       }
-      produce100(channel, 0)
+      produce100(stream, 0)
     }
     
     val consumer = task {
-      def consume(ch: FlowStream[Int]) {
-        if (!ch.isEmpty) {
-          println(ch.head)
-          consume(ch.tail)
+      def consume(fs: FlowStream[Int]) {
+        if (!fs.blocking.isEmpty) {
+          println(fs.blocking.head)
+          consume(fs.blocking.tail)
         } else println("done!")
       }
-      consume(channel)
+      consume(stream)
     }
     
     val matchingConsumer = task {
-      def consume(ch: FlowStream[Int]): Unit = ch match {
+      def consume(fs: FlowStream[Int]): Unit = fs.blocking match {
         case c << cs =>
           println(c)
           consume(cs)
         case Seal() =>
           println("done")
       }
-      consume(channel)
+      consume(stream)
     }
   }
   
   def producerConsumerMonadic() {
-    val channel = FlowStream[Int]()
+    val stream = FlowStream[Int]()
     
     val producer = task {
-      def produce100(ch: FlowStream[Int], i: Int) {
-        if (i == 100) ch.seal()
+      def produce100(fs: FlowStream[Int], i: Int) {
+        if (i == 100) fs.seal()
         else {
-          ch << i
-          produce100(ch.tail, i + 1)
+          fs << i
+          produce100(fs.blocking.tail, i + 1)
         }
       }
-      produce100(channel, 0)
+      produce100(stream, 0)
     }
     
     val consumer = task {
-      def consume(ch: FlowStream[Int]): Unit = ch onBind {
+      def consume(fs: FlowStream[Int]): Unit = fs onBind {
         case c << cs =>
           println(c)
           consume(cs)
         case Seal() =>
           println("done")
       }
-      consume(channel)
+      consume(stream)
     }
     
     val foreachConsumer = task {
-      channel foreach {
+      stream foreach {
         println
       } andThen {
         println("done")
@@ -201,10 +225,25 @@ object FlowStream {
 }
 
 
+trait FlowVarLike[T, Async[X]] {
+  
+  def <<(x: T): Unit
+  
+  def apply(): Async[T]
+  
+  def blocking: FlowVar.Blocking[T]
+  
+}
 
 
+trait FlowVar[T] extends FlowVarLike[T, Future]
 
 
+object FlowVar extends FlowFactory[FlowVarLike] {
+  
+  def apply[T](): FlowVar[T] = null
+  
+}
 
 
 
