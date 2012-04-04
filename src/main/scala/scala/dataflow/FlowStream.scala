@@ -17,6 +17,8 @@ trait FlowStream[T] extends FlowStreamLike[T, Future] {
 
 class Head[T]() extends FlowStream[T] {
   
+  var actual: FlowStream[T] = null
+  
   def <<(elem: T) = null
   
   def onBind[U](body: T => U) = null
@@ -33,6 +35,15 @@ class <<[T](val head: T) extends FlowStream[T] {
   def onBind[U](body: T => U) = null
   
   def reader = null
+  
+}
+
+
+object << {
+  
+  def unapply[T](fs: FlowStream[T]): Option[(T, FlowStream[T])] = {
+    None
+  }
   
 }
 

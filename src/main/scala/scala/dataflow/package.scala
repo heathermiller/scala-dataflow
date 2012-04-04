@@ -16,9 +16,9 @@ package object dataflow {
     null
   }
   
-  case class BreakCallbackException() extends util.control.ControlThrowable
+  case class WithdrawCallbackException() extends util.control.ControlThrowable
   
-  def break: Nothing = throw new BreakCallbackException
+  def withdraw: Nothing = throw new WithdrawCallbackException
   
 }
 
