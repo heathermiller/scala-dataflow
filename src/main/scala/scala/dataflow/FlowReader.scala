@@ -11,7 +11,7 @@ trait FlowReaderLike[T, Async[X]] {
   
   def pop(): Async[T]
   
-  def isEmpty: Boolean
+  def isEmpty: Async[Boolean]
   
   def foreach[U](f: T => U): Async[Unit]
   
