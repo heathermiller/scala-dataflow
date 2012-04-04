@@ -59,75 +59,54 @@ object Examples {
       v => println("Solutions: " + v)
     }
   }
-  /*
-  def producerConsumerBlocking() {
-    val stream = FlowQueue[Int]()
-    
-    val producer = task {
-      def produce100(fs: FlowQueue[Int], i: Int) {
-        if (i == 100) fs.seal()
-        else {
-          fs << i
-          produce100(fs.blocking.tail, i + 1)
-        }
-      }
-      produce100(stream, 0)
-    }
-    
-    val consumer = task {
-      def consume(fs: FlowQueue[Int]) {
-        if (!fs.blocking.isEmpty) {
-          println(fs.blocking.head)
-          consume(fs.blocking.tail)
-        } else println("done!")
-      }
-      consume(stream)
-    }
-    
-    val matchingConsumer = task {
-      def consume(fs: FlowQueue[Int]): Unit = fs.blocking match {
-        case c << cs =>
-          println(c)
-          consume(cs)
-        case Seal() =>
-          println("done")
-      }
-      consume(stream)
-    }
-  }
   
   def producerConsumerMonadic() {
-    val stream = FlowQueue[Int]()
+    val queue = FlowQueue[Int]()
     
     val producer = task {
-      def produce100(fs: FlowQueue[Int], i: Int) {
-        if (i == 100) fs.seal()
-        else {
-          fs << i
-          produce100(fs.blocking.tail, i + 1)
-        }
-      }
-      produce100(stream, 0)
+      for (i <- 0 until 100) queue << i
+      queue.seal()
     }
     
     val consumer = task {
-      def consume(fs: FlowQueue[Int]): Unit = fs onBind {
-        case c << cs =>
-          println(c)
-          consume(cs)
-        case Seal() =>
-          println("done")
-      }
-      consume(stream)
-    }
-    
-    val foreachConsumer = task {
-      stream foreach {
+      queue foreach {
         println
       } andThen {
         println("done")
       }
     }
   }
-  */
+  
+  def producerConsumerBlocking() {
+    val queue = FlowQueue[Int]()
+    
+    val producer = task {
+      for (i <- 0 until 100) queue << i
+      queue.seal()
+    }
+    
+    val consumer = task {
+      for (x <- queue.blocking) println(x)
+      println("done")
+    }
+    
+    val readerConsumer = task {
+      val reader = queue.reader.blocking
+      while (!reader.isEmpty) println(reader.pop())
+      println("done")
+    }
+  }
+  
+  def dataflowList() {
+    // TODO
+  }
+  
+  def knapsackProblem() {
+    // TODO
+  }
+  
+  def boundedProducerConsumer() {
+    // TODO
+  }
+  
 }

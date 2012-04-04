@@ -16,6 +16,10 @@ package object dataflow {
     null
   }
   
+  case class BreakCallbackException() extends util.control.ControlThrowable
+  
+  def break: Nothing = throw new BreakCallbackException
+  
 }
 
 
@@ -25,7 +29,7 @@ package dataflow {
     
     def reader: FlowReader[T]
     
-    def onBind[U](body: T => U)
+    def onBind[U](body: T => U): Unit
     
   }
   

@@ -15,7 +15,7 @@ trait FlowMapLike[K, V, Async[X]] extends FlowLike[(K, V)] {
   
   def seal(): FlowMap.Blocking[K, V]
   
-  def foreach[U](f: (K, V) => U): Future[Unit]
+  def foreach[U](f: (K, V) => U): Async[Unit]
   
   def onKey[U](key: K)(body: V => U): Unit
   

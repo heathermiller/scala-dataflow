@@ -13,6 +13,8 @@ trait FlowReaderLike[T, Async[X]] {
   
   def isEmpty: Boolean
   
+  def foreach[U](f: T => U): Async[Unit]
+  
   def blocking: FlowReader.Blocking[T]
   
 }
