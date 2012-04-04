@@ -17,6 +17,12 @@ trait FlowBufferLike[T, Async[X]] extends FlowLike[T] {
   
   def blocking: FlowReader.Blocking[T]
   
+  def map[S](f: T => S) = {
+    val fb = FlowBuffer[T]()
+    this foreach { fb << _ } andThen { fb.seal() }
+    fb
+  }
+  
 }
 
 
