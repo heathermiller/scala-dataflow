@@ -59,7 +59,7 @@ object Examples {
       v => println("Solutions: " + v)
     }
   }
-  
+  /*
   def producerConsumerBlocking() {
     val stream = FlowQueue[Int]()
     
@@ -129,5 +129,5 @@ object Examples {
       }
     }
   }
-  
+  */
 }
