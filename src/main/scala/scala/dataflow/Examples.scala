@@ -61,15 +61,15 @@ object Examples {
   }
   
   def producerConsumerMonadic() {
-    val queue = FlowQueue[Int]()
+    val buffer = FlowBuffer[Int]()
     
     val producer = task {
-      for (i <- 0 until 100) queue << i
-      queue.seal()
+      for (i <- 0 until 100) buffer << i
+      buffer.seal()
     }
     
     val consumer = task {
-      queue foreach {
+      buffer foreach {
         println
       } andThen {
         println("done")
@@ -78,20 +78,20 @@ object Examples {
   }
   
   def producerConsumerBlocking() {
-    val queue = FlowQueue[Int]()
+    val channel = FlowBuffer[Int]()
     
     val producer = task {
-      for (i <- 0 until 100) queue << i
-      queue.seal()
+      for (i <- 0 until 100) channel << i
+      channel.seal()
     }
     
     val consumer = task {
-      for (x <- queue.blocking) println(x)
+      for (x <- channel.blocking) println(x)
       println("done")
     }
     
     val readerConsumer = task {
-      val reader = queue.reader.blocking
+      val reader = channel.reader.blocking
       while (!reader.isEmpty) println(reader.pop())
       println("done")
     }
