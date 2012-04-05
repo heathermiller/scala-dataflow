@@ -31,6 +31,8 @@ package dataflow {
     
     def onBind[U](body: T => U): Unit
     
+    def barrier: this.type
+    
   }
   
   trait FlowMapFactory[Flow[X, Y, Z[_]]] {

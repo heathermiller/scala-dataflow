@@ -109,4 +109,49 @@ object Examples {
     // TODO
   }
   
+  def tweetTrending() {
+    // TODO
+  }
+  
+  def inversePermutation() {
+    // TODO
+  }
+  
+  def histogram() {
+    // TODO
+  }
+  
+  def partitioning() {
+    // TODO
+  }
+  
 }
+
+
+object Scratchpad {
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -20,9 +20,10 @@ trait FlowMapLike[K, V, Async[X]] extends FlowLike[(K, V)] {
    */
   def get(key: K): Async[Option[V]]
   
-  /**
-  *  Same semantics as normal `update` on a map, except for after `seal` is called on this map. In this case, some kind of exception is thrown.
-  */
+  def <<(kv: (K, V)): this.type
+  
+  /** Same semantics as normal `update` on a map, except for after `seal` is called on this map. In this case, some kind of exception is thrown.
+   */
   def update(key: K, value: V): Unit
   
   def seal(): FlowMap.Blocking[K, V]

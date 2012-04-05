@@ -8,8 +8,8 @@ package scala.dataflow
 trait FlowBufferLike[T, Async[X]] extends FlowLike[T] {
   
   /**
-  * Analogous to `push`, `enqueue`  
-  */
+   * Analogous to `push`, `enqueue`  
+   */
   def <<(x: T): this.type
   
   /**
