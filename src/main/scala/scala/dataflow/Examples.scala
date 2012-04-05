@@ -61,15 +61,15 @@ object Examples {
   }
   
   def producerConsumerMonadic() {
-    val buffer = FlowBuffer[Int]()
+    val channel = FlowBuffer[Int]()
     
     val producer = task {
-      for (i <- 0 until 100) buffer << i
-      buffer.seal()
+      for (i <- 0 until 100) channel << i
+      channel.seal()
     }
     
     val consumer = task {
-      buffer foreach {
+      channel foreach {
         println
       } andThen {
         println("done")
@@ -94,6 +94,46 @@ object Examples {
       val reader = channel.reader.blocking
       while (!reader.isEmpty) println(reader.pop())
       println("done")
+    }
+  }
+  
+  def producerConsumerStreamBlocking() {
+    val channel = FlowStream[Int]()
+    
+    val producer = task {
+      def produce(ch: FlowStream[Int], i: Int) {
+        produce(ch << i, i + 1)
+      }
+      produce(channel, 0)
+    }
+    
+    val consumer = task {
+      def consume(channel: FlowStream.Blocking[Int]): Unit = channel match {
+        case c << ch =>
+          println(c)
+          consume(ch)
+        case Seal() =>
+          println("done")
+      }
+      consume(channel.blocking)
+    }
+  }
+  
+  def producerConsumerStreamMonadic() {
+    val channel = FlowStream[Int]()
+    
+    val producer = task {
+      def produce(ch: FlowStream[Int], i: Int) {
+        produce(ch << i, i + 1)
+      }
+      produce(channel, 0)
+    }
+    
+    val consumer = task {
+      // def consume(channel: FlowStream[Int]): Unit = channel match {
+      //   case c << ch =>
+      //   case Seal() =>
+      // }
     }
   }
   
