@@ -9,7 +9,7 @@ trait FlowVarLike[T, Async[X]] extends FlowLike[T] {
   
   def <<(x: T): Unit
   
-  def apply(): Async[T]
+  def apply()(implicit apply: Apply[T, FlowVar, Async]): Async[T]
   
   def blocking: FlowVar.Blocking[T]
   

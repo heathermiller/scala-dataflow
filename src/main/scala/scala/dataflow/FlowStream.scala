@@ -10,12 +10,16 @@ trait FlowStreamLike[T, Async[X]] extends FlowLike[T] {
   
   def blocking: FlowStream.Blocking[T]
   
+  def async: FlowStream[T] = null
+  
+  def onReady[U](body: FlowStream.Blocking[T] => U): Unit = null
+  
+  def <<(elem: T): this.type
+  
 }
 
 
 trait FlowStream[T] extends FlowStreamLike[T, Future] {
-  
-  def <<(elem: T): FlowStream[T]
   
 }
 
@@ -67,7 +71,7 @@ object << {
 
 class Seal extends FlowStream[Nothing] {
   
-  def <<(elem: Nothing): FlowStream[Nothing] = throw new UnsupportedOperationException
+  def <<(elem: Nothing): this.type = throw new UnsupportedOperationException
   
   def onBind[U](body: Nothing => U) = throw new UnsupportedOperationException
   

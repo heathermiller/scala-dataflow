@@ -52,4 +52,9 @@ package dataflow {
     
     def andThen[U](body: =>U): Future[T]
   }
+  
+  /* type classes */
+  
+  trait Apply[T, Collection[X], Async[X]]
+  
 }

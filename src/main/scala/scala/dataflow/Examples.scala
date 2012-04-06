@@ -130,10 +130,13 @@ object Examples {
     }
     
     val consumer = task {
-      // def consume(channel: FlowStream[Int]): Unit = channel match {
-      //   case c << ch =>
-      //   case Seal() =>
-      // }
+      def consume(channel: FlowStream[Int]): Unit = channel onReady {
+        case c << ch =>
+          println(c)
+          consume(ch.async)
+        case Seal() =>
+          println("done")
+      }
     }
   }
   
