@@ -6,7 +6,7 @@ package scala.dataflow
 
 trait FlowStreamLike[T, Async[X]] extends FlowLike[T] {
   
-  def isEmpty: Async[Boolean]
+  def isEmpty(implicit e: FlowStream.IsEmpty[Async]): Async[Boolean]
   
   def blocking: FlowStream.Blocking[T]
   
@@ -24,6 +24,27 @@ trait FlowStream[T] extends FlowStreamLike[T, Future] {
 }
 
 
+object FlowStream extends FlowFactory[FlowStreamLike] {
+  
+  def apply[T](): FlowStream[T] = null
+  
+  /* typeclass */
+  
+  trait IsEmpty[Async[X]] {
+    def apply[T](coll: FlowBufferLike[T, Async]): Async[Boolean]
+  }
+  
+  implicit object FutureIsEmpty extends IsEmpty[Future] {
+    def apply[T](coll: FlowBufferLike[T, Future]): Future[Boolean] = null
+  }
+  
+  implicit object IdIsEmpty extends IsEmpty[Id] {
+    def apply[T](coll: FlowBufferLike[T, Id]): Boolean = throw new Exception
+  }  
+  
+}
+
+
 class Head[T]() extends FlowStream[T] {
   
   var actual: FlowStream[T] = null
@@ -34,7 +55,7 @@ class Head[T]() extends FlowStream[T] {
   
   def reader = null
   
-  def isEmpty = throw new Exception
+  def isEmpty(implicit e: FlowStream.IsEmpty[Future]) = throw new Exception
   
   def barrier = this
   
@@ -50,7 +71,7 @@ class <<[T](val head: T) extends FlowStream[T] {
   
   def reader = null
   
-  def isEmpty = null
+  def isEmpty(implicit e: FlowStream.IsEmpty[Future]) = null
   
   def barrier = this
   
@@ -75,9 +96,9 @@ class Seal extends FlowStream[Nothing] {
   
   def onBind[U](body: Nothing => U) = throw new UnsupportedOperationException
   
-  def reader = FlowReader.Empty
+  def reader = FlowReader.empty
   
-  def isEmpty = null
+  def isEmpty(implicit e: FlowStream.IsEmpty[Future]) = null
   
   def barrier = this
   
@@ -92,12 +113,5 @@ object Seal {
     case bind: <<[_] => false
     case seal: Seal => true
   }
-  
-}
-
-
-object FlowStream extends FlowFactory[FlowStreamLike] {
-  
-  def apply[T](): FlowStream[T] = null
   
 }

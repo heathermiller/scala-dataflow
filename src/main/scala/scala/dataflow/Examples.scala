@@ -141,14 +141,41 @@ object Examples {
   }
   
   def dataflowList() {
+    trait FlowList[T]
+    
+    case class Node[T](head: T, tail: FlowVar[FlowList[T]]) extends FlowList[T] {
+      def this(head: T) = this(head, FlowVar())
+    }
+    
+    case class End[T]() extends FlowList[T]
+    
+    val list = new Node(1)
+    
+    val producer = task {
+      def produce(ch: FlowList[Int]): Unit = ch match {
+        case Node(head, tail) =>
+          tail << new Node(head + 1)
+          produce(tail.blocking())
+      }
+      produce(list)
+    }
+    
+    val consumer = task {
+      def consume(ch: FlowList[Int]): Unit = ch match {
+        case Node(head, tail) =>
+          println(head)
+          consume(tail.blocking())
+        case End() =>
+          println("done")
+      }
+    }
+  }
+  
+  def boundedProducerConsumer() {
     // TODO
   }
   
   def knapsackProblem() {
-    // TODO
-  }
-  
-  def boundedProducerConsumer() {
     // TODO
   }
   

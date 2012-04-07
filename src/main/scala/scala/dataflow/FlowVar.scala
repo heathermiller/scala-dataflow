@@ -7,9 +7,9 @@ package scala.dataflow
 
 trait FlowVarLike[T, Async[X]] extends FlowLike[T] {
   
-  def <<(x: T): Unit
+  def <<(x: T): FlowVar.Blocking[T]
   
-  def apply()(implicit apply: Apply[FlowVar, Async]): Async[T]
+  def apply()(implicit a: FlowVar.Apply[Async]): Async[T]
   
   def blocking: FlowVar.Blocking[T]
   
@@ -23,12 +23,19 @@ object FlowVar extends FlowFactory[FlowVarLike] {
   
   def apply[T](): FlowVar[T] = null
   
-  class FutureApply extends Apply[FlowVar, Future] {
-    def apply[T](coll: FlowVar[T]): Future[T] = null
+  /* type classes */
+  
+  trait Apply[Async[X]] {
+    def apply[T](coll: FlowVarLike[T, Async]): Async[T]
   }
   
-  @inline
-  implicit val futureApplyEvidence = new FutureApply
+  implicit object FutureApply extends Apply[Future] {
+    def apply[T](coll: FlowVarLike[T, Future]): Future[T] = null
+  }
+  
+  implicit object IdApply extends Apply[Id] {
+    def apply[T](coll: FlowVarLike[T, Id]): T = throw new Exception
+  }
   
 }
 

@@ -34,11 +34,11 @@ trait FlowReader[T] extends FlowReaderLike[T, Future]
 
 object FlowReader extends FlowFactory[FlowReaderLike] {
   
-  object Empty extends FlowReader[Nothing] {
+  def empty[T] = new FlowReader[T] {
     def peek = throw new NoSuchElementException("Empty.peek")
     def pop() = throw new NoSuchElementException("Empty.peek")
     def isEmpty = null
-    def foreach[U](f: Nothing => U) = null
+    def foreach[U](f: T => U) = null
     def blocking = null
   }
   
