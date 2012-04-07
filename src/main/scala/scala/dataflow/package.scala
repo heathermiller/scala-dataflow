@@ -55,6 +55,8 @@ package dataflow {
   
   /* type classes */
   
-  trait Apply[T, Collection[X], Async[X]]
+  trait Apply[Collection[X], Async[X]] {
+    def apply[T](coll: Collection[T]): Async[T]
+  }
   
 }

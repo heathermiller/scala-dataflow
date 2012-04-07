@@ -111,7 +111,7 @@ object Examples {
       def consume(channel: FlowStream.Blocking[Int]): Unit = channel match {
         case c << ch =>
           println(c)
-          consume(ch)
+          consume(ch.blocking)
         case Seal() =>
           println("done")
       }
@@ -133,7 +133,7 @@ object Examples {
       def consume(channel: FlowStream[Int]): Unit = channel onReady {
         case c << ch =>
           println(c)
-          consume(ch.async)
+          consume(ch)
         case Seal() =>
           println("done")
       }

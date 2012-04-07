@@ -60,7 +60,7 @@ class <<[T](val head: T) extends FlowStream[T] {
 
 object << {
   
-  def unapply[T](fs: FlowStream.Blocking[T]): Option[(T, FlowStream.Blocking[T])] = fs.asInstanceOf[FlowStream[T]] match {
+  def unapply[T](fs: FlowStream.Blocking[T]): Option[(T, FlowStream[T])] = fs.asInstanceOf[FlowStream[T]] match {
     case head: Head[_] => null
     case bind: <<[_] => Some((bind.head, null))
     case seal: Seal => None
