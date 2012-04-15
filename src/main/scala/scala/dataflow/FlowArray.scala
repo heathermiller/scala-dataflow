@@ -5,38 +5,51 @@ package scala.dataflow
 
 
 
-trait FlowArrayLike[T, Async[X]] extends FlowLike[T] {
+trait FlowArrayLike[I, T, Async[X]] extends FlowLike[(I, T)] {
 
-  def length: Int
+  def dim: I
 
-  def <<(i: Int, x: T): this.type
+  def <<(iv: (I, T))(implicit a: FlowArray.Put[I]): this.type
 
-  def apply(i: Int)(implicit a: FlowArray.Apply[Async]): Async[T]
+  def apply(i: I)(implicit a: FlowArray.Apply[I, Async]): Async[T]
 
   def blocking: FlowArray.Blocking[T]
 
 }
 
 
-trait FlowArray[T] extends FlowVarLike[T, Future]
+trait FlowArray[I, T] extends FlowVarLike[I, T, Future]
 
 
 object FlowArray extends FlowFactory[FlowArrayLike] {
 
-  def apply[T](size: Int): FlowArray[T] = null
+  def apply[T](n1: Int): FlowArray[Int, T] = null
+  def apply[T](n1: Int, n2: Int): FlowArray[(Int, Int), T] = null
 
   /* type classes */
 
-  trait Apply[Async[X]] {
-    def apply[T](coll: FlowArrayLike[T, Async], i: Int): Async[T]
+  trait Apply[I, Async[X]] {
+    def apply[T](coll: FlowArrayLike[I, T, Async], i: I): Async[T]
   }
 
-  implicit object FutureApply extends Apply[Future] {
-    def apply[T](coll: FlowArrayLike[T, Future], i: Int): Future[T] = null
+  implicit object 1DFutureApply extends Apply[Int,Future] {
+    def apply[T](coll: FlowArrayLike[I, T, Future], i: Int): Future[T] = null
   }
 
-  implicit object IdApply extends Apply[Id] {
-    def apply[T](coll: FlowArrayLike[T, Id], i: Int): T = throw new Exception
+  implicit object 1DIdApply extends Apply[Int,Id] {
+    def apply[T](coll: FlowArrayLike[I, T, Id], i: Int): T = throw new Exception
+  }
+
+  trait Put[I] {
+    def <<[T, Async](coll: FlowArrayLike[I, T, Async], iv: (I,T))
+  }
+
+  implicit object 1DPut extends Put[Int] {
+    def <<[T, Async](coll: FlowArrayLike[Int, T, Async], iv: (Int,T))
+  }
+
+  implicit object 2DPut extends Put[(Int,Int)] {
+    def <<[T, Async](coll: FlowArrayLike[(Int, Int), T, Async], iv: ((Int, Int),T))
   }
 
 }

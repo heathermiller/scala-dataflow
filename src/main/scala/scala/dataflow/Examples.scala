@@ -170,6 +170,24 @@ object Examples {
       }
     }
   }
+
+  def waveFrontBlocking() {
+    val surface = FlowArray[Int](10,10)
+    def calculate(x: Int, y: Int) = {
+      assert(x > 0)
+      assert(y > 0)
+      val sum =
+        surface.blocking((x-1,y)) +
+        surface.blocking((x,y-1)) +
+        surface.blocking((x-1,y-1))
+
+      surface << ((x,y),sum) 
+    }
+
+    // Now I need to think really hard how to partition the wavefront
+    // correctly. Should I need to do so at this point?
+    
+  }
   
   def boundedProducerConsumer() {
     // TODO
