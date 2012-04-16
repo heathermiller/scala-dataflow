@@ -206,7 +206,28 @@ object Examples {
   }
   
   def histogram() {
-    // TODO
+    val buckets = 10;
+    val maxval = 100;
+
+    val buf = FlowBuffer[Double]()
+    def calculate(i: Int) = {
+      // Do some complicated calculations
+      val res = Math.sqrt(i)
+      buf << res
+    }
+
+    // TODO when do we seal the buffer?
+
+    for (i <- 0 to 10000) yield task { calculate(i) }
+    
+    // Merger
+    val merger = task { 
+      val hist = Array.fill(buckets)(0)
+      for (e <- buf.blocking) {
+        val bi = Math.floor(e / maxval * buckets)
+        hist(bi) = hist(bi) + 1
+      }
+    }
   }
   
   def partitioning() {
