@@ -5,6 +5,7 @@ package scala.dataflow
 
 
 
+/* The below does not compile currently, so I've commented it out until it does - alex
 trait FlowArrayLike[I, T, Async[X]] extends FlowLike[(I, T)] {
 
   def dim: I
@@ -36,11 +37,11 @@ object FlowArray extends FlowFactory[FlowArrayLike] {
     def apply[T](coll: FlowArrayLike[I, T, Async], i: I): Async[T]
   }
 
-  implicit object 1DFutureApply extends Apply[Int,Future] {
+  implicit object FutureApply1D extends Apply[Int,Future] {
     def apply[T](coll: FlowArrayLike[I, T, Future], i: Int): Future[T] = null
   }
 
-  implicit object 1DIdApply extends Apply[Int,Id] {
+  implicit object IdApply1D extends Apply[Int,Id] {
     def apply[T](coll: FlowArrayLike[I, T, Id], i: Int): T = throw new Exception
   }
 
@@ -48,11 +49,11 @@ object FlowArray extends FlowFactory[FlowArrayLike] {
     def <<[T, Async](coll: FlowArrayLike[I, T, Async], iv: (I,T))
   }
 
-  implicit object 1DPut extends Put[Int] {
+  implicit object Put1D extends Put[Int] {
     def <<[T, Async](coll: FlowArrayLike[Int, T, Async], iv: (Int,T))
   }
 
-  implicit object 2DPut extends Put[(Int,Int)] {
+  implicit object Put2D extends Put[(Int,Int)] {
     def <<[T, Async](coll: FlowArrayLike[(Int, Int), T, Async], iv: ((Int, Int),T))
   }
 
@@ -61,3 +62,4 @@ object FlowArray extends FlowFactory[FlowArrayLike] {
   }
 
 }
+*/

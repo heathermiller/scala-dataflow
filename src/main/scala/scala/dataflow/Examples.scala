@@ -172,6 +172,7 @@ object Examples {
   }
 
   def waveFrontBlocking() {
+    /* alex - didn't compile, so I've commented it out
     val surface = FlowArray[Int](10,10)
     def calculate(x: Int, y: Int) = {
       assert(x > 0)
@@ -183,7 +184,7 @@ object Examples {
 
       surface << ((x,y),sum) 
     }
-
+    */
     // Now I need to think really hard how to partition the wavefront
     // correctly. Should I need to do so at this point?
     
@@ -202,7 +203,7 @@ object Examples {
   }
   
   def inversePermutation() {
-
+    /* alex - did not compile, so temporarily commented
     val n = 10
     val x = FlowArray[Int](n)
     val y = FlowArray[Int](n)
@@ -218,7 +219,7 @@ object Examples {
         case (i,v) => y << (v,i)
       }
     }
-
+    */
   }
   
   def histogram() {
@@ -229,7 +230,7 @@ object Examples {
     val buf = FlowBuffer[Double]()
     def calculate(i: Int) = {
       // Do some complicated calculations
-      val res = Math.sqrt(i)
+      val res = math.sqrt(i)
       buf << res
     }
 
@@ -242,8 +243,8 @@ object Examples {
     val merger = task { 
       val hist = Array.fill(buckets)(0)
       for (e <- buf.blocking) {
-        val bi = Math.floor(e / maxval * buckets)
-        hist(bi) = hist(bi) + 1
+        val bi = math.floor(e / maxval * buckets)
+        hist(bi.toInt) = hist(bi.toInt) + 1
       }
     }
   }
