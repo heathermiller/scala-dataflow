@@ -14,6 +14,8 @@ trait FlowBufferLike[T, Async[X]] extends FlowLike[T] {
   /** Call this on a `FlowBuffer` to "seal" the interface. So as not to allow it to change any further after `seal`.
    */
   def seal(): FlowBuffer.Blocking[T]
+
+  def sealAfter(n: Int): FlowBuffer.Blocking[T]
   
   def apply(idx: Int)(implicit i: FlowBuffer.Index[Async]): T
   

@@ -202,12 +202,29 @@ object Examples {
   }
   
   def inversePermutation() {
-    // TODO
+
+    val n = 10
+    val x = FlowArray[Int](n)
+    val y = FlowArray[Int](n)
+
+    task {
+      for (i <- 0 to n-1) {
+        x << (i,(i + 4) % n);
+      }
+    }
+
+    task {
+      x.zipWithIndex foreach {
+        case (i,v) => y << (v,i)
+      }
+    }
+
   }
   
   def histogram() {
-    val buckets = 10;
-    val maxval = 100;
+    val n = 10000
+    val buckets = 10
+    val maxval = 100
 
     val buf = FlowBuffer[Double]()
     def calculate(i: Int) = {
@@ -216,9 +233,10 @@ object Examples {
       buf << res
     }
 
-    // TODO when do we seal the buffer?
+    // Seal buffer after all calculations
+    buf.sealAfter(n)
 
-    for (i <- 0 to 10000) yield task { calculate(i) }
+    for (i <- 1 to n) yield task { calculate(i) }
     
     // Merger
     val merger = task { 

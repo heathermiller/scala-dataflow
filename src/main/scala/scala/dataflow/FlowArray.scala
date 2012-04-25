@@ -13,6 +13,10 @@ trait FlowArrayLike[I, T, Async[X]] extends FlowLike[(I, T)] {
 
   def apply(i: I)(implicit a: FlowArray.Apply[I, Async]): Async[T]
 
+  def foreach[U](f: T => U)(implicit e: FlowArray.Foreach[Async]): Async[Unit]
+
+  def zipWithIndex: FlowArrayLike[I, (I, T), Async]
+
   def blocking: FlowArray.Blocking[T]
 
 }
@@ -50,6 +54,10 @@ object FlowArray extends FlowFactory[FlowArrayLike] {
 
   implicit object 2DPut extends Put[(Int,Int)] {
     def <<[T, Async](coll: FlowArrayLike[(Int, Int), T, Async], iv: ((Int, Int),T))
+  }
+
+  trait Foreach[Async[X]] {
+    def apply[T, U](coll: FlowArrayLike[T, Async], f: T => U): Async[Boolean]
   }
 
 }
