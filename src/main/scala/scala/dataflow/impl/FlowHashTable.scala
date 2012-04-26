@@ -59,7 +59,20 @@ final class FlowHashTable[K, V] {
   
   private def READ_STATE(table: Array[AnyRef]) = table(0)
   
-  private def helpResize(state: AnyRef, criticalIndex: Int) {
+  private def retry_limit(len: Int) = 10 + (len >> 3)
+  
+  private def helpResizeOnLookup(state: AnyRef, criticalIndex: Int) {
+    // if you've noticed a key in the old table and the new array is being allocated
+    // then the key will surely be copied - stop search
+    // TODO
+    
+    // however, if the new array is already allocated
+    // then the key may not be copied to the new array before you return it
+    // in this case - try to copy the key yourself before returning it
+    // TODO
+  }
+  
+  private def helpResizeOnUpdate(state: AnyRef, criticalIndex: Int) {
     // see if sleep is needed before the allocation starts
     // in case that some processor is already allocating the array
     // we want to avoid creating too much garbage, so we wait a bit
@@ -83,6 +96,7 @@ final class FlowHashTable[K, V] {
     val table = /*READ*/this.table
     val len = table.length
     var idx = index(k, len)
+    var probes = 0
     
     // if table is in the open state, we can try to update it
     if (READ_STATE(table) == Open) while (true) {
@@ -103,7 +117,7 @@ final class FlowHashTable[K, V] {
               // if the value is successfully assigned
               val state = READ_STATE(table)
               if (state == Open) return
-              else helpResize(state, idx)
+              else helpResizeOnUpdate(state, idx)
             }
           }
         }
