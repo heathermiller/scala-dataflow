@@ -172,7 +172,6 @@ object Examples {
   }
 
   def waveFrontBlocking() {
-    /* alex - didn't compile, so I've commented it out
     val surface = FlowArray[Int](10,10)
     def calculate(x: Int, y: Int) = {
       assert(x > 0)
@@ -184,7 +183,7 @@ object Examples {
 
       surface << ((x,y),sum) 
     }
-    */
+
     // Now I need to think really hard how to partition the wavefront
     // correctly. Should I need to do so at this point?
     
@@ -203,7 +202,6 @@ object Examples {
   }
   
   def inversePermutation() {
-    /* alex - did not compile, so temporarily commented
     val n = 10
     val x = FlowArray[Int](n)
     val y = FlowArray[Int](n)
@@ -219,7 +217,6 @@ object Examples {
         case (i,v) => y << (v,i)
       }
     }
-    */
   }
   
   def histogram() {
