@@ -184,6 +184,7 @@ object Examples {
       surface << ((x,y),sum) 
     }
 
+    // TODO
     // Now I need to think really hard how to partition the wavefront
     // correctly. Should I need to do so at this point?
     
@@ -194,7 +195,37 @@ object Examples {
   }
   
   def knapsackProblem() {
-    // TODO
+    // Unbounded Knapsack problem
+    //  alg source: http://en.wikipedia.org/wiki/Knapsack_problem#Dynamic_Programming_Algorithm
+    
+    // Input
+    val maxw = 100
+    val w = Array(4,2,7,4,1,8,9,3,5,6,2,5,3,6,3,5,2,5)
+    val v = w
+    val n = w.length
+
+    // Dynamic algorithm
+    //  note that an array is more suitable here than a map (compare
+    //  w/ dynamicProgrammingExample), as we have a guarantee on the
+    //  existence of elements
+    val t = FlowArray[Int](n,maxw+1).blocking
+
+    // Define element calculation
+    def calc(i: Int, j: Int) {
+      val nv =
+        if (j >= w(i)) math.max(t(i-1, j), t(i-1, j-w(i)) + v(i))
+        else           t(i-1,j)
+
+      t << ((i,j),nv)
+    }
+
+    // Spawn tasks
+    for (i <- 0 to (n-1))
+      yield task {
+        for (j <- 0 to maxw)
+          calc(i,j)
+      }
+
   }
   
   def tweetTrending() {
@@ -245,9 +276,56 @@ object Examples {
       }
     }
   }
+
+  def matrixMultiplication() {
+    val k = 10
+    val n = 10
+    val m = 10
+    
+    val a = Array.fill[Double](k,n)(0)
+    val b = Array.fill[Double](n,m)(0)
+    val c = FlowArray[Double](k,m)
+
+    // Now calculate c = a * b
+    for (i <- 0 to k-1 ; j <- 0 to m-1)
+      yield task {
+        val v = (0 to (n-1)).map( ii => a(i)(ii) * b(ii)(j) ).sum
+        c << ((i,j), v)
+      }
+
+    // Is the upper thing a good idea? This should depend on the
+    // number of CPUs or something. But this is supposed to be
+    // application code...
+
+    // Tasks can be handled w/ thread pools which solves that problem
+
+  }
   
   def partitioning() {
-    // TODO
+
+    val a = FlowBuffer[Int]()
+
+    val p1 = FlowBuffer[Int]()
+    val p2 = FlowBuffer[Int]()
+
+    task {
+      a foreach { e =>
+        if (e >= 0) p1 << e
+        else        p2 << e
+      }
+      p1.seal();
+      p2.seal();
+    }
+
+    task {
+      for (i <- 0 to 100) {
+        a << i*math.pow(-1,i).toInt
+      }
+      a.seal()
+    }
+
+    // p1, p2 form a partition of a
+
   }
   
 }
