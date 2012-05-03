@@ -8,16 +8,22 @@
 
 ## Write / Seal
     sub write(val,i) {
-        // Try to write element
+
+        // Create new element
         nvobj = { state = full, val = val, cbs = Nil }
+
+        // Try to write element
         do {
-            do {
-                  cobj = elems[i]
-                  if (cobj->state != full) break;
-                  i++
-            } 
-            if (cobj->state == sealed) fail("Insert into sealed pool")
-        } while(!propagateCallbacks(cobj, i+1) || !elems[i].cas(cobj, nvobj))
+            // Advance to next non-full
+            do cobj = elems[i];
+            while (cobj->state != full && ++i);
+
+            // Are we sealed?
+            if (cobj->state == sealed)
+               fail("Insert into sealed pool")
+
+        } while (!propagateCallbacks(cobj, i+1) ||
+                 !elems[i].cas(cobj, nvobj))
 
         // Call callbacks
         cobj->cbs.foreach(cb => cb(val))
@@ -37,13 +43,13 @@
                     // cnobj->state == callbacks && cnobj != cobj
                     //   ==> somebody else propagated callbacks AND they
                     //       have already been altered. This requires
-                    //       elems[i]->state == full
+                    //       that elems[i-1]->state == full
                     return false;
                 }
                 // try to set elemnt
-                ok = !elems[i+1].cas(cnobj,cobj);
+                ok = elems[i+1].cas(cnobj,cobj);
             } else ok = true;
-        while (!ok);     
+        } while (!ok);     
     }
 
 
@@ -62,3 +68,12 @@
     }
 
 ## Add new block
+Called implicitly when advance reaches end of block
+    sub nextBlock(end) {
+        nptr = end->next
+        if (!nptr) {
+           nblock = new Block();
+           end->next.cas(nptr, nblock)
+        }
+        return end->next;
+    }
