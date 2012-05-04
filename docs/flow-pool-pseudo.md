@@ -6,6 +6,20 @@
 * free
 * callbacks
 
+## Race Condition!
+Scenario (2 processes):
+
+    p2: addCallback(foo, 0)
+    p1: write(1, 0)
+        --> propagateCallbacks --> succeeds
+    p2: addCallback(bar, 0)
+    p1: cas fails
+    p1: loops infinitely
+
+A solution would be to have the writing process propagate callbacks
+after having set the value and possibly following the buffer during
+quite some time. This seems more inefficient.
+
 ## Write / Seal
     sub write(val,i) {
 
