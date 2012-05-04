@@ -20,6 +20,8 @@ A solution would be to have the writing process propagate callbacks
 after having set the value and possibly following the buffer during
 quite some time. This seems more inefficient.
 
+This race has been solved by adding the check on the length
+
 ## Write / Seal
     sub write(val,i) {
 
@@ -55,13 +57,25 @@ quite some time. This seems more inefficient.
                     // cnobj->state in {full,sealed}
                     //   ==> pool advanced
                     // cnobj->state == callbacks && cnobj != cobj
-                    //   ==> somebody else propagated callbacks AND they
+                    //   case 1 =>
+                    //       somebody else propagated callbacks AND they
                     //       have already been altered. This requires
                     //       that elems[i-1]->state == full
-                    return false;
+                    //   OR
+                    //   case 2 =>
+                    //       cnobj is old. i.e. somebody tried to
+                    //       write before but did not succeed and
+                    //       looped in the main loop of write()
+
+                    assert (cnobj->cbs.length != cobj->cbs.length)
+
+                    if (cnobj->cbs.length > cobj->cbs.length) {
+                       // case 1 ==> retry write
+                       return false;
+                    }
                 }
                 // try to set elemnt
-                ok = elems[i+1].cas(cnobj,cobj);
+                ok = elems[i].cas(cnobj,cobj);
             } else ok = true;
         } while (!ok);     
     }
