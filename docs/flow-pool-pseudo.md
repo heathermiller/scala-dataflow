@@ -16,7 +16,7 @@
         do {
             // Advance to next non-full
             do cobj = elems[i];
-            while (cobj->state != full && ++i);
+            while (cobj->state == full && ++i);
 
             // Are we sealed?
             if (cobj->state == sealed)
