@@ -1,0 +1,161 @@
+package scala.dataflow.impl
+
+import scala.dataflow.FlowPoolLike
+import scala.annotation.tailrec
+
+class FlowPool[T <: AnyRef] extends FlowPoolLike[T] {
+
+  private val initBlock = FlowPool.createBlock
+  
+  override def builder: FlowPool.Builder[T] =
+    new FlowPool.Builder[T](initBlock)
+
+  override def foreach[U](f: T => U) {
+    // TODO it is useless to allocate an object here. What to do?
+    val w = new CBWriter(initBlock)
+    w.addCB(f)
+  }
+  
+  private class CBWriter(bl: Array[AnyRef]) extends FlowPool.BlockFinder(bl) {
+    
+    @tailrec
+    private def findNonFull(cb: T => Any): AnyRef = {
+      var cobj = b(i)
+      if (!FlowPool.isElem(cobj)) cobj
+      else {
+        cb(cobj.asInstanceOf[T])
+        advance();
+        findNonFull(cb)
+      }
+    }
+    
+    def addCB(cb: T => Any) {
+      var cur_obj: AnyRef = null 
+      var new_obj: AnyRef = null
+      do {
+        cur_obj = findNonFull(cb)
+        if (cur_obj eq FlowPool.Seal) return
+        
+        new_obj =
+          new FlowPool.CBElem(cb, FlowPool.CAST[FlowPool.CBElem[T]](cur_obj))
+
+      } while(!FlowPool.CAS(b, i, cur_obj, new_obj));
+    }
+  }
+
+}
+
+object FlowPool {
+
+  private val unsafe = getUnsafe()
+  private val blockSize = 200
+  
+  private val ARRAYOFFSET = unsafe.arrayBaseOffset(classOf[Array[AnyRef]])
+  private val ARRAYSTEP   = unsafe.arrayIndexScale(classOf[Array[AnyRef]])
+  private def RAWPOS(idx: Int) = ARRAYOFFSET + idx * ARRAYSTEP 
+  private def CAS(trg: Any, idx: Int, exp: Any, x: Any) =
+    unsafe.compareAndSwapObject(trg, RAWPOS(idx), exp, x)
+  private def CAST[T](v: AnyRef) = v.asInstanceOf[T]
+
+  class BlockFinder(bl: Array[AnyRef]) {
+    var b = bl
+    var i = 0
+    
+    final protected def nextBlock() = {
+      val next = b(blockSize - 1)
+        
+      if (next eq null) {
+        val nb = createBlock
+        CAS(b, blockSize - 1, next, nb)
+      }
+      
+      CAST[Array[AnyRef]](b(blockSize - 1))
+    }
+    
+    final protected def advance() {
+      if (i >= blockSize - 2) {
+        b = nextBlock() 
+        i = 0
+      } else {
+        i = i + 1
+      }
+    }
+    
+    @tailrec
+    final protected def findNonFull(): AnyRef = {
+      var cobj = b(i)
+      if (!isElem(cobj)) cobj
+      else {
+        advance();
+        findNonFull()
+      }
+    }
+
+  }
+  
+  // TODO make this builder threadsafe
+  class Builder[T <: AnyRef](bl: Array[AnyRef])
+  	extends BlockFinder(bl) with FlowPoolLike.Builder[T] {
+
+    var nextb: Array[AnyRef] = null
+    var nexti: Int = 0
+    
+    def <<(x: T) = { write(x); this }
+    def seal() { write(Seal) }
+        
+        
+    private def peek() {
+      if (i >= blockSize - 2) {
+        nextb = nextBlock()
+        nexti = 0
+      } else {
+        nextb = b
+        nexti = i
+      }
+    }
+    
+    private def write(obj: AnyRef) = {
+      var cur_obj:  AnyRef = null
+      var next_obj: AnyRef = null
+      
+      do {
+        cur_obj = findNonFull()
+        
+        if (cur_obj eq Seal)
+          sys.error("Attempted write to sealed buffer")
+
+        peek()
+        
+        next_obj = nextb(nexti)
+        cur_obj  = b(i)
+
+      } while (!CAS(nextb, nexti, next_obj, cur_obj) ||
+    		   !CAS(b, i, cur_obj, obj));
+      
+      applyCBs(CAST[CBElem[T]](cur_obj), obj)
+
+    }
+    
+  }
+  
+  @tailrec
+  private def applyCBs[T](e: CBElem[T], obj: AnyRef) {
+    if (e eq null) return
+    e.elem(obj.asInstanceOf[T])
+    applyCBs(e.next, obj)
+  }
+
+  private def isElem(obj: AnyRef) =
+    (obj ne null) && (obj ne Seal) &&
+    (obj.getClass() ne classOf[CBElem[_]])
+
+  private def createBlock = new Array[AnyRef](blockSize)
+
+  private final class CBElem[-T] (
+    val elem: T => Any,
+    val next: CBElem[T] // null here means end
+  )
+
+  private object Seal;
+
+}
