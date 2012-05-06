@@ -1,8 +1,8 @@
 package scala.dataflow
 
-trait FlowPoolLike[T, Async[X]] extends FlowLike[T] {
+trait FlowPoolLike[T] {
 
-  def builder: FlowPool.Builder[T]
+  def builder: FlowPoolLike.Builder[T]
 
   def foreach[U](f: T => U): Unit
 
@@ -10,13 +10,11 @@ trait FlowPoolLike[T, Async[X]] extends FlowLike[T] {
 
 }
 
-trait FlowPool[T] extends FlowPoolLike[T, Future]
-
-object FlowPool {
+object FlowPoolLike {
 
   trait Builder[T] {
     def <<(x: T): this.type
-    def seal(): Unit
+    def seal: Unit
   }
 
 }

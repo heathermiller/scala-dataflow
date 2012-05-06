@@ -1,29 +1,32 @@
 package scala.dataflow.impl
 
-import scala.dataflow.FlowPoolLike
 import scala.annotation.tailrec
+import scala.dataflow.FlowPoolLike
 
 class FlowPool[T <: AnyRef] extends FlowPoolLike[T] {
 
-  private val initBlock = FlowPool.createBlock
+  import FlowPool._
   
-  override def builder: FlowPool.Builder[T] =
-    new FlowPool.Builder[T](initBlock)
+  private val initBlock = createBlock
+  
+  override def builder: Builder[T] =
+    new Builder[T](initBlock)
 
   override def foreach[U](f: T => U) {
     // TODO it is useless to allocate an object here. What to do?
+    // I hope this is optimized an put on stack...
     val w = new CBWriter(initBlock)
     w.addCB(f)
   }
   
-  private class CBWriter(bl: Array[AnyRef]) extends FlowPool.BlockFinder(bl) {
+  private class CBWriter(bl: Array[AnyRef]) extends BlockFinder(bl) {
     
     @tailrec
     private def findNonFull(cb: T => Any): AnyRef = {
       var cobj = b(i)
-      if (!FlowPool.isElem(cobj)) cobj
+      if (!isElem(cobj)) cobj
       else {
-        cb(cobj.asInstanceOf[T])
+        cb(CAST[T](cobj))
         advance();
         findNonFull(cb)
       }
@@ -37,9 +40,9 @@ class FlowPool[T <: AnyRef] extends FlowPoolLike[T] {
         if (cur_obj eq FlowPool.Seal) return
         
         new_obj =
-          new FlowPool.CBElem(cb, FlowPool.CAST[FlowPool.CBElem[T]](cur_obj))
+          new CBElem(cb, CAST[CBElem[T]](cur_obj))
 
-      } while(!FlowPool.CAS(b, i, cur_obj, new_obj));
+      } while(!CAS(b, i, cur_obj, new_obj));
     }
   }
 
@@ -58,6 +61,7 @@ object FlowPool {
   private def CAST[T](v: AnyRef) = v.asInstanceOf[T]
 
   class BlockFinder(bl: Array[AnyRef]) {
+    @volatile
     var b = bl
     var i = 0
     
@@ -97,6 +101,7 @@ object FlowPool {
   class Builder[T <: AnyRef](bl: Array[AnyRef])
   	extends BlockFinder(bl) with FlowPoolLike.Builder[T] {
 
+    @volatile
     var nextb: Array[AnyRef] = null
     var nexti: Int = 0
     
@@ -141,7 +146,7 @@ object FlowPool {
   @tailrec
   private def applyCBs[T](e: CBElem[T], obj: AnyRef) {
     if (e eq null) return
-    e.elem(obj.asInstanceOf[T])
+    e.elem(CAST[T](obj))
     applyCBs(e.next, obj)
   }
 
