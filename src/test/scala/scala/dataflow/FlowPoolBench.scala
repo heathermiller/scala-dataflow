@@ -10,8 +10,8 @@ object FlowPoolBench extends ParInsertBench {
   var pool = new impl.FlowPool[Data]()
   
   class Inserter(val sz: Int) extends Thread {
-    val build = pool.builder
     override def run() {
+      val build = pool.builder
       var i = 0
       while (i < sz) {
         build << data
