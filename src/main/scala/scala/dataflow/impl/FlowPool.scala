@@ -134,7 +134,8 @@ object FlowPool {
         next_obj = nextb(nexti)
         cur_obj  = b(i)
 
-      } while (!CAS(nextb, nexti, next_obj, cur_obj) ||
+      } while (isElem(cur_obj) ||
+               !CAS(nextb, nexti, next_obj, cur_obj) ||
     		   !CAS(b, i, cur_obj, obj));
       
       applyCBs(CAST[CBElem[T]](cur_obj), obj)
