@@ -11,53 +11,70 @@ class FlowPool[T <: AnyRef] extends FlowPoolLike[T] {
 
   initBlock(0) = CBNil
   
-  override def builder: Builder[T] =
-    new Builder[T](initBlock)
+  override def builder: Builder[T] = new Builder[T](initBlock)
 
-  override def foreach[U](f: T => U) {}
-  /*
   override def foreach[U](f: T => U) {
-    // TODO it is useless to allocate an object here. What to do?
-    // I hope this is optimized an put on stack...
-    // probably not, but doesn't really matter - there aren't that many callbacks
-    // ! real problem is - CBWrite captures the this reference to the FlowPool
-    val w = new CBWriter(initBlock)
-    w.addCB(f)
+    (new CBWriter(initBlock)).addCB(f)
   }
-  
-  private class CBWriter(bl: Array[AnyRef]) extends BlockFinder(bl) {
-    
-    @tailrec
-    private def findNonFull(cb: T => Any): AnyRef = {
-      var cobj = b(i)
-      if (!isElem(cobj)) cobj
-      else {
-        cb(CAST[T](cobj))
-        advance();
-        findNonFull(cb)
-      }
-    }
-    
-    def addCB(cb: T => Any) {
-      var cur_obj: AnyRef = null 
-      var new_obj: AnyRef = null
-      do {
-        cur_obj = findNonFull(cb)
-        if (cur_obj eq FlowPool.Seal) return
-        
-        new_obj =
-          new CBElem(cb, CAST[CBElem[T]](cur_obj))
-
-      } while(!CAS(b, i, cur_obj, new_obj));
-    }
-  }
-  * */
 
 }
 
 object FlowPool {
 
   private val blockSize = 2000
+
+  private final class CBWriter[T](bl: Array[AnyRef]) {
+    
+    @volatile private var lastpos = 0
+    @volatile private var block   = bl
+    private val unsafe = getUnsafe()
+    private val ARRAYOFFSET = unsafe.arrayBaseOffset(classOf[Array[AnyRef]])
+    private val ARRAYSTEP   = unsafe.arrayIndexScale(classOf[Array[AnyRef]])
+    @inline private def RAWPOS(idx: Int) = ARRAYOFFSET + idx * ARRAYSTEP 
+    @inline private def CAS(idx: Int, exp: Any, x: Any) =
+      unsafe.compareAndSwapObject(block, RAWPOS(idx), exp, x)
+
+    @tailrec
+    private def advance(cb: T => Any) {
+      val pos = lastpos
+      val obj = block(pos)
+      if (obj eq Seal) return
+      if (!obj.isInstanceOf[CBList[_]]) {
+        cb(obj.asInstanceOf[T])
+        lastpos = pos + 1
+        advance(cb)
+      } else if (pos >= blockSize) {
+        val ob = block(blockSize + 1).asInstanceOf[Array[AnyRef]]
+        if (ob eq null) {
+          val nb = new Array[AnyRef](blockSize + 2)
+          nb(0) = block(blockSize)
+          CAS(blockSize + 1, ob, nb)
+        }
+        // TODO we have a race here
+        block = block(blockSize + 1).asInstanceOf[Array[AnyRef]]
+        lastpos = 0
+      }
+    }
+    
+    @tailrec
+    def addCB(cb: T => Any) {
+      if (lastpos < blockSize) {
+        val pos = lastpos
+        val curo = block(pos)
+        if (curo.isInstanceOf[CBList[T]]) {
+          val no = new CBElem(cb, curo.asInstanceOf[CBList[T]])
+          if (!CAS(pos, curo, no)) addCB(cb)
+        } else {
+          advance(cb)
+          addCB(cb)
+        }
+      } else {
+        advance(cb)
+        addCB(cb)
+      }
+    }
+  }
+
   
   final class Builder[T <: AnyRef](bl: Array[AnyRef]) extends FlowPoolLike.Builder[T] {
 
@@ -65,7 +82,6 @@ object FlowPool {
     @volatile private var block   = bl
 
     private val unsafe = getUnsafe()
-    private val blockSize = 2000
     private val ARRAYOFFSET = unsafe.arrayBaseOffset(classOf[Array[AnyRef]])
     private val ARRAYSTEP   = unsafe.arrayIndexScale(classOf[Array[AnyRef]])
     @inline private def RAWPOS(idx: Int) = ARRAYOFFSET + idx * ARRAYSTEP 
@@ -155,7 +171,7 @@ object FlowPool {
   private sealed class CBList[-T]
   private final class CBElem[-T] (
     val elem: T => Any,
-    val next: CBElem[T]
+    val next: CBList[T]
   ) extends CBList[T]
   private final object CBNil extends CBList[Any]
 
