@@ -14,7 +14,7 @@ for par in $PARS; do
         for bench in $BENCHES; do
             bdat=$(sbt "bench -Dsize=$l -Dpar=$par scala.dataflow.$bench 100" | \
                 grep '^scala.dataflow')
-            echo "$par $l $bdat"
+            echo "$par\t$l\t$bdat"
         done
     done
 done > benchmarks/bench.log
