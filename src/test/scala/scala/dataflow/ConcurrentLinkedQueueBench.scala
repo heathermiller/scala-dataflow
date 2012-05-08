@@ -4,17 +4,26 @@ import java.lang.Integer
 import java.util.concurrent.ConcurrentLinkedQueue
 
 object ConcurrentLinkedQueueBench extends ParInsertBench {
-
-  var queue = new ConcurrentLinkedQueue[Integer]()
-
+  import Utils._
+  
+  var queue = new ConcurrentLinkedQueue[Data]()
+  val data = new Data(0)
+  
   class Inserter(val sz: Int) extends Thread {
-    override def run() { for (i <- 1 to sz) queue.add(0) }
+    override def run() {
+      var i = 0
+      val until = sz
+      while (i < until) {
+        queue.add(data)
+        i += 1
+      }
+    }
   }
 
   def inserter(sz: Int) = new Inserter(sz)
 
   override def setUp() {
-    queue = new ConcurrentLinkedQueue[Integer]()
+    queue = new ConcurrentLinkedQueue[Data]()
   }
 
 }

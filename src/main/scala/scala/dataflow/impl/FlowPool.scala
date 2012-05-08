@@ -15,6 +15,8 @@ class FlowPool[T <: AnyRef] extends FlowPoolLike[T] {
   override def foreach[U](f: T => U) {
     // TODO it is useless to allocate an object here. What to do?
     // I hope this is optimized an put on stack...
+    // probably not, but doesn't really matter - there aren't that many callbacks
+    // ! real problem is - CBWrite captures the this reference to the FlowPool
     val w = new CBWriter(initBlock)
     w.addCB(f)
   }
