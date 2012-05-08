@@ -7,11 +7,15 @@ class FlowPool[T <: AnyRef] extends FlowPoolLike[T] {
 
   import FlowPool._
   
-  private val initBlock = createBlock
+  private val initBlock = new Array[AnyRef](blockSize + 2)
+
+  initBlock(0) = CBNil
   
   override def builder: Builder[T] =
     new Builder[T](initBlock)
 
+  override def foreach[U](f: T => U) {}
+  /*
   override def foreach[U](f: T => U) {
     // TODO it is useless to allocate an object here. What to do?
     // I hope this is optimized an put on stack...
@@ -47,122 +51,113 @@ class FlowPool[T <: AnyRef] extends FlowPoolLike[T] {
       } while(!CAS(b, i, cur_obj, new_obj));
     }
   }
+  * */
 
 }
 
 object FlowPool {
 
-  private val unsafe = getUnsafe()
-  private val blockSize = 200
+  private val blockSize = 2000
   
-  private val ARRAYOFFSET = unsafe.arrayBaseOffset(classOf[Array[AnyRef]])
-  private val ARRAYSTEP   = unsafe.arrayIndexScale(classOf[Array[AnyRef]])
-  private def RAWPOS(idx: Int) = ARRAYOFFSET + idx * ARRAYSTEP 
-  private def CAS(trg: Any, idx: Int, exp: Any, x: Any) =
-    unsafe.compareAndSwapObject(trg, RAWPOS(idx), exp, x)
-  private def CAST[T](v: AnyRef) = v.asInstanceOf[T]
+  final class Builder[T <: AnyRef](bl: Array[AnyRef]) extends FlowPoolLike.Builder[T] {
 
-  class BlockFinder(bl: Array[AnyRef]) {
-    @volatile
-    var b = bl
-    var i = 0
-    
-    final protected def nextBlock() = {
-      val next = b(blockSize - 1)
-        
-      if (next eq null) {
-        val nb = createBlock
-        CAS(b, blockSize - 1, next, nb)
-      }
-      
-      CAST[Array[AnyRef]](b(blockSize - 1))
-    }
-    
-    final protected def advance() {
-      if (i >= blockSize - 2) {
-        b = nextBlock() 
-        i = 0
-      } else {
-        i = i + 1
-      }
-    }
+    @volatile private var lastpos = 0
+    @volatile private var block   = bl
+
+    private val unsafe = getUnsafe()
+    private val blockSize = 2000
+    private val ARRAYOFFSET = unsafe.arrayBaseOffset(classOf[Array[AnyRef]])
+    private val ARRAYSTEP   = unsafe.arrayIndexScale(classOf[Array[AnyRef]])
+    @inline private def RAWPOS(idx: Int) = ARRAYOFFSET + idx * ARRAYSTEP 
+    @inline private def CAS(idx: Int, exp: Any, x: Any) =
+      unsafe.compareAndSwapObject(block, RAWPOS(idx), exp, x)
     
     @tailrec
-    final protected def findNonFull(): AnyRef = {
-      var cobj = b(i)
-      if (!isElem(cobj)) cobj
-      else {
-        advance();
-        findNonFull()
-      }
-    }
-
-  }
-  
-  // TODO make this builder threadsafe
-  class Builder[T <: AnyRef](bl: Array[AnyRef])
-  	extends BlockFinder(bl) with FlowPoolLike.Builder[T] {
-
-    @volatile
-    var nextb: Array[AnyRef] = null
-    var nexti: Int = 0
-    
-    def <<(x: T) = { write(x); this }
-    def seal() { write(Seal) }
-        
-        
-    private def peek() {
-      if (i >= blockSize - 2) {
-        nextb = nextBlock()
-        nexti = 0
+    def <<(x: T) = 
+      if (lastpos < blockSize) { 
+        val pos = lastpos
+        val npos = pos + 1
+        val next = block(npos)
+        val curo = block(pos)
+        if (curo.isInstanceOf[CBList[T]]) {
+          if (CAS(npos, next, curo)) {
+            if (CAS(pos, curo, x)) {
+              lastpos = npos
+              applyCBs(curo.asInstanceOf[CBList[T]], x)
+              this
+            } else <<(x)
+          } else <<(x)
+        } else {
+          advance()
+          <<(x)
+        }
       } else {
-        nextb = b
-        nexti = i
+        advance()
+        <<(x)
+      }
+
+    def seal() {
+      // TODO
+    }
+
+    @tailrec
+    private def advance() {
+      val pos = lastpos
+      val obj = block(pos)
+      if (obj eq Seal) sys.error("Insert on sealed structure")
+      if (!obj.isInstanceOf[CBList[_]]) {
+        lastpos = pos + 1
+        advance()
+      } else if (pos >= blockSize) {
+        val ob = block(blockSize + 1).asInstanceOf[Array[AnyRef]]
+        if (ob eq null) {
+          val nb = new Array[AnyRef](blockSize + 2)
+          nb(0) = block(blockSize)
+          CAS(blockSize + 1, ob, nb)
+        }
+        // TODO we have a race here
+        block = block(blockSize + 1).asInstanceOf[Array[AnyRef]]
+        lastpos = 0
       }
     }
-    
-    private def write(obj: AnyRef) = {
-      var cur_obj:  AnyRef = null
-      var next_obj: AnyRef = null
-      
-      do {
-        cur_obj = findNonFull()
-        
-        if (cur_obj eq Seal)
-          sys.error("Attempted write to sealed buffer")
 
-        peek()
-        
-        next_obj = nextb(nexti)
-        cur_obj  = b(i)
-
-      } while (isElem(cur_obj) ||
-               !CAS(nextb, nexti, next_obj, cur_obj) ||
-    		   !CAS(b, i, cur_obj, obj));
-      
-      applyCBs(CAST[CBElem[T]](cur_obj), obj)
-
+    /*
+    private def advance() {
+      var pos = lastpos
+      while (!block(pos).isInstanceOf[CBList[_]]) {
+        if (block(pos) eq Seal) sys.error("Insert on sealed structure")
+        pos += 1
+      }
+      if (pos < blockSize) {
+        lastpos = pos
+      } else {
+        val ob = block(blockSize + 1).asInstanceOf[Array[AnyRef]]
+        if (ob eq null) {
+          val nb = new Array[AnyRef](blockSize + 2)
+          nb(0) = block(blockSize)
+          CAS(blockSize + 1, ob, nb)
+        }
+        // TODO race here
+        block = block(blockSize + 1).asInstanceOf[Array[AnyRef]]
+        lastpos = 0
+      }
     }
-    
+    */
+
+    @tailrec
+    private def applyCBs[T](e: CBList[T], obj: T): Unit = e match {
+      case el: CBElem[T] => el.elem(obj); applyCBs(el.next, obj)
+      case _ =>
+    }
+
   }
-  
-  @tailrec
-  private def applyCBs[T](e: CBElem[T], obj: AnyRef) {
-    if (e eq null) return
-    e.elem(CAST[T](obj))
-    applyCBs(e.next, obj)
-  }
 
-  private def isElem(obj: AnyRef) =
-    (obj ne null) && (obj ne Seal) &&
-    (obj.getClass() ne classOf[CBElem[_]])
-
-  private def createBlock = new Array[AnyRef](blockSize)
-
+  private sealed class CBList[-T]
   private final class CBElem[-T] (
     val elem: T => Any,
-    val next: CBElem[T] // null here means end
-  )
+    val next: CBElem[T]
+  ) extends CBList[T]
+  private final object CBNil extends CBList[Any]
 
   private object Seal;
 
