@@ -1,5 +1,11 @@
 *~
 *.*~
+*.aux
+*.bbl
+*.blg
+*.log
 
 target
-
+.DS_Store
+project/boot
+project/target
