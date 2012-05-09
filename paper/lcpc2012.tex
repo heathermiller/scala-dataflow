@@ -111,16 +111,24 @@ Producer-consumer parallelism. Description and image of queue/stream of values, 
 \texttt{foreach} on flowpools.
 And \texttt{future} to start asynchronous computations.
 
+Discussion why \texttt{seal} takes a size argument. Show
+nondeterminism without it.
+
 Examples of generators using the above constructs (e.g. iterate,
 tabulate, fill, ...).
+
 Examples with implementing map, flatMap, filter with the above.
+Show why we need futures as result types of foreach loops.
 
 \section{Implementation}
 
 \section{Proofs}
 \subsection{Abstract Pool Semantics}
+Alex
 \subsection{Linearizability}
+Alex
 \subsection{Lock-Freedom}
+
 \subsection{Determinism}
 
 \section{Experimental Results}
