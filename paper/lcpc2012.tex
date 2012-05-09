@@ -32,10 +32,10 @@
 \mainmatter  % start of an individual contribution
 
 % first the title is needed
-\title{FlowPools: Efficient Deterministic Non-Blocking Queues}
+\title{FlowPools: Lock-Free Deterministic Concurrent Data-Flow Queues}
 
 % a short form should be given in case it is too long for the running head
-\titlerunning{FlowPools: Efficient Deterministic Non-Blocking Queues}
+\titlerunning{FlowPools: Lock-Free Deterministic Concurrent Data-Flow Queues}
 
 % the name(s) of the author(s) follow(s) next
 %
@@ -53,7 +53,7 @@
 % Anna Kramer\and Leonie Kunz\and Christine Rei\ss\and\\
 % Nicole Sator\and Erika Siebert-Cole\and Peter Stra\ss er}
 
-\authorrunning{FlowPools: Efficient Non-Blocking Queues}
+\authorrunning{FlowPools: Lock-Free Deterministic Concurrent Data-Flow Queues}
 % (feature abused for this document to repeat the title also on left hand pages)
 
 % the affiliations are given next; don't give your e-mail address
@@ -75,11 +75,8 @@
 
 
 \begin{abstract}
-The abstract should summarize the contents of the paper and should
-contain at least 70 and at most 150 words. It should be written using the
-\emph{abstract} environment.
-\keywords{We would like to encourage you to list your keywords within
-the abstract section}
+Implementing correct and deterministic parallel programs is hard (additional motivation sentence after this). We present the design and implementation of a fundamental data structure for deterministic parallel data-flow computation. Aditionally, we provide a proof of correctness, showing that the implementation is linearizable, lock-free, and deterministic. Finally, we provide microbenchmarks which compare our \emph{flow pools} against corresponding operations on other popular concurrent data structures, in addition to performance benchmarks on a real \emph{XYZ} application using real data. (Keep abstract between 70 and 150 words).
+\keywords{data-flow, concurrent data-structure, determinism}
 \end{abstract}
 
 
@@ -99,45 +96,43 @@ data structure we no longer need
 much as possible => lower memory consumption, better cache behaviour
 and fewer GC cycles
 
+
+Obligatory multicore motivation paragraph.
+
+Lock-free is better, and why.
+
+Introduction and motivation for data-flow programming model.
+
+\section{Model of Computation}
+Producer-consumer parallelism. Description and image of queue/stream of values, producer, and multiple consumers. 
+
 \section{Programming Model}
+\texttt{<<} (insert) and \texttt{seal} on builders. And
+\texttt{foreach} on flowpools.
+And \texttt{future} to start asynchronous computations.
 
-
-
-\subsection{Model of Computation}
-
-
+Examples of generators using the above constructs (e.g. iterate,
+tabulate, fill, ...).
+Examples with implementing map, flatMap, filter with the above.
 
 \section{Implementation}
 
-
-
-\section{Correctness Proof}
-
-\subsection{Abstract pool semantics}
-
+\section{Proofs}
+\subsection{Abstract Pool Semantics}
 \subsection{Linearizability}
-
-\subsection{Lock-freedom}
-
+\subsection{Lock-Freedom}
 \subsection{Determinism}
 
-
-\section{Evaluation}
-
-
+\section{Experimental Results}
 
 \section{Related Work}
-Forcing a bib, \cite{bowman:reasoning}, \cite{braams:babel},
-\cite{clark:pct}, \cite{herlihy:methodology}, \cite{Lamport:LaTeX},
-\cite{salas:calculus}
+Things to probably cite: Oz, gpars, Java CLQ, our futures writeup.
 
+Things we should probably have a look at: Microsoft TPL, Dataflow
+Java, FlumeJava...
 
-
+Forcing a bib, \cite{bowman:reasoning}, \cite{braams:babel}, \cite{clark:pct}, \cite{herlihy:methodology}, \cite{Lamport:LaTeX}, \cite{salas:calculus}
 \section{Conclusion}
-
-
-
-\section{References}
 
 \bibliographystyle{abbrv}
 \bibliography{bib}
