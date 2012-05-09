@@ -32,10 +32,10 @@
 \mainmatter  % start of an individual contribution
 
 % first the title is needed
-\title{FlowPools: Efficient Non-Blocking Queues}
+\title{FlowPools: Efficient Deterministic Non-Blocking Queues}
 
 % a short form should be given in case it is too long for the running head
-\titlerunning{FlowPools: Efficient Non-Blocking Queues}
+\titlerunning{FlowPools: Efficient Deterministic Non-Blocking Queues}
 
 % the name(s) of the author(s) follow(s) next
 %
@@ -84,14 +84,59 @@ the abstract section}
 
 
 \section{Introduction}
-\section{Programming Interface}
+
+
+\subsection{Motivation}
+
+- we want a deterministic model
+- we do not block in the programming model (i.e. there are no
+operations which cause blocking until a value becomes available)
+- we want a non-blocking data-structure (i.e. the operations on the
+data-structures should themselves be non-blocking)
+- programs run indefinitely => we need to GC parts of the
+data structure we no longer need
+- we want to reduce heap allocation and inline the datastructure as
+much as possible => lower memory consumption, better cache behaviour
+and fewer GC cycles
+
+\section{Programming Model}
+
+
+
 \subsection{Model of Computation}
+
+
+
 \section{Implementation}
-\section{Proofs}
-\section{Experimental Results}
+
+
+
+\section{Correctness Proof}
+
+\subsection{Abstract pool semantics}
+
+\subsection{Linearizability}
+
+\subsection{Lock-freedom}
+
+\subsection{Determinism}
+
+
+\section{Evaluation}
+
+
+
 \section{Related Work}
-Forcing a bib, \cite{bowman:reasoning}, \cite{braams:babel}, \cite{clark:pct}, \cite{herlihy:methodology}, \cite{Lamport:LaTeX}, \cite{salas:calculus}
+Forcing a bib, \cite{bowman:reasoning}, \cite{braams:babel},
+\cite{clark:pct}, \cite{herlihy:methodology}, \cite{Lamport:LaTeX},
+\cite{salas:calculus}
+
+
+
 \section{Conclusion}
+
+
+
 \section{References}
 
 \bibliographystyle{abbrv}
