@@ -7,4 +7,5 @@
 
 target
 .DS_Store
-project
+project/boot
+project/target
