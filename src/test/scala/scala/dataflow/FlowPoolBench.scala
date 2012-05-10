@@ -36,10 +36,15 @@ object FlowPoolBench2 extends testing.Benchmark with Utils.Props {
   import Utils._
   
   override def run() {
-    val work = size
     val pool = new impl.FlowPool[Data]()
     //val builder = pool.builder
     val builder = new impl.Builder[Data](pool.initBlock)
+    
+    test(builder)
+  }
+  
+  private def test(builder: impl.Builder[Data]) {
+    val work = size
     val data = new Data(0)
     var i = 0
     
@@ -48,6 +53,7 @@ object FlowPoolBench2 extends testing.Benchmark with Utils.Props {
       i += 1
     }
   }
+  
 }
 
 

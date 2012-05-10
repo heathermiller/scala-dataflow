@@ -7,7 +7,7 @@ class FlowPool[T <: AnyRef] {
 
   import FlowPool._
   
-  private def BLOCKSIZE = 256
+  private def BLOCKSIZE = 512
   
   val initBlock = FlowPool.newBlock
   
@@ -21,7 +21,7 @@ class FlowPool[T <: AnyRef] {
 
 object FlowPool {
 
-  private val BLOCKSIZE = 256
+  private val BLOCKSIZE = 512
   
   def newBlock = {
     val bl = new Array[AnyRef](BLOCKSIZE + 4)
@@ -98,7 +98,7 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) extends FlowPoolLike.Builder
   @inline private def CAS(idx: Int, exp: Any, x: Any) =
     unsafe.compareAndSwapObject(block, RAWPOS(idx), exp, x)
   
-  private def BLOCKSIZE = 256
+  private def BLOCKSIZE = 512
   
   @tailrec
   def <<(x: T) = {
@@ -119,11 +119,11 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) extends FlowPoolLike.Builder
       <<(x)
     }
   }
-
+  
   def seal() {
     // TODO
   }
-
+  
   @tailrec
   private def advance() {
     val pos = lastpos
@@ -171,20 +171,31 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) extends FlowPoolLike.Builder
 
   @tailrec
   private def applyCBs[T](e: CBList[T], obj: T): Unit = e match {
-    case el: CBElem[T] => el.elem(obj); applyCBs(el.next, obj)
+    case el: CBElem[T] =>
+      el.elem(obj)
+      applyCBs(el.next, obj)
     case _ =>
   }
 
 }
 
+
 sealed class CBList[-T]
+
+
 final class CBElem[-T] (
   val elem: T => Any,
   val next: CBList[T]
 ) extends CBList[T]
+
+
 final object CBNil extends CBList[Any]
+
 
 object End
 
-private object Seal;
+
+private object Seal
+
+
 
