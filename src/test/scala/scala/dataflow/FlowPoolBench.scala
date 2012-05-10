@@ -6,30 +6,30 @@ import annotation.tailrec
 
 
 
-object FlowPoolBench extends ParInsertBench {
-  import Utils._
+// object FlowPoolBench extends ParInsertBench {
+//   import Utils._
   
-  val data = new Data(0)
-  var pool = new impl.FlowPool[Data]()
+//   val data = new Data(0)
+//   var pool = new impl.FlowPool[Data]()
   
-  class Inserter(val sz: Int) extends Thread {
-    override def run() {
-      val build = pool.builder
-      var i = 0
-      while (i < sz) {
-        build << data
-        i += 1
-      }
-    }
-  }
+//   class Inserter(val sz: Int) extends Thread {
+//     override def run() {
+//       val build = pool.builder
+//       var i = 0
+//       while (i < sz) {
+//         build << data
+//         i += 1
+//       }
+//     }
+//   }
   
-  def inserter(sz: Int) = new Inserter(sz)
+//   def inserter(sz: Int) = new Inserter(sz)
   
-  override def setUp() {
-    pool = new impl.FlowPool[Data]()
-  }
+//   override def setUp() {
+//     pool = new impl.FlowPool[Data]()
+//   }
   
-}
+// }
 
 
 object FlowPoolBench2 extends testing.Benchmark with Utils.Props {
@@ -38,8 +38,8 @@ object FlowPoolBench2 extends testing.Benchmark with Utils.Props {
   override def run() {
     val work = size
     //val pool = new impl.FlowPool[Data]()
-    val builder = new impl.FlowPool.Builder[Data]()
     //val builder = pool.builder
+    val builder = new impl.Builder[Data]()
     val data = new Data(0)
     var i = 0
     
@@ -57,7 +57,7 @@ object FlowPoolExperiment extends ParInsertBench {
   class Inserter(val sz: Int) extends Thread {
     override def run() {
       val work = size
-      val pool = new ExpPool[Data](work)
+      val pool = new FlowPoolBuilder[Data](work)
       val data = new Data(0)
       var i = 0
       
@@ -73,7 +73,7 @@ object FlowPoolExperiment extends ParInsertBench {
 }
 
 
-final class ExpPool[T](private val blocksize: Int) {
+final class FlowPoolBuilder[T](private val blocksize: Int) {
   private val unsafe = impl.getUnsafe()
   private val ARRAYOFFSET = unsafe.arrayBaseOffset(classOf[Array[AnyRef]])
   private val ARRAYSTEP = unsafe.arrayIndexScale(classOf[Array[AnyRef]])
@@ -88,34 +88,51 @@ final class ExpPool[T](private val blocksize: Int) {
     unsafe.compareAndSwapObject(array, RAWPOS(idx), ov, nv)
   }
   
-  def advance() {
-    var pos = lastpos
-    while (!array(pos).isInstanceOf[List[_]]) pos += 1
-    lastpos = pos
-  }
-  
   @tailrec
-  def <<(elem: T): this.type = if (lastpos < blocksize) {
+  def <<(elem: T): this.type = {
     val pos = lastpos
     val npos = pos + 1
     val next = array(npos)
     val curr = array(pos)
-    if (curr.isInstanceOf[List[_]]) {
+    if (curr.isInstanceOf[List[_]] && (next ne End)) {
       if (CAS(npos, next, curr)) {
         if (CAS(pos, curr, elem.asInstanceOf[AnyRef])) {
           lastpos = npos
           this
         } else <<(elem)
       } else <<(elem)
-    } else {
+    } else slowadd(elem)
+  }
+  
+  def slowadd(elem: T): this.type = {
+    advance()
+    <<(elem)
+  }
+  
+  @tailrec
+  private def advance() {
+    val pos = lastpos
+    val obj = array(pos)
+    if (obj eq Seal) sys.error("Insert on sealed structure")
+    if (!obj.isInstanceOf[List[_]]) {
+      lastpos = pos + 1
       advance()
-      <<(elem)
+    } else if (pos >= blocksize) {
+      val ob = array(blocksize + 1).asInstanceOf[Array[AnyRef]]
+      if (ob eq null) {
+        val nb = new Array[AnyRef](blocksize + 2)
+        nb(0) = array(blocksize)
+        CAS(blocksize + 1, ob, nb)
+      }
+      // TODO we have a race here
+      array = array(blocksize + 1).asInstanceOf[Array[AnyRef]]
+      lastpos = 0
     }
-  } else throw new Exception
+  }
   
 }
 
 
-
+object End
 
 
