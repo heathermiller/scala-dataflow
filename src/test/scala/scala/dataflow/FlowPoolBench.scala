@@ -32,20 +32,43 @@ object FlowPoolBench extends ParInsertBench {
 }
 
 
-object FlowPoolExperiment extends testing.Benchmark with Utils.Props {
+object FlowPoolBench2 extends testing.Benchmark with Utils.Props {
   import Utils._
   
   override def run() {
     val work = size
-    val pool = new ExpPool[Data](work)
+    //val pool = new impl.FlowPool[Data]()
+    val builder = new impl.FlowPool.Builder[Data]()
+    //val builder = pool.builder
     val data = new Data(0)
     var i = 0
     
     while (i < work) {
-      pool << data
+      builder << data
       i += 1
     }
   }
+}
+
+
+object FlowPoolExperiment extends ParInsertBench {
+  import Utils._
+  
+  class Inserter(val sz: Int) extends Thread {
+    override def run() {
+      val work = size
+      val pool = new ExpPool[Data](work)
+      val data = new Data(0)
+      var i = 0
+      
+      while (i < work) {
+        pool << data
+        i += 1
+      }
+    }
+  }
+  
+  def inserter(sz: Int) = new Inserter(sz)
   
 }
 
