@@ -9,12 +9,9 @@ class FlowPool[T <: AnyRef] {
   
   private def BLOCKSIZE = 256
   
-  private val initBlock = new Array[AnyRef](BLOCKSIZE + 4)
-
-  initBlock(0) = CBNil
-  initBlock(BLOCKSIZE) = End
+  val initBlock = FlowPool.newBlock
   
-  // override def builder: Builder[T] = new Builder[T](initBlock)
+  def builder: Builder[T] = new Builder[T](initBlock)
 
   def foreach[U](f: T => U) {
     (new CBWriter(initBlock)).addCB(f)
@@ -24,8 +21,15 @@ class FlowPool[T <: AnyRef] {
 
 object FlowPool {
 
-  private val blockSize = 2000
-
+  private val BLOCKSIZE = 256
+  
+  def newBlock = {
+    val bl = new Array[AnyRef](BLOCKSIZE + 4)
+    bl(0) = CBNil
+    bl(BLOCKSIZE) = End
+    bl
+  }
+  
   private final class CBWriter[T](bl: Array[AnyRef]) {
     
     @volatile private var lastpos = 0
@@ -46,22 +50,22 @@ object FlowPool {
         cb(obj.asInstanceOf[T])
         lastpos = pos + 1
         advance(cb)
-      } else if (pos >= blockSize) {
-        val ob = block(blockSize + 1).asInstanceOf[Array[AnyRef]]
+      } else if (pos >= BLOCKSIZE) {
+        val ob = block(BLOCKSIZE + 1).asInstanceOf[Array[AnyRef]]
         if (ob eq null) {
-          val nb = new Array[AnyRef](blockSize + 2)
-          nb(0) = block(blockSize)
-          CAS(blockSize + 1, ob, nb)
+          val nb = new Array[AnyRef](BLOCKSIZE + 2)
+          nb(0) = block(BLOCKSIZE)
+          CAS(BLOCKSIZE + 1, ob, nb)
         }
         // TODO we have a race here
-        block = block(blockSize + 1).asInstanceOf[Array[AnyRef]]
+        block = block(BLOCKSIZE + 1).asInstanceOf[Array[AnyRef]]
         lastpos = 0
       }
     }
     
     @tailrec
     def addCB(cb: T => Any) {
-      if (lastpos < blockSize) {
+      if (lastpos < BLOCKSIZE) {
         val pos = lastpos
         val curo = block(pos)
         if (curo.isInstanceOf[CBList[T]]) {
@@ -82,12 +86,10 @@ object FlowPool {
 }
 
 
-final class Builder[T <: AnyRef](/*bl: Array[AnyRef]*/) extends FlowPoolLike.Builder[T] {
+final class Builder[T <: AnyRef](bl: Array[AnyRef]) extends FlowPoolLike.Builder[T] {
 
   @volatile private var lastpos = 0
-  @volatile private var block   = new Array[AnyRef](BLOCKSIZE + 4)
-  block(0) = CBNil
-  block(BLOCKSIZE) = End
+  @volatile private var block   = bl
 
   private val unsafe = getUnsafe()
   private val ARRAYOFFSET = unsafe.arrayBaseOffset(classOf[Array[AnyRef]])
@@ -175,12 +177,12 @@ final class Builder[T <: AnyRef](/*bl: Array[AnyRef]*/) extends FlowPoolLike.Bui
 
 }
 
-private sealed class CBList[-T]
-private final class CBElem[-T] (
+sealed class CBList[-T]
+final class CBElem[-T] (
   val elem: T => Any,
   val next: CBList[T]
 ) extends CBList[T]
-private final object CBNil extends CBList[Any]
+final object CBNil extends CBList[Any]
 
 object End
 
