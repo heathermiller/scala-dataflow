@@ -12,7 +12,7 @@ class FlowPool[T <: AnyRef] {
 
   import FlowPool._
   
-  private def BLOCKSIZE = 512
+  private def BLOCKSIZE = 256
   
   val initBlock = FlowPool.newBlock
   
@@ -26,7 +26,7 @@ class FlowPool[T <: AnyRef] {
 
 object FlowPool {
 
-  private val BLOCKSIZE = 512
+  private val BLOCKSIZE = 256
   
   def newBlock = {
     val bl = new Array[AnyRef](BLOCKSIZE + 4)
@@ -111,7 +111,7 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) extends FlowPoolLike.Builder
   @inline private def CAS(idx: Int, exp: Any, x: Any) =
     unsafe.compareAndSwapObject(block, RAWPOS(idx), exp, x)
   
-  private def BLOCKSIZE = 512
+  private def BLOCKSIZE = 256
   
   @tailrec
   def <<(x: T) = {
