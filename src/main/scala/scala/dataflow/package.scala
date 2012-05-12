@@ -46,11 +46,6 @@ package dataflow {
     type Blocking[T] = Flow[T, Id]
     
   }
-  
-  trait Future[T] {
-    def foreach[U](f: T => U): Unit
-    
-    def andThen[U](body: =>U): Future[T]
-  }
+
     
 }

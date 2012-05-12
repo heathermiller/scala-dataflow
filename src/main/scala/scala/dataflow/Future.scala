@@ -14,6 +14,19 @@ class Future[T] {
     fut
   }
 
+  def andThen[U](body: => U) = {
+    val fut = new Future[T]
+    registerCB { x =>
+      body
+      fut.complete(x)
+    }
+    fut
+  }
+
+  def foreach[U](f: T => U) {
+    registerCB(x => f(x))
+  }
+
   private def registerCB(f: T => Unit) {
     synchronized {
       res match {

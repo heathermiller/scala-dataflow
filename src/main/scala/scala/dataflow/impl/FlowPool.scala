@@ -15,16 +15,25 @@ class FlowPool[T <: AnyRef] {
   
   def builder: Builder[T] = new Builder[T](initBlock)
 
-  def foreach[U](f: T => U) = {
-    val fut = new Future[Unit]()
+  def foreach[U](f: T => U): Future[Int] = {
+    val fut = new Future[Int]()
     (new CBWriter(initBlock)).addCB(f, fut)
     fut
   }
 
-  def folding[U <: T](acc: U)(cmb: (T, U) => U) = {
+  def folding[V,U <: V](acc: U)(cmb: (V, U) => U) =
+    new FoldingFlowPool(this, acc, cmb)
 
+  def map[S <: AnyRef](f: T => S): FlowPool[S] = {
+    val fp = new FlowPool[S]
+    val b = fp.builder
+
+    {
+      for (x <- this) { b << f(x) }
+    } map { b.seal _ }
+
+    fp
   }
-
 }
 
 object FlowPool {
@@ -50,11 +59,12 @@ object FlowPool {
       unsafe.compareAndSwapObject(block, RAWPOS(idx), exp, x)
 
     @tailrec
-    private def advance(cb: T => Any, endf: Future[Unit]) {
+    private def advance(cb: T => Any, endf: Future[Int]) {
       val pos = lastpos
       val obj = block(pos)
       if (obj eq Seal) {
-        endf.complete()
+        // TODO Heather find size of Seal. store in seal?
+        endf.complete(0)
         return
       }
       if (!obj.isInstanceOf[CBList[_]]) {
@@ -75,7 +85,7 @@ object FlowPool {
     }
     
     @tailrec
-    def addCB(cb: T => Any, endf: Future[Unit]) {
+    def addCB(cb: T => Any, endf: Future[Int]) {
       if (lastpos < BLOCKSIZE) {
         val pos = lastpos
         val curo = block(pos)
@@ -139,7 +149,7 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
     }
   }
   
-  def seal() {
+  def seal(size: Int) {
     // TODO
   }
   
@@ -204,7 +214,7 @@ sealed class CBList[-T]
 
 final class CBElem[-T] (
   val func: T => Any,
-  val endf: Future[Unit],
+  val endf: Future[Int],
   val next: CBList[T]
 ) extends CBList[T] {
   // if the count is negative, then
@@ -232,6 +242,22 @@ final class CBElem[-T] (
   def unown(cnt: Int) = CBElem.WRITE_COUNT(this, cnt)
 }
 
+final class FoldingFlowPool[T <: AnyRef, V, U <: V](
+  pool: FlowPool[T],
+  accInit: U,
+  cmb: (V, U) => U
+) {
+  
+  def foreach(f: T => V): Future[U] = {
+    // TODO races here!
+    // TODO ALEX can the scheduler take care of this or do we need to sync?
+    var acc = accInit
+
+    { for (v <- pool) { acc = cmb(f(v),acc) }
+    } map { ign => acc }
+  }
+
+}
 
 object CBElem {
   
@@ -258,8 +284,9 @@ object CBElem {
       }
 
       // TODO Alex verify this is OK and free all references
+      // TODO Heather find size of seal
       if (cur eq Seal) {
-        callback.endf.complete()
+        callback.endf.complete(0)
       }
       
       // relinquish control
