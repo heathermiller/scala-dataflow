@@ -5,21 +5,24 @@ package scala.dataflow.impl
 import scala.annotation.tailrec
 import scala.dataflow.FlowPoolLike
 import jsr166y._
-
-
+import scala.dataflow.Future
 
 class FlowPool[T <: AnyRef] {
 
   import FlowPool._
   
-  private def BLOCKSIZE = 256
-  
   val initBlock = FlowPool.newBlock
   
   def builder: Builder[T] = new Builder[T](initBlock)
 
-  def foreach[U](f: T => U) {
-    (new CBWriter(initBlock)).addCB(f)
+  def foreach[U](f: T => U) = {
+    val fut = new Future[Unit]()
+    (new CBWriter(initBlock)).addCB(f, fut)
+    fut
+  }
+
+  def folding[U <: T](acc: U)(cmb: (T, U) => U) = {
+
   }
 
 }
@@ -47,14 +50,17 @@ object FlowPool {
       unsafe.compareAndSwapObject(block, RAWPOS(idx), exp, x)
 
     @tailrec
-    private def advance(cb: T => Any) {
+    private def advance(cb: T => Any, endf: Future[Unit]) {
       val pos = lastpos
       val obj = block(pos)
-      if (obj eq Seal) return
+      if (obj eq Seal) {
+        endf.complete()
+        return
+      }
       if (!obj.isInstanceOf[CBList[_]]) {
         cb(obj.asInstanceOf[T])
         lastpos = pos + 1
-        advance(cb)
+        advance(cb, endf)
       } else if (pos >= BLOCKSIZE) {
         val ob = block(BLOCKSIZE + 1).asInstanceOf[Array[AnyRef]]
         if (ob eq null) {
@@ -69,20 +75,20 @@ object FlowPool {
     }
     
     @tailrec
-    def addCB(cb: T => Any) {
+    def addCB(cb: T => Any, endf: Future[Unit]) {
       if (lastpos < BLOCKSIZE) {
         val pos = lastpos
         val curo = block(pos)
         if (curo.isInstanceOf[CBList[T]]) {
-          val no = new CBElem(cb, curo.asInstanceOf[CBList[T]])
-          if (!CAS(pos, curo, no)) addCB(cb)
+          val no = new CBElem(cb, endf, curo.asInstanceOf[CBList[T]])
+          if (!CAS(pos, curo, no)) addCB(cb, endf)
         } else {
-          advance(cb)
-          addCB(cb)
+          advance(cb, endf)
+          addCB(cb, endf)
         }
       } else {
-        advance(cb)
-        addCB(cb)
+        advance(cb, endf)
+        addCB(cb, endf)
       }
     }
   }
@@ -99,7 +105,7 @@ object FlowPool {
 }
 
 
-final class Builder[T <: AnyRef](bl: Array[AnyRef]) extends FlowPoolLike.Builder[T] {
+final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
 
   @volatile private var lastpos = 0
   @volatile private var block   = bl
@@ -114,7 +120,7 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) extends FlowPoolLike.Builder
   private def BLOCKSIZE = 256
   
   @tailrec
-  def <<(x: T) = {
+  def <<(x: T): this.type = {
     val pos = lastpos
     val npos = pos + 1
     val next = block(npos)
@@ -198,6 +204,7 @@ sealed class CBList[-T]
 
 final class CBElem[-T] (
   val func: T => Any,
+  val endf: Future[Unit],
   val next: CBList[T]
 ) extends CBList[T] {
   // if the count is negative, then
@@ -248,6 +255,11 @@ object CBElem {
         pos += 1
         cnt += 1
         cur = block(pos)
+      }
+
+      // TODO Alex verify this is OK and free all references
+      if (cur eq Seal) {
+        callback.endf.complete()
       }
       
       // relinquish control
