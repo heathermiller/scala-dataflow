@@ -1,7 +1,11 @@
 package scala.dataflow
 
+
+
 import java.lang.Integer
 import java.util.concurrent.ConcurrentLinkedQueue
+
+
 
 object ConcurrentLinkedQueueBench extends ParInsertBench {
   import Utils._
@@ -24,6 +28,29 @@ object ConcurrentLinkedQueueBench extends ParInsertBench {
 
   override def setUp() {
     queue = new ConcurrentLinkedQueue[Data]()
+  }
+
+}
+
+
+object CLQBench2 extends testing.Benchmark with Utils.Props {
+  import Utils._
+  
+  
+  def run() {
+    val queue = new ConcurrentLinkedQueue[Data]()
+    test(queue)
+  }
+  
+  private def test(queue: ConcurrentLinkedQueue[Data]) {
+    val data = new Data(0)
+    var i = 0
+    val until = size
+    
+    while (i < until) {
+      queue.add(data)
+      i += 1
+    }
   }
 
 }
