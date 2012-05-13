@@ -19,6 +19,12 @@ package object dataflow {
   case class WithdrawCallbackException() extends util.control.ControlThrowable
   
   def withdraw: Nothing = throw new WithdrawCallbackException
+
+  def future[T](x: T) = {
+    val f = new Future[T]()
+    f.complete(x)
+    f
+  }
   
 }
 

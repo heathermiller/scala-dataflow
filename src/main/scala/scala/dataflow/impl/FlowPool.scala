@@ -6,6 +6,7 @@ import scala.annotation.tailrec
 import scala.dataflow.FlowPoolLike
 import jsr166y._
 import scala.dataflow.Future
+import scala.dataflow.future
 
 class FlowPool[T <: AnyRef] {
 
@@ -26,7 +27,7 @@ class FlowPool[T <: AnyRef] {
 
   def map[S <: AnyRef](f: T => S): FlowPool[S] = {
     val fp = new FlowPool[S]
-    val b = fp.builder
+    val b  = fp.builder
 
     {
       for (x <- this) { b << f(x) }
@@ -34,6 +35,37 @@ class FlowPool[T <: AnyRef] {
 
     fp
   }
+
+  def filter(f: T => Boolean): FlowPool[T] = {
+    val fp = new FlowPool[T]
+    val b  = fp.builder
+
+    {
+      for (x <- this.folding(0)(_ + _)) {
+        if (f(x)) { b << x; 1 }
+        else 0
+      }
+    } map { b.seal _ }
+
+    fp
+  }
+
+  def flatMap[S <: AnyRef](f: T => FlowPool[S]): FlowPool[S] = {
+    val fp = new FlowPool[S]
+    val b  = fp.builder
+
+    def fsum(f1: Future[Int], f2: Future[Int]) = f1.flatMap(x => f2.map(x + _))
+
+    {
+      for (x <- this.folding(future(0))(fsum _)) {
+        val ifp = f(x)
+        for (y <- ifp) { b << y }
+      }
+    } map { _.map(b.seal _) }
+
+    fp
+  }
+
 }
 
 object FlowPool {

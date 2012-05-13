@@ -14,6 +14,12 @@ class Future[T] {
     fut
   }
 
+  def flatMap[U](f: T => Future[U]): Future[U] = {
+    val fut = new Future[U]
+    registerCB { x => f(x).foreach(fut.complete _) }
+    fut
+  }
+
   def andThen[U](body: => U) = {
     val fut = new Future[T]
     registerCB { x =>
