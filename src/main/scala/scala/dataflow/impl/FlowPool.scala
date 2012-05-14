@@ -20,10 +20,17 @@ class FlowPool[T <: AnyRef] {
 
   // def foreach[U](f: T => U): Future[Int] = {
   //   val fut = new Future[Int]()
-  //   (new CBWriter(initBlock)).addCB(f, fut)
+  //   (new CallbackWriter(initBlock)).addCallback(f, fut)
   //   fut
   // }
 
+  final class RegisterCallbackTask[T](var block: Array[AnyRef], val callback: CallbackElem[T]) extends RecursiveAction {
+    @tailrec
+    def compute() {
+      compute()
+    }
+  }
+  
   def folding[V,U <: V](acc: U)(cmb: (V, U) => U) =
     new FoldingFlowPool(this, acc, cmb)
 
@@ -72,18 +79,23 @@ class FlowPool[T <: AnyRef] {
 
 object FlowPool {
 
-  val BLOCKSIZE = 256
+  def BLOCKSIZE = 256
+  def LAST_CALLBACK_POS = BLOCKSIZE - 4
+  def MUST_EXPAND_POS = BLOCKSIZE - 3
+  def IDX_POS = BLOCKSIZE - 2
+  def LOCK_POS = BLOCKSIZE - 1
+  def MAX_BLOCK_ELEMS = LAST_CALLBACK_POS
   
   def newBlock(idx: Int) = {
-    val bl = new Array[AnyRef](BLOCKSIZE + 2)
-    bl(0) = CBNil
-    bl(BLOCKSIZE - 1) = MustExpand(-1)
-    bl(BLOCKSIZE) = idx.asInstanceOf[AnyRef]
+    val bl = new Array[AnyRef](BLOCKSIZE)
+    bl(0) = CallbackNil
+    bl(MUST_EXPAND_POS) = MustExpand(-1)
+    bl(IDX_POS) = idx.asInstanceOf[AnyRef]
     bl
   }
   
   /*
-  private final class CBWriter[T](bl: Array[AnyRef]) {
+  private final class CallbackWriter[T](bl: Array[AnyRef]) {
     
     @volatile private var lastpos = 0
     @volatile private var block   = bl
@@ -103,7 +115,7 @@ object FlowPool {
         endf.complete(0)
         return
       }
-      if (!obj.isInstanceOf[CBList[_]]) {
+      if (!obj.isInstanceOf[CallbackList[_]]) {
         cb(obj.asInstanceOf[T])
         lastpos = pos + 1
         advance(cb, endf)
@@ -121,20 +133,20 @@ object FlowPool {
     }
     
     @tailrec
-    def addCB(cb: T => Any, endf: Future[Int]) {
+    def addCallback(cb: T => Any, endf: Future[Int]) {
       if (lastpos < BLOCKSIZE) {
         val pos = lastpos
         val curo = block(pos)
-        if (curo.isInstanceOf[CBList[T]]) {
-          val no = new CBElem(cb, endf, curo.asInstanceOf[CBList[T]])
-          if (!CAS(pos, curo, no)) addCB(cb, endf)
+        if (curo.isInstanceOf[CallbackList[T]]) {
+          val no = new CallbackElem(cb, endf, curo.asInstanceOf[CallbackList[T]])
+          if (!CAS(pos, curo, no)) addCallback(cb, endf)
         } else {
           advance(cb, endf)
-          addCB(cb, endf)
+          addCallback(cb, endf)
         }
       } else {
         advance(cb, endf)
-        addCB(cb, endf)
+        addCallback(cb, endf)
       }
     }
   }
@@ -168,16 +180,17 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
   
   @tailrec
   def <<(x: T): this.type = {
+    val firstread = block
     val pos = lastpos
     val npos = pos + 1
     val curblock = block
     val next = curblock(npos)
     val curo = curblock(pos)
-    if (curo.isInstanceOf[CBList[T]] && ((next eq null) || next.isInstanceOf[CBList[_]])) {
+    if ((firstread eq curblock) && curo.isInstanceOf[CallbackList[_]] && ((next eq null) || next.isInstanceOf[CallbackList[_]])) {
       if (CAS(curblock, npos, next, curo)) {
         if (CAS(curblock, pos, curo, x)) {
           lastpos = npos
-          applyCBs(curo.asInstanceOf[CBList[T]], curblock, pos)
+          applyCallbacks(curo.asInstanceOf[CallbackList[T]], curblock, pos)
           this
         } else <<(x)
       } else <<(x)
@@ -192,30 +205,30 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
   }
   
   private def advance() {
-    import FlowPool.BLOCKSIZE
+    import FlowPool._
     def goToNext(curblock: Array[AnyRef], nextblock: Array[AnyRef]) {
       // to avoid races - CAS block in builder from curblock to nextblock
       // and if successful lastpos = 0 (racey, but affects perf. rather than correctness)
       // if (CAS_BLOCK_PTR(curblock, nextblock)) lastpos = 0 -> hm, slow for some reason...
       // ok, then spin, spin like you've never spinned before
-      while (!CAS(curblock, BLOCKSIZE + 1, null, new AnyRef)) {}
+      while (!CAS(curblock, LOCK_POS, null, new AnyRef)) {}
       block = nextblock 
       lastpos = 0
-      curblock(BLOCKSIZE) = null
+      curblock(LOCK_POS) = null
     }
     def expand(at: Int, curblock: Array[AnyRef], me: MustExpand) {
-      val curidx = curblock(BLOCKSIZE).asInstanceOf[Int]
-      val nextblock = new Array[AnyRef](BLOCKSIZE + 2)
+      val curidx = curblock(IDX_POS).asInstanceOf[Int]
+      val nextblock = new Array[AnyRef](BLOCKSIZE)
       // copy callbacks to next block
       nextblock(0) = curblock(at - 1)
       // try to seal or propagate seal information
-      if (me.isSealed && me.sealedAt <= (curidx + 2) * (BLOCKSIZE - 2)) {
-        val sealpos = me.sealedAt - (curidx + 1) * (BLOCKSIZE - 2)
+      if (me.isSealed && me.sealedAt <= (curidx + 2) * (MAX_BLOCK_ELEMS)) {
+        val sealpos = me.sealedAt - (curidx + 1) * (MAX_BLOCK_ELEMS)
         nextblock(sealpos) = Seal(me.sealedAt)
       } else {
-        nextblock(BLOCKSIZE - 1) = MustExpand(me.sealedAt)
+        nextblock(MUST_EXPAND_POS) = MustExpand(me.sealedAt)
       }
-      nextblock(BLOCKSIZE) = (curidx + 1).asInstanceOf[AnyRef]
+      nextblock(IDX_POS) = (curidx + 1).asInstanceOf[AnyRef]
       
       CAS(curblock, at, me, Next(nextblock))
     }
@@ -230,12 +243,12 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
         expand(pos, curblock, me)
       case Next(nextblock) => // the next block already exists - go to it
         goToNext(curblock, nextblock)
-      case cbs: CBList[_] => // a list of callbacks here - check if this is the end of the block
+      case cbs: CallbackList[_] => // a list of callbacks here - check if this is the end of the block
         curblock(pos + 1) match {
           case me @ MustExpand(_) =>
             expand(pos + 1, curblock, me)
           case Seal(sz) =>
-            // TODO do special slow add here
+            // TODO special slow add goes here
           case Next(nextblock) =>
             goToNext(curblock, nextblock)
           case _ =>
@@ -247,24 +260,24 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
   }
   
   @tailrec
-  private def applyCBs[T](e: CBList[T], block: Array[AnyRef], pos: Int): Unit = e match {
-    case el: CBElem[T] =>
+  private def applyCallbacks[T](e: CallbackList[T], block: Array[AnyRef], pos: Int): Unit = e match {
+    case el: CallbackElem[T] =>
       el.awakeCallback(block, pos)
-      applyCBs(el.next, block, pos)
+      applyCallbacks(el.next, block, pos)
     case _ =>
   }
-
+  
 }
 
 
-sealed class CBList[-T]
+sealed class CallbackList[-T]
 
 
-final class CBElem[-T] (
+final class CallbackElem[-T] (
   val func: T => Any,
-  val endf: Future[Int],
-  val next: CBList[T]
-) extends CBList[T] {
+  val endf: T => Any,
+  val next: CallbackList[T]
+) extends CallbackList[T] {
   // if the count is negative, then
   // there is no active batch task
   // if the count is positive, then
@@ -280,14 +293,14 @@ final class CBElem[-T] (
       if (tryOwn(cnt)) {
         // we are now responsible for starting the active batch
         // so we start a new fork-join task to call the callbacks
-        FlowPool.task(new CBElem.BatchTask(block, pos, this))
+        FlowPool.task(new CallbackElem.BatchTask(block, pos, this))
       }
     }
   }
   
-  def tryOwn(cnt: Int): Boolean = CBElem.CAS_COUNT(this, cnt, -cnt)
+  def tryOwn(cnt: Int): Boolean = CallbackElem.CAS_COUNT(this, cnt, -cnt)
   
-  def unown(cnt: Int) = CBElem.WRITE_COUNT(this, cnt)
+  def unown(cnt: Int) = CallbackElem.WRITE_COUNT(this, cnt)
 }
 
 
@@ -309,24 +322,24 @@ final class FoldingFlowPool[T <: AnyRef, V, U <: V](
 
 }
 
-object CBElem {
+object CallbackElem {
   
   val unsafe = getUnsafe()
   
-  val COUNTOFFSET = unsafe.objectFieldOffset(classOf[CBElem[_]].getDeclaredField("head"))
+  val COUNTOFFSET = unsafe.objectFieldOffset(classOf[CallbackElem[_]].getDeclaredField("head"))
   
-  def CAS_COUNT(obj: CBElem[_], ov: Int, nv: Int) = unsafe.compareAndSwapObject(obj, COUNTOFFSET, ov, nv)
+  def CAS_COUNT(obj: CallbackElem[_], ov: Int, nv: Int) = unsafe.compareAndSwapObject(obj, COUNTOFFSET, ov, nv)
   
-  def WRITE_COUNT(obj: CBElem[_], v: Int) = unsafe.putObjectVolatile(obj, COUNTOFFSET, v)
+  def WRITE_COUNT(obj: CallbackElem[_], v: Int) = unsafe.putObjectVolatile(obj, COUNTOFFSET, v)
   
-  final class BatchTask[T](var block: Array[AnyRef], var startpos: Int, val callback: CBElem[T]) extends RecursiveAction {
+  final class BatchTask[T](var block: Array[AnyRef], var startpos: Int, val callback: CallbackElem[T]) extends RecursiveAction {
     @tailrec
     protected def compute() {
       // invoke callback while there are elements or we reach an end of the block
       var cnt = callback.count
       var pos = startpos
       var cur = block(pos)
-      while ((cur ne null) && !cur.isInstanceOf[CBList[_]]) {
+      while ((cur ne null) && !cur.isInstanceOf[CallbackList[_]]) {
         callback.func(cur.asInstanceOf[T])
         pos += 1
         cnt += 1
@@ -335,9 +348,9 @@ object CBElem {
       
       // TODO Alex verify this is OK and free all references
       // TODO Heather find size of seal
-      if (cur.isInstanceOf[Seal]) {
-        callback.endf.complete(0)
-      }
+      // if (cur.isInstanceOf[Seal]) {
+      //   callback.endf.complete(0)
+      // }
       
       // relinquish control
       callback.unown(-cnt)
@@ -345,7 +358,7 @@ object CBElem {
       // see if there are more elements available
       // if there are, try to regain control and start again
       cur = block(pos)
-      if ((cur ne null) && !cur.isInstanceOf[CBList[_]]) {
+      if ((cur ne null) && !cur.isInstanceOf[CallbackList[_]]) {
         if (callback.tryOwn(-cnt)) {
           startpos = pos
           compute()
@@ -357,7 +370,7 @@ object CBElem {
 }
 
 
-final object CBNil extends CBList[Any]
+final object CallbackNil extends CallbackList[Any]
 
 
 trait BlockEnd
