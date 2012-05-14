@@ -8,77 +8,81 @@ import jsr166y._
 import scala.dataflow.Future
 import scala.dataflow.future
 
+
+
 class FlowPool[T <: AnyRef] {
 
   import FlowPool._
   
-  val initBlock = FlowPool.newBlock
+  val initBlock = FlowPool.newBlock(0)
   
   def builder: Builder[T] = new Builder[T](initBlock)
 
-  def foreach[U](f: T => U): Future[Int] = {
-    val fut = new Future[Int]()
-    (new CBWriter(initBlock)).addCB(f, fut)
-    fut
-  }
+  // def foreach[U](f: T => U): Future[Int] = {
+  //   val fut = new Future[Int]()
+  //   (new CBWriter(initBlock)).addCB(f, fut)
+  //   fut
+  // }
 
   def folding[V,U <: V](acc: U)(cmb: (V, U) => U) =
     new FoldingFlowPool(this, acc, cmb)
 
-  def map[S <: AnyRef](f: T => S): FlowPool[S] = {
-    val fp = new FlowPool[S]
-    val b  = fp.builder
+  // def map[S <: AnyRef](f: T => S): FlowPool[S] = {
+  //   val fp = new FlowPool[S]
+  //   val b  = fp.builder
 
-    {
-      for (x <- this) { b << f(x) }
-    } map { b.seal _ }
+  //   {
+  //     for (x <- this) { b << f(x) }
+  //   } map { b.seal _ }
 
-    fp
-  }
+  //   fp
+  // }
 
-  def filter(f: T => Boolean): FlowPool[T] = {
-    val fp = new FlowPool[T]
-    val b  = fp.builder
+  // def filter(f: T => Boolean): FlowPool[T] = {
+  //   val fp = new FlowPool[T]
+  //   val b  = fp.builder
 
-    {
-      for (x <- this.folding(0)(_ + _)) {
-        if (f(x)) { b << x; 1 }
-        else 0
-      }
-    } map { b.seal _ }
+  //   {
+  //     for (x <- this.folding(0)(_ + _)) {
+  //       if (f(x)) { b << x; 1 }
+  //       else 0
+  //     }
+  //   } map { b.seal _ }
 
-    fp
-  }
+  //   fp
+  // }
 
-  def flatMap[S <: AnyRef](f: T => FlowPool[S]): FlowPool[S] = {
-    val fp = new FlowPool[S]
-    val b  = fp.builder
+  // def flatMap[S <: AnyRef](f: T => FlowPool[S]): FlowPool[S] = {
+  //   val fp = new FlowPool[S]
+  //   val b  = fp.builder
 
-    def fsum(f1: Future[Int], f2: Future[Int]) = f1.flatMap(x => f2.map(x + _))
+  //   def fsum(f1: Future[Int], f2: Future[Int]) = f1.flatMap(x => f2.map(x + _))
 
-    {
-      for (x <- this.folding(future(0))(fsum _)) {
-        val ifp = f(x)
-        for (y <- ifp) { b << y }
-      }
-    } map { _.map(b.seal _) }
+  //   {
+  //     for (x <- this.folding(future(0))(fsum _)) {
+  //       val ifp = f(x)
+  //       for (y <- ifp) { b << y }
+  //     }
+  //   } map { _.map(b.seal _) }
 
-    fp
-  }
+  //   fp
+  // }
 
 }
 
 object FlowPool {
 
-  private val BLOCKSIZE = 256
+  val BLOCKSIZE = 256
   
-  def newBlock = {
-    val bl = new Array[AnyRef](BLOCKSIZE + 4)
+  def newBlock(idx: Int) = {
+    val bl = new Array[AnyRef](BLOCKSIZE + 1)
     bl(0) = CBNil
-    bl(BLOCKSIZE) = End
+    bl(BLOCKSIZE - 1) = MustExpand(-1)
+    bl(BLOCKSIZE) = idx.asInstanceOf[AnyRef]
     bl
   }
   
+  /*
   private final class CBWriter[T](bl: Array[AnyRef]) {
     
     @volatile private var lastpos = 0
@@ -94,7 +98,7 @@ object FlowPool {
     private def advance(cb: T => Any, endf: Future[Int]) {
       val pos = lastpos
       val obj = block(pos)
-      if (obj eq Seal) {
+      if (obj.isInstanceOf[Seal]) {
         // TODO Heather find size of Seal. store in seal?
         endf.complete(0)
         return
@@ -134,6 +138,7 @@ object FlowPool {
       }
     }
   }
+  */
   
   val forkjoinpool = new ForkJoinPool
   
@@ -148,30 +153,31 @@ object FlowPool {
 
 
 final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
-
   @volatile private var lastpos = 0
   @volatile private var block   = bl
-
-  private val unsafe = getUnsafe()
-  private val ARRAYOFFSET = unsafe.arrayBaseOffset(classOf[Array[AnyRef]])
-  private val ARRAYSTEP   = unsafe.arrayIndexScale(classOf[Array[AnyRef]])
-  @inline private def RAWPOS(idx: Int) = ARRAYOFFSET + idx * ARRAYSTEP
-  @inline private def CAS(idx: Int, exp: Any, x: Any) =
-    unsafe.compareAndSwapObject(block, RAWPOS(idx), exp, x)
   
-  private def BLOCKSIZE = 256
+  private val unsafe = getUnsafe()
+  private val ARRAYOFFSET      = unsafe.arrayBaseOffset(classOf[Array[AnyRef]])
+  private val ARRAYSTEP        = unsafe.arrayIndexScale(classOf[Array[AnyRef]])
+  private val BLOCKFIELDOFFSET = unsafe.objectFieldOffset(classOf[Builder[_]].getDeclaredField("block"))
+  @inline private def RAWPOS(idx: Int) = ARRAYOFFSET + idx * ARRAYSTEP
+  @inline private def CAS(bl: Array[AnyRef], idx: Int, ov: AnyRef, nv: AnyRef) =
+    unsafe.compareAndSwapObject(bl, RAWPOS(idx), ov, nv)
+  @inline private def CAS_BLOCK_PTR(ov: Array[AnyRef], nv: Array[AnyRef]) =
+    unsafe.compareAndSwapObject(this, BLOCKFIELDOFFSET, ov, nv)
   
   @tailrec
   def <<(x: T): this.type = {
     val pos = lastpos
     val npos = pos + 1
-    val next = block(npos)
-    val curo = block(pos)
+    val curblock = block
+    val next = curblock(npos)
+    val curo = curblock(pos)
     if (curo.isInstanceOf[CBList[T]] && ((next eq null) || next.isInstanceOf[CBList[_]])) {
-      if (CAS(npos, next, curo)) {
-        if (CAS(pos, curo, x)) {
+      if (CAS(curblock, npos, next, curo)) {
+        if (CAS(curblock, pos, curo, x)) {
           lastpos = npos
-          applyCBs(curo.asInstanceOf[CBList[T]], block, pos)
+          applyCBs(curo.asInstanceOf[CBList[T]], curblock, pos)
           this
         } else <<(x)
       } else <<(x)
@@ -185,51 +191,56 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
     // TODO
   }
   
-  @tailrec
   private def advance() {
-    val pos = lastpos
-    val obj = block(pos)
-    if (obj eq Seal) sys.error("Insert on sealed structure")
-    if (!obj.isInstanceOf[CBList[_]]) {
-      lastpos = pos + 1
-      advance()
-    } else if (pos >= (BLOCKSIZE - 1)) {
-      val ob = block(BLOCKSIZE + 1).asInstanceOf[Array[AnyRef]]
-      if (ob eq null) {
-        val nb = new Array[AnyRef](BLOCKSIZE + 4)
-        nb(0) = block(BLOCKSIZE - 1)
-        nb(BLOCKSIZE) = End
-        CAS(BLOCKSIZE + 1, ob, nb)
-      }
-      // TODO we have a race here
-      block = block(BLOCKSIZE + 1).asInstanceOf[Array[AnyRef]]
+    import FlowPool.BLOCKSIZE
+    def goToNext(curblock: Array[AnyRef], nextblock: Array[AnyRef]) {
+      // to avoid races - CAS block in builder from curblock to nextblock
+      // and if successful lastpos = 0 (racey, but affects perf. rather than correctness)
+      //if (CAS_BLOCK_PTR(curblock, nextblock)) lastpos = 0 // hm, slow..
+      block = nextblock
       lastpos = 0
+    }
+    def expand(at: Int, curblock: Array[AnyRef], me: MustExpand) {
+      val curidx = curblock(BLOCKSIZE).asInstanceOf[Int]
+      val nextblock = new Array[AnyRef](BLOCKSIZE + 1)
+      // copy callbacks to next block
+      nextblock(0) = curblock(at - 1)
+      // try to seal or propagate seal information
+      if (me.isSealed && me.sealedAt <= (curidx + 2) * (BLOCKSIZE - 2)) {
+        val sealpos = me.sealedAt - (curidx + 1) * (BLOCKSIZE - 2)
+        nextblock(sealpos) = Seal(me.sealedAt)
+      } else {
+        nextblock(BLOCKSIZE - 1) = MustExpand(me.sealedAt)
+      }
+      nextblock(BLOCKSIZE) = (curidx + 1).asInstanceOf[AnyRef]
+      
+      if (CAS(curblock, at, me, Next(nextblock))) goToNext(curblock, nextblock)
+    }
+    
+    val curblock = block
+    val pos = lastpos
+    val obj = curblock(pos)
+    obj match {
+      case Seal(sz) => // flowpool sealed here - error
+        sys.error("Insert on a sealed structure.")
+      case me @ MustExpand(_) => // must extend with a new block
+        expand(pos, curblock, me)
+      case Next(nextblock) => // the next block already exists - go to it
+        goToNext(curblock, nextblock)
+      case cbs: CBList[_] => // a list of callbacks here - check if this is the end of the block
+        curblock(pos + 1) match {
+          case me @ MustExpand(_) =>
+            expand(pos + 1, curblock, me)
+          case Seal(sz) =>
+            // TODO do special slow add here
+          case _ =>
+        }
+      case _ => // a regular object - advance
+        lastpos = pos + 1
+        advance()
     }
   }
   
-  /*
-   private def advance() {
-   var pos = lastpos
-   while (!block(pos).isInstanceOf[CBList[_]]) {
-   if (block(pos) eq Seal) sys.error("Insert on sealed structure")
-   pos += 1
-   }
-   if (pos < blockSize) {
-   lastpos = pos
-   } else {
-   val ob = block(blockSize + 1).asInstanceOf[Array[AnyRef]]
-   if (ob eq null) {
-   val nb = new Array[AnyRef](blockSize + 2)
-   nb(0) = block(blockSize)
-   CAS(blockSize + 1, ob, nb)
-   }
-   // TODO race here
-   block = block(blockSize + 1).asInstanceOf[Array[AnyRef]]
-   lastpos = 0
-   }
-   }
-   */
-
   @tailrec
   private def applyCBs[T](e: CBList[T], block: Array[AnyRef], pos: Int): Unit = e match {
     case el: CBElem[T] =>
@@ -274,6 +285,7 @@ final class CBElem[-T] (
   def unown(cnt: Int) = CBElem.WRITE_COUNT(this, cnt)
 }
 
+
 final class FoldingFlowPool[T <: AnyRef, V, U <: V](
   pool: FlowPool[T],
   accInit: U,
@@ -285,8 +297,9 @@ final class FoldingFlowPool[T <: AnyRef, V, U <: V](
     // TODO ALEX can the scheduler take care of this or do we need to sync?
     var acc = accInit
 
-    { for (v <- pool) { acc = cmb(f(v),acc) }
-    } map { ign => acc }
+    // { for (v <- pool) { acc = cmb(f(v),acc) }
+    // } map { ign => acc }
+    null
   }
 
 }
@@ -304,20 +317,20 @@ object CBElem {
   final class BatchTask[T](var block: Array[AnyRef], var startpos: Int, val callback: CBElem[T]) extends RecursiveAction {
     @tailrec
     protected def compute() {
-      // invoke callback while there are elements
+      // invoke callback while there are elements or we reach an end of the block
       var cnt = callback.count
       var pos = startpos
       var cur = block(pos)
-      while ((cur ne null) && !cur.isInstanceOf[CBList[_]] && (cur ne Seal) && (cur ne End)) {
+      while ((cur ne null) && !cur.isInstanceOf[CBList[_]]) {
         callback.func(cur.asInstanceOf[T])
         pos += 1
         cnt += 1
         cur = block(pos)
       }
-
+      
       // TODO Alex verify this is OK and free all references
       // TODO Heather find size of seal
-      if (cur eq Seal) {
+      if (cur.isInstanceOf[Seal]) {
         callback.endf.complete(0)
       }
       
@@ -327,7 +340,7 @@ object CBElem {
       // see if there are more elements available
       // if there are, try to regain control and start again
       cur = block(pos)
-      if ((cur ne null) && !cur.isInstanceOf[CBList[_]] && (cur ne Seal) && (cur ne End)) {
+      if ((cur ne null) && !cur.isInstanceOf[CBList[_]]) {
         if (callback.tryOwn(-cnt)) {
           startpos = pos
           compute()
@@ -342,10 +355,18 @@ object CBElem {
 final object CBNil extends CBList[Any]
 
 
-object End
+trait BlockEnd
 
 
-private object Seal
+case class Seal(size: Int) extends BlockEnd
+
+
+case class MustExpand(sealedAt: Int) extends BlockEnd {
+  def isSealed = sealedAt >= 0
+}
+
+
+case class Next(block: Array[AnyRef]) extends BlockEnd
 
 
 
