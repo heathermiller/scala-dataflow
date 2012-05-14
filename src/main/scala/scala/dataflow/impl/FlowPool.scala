@@ -75,7 +75,7 @@ object FlowPool {
   val BLOCKSIZE = 256
   
   def newBlock(idx: Int) = {
-    val bl = new Array[AnyRef](BLOCKSIZE + 1)
+    val bl = new Array[AnyRef](BLOCKSIZE + 2)
     bl(0) = CBNil
     bl(BLOCKSIZE - 1) = MustExpand(-1)
     bl(BLOCKSIZE) = idx.asInstanceOf[AnyRef]
@@ -163,7 +163,7 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
   @inline private def RAWPOS(idx: Int) = ARRAYOFFSET + idx * ARRAYSTEP
   @inline private def CAS(bl: Array[AnyRef], idx: Int, ov: AnyRef, nv: AnyRef) =
     unsafe.compareAndSwapObject(bl, RAWPOS(idx), ov, nv)
-  @inline private def CAS_BLOCK_PTR(ov: Array[AnyRef], nv: Array[AnyRef]) =
+  def CAS_BLOCK_PTR(ov: Array[AnyRef], nv: Array[AnyRef]) =
     unsafe.compareAndSwapObject(this, BLOCKFIELDOFFSET, ov, nv)
   
   @tailrec
@@ -196,13 +196,16 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
     def goToNext(curblock: Array[AnyRef], nextblock: Array[AnyRef]) {
       // to avoid races - CAS block in builder from curblock to nextblock
       // and if successful lastpos = 0 (racey, but affects perf. rather than correctness)
-      //if (CAS_BLOCK_PTR(curblock, nextblock)) lastpos = 0 // hm, slow..
-      block = nextblock
+      // if (CAS_BLOCK_PTR(curblock, nextblock)) lastpos = 0 -> hm, slow for some reason...
+      // ok, then spin, spin like you've never spinned before
+      while (!CAS(curblock, BLOCKSIZE + 1, null, new AnyRef)) {}
+      block = nextblock 
       lastpos = 0
+      curblock(BLOCKSIZE) = null
     }
     def expand(at: Int, curblock: Array[AnyRef], me: MustExpand) {
       val curidx = curblock(BLOCKSIZE).asInstanceOf[Int]
-      val nextblock = new Array[AnyRef](BLOCKSIZE + 1)
+      val nextblock = new Array[AnyRef](BLOCKSIZE + 2)
       // copy callbacks to next block
       nextblock(0) = curblock(at - 1)
       // try to seal or propagate seal information
@@ -214,7 +217,7 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
       }
       nextblock(BLOCKSIZE) = (curidx + 1).asInstanceOf[AnyRef]
       
-      if (CAS(curblock, at, me, Next(nextblock))) goToNext(curblock, nextblock)
+      CAS(curblock, at, me, Next(nextblock))
     }
     
     val curblock = block
@@ -233,6 +236,8 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
             expand(pos + 1, curblock, me)
           case Seal(sz) =>
             // TODO do special slow add here
+          case Next(nextblock) =>
+            goToNext(curblock, nextblock)
           case _ =>
         }
       case _ => // a regular object - advance
