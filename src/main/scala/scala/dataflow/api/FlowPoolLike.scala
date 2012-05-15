@@ -1,4 +1,4 @@
-package scala.dataflow
+package scala.dataflow.api
 
 trait FlowPoolLike[T] {
 

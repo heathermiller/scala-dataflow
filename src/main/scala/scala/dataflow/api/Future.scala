@@ -1,10 +1,6 @@
-package scala.dataflow
-
-
+package scala.dataflow.api
 
 import scala.collection.mutable.MutableList
-
-
 
 // TODO do we need CAS here or are synchronized methods enough? -- tobias
 class Future[T] {
