@@ -150,3 +150,26 @@
 
 
 ### Foreach
+
+    def foreach(f: Elem => Unit)
+	  future {
+	    asyncForeach(f, start, 0)
+	  }
+	
+	def asyncForeach(f: Elem => Unit, b: Block, idx: Int)
+	  if (idx <= LASTELEMPOS) {
+        obj = READ(b.array(idx))
+	    obj match {
+	      term: Terminal =>
+		    if (!CAS(b.array(idx), term, nterm)) asyncForeach(f, b, idx)
+		  elem: Elem =>
+		    f(elem)
+			asyncForeach(f, b, idx + 1)
+		  null =>
+		    error("unreachable")
+		}
+	  } else {
+	    expand(b)
+		asyncForeach(f, b.next, 0)
+	  }
+	  
