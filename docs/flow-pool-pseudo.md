@@ -1,108 +1,152 @@
-# Flow Pool Pseudocode
-
-## Cell states
-* full
-* sealed
-* free
-* callbacks
-
-## Race Condition!
-Scenario (2 processes):
-
-    p2: addCallback(foo, 0)
-    p1: write(1, 0)
-        --> propagateCallbacks --> succeeds
-    p2: addCallback(bar, 0)
-    p1: cas fails
-    p1: loops infinitely
-
-A solution would be to have the writing process propagate callbacks
-after having set the value and possibly following the buffer during
-quite some time. This seems more inefficient.
-
-This race has been solved by adding the check on the length
-
-## Write / Seal
-    sub write(val,i) {
-
-        // Create new element
-        nvobj = { state = full, val = val, cbs = Nil }
-
-        // Try to write element
-        do {
-            // Advance to next non-full
-            do cobj = elems[i];
-            while (cobj->state == full && ++i);
-
-            // Are we sealed?
-            if (cobj->state == sealed)
-               fail("Insert into sealed pool")
-
-        } while (!propagateCallbacks(cobj, i+1) ||
-                 !elems[i].cas(cobj, nvobj))
-
-        // Call callbacks
-        cobj->cbs.foreach(cb => cb(val))
-    }
-
-## Propagate Callbacks
-    sub propCallback(cobj, i) {
-        do {
-            cnobj = elems[i];
-            if (cnobj != cobj) {
-                // Element is in bad state
-                if (!cnobj->state == free) {
-                    // We end up here if somebody else has already written.
-                    // Possible cases:
-                    // cnobj->state in {full,sealed}
-                    //   ==> pool advanced
-                    // cnobj->state == callbacks && cnobj != cobj
-                    //   case 1 =>
-                    //       somebody else propagated callbacks AND they
-                    //       have already been altered. This requires
-                    //       that elems[i-1]->state == full
-                    //   OR
-                    //   case 2 =>
-                    //       cnobj is old. i.e. somebody tried to
-                    //       write before but did not succeed and
-                    //       looped in the main loop of write()
-
-                    assert (cnobj->cbs.length != cobj->cbs.length)
-
-                    if (cnobj->cbs.length > cobj->cbs.length) {
-                       // case 1 ==> retry write
-                       return false;
-                    }
-                }
-                // try to set elemnt
-                ok = elems[i].cas(cnobj,cobj);
-            } else ok = true;
-        } while (!ok);     
-    }
 
 
-## Add Callback
-    sub addCallback(cb,i) {
-        do {
-            while true {
-                cobj = elems[i]
-                if (cobj->state != full) break;
-                cb(cobj->val); i++
-            }
-            if (cobj->state == sealed) { cb(end); return; }
-            cblist = cb :: (cobj->state == free ? Nil : cobj->cbs)
-            nobj = { state = callback, val = null, cbs = cblist }
-        } while(!elems[i].cas(cobj, nobj));
-    }
 
-## Add new block
-Called implicitly when advance reaches end of block
 
-    sub nextBlock(end) {
-        nptr = end->next
-        if (!nptr) {
-           nblock = new Block();
-           end->next.cas(nptr, nblock)
-        }
-        return end->next;
-    }
+
+# Flow-Pool Pseudocode
+
+
+
+## Data-Types and Constants
+
+	type Elem
+	
+    type Block {
+	  array: Array
+	  index: Int
+	  blockindex: Int
+	  next: Block
+	}
+	
+	type FlowPool {
+  	  start: Block
+      current: Block
+	}
+	
+	type Terminal {
+	  sealed: Int
+	  callbacks: List[Elem => Unit]
+	}
+	
+	BLOCKSIZE = 256
+	LASTELEMPOS = BLOCKSIZE - 2
+	NOTSEALED = -1
+	
+	
+## Operations
+
+
+### Constructor
+
+    def create()
+	  new FlowPool {
+	    start = createBlock(0)
+		current = start
+	  }
+	
+    def createBlock(bidx: Int)
+      new Block {
+	    array = new Array(BLOCKSIZE)
+	    index = 0
+	    blockindex = bidx
+	    next = null
+	  }
+
+### Append (`<<`)
+	
+    def append(elem: Elem)
+	  b = READ(current)
+	  idx = READ(b.index)
+	  nextobj = READ(b.array(idx + 1))
+	  curobj = READ(b.array(idx))
+	  if (check(b, idx, curobj, nextobj)) {
+  	    if (CAS(b.array(idx + 1), nextobj, curobj)) {
+ 	      if (CAS(b.array(idx), curobj, elem)) {
+		    WRITE(b.index, idx + 1)
+			invokeCallbacks(elem, curobj)
+		  } else append(elem)
+	    } else append(elem)
+	  } else advance()
+	
+	def check(b: Block, idx: Int, curobj: Object, nextobj: Object)
+	  if (idx > LASTELEMPOS) return false
+	  else curobj match {
+	    elem: Elem =>
+		  return false
+		term: Terminal =>
+		  if (term.sealed == NOTSEALED) return true
+		  else {
+			if (totalElems(b, idx) < term.sealed) return true
+			else error("sealed")
+		  }
+		null =>
+		  error("unreachable")
+	  }
+	
+	def advance()
+	  b = READ(current)
+	  idx = READ(b.index)
+	  if (idx > LASTELEMPOS) expand(b)
+	  else {
+	    WRITE(b.index, idx + 1)
+	  }
+	
+	def expand(b: Block)
+	  nb = READ(b.next)
+	  if (nb is null) {
+	    nb = createBlock(b.blockindex + 1)
+	    if (CAS(b.next, null, nb)) CAS(current, b, nb)
+	  } else {
+	    CAS(current, b, nb)
+	  }
+	
+	def totalElems(b: Block, idx: Int)
+	  return b.blockindex * BLOCKSIZE + idx
+    
+	def invokeCallbacks(elem: Elem, term: Terminal)
+	  for (f <- term.callbacks) future {
+	    f(elem)
+	  }
+
+
+### Seal
+
+	def seal(size: Int)
+	  b = READ(current)
+	  idx = READ(b.index)
+	  if (idx <= LASTELEMPOS) {
+	    curobj = READ(b.array(idx))
+	    curobj match {
+		  term: Terminal =>
+		    tryWriteSeal(b, idx, size)
+		  elem: Elem =>
+		    WRITE(b.index, idx + 1)
+		    seal(size)
+		  null =>
+		    error("unreachable")
+		}
+	  } else expand(b)
+	
+	def tryWriteSeal(b: Block, idx: Int, size: Int)
+	  old = READ(b.array(idx))
+	  old match {
+	    term: Terminal =>
+		  val total = totalElems(b, idx)
+		  if (total > size) error("too many elements")
+		  if (term.sealed == NOTSEALED) {
+		    nterm = Terminal {
+			  sealed = size
+			  callbacks = term.callbacks
+			}
+		    CAS(b.array(idx), term, nterm)
+		  } else if (term.sealed != NOTSEALED) {
+		    error("already sealed")
+		  }
+		elem: Elem =>
+		  return false
+		null =>
+		  error("unreachable")
+	  }
+
+
+### Foreach

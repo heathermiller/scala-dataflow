@@ -33,7 +33,7 @@ object ConcurrentLinkedQueueBench extends ParInsertBench {
 }
 
 
-object CLQBench2 extends testing.Benchmark with Utils.Props {
+object CLQBench extends testing.Benchmark with Utils.Props {
   import Utils._
   
   
