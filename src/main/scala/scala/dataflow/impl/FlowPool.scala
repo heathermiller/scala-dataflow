@@ -3,7 +3,6 @@ package scala.dataflow.impl
 
 
 import scala.annotation.tailrec
-import scala.dataflow.FlowPoolLike
 import jsr166y._
 import scala.dataflow.Future
 import scala.dataflow.future
