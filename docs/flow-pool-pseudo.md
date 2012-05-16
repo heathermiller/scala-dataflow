@@ -66,7 +66,10 @@
 			invokeCallbacks(elem, curobj)
 		  } else append(elem)
 	    } else append(elem)
-	  } else advance()
+	  } else {
+	    advance()
+		append(elem)
+	  }
 	
 	def check(b: Block, idx: Int, curobj: Object, nextobj: Object)
 	  if (idx > LASTELEMPOS) return false
@@ -88,7 +91,8 @@
 	  idx = READ(b.index)
 	  if (idx > LASTELEMPOS) expand(b)
 	  else {
-	    WRITE(b.index, idx + 1)
+	    obj = READ(b.array(idx))
+	    if (obj is Elem) WRITE(b.index, idx + 1)
 	  }
 	
 	def expand(b: Block)
