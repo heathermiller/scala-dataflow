@@ -134,7 +134,7 @@
 		  val total = totalElems(b, idx)
 		  if (total > size) error("too many elements")
 		  if (term.sealed == NOTSEALED) {
-		    nterm = Terminal {
+		    nterm = new Terminal {
 			  sealed = size
 			  callbacks = term.callbacks
 			}
@@ -161,6 +161,10 @@
         obj = READ(b.array(idx))
 	    obj match {
 	      term: Terminal =>
+		    nterm = new Terminal {
+			  sealed = term.sealed
+			  callbacks = f :: term.callbacks
+			}
 		    if (!CAS(b.array(idx), term, nterm)) asyncForeach(f, b, idx)
 		  elem: Elem =>
 		    f(elem)
