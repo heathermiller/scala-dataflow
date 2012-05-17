@@ -72,7 +72,7 @@
 	  }
 	
 	def check(b: Block, idx: Int, curobj: Object, nextobj: Object)
-      // This check is done implicitly in the real code
+      // The check on the index is done implicitly in the real code
 	  if (idx > LASTELEMPOS) return false
 	  else curobj match {
 	    elem: Elem =>

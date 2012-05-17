@@ -220,7 +220,7 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
     val npos = pos + 1
     val next = curblock(npos)
     val curo = curblock(pos)
-    //println(curblock, pos)
+
     if (curo.isInstanceOf[CallbackList[_]] && ((next eq null) || next.isInstanceOf[CallbackList[_]])) {
       if (CAS(curblock, npos, next, curo)) {
         if (CAS(curblock, pos, curo, x)) {
@@ -287,6 +287,8 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
     nextblock(IDX_POS) = (curidx + 1).asInstanceOf[AnyRef]
     
     CAS(curblock, at, me, Next(nextblock))
+
+    // TODO should we take a shortcut here?
   }
   
   
@@ -297,7 +299,7 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
     val curblock = p.block
     val pos = /*READ*/p.index
     val obj = curblock(pos)
-    //println("tryAdd", curblock, pos, obj)
+
     obj match {
       case Seal(sz, null) => // flowpool sealed here - error
         sys.error("Insert on a sealed structure.")
@@ -306,7 +308,6 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
       case ne @ Next(_) => // the next block already exists - go to it
         goToNext(curblock, p, ne)
       case cbh: CallbackHolder[_] => // a list of callbacks here - check if this is the end of the block
-        //println("callbackholder")
         val nextelem = curblock(pos + 1)
         nextelem match {
           case me @ MustExpand() =>
