@@ -72,6 +72,7 @@
 	  }
 	
 	def check(b: Block, idx: Int, curobj: Object, nextobj: Object)
+      // This check is done implicitly in the real code
 	  if (idx > LASTELEMPOS) return false
 	  else curobj match {
 	    elem: Elem =>
@@ -100,6 +101,7 @@
 	  if (nb is null) {
 	    nb = createBlock(b.blockindex + 1)
 	    if (CAS(b.next, null, nb)) CAS(current, b, nb)
+        // In the real code we take a shortcut here (read, and try to CAS)
 	  } else {
 	    CAS(current, b, nb)
 	  }
@@ -122,49 +124,47 @@
 	    curobj = READ(b.array(idx))
 	    curobj match {
 		  term: Terminal =>
-		    tryWriteSeal(b, idx, size)
+		    tryWriteSeal(term, b, idx, size)
 		  elem: Elem =>
 		    WRITE(b.index, idx + 1)
 		    seal(size)
 		  null =>
 		    error("unreachable")
 		}
-	  } else expand(b)
+	  } else {
+        expand(b)
+        seal(size)
+      }
 	
-	def tryWriteSeal(b: Block, idx: Int, size: Int)
-	  old = READ(b.array(idx))
-	  old match {
-	    term: Terminal =>
-		  val total = totalElems(b, idx)
-		  if (total > size) error("too many elements")
-		  if (term.sealed == NOTSEALED) {
-		    nterm = new Terminal {
-			  sealed = size
-			  callbacks = term.callbacks
-			}
-		    CAS(b.array(idx), term, nterm)
-		  } else if (term.sealed != NOTSEALED) {
-		    error("already sealed")
-		  }
-		elem: Elem =>
-		  return false
-		null =>
-		  error("unreachable")
+	def tryWriteSeal(term: Terminal, b: Block, idx: Int, size: Int)
+	  val total = totalElems(b, idx)
+	  if (total > size) error("too many elements")
+	  if (term.sealed == NOTSEALED) {
+	    nterm = new Terminal {
+		  sealed = size
+		  callbacks = term.callbacks
+		}
+	    CAS(b.array(idx), term, nterm)
+	  } else if (term.sealed != size) {
+	    error("already sealed with different size")
 	  }
 
 
-### Foreach
+### doForAll
 
-    def foreach(f: Elem => Unit)
+    def doForAll(f: Elem => Unit)
 	  future {
-	    asyncForeach(f, start, 0)
+	    asyncDoForAll(f, start, 0)
 	  }
 	
-	def asyncForeach(f: Elem => Unit, b: Block, idx: Int)
+	def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
 	  if (idx <= LASTELEMPOS) {
         obj = READ(b.array(idx))
 	    obj match {
 	      term: Terminal =>
+            if (term.sealed <= totalElems(b,idx))
+               return totalElems(b,idx)
+
 		    nterm = new Terminal {
 			  sealed = term.sealed
 			  callbacks = f :: term.callbacks
@@ -177,6 +177,7 @@
 		    error("unreachable")
 		}
 	  } else {
+        // In the real code we take a shortcut when preparing the new block
 	    expand(b)
 		asyncForeach(f, b.next, 0)
 	  }
