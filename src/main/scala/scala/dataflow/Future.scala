@@ -5,8 +5,6 @@ package scala.dataflow
 import scala.collection.mutable.MutableList
 
 
-
-// TODO do we need CAS here or are synchronized methods enough? -- tobias
 class Future[T] {
 
   private var res: Option[T] = None
@@ -53,9 +51,12 @@ class Future[T] {
         case None    => res = Some(v)
       }
     }
-    
-    // TODO ALEX invoke scheduler with cbs
-    cbs = null  // Release list
+
+    // Execute callbacks
+    cbs.foreach(f => f(v))
+
+    // Release list
+    cbs = null
   }
 
 }
