@@ -107,7 +107,7 @@
 	  }
 	
 	def totalElems(b: Block, idx: Int)
-	  return b.blockindex * LASTELEMPOS + idx
+	  return b.blockindex * (BLOCKSIZE - 1) + idx
     
 	def invokeCallbacks(elem: Elem, term: Terminal)
 	  for (f <- term.callbacks) future {
@@ -162,9 +162,6 @@
         obj = READ(b.array(idx))
 	    obj match {
 	      term: Terminal =>
-            if (term.sealed <= totalElems(b,idx))
-               return totalElems(b,idx)
-
 		    nterm = new Terminal {
 			  sealed = term.sealed
 			  callbacks = f :: term.callbacks
