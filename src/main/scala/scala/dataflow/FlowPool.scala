@@ -122,10 +122,10 @@ object FlowPool {
       val curo = /*READ*/cb.block(cb.pos)
       curo match {
         // At (sealed) end of buffer
-        case s: Seal[_] if totalElems >= s.size => cb.endf(s.size)
+        case Seal(sz, null) => cb.endf(sz)
         // At end of current elements
         case cbh: CallbackHolder[T] => {
-          val newel = cbh.insertCB(cb)
+          val newel = cbh.insertedCallback(cb)
           if (!CAS(cb.block, cb.pos, curo, newel)) compute()
         }
         // Some element
@@ -143,8 +143,8 @@ object FlowPool {
 
       // Check if last callback is seal for early stopping
       curcb match {
-        case s: Seal[_] if totalElems >= s.size => {
-          cb.endf(s.size)
+        case Seal(sz, null) => {
+          cb.endf(sz)
           return
         }
         case _ => 
@@ -168,7 +168,7 @@ object FlowPool {
           cb.pos = 0
 
           // prepare next block
-          nextblock(0) = curcb.asInstanceOf[CallbackHolder[_]].insertCB(cb)
+          nextblock(0) = curcb.asInstanceOf[CallbackHolder[_]].insertedCallback(cb)
           nextblock(MUST_EXPAND_POS) = MustExpand()
           nextblock(IDX_POS) = (curidx + 1).asInstanceOf[AnyRef]
     
@@ -271,7 +271,7 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
     blockidx * MAX_BLOCK_ELEMS + pos
   }
   
-  private def goToNext(curblock: Array[AnyRef], oldposition: Next, next: Next) {
+  private def goToNext(next: Next) {
     //CAS_BLOCK_PTR(oldposition, next)
     position = next // ok - not racey
   }
@@ -286,9 +286,11 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
     nextblock(MUST_EXPAND_POS) = MustExpand()
     nextblock(IDX_POS) = (curidx + 1).asInstanceOf[AnyRef]
     
-    CAS(curblock, at, me, Next(nextblock))
-
-    // TODO should we take a shortcut here?
+    val next = Next(nextblock)
+    if (CAS(curblock, at, me, next)) {
+      // take a shortcut here
+      goToNext(next)
+    }
   }
   
   
@@ -306,14 +308,14 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
       case me @ MustExpand() => // must extend with a new block
         expand(curblock, me)
       case ne @ Next(_) => // the next block already exists - go to it
-        goToNext(curblock, p, ne)
+        goToNext(ne)
       case cbh: CallbackHolder[_] => // a list of callbacks here - check if this is the end of the block
         val nextelem = curblock(pos + 1)
         nextelem match {
           case me @ MustExpand() =>
             expand(curblock, me)
           case ne @ Next(_) =>
-            goToNext(curblock, p, ne)
+            goToNext(ne)
           case _: CallbackHolder[_] | null =>
             // current is Seal(sz, _ != null), next is not at the end
             // check size and append
@@ -354,13 +356,13 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
 
 trait CallbackHolder[-T] {
   def callbacks: CallbackList[T]
-  def insertCB[U <: T](el: CallbackElem[U]): CallbackHolder[U]
+  def insertedCallback[U <: T](el: CallbackElem[U]): CallbackHolder[U]
 }
 
 
 sealed class CallbackList[-T] extends CallbackHolder[T] {
   def callbacks = this
-  def insertCB[U <: T](el: CallbackElem[U]): CallbackList[U] =
+  def insertedCallback[U <: T](el: CallbackElem[U]): CallbackList[U] =
     new CallbackElem(
       el.func,
       el.endf,
@@ -464,7 +466,7 @@ final object CallbackNil extends CallbackList[Any]
 
 
 case class Seal[T](size: Int, callbacks: CallbackList[T]) extends CallbackHolder[T] {
-  def insertCB[U <: T](el: CallbackElem[U]) = Seal(size, callbacks.insertCB(el))
+  def insertedCallback[U <: T](el: CallbackElem[U]) = Seal(size, callbacks.insertedCallback(el))
 }
 
 
