@@ -23,7 +23,10 @@ class FlowPool[T <: AnyRef] {
   }
 
   def mappedFold[U, V <: U](accInit: V)(cmb: (U,V) => V)(map: T => U): Future[(Int, V)] = {
-    // TODO races here! CHECK
+    /* We do not need to synchronize on this var, because IN THE
+     * CURRENT SETTING, callbacks are only executed in sequence.
+     * This WILL break if the scheduling changes
+     */
     var acc = accInit
 
     doForAll { x =>
@@ -88,6 +91,7 @@ object FlowPool {
   def IDX_POS = BLOCKSIZE - 1
   def MAX_BLOCK_ELEMS = LAST_CALLBACK_POS
   
+  // TODO refactor to use that everywhere (or change to initBlock) -- tobias
   def newBlock(idx: Int) = {
     val bl = new Array[AnyRef](BLOCKSIZE)
     bl(0) = CallbackNil
@@ -375,6 +379,10 @@ final class CallbackElem[-T] (
 ) extends CallbackList[T] {
   @volatile var lock: Int = -1
   
+  /* ATTENTION:
+   * If you change the scheduling, make sure that FlowPool.mappedFold
+   * synchronized still properly. Otherwise there will be races.
+   */
   @tailrec
   def awakeCallback(block: Array[AnyRef], pos: Int) {
     val lk = /*READ*/lock
