@@ -105,7 +105,7 @@
 	  }
 	
 	def totalElems(b: Block, idx: Int)
-	  return b.blockindex * BLOCKSIZE + idx
+	  return b.blockindex * LASTELEMPOS + idx
     
 	def invokeCallbacks(elem: Elem, term: Terminal)
 	  for (f <- term.callbacks) future {
