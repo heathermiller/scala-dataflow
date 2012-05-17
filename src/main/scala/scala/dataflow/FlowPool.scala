@@ -27,7 +27,7 @@ class FlowPool[T <: AnyRef] {
      * CURRENT SETTING, callbacks are only executed in sequence.
      * This WILL break if the scheduling changes
      */
-    var acc = accInit
+    @volatile var acc = accInit
 
     doForAll { x =>
       acc = cmb(map(x), acc)
@@ -122,7 +122,8 @@ object FlowPool {
       val curo = /*READ*/cb.block(cb.pos)
       curo match {
         // At (sealed) end of buffer
-        case Seal(sz, null) => cb.endf(sz)
+        case Seal(sz, null) => 
+          cb.endf(sz)
         // At end of current elements
         case cbh: CallbackHolder[T] => {
           val newel = cbh.insertedCallback(cb)
@@ -225,7 +226,7 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
       if (CAS(curblock, npos, next, curo)) {
         if (CAS(curblock, pos, curo, x)) {
           p.index = npos
-          applyCallbacks(curo.asInstanceOf[CallbackList[T]], curblock, pos)
+          applyCallbacks(curo.asInstanceOf[CallbackList[T]])
           this
         } else <<(x)
       } else <<(x)
@@ -256,7 +257,9 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
             if (total < size) Seal(size, cbl)
             else if (total == size) Seal(size, null)
             else sys.error("sealing with %d < number of elements in flow-pool %d".format(size, total))
-          if (!CAS(curblock, pos, cbl, nseal)) seal(size, curblock, pos)
+          if (CAS(curblock, pos, cbl, nseal)) {
+            applyCallbacks(cbl)
+          } else seal(size, curblock, pos)
         } else seal(size, curblock, pos + 1)
       case Seal(sz, _) =>
         if (size != sz) sys.error("already sealed at %d (!= %d)".format(sz, size))
@@ -327,7 +330,7 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
                 if (CAS(curblock, pos + 1, nextelem, nseal)) {
                   if (CAS(curblock, pos, curelem, null)) {
                     p.index = pos + 1
-                    applyCallbacks(cbh.callbacks, curblock, pos)
+                    applyCallbacks(cbh.callbacks)
                     return true
                   }
                 }
@@ -344,10 +347,10 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
   }
   
   @tailrec
-  private def applyCallbacks[T](e: CallbackList[T], block: Array[AnyRef], pos: Int): Unit = e match {
+  private def applyCallbacks[T](e: CallbackList[T]): Unit = e match {
     case el: CallbackElem[T] =>
-      el.awakeCallback(block, pos)
-      applyCallbacks(el.next, block, pos)
+      el.awakeCallback()
+      applyCallbacks(el.next)
     case _ =>
   }
   
@@ -387,7 +390,7 @@ final class CallbackElem[-T] (
    * synchronized still properly. Otherwise there will be races.
    */
   @tailrec
-  def awakeCallback(block: Array[AnyRef], pos: Int) {
+  def awakeCallback() {
     val lk = /*READ*/lock
     if (lk < 0) {
       // there is no active batch
@@ -395,7 +398,7 @@ final class CallbackElem[-T] (
         // we are now responsible for starting the active batch
         // so we start a new fork-join task to call the callbacks
         FlowPool.task(new CallbackElem.BatchTask(this))
-      } else awakeCallback(block, pos)
+      } else awakeCallback()
     }
   }
   
@@ -408,11 +411,11 @@ object CallbackElem {
   
   val unsafe = getUnsafe()
   
-  val COUNTOFFSET = unsafe.objectFieldOffset(classOf[CallbackElem[_]].getDeclaredField("pos"))
+  val COUNTOFFSET = unsafe.objectFieldOffset(classOf[CallbackElem[_]].getDeclaredField("lock"))
   
-  def CAS_COUNT(obj: CallbackElem[_], ov: Int, nv: Int) = unsafe.compareAndSwapObject(obj, COUNTOFFSET, ov, nv)
+  def CAS_COUNT(obj: CallbackElem[_], ov: Int, nv: Int) = unsafe.compareAndSwapInt(obj, COUNTOFFSET, ov, nv)
   
-  def WRITE_COUNT(obj: CallbackElem[_], v: Int) = unsafe.putObjectVolatile(obj, COUNTOFFSET, v)
+  def WRITE_COUNT(obj: CallbackElem[_], v: Int) = unsafe.putIntVolatile(obj, COUNTOFFSET, v)
   
   final class BatchTask[T](val callback: CallbackElem[T]) extends RecursiveAction {
     import FlowPool._
