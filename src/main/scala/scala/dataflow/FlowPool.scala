@@ -15,64 +15,73 @@ class FlowPool[T <: AnyRef] {
   
   def builder: Builder[T] = new Builder[T](initBlock)
 
-  // def foreach[U](f: T => U): Future[Int] = {
-  //   val fut = new Future[Int]()
-  //   (new CallbackWriter(initBlock)).addCallback(f, fut)
-  //   fut
-  // }
+  def doForAll[U](f: T => U): Future[Int] = {
+    val fut = new Future[Int]()
+    val cbe = new CallbackElem(f, fut.complete _, CallbackNil, initBlock, 0)
+    task(new RegisterCallbackTask(cbe))
+    fut
+  }
 
-  final class RegisterCallbackTask[T](var block: Array[AnyRef], val callback: CallbackElem[T]) extends RecursiveAction {
-    @tailrec
-    def compute() {
-      compute()
+  def mappedFold[U, V <: U](accInit: V)(cmb: (U,V) => V)(map: T => U): Future[(Int, V)] = {
+    /* We do not need to synchronize on this var, because IN THE
+     * CURRENT SETTING, callbacks are only executed in sequence.
+     * This WILL break if the scheduling changes
+     */
+    var acc = accInit
+
+    doForAll { x =>
+      acc = cmb(map(x), acc)
+    } map {
+      c => (c,acc)
     }
   }
-  
-  def folding[V,U <: V](acc: U)(cmb: (V, U) => U) =
-    new FoldingFlowPool(this, acc, cmb)
 
-  // def map[S <: AnyRef](f: T => S): FlowPool[S] = {
-  //   val fp = new FlowPool[S]
-  //   val b  = fp.builder
+  // Monadic Ops
 
-  //   {
-  //     for (x <- this) { b << f(x) }
-  //   } map { b.seal _ }
+  def map[S <: AnyRef](f: T => S): FlowPool[S] = {
+    val fp = new FlowPool[S]
+    val b  = fp.builder
 
-  //   fp
-  // }
+    doForAll { x =>
+      b << f(x)
+    } map { b.seal _ }
 
-  // def filter(f: T => Boolean): FlowPool[T] = {
-  //   val fp = new FlowPool[T]
-  //   val b  = fp.builder
+    fp
+  }
 
-  //   {
-  //     for (x <- this.folding(0)(_ + _)) {
-  //       if (f(x)) { b << x; 1 }
-  //       else 0
-  //     }
-  //   } map { b.seal _ }
+  def foreach[U](f: T => U) { doForAll(f) }
 
-  //   fp
-  // }
+  def filter(f: T => Boolean): FlowPool[T] = {
+    val fp = new FlowPool[T]
+    val b  = fp.builder
 
-  // def flatMap[S <: AnyRef](f: T => FlowPool[S]): FlowPool[S] = {
-  //   val fp = new FlowPool[S]
-  //   val b  = fp.builder
+    mappedFold(0)(_ + _) { x =>
+      if (f(x)) { b << x; 1 }
+      else 0
+    }  map {
+      case (c,fc) => b.seal(fc)
+    }
 
-  //   def fsum(f1: Future[Int], f2: Future[Int]) = f1.flatMap(x => f2.map(x + _))
+    fp
+  }
 
-  //   {
-  //     for (x <- this.folding(future(0))(fsum _)) {
-  //       val ifp = f(x)
-  //       for (y <- ifp) { b << y }
-  //     }
-  //   } map { _.map(b.seal _) }
+  def flatMap[S <: AnyRef](f: T => FlowPool[S]): FlowPool[S] = {
+    val fp = new FlowPool[S]
+    val b  = fp.builder
 
-  //   fp
-  // }
+    mappedFold(future(0))(futLift(_ + _)) { x =>
+      val ifp = f(x)
+      ifp.doForAll(b << _)
+    } map { 
+      case (c,cfut) => cfut.map(b.seal _)
+    }
+
+    fp
+  }
 
 }
+
+
 
 object FlowPool {
 
@@ -82,6 +91,7 @@ object FlowPool {
   def IDX_POS = BLOCKSIZE - 1
   def MAX_BLOCK_ELEMS = LAST_CALLBACK_POS
   
+  // TODO refactor to use that everywhere (or change to initBlock) -- tobias
   def newBlock(idx: Int) = {
     val bl = new Array[AnyRef](BLOCKSIZE)
     bl(0) = CallbackNil
@@ -97,6 +107,93 @@ object FlowPool {
       fjt.fork()
     case _ =>
       forkjoinpool.execute(fjt)
+  }
+
+  final class RegisterCallbackTask[T](val cb: CallbackElem[T]) extends RecursiveAction {
+    private val unsafe = getUnsafe()
+    private val ARRAYOFFSET      = unsafe.arrayBaseOffset(classOf[Array[AnyRef]])
+    private val ARRAYSTEP        = unsafe.arrayIndexScale(classOf[Array[AnyRef]])
+    @inline private def RAWPOS(idx: Int) = ARRAYOFFSET + idx * ARRAYSTEP
+    @inline private def CAS(bl: Array[AnyRef], idx: Int, ov: AnyRef, nv: AnyRef) =
+      unsafe.compareAndSwapObject(bl, RAWPOS(idx), ov, nv)
+
+    @tailrec
+    def compute() {
+      val curo = /*READ*/cb.block(cb.pos)
+      curo match {
+        // At (sealed) end of buffer
+        case s: Seal[_] if totalElems >= s.size => cb.endf(s.size)
+        // At end of current elements
+        case cbh: CallbackHolder[T] => {
+          val newel = cbh.insertCB(cb)
+          if (!CAS(cb.block, cb.pos, curo, newel)) compute()
+        }
+        // Some element
+        case v => {
+          cb.func(v.asInstanceOf[T])
+          cb.pos = cb.pos + 1
+          if (cb.pos >= LAST_CALLBACK_POS) endOfBlock()
+          else compute()
+        }
+      }
+    }
+
+    private def endOfBlock() {
+      val curcb = cb.block(LAST_CALLBACK_POS)
+
+      // Check if last callback is seal for early stopping
+      curcb match {
+        case s: Seal[_] if totalElems >= s.size => {
+          cb.endf(s.size)
+          return
+        }
+        case _ => 
+      }
+
+      // We need to move on
+      val mexp = cb.block(MUST_EXPAND_POS)
+      mexp match {
+        case Next(b) => {
+          // We can safely set here as nobody knows about the CBElem yet
+          cb.block = b
+          cb.pos = 0
+        }
+        case me: MustExpand => {
+          val curidx = cb.block(IDX_POS).asInstanceOf[Int]
+          val nextblock = new Array[AnyRef](BLOCKSIZE)
+          val curblock = cb.block
+
+          // prepare callback to be added
+          cb.block = nextblock
+          cb.pos = 0
+
+          // prepare next block
+          nextblock(0) = curcb.asInstanceOf[CallbackHolder[_]].insertCB(cb)
+          nextblock(MUST_EXPAND_POS) = MustExpand()
+          nextblock(IDX_POS) = (curidx + 1).asInstanceOf[AnyRef]
+    
+          // Swap block in an end.
+          if (CAS(curblock, MUST_EXPAND_POS, me, Next(nextblock))) return
+
+          // We failed CASing. We have another Next now. Update and move on
+          cb.block = curblock(MUST_EXPAND_POS).asInstanceOf[Next].block
+          cb.pos = 0
+          
+        }
+        case _ => sys.error("FlowPool block in inconsistent state: " +
+                            "Unknown object at MUST_EXPAND_POS. Epic " +
+                            "Fail you DIE (miserably).") 
+      }
+
+      task(new RegisterCallbackTask(cb))
+      
+    }
+
+    private def totalElems = {
+      val blockidx = cb.block(IDX_POS).asInstanceOf[Int]
+      blockidx * MAX_BLOCK_ELEMS + cb.pos
+    }
+
   }
   
 }
@@ -256,11 +353,20 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
 
 trait CallbackHolder[-T] {
   def callbacks: CallbackList[T]
+  def insertCB[U <: T](el: CallbackElem[U]): CallbackHolder[U]
 }
 
 
 sealed class CallbackList[-T] extends CallbackHolder[T] {
   def callbacks = this
+  def insertCB[U <: T](el: CallbackElem[U]): CallbackList[U] =
+    new CallbackElem(
+      el.func,
+      el.endf,
+      this,
+      el.block,
+      el.pos
+    )
 }
 
 
@@ -273,6 +379,10 @@ final class CallbackElem[-T] (
 ) extends CallbackList[T] {
   @volatile var lock: Int = -1
   
+  /* ATTENTION:
+   * If you change the scheduling, make sure that FlowPool.mappedFold
+   * synchronized still properly. Otherwise there will be races.
+   */
   @tailrec
   def awakeCallback(block: Array[AnyRef], pos: Int) {
     val lk = /*READ*/lock
@@ -289,25 +399,6 @@ final class CallbackElem[-T] (
   def tryOwn(): Boolean = CallbackElem.CAS_COUNT(this, -1, 1)
   
   def unOwn() = CallbackElem.WRITE_COUNT(this, -1)
-}
-
-
-final class FoldingFlowPool[T <: AnyRef, V, U <: V](
-  pool: FlowPool[T],
-  accInit: U,
-  cmb: (V, U) => U
-) {
-  
-  def foreach(f: T => V): Future[U] = {
-    // TODO races here!
-    // TODO ALEX can the scheduler take care of this or do we need to sync?
-    var acc = accInit
-
-    // { for (v <- pool) { acc = cmb(f(v),acc) }
-    // } map { ign => acc }
-    null
-  }
-
 }
 
 object CallbackElem {
@@ -371,7 +462,9 @@ object CallbackElem {
 final object CallbackNil extends CallbackList[Any]
 
 
-case class Seal[T](size: Int, callbacks: CallbackList[T]) extends CallbackHolder[T]
+case class Seal[T](size: Int, callbacks: CallbackList[T]) extends CallbackHolder[T] {
+  def insertCB[U <: T](el: CallbackElem[U]) = Seal(size, callbacks.insertCB(el))
+}
 
 
 case class MustExpand()
