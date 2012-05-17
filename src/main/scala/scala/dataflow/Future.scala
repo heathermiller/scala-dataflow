@@ -10,6 +10,13 @@ class Future[T] {
   private var res: Option[T] = None
   private var cbs: MutableList[T => Unit] = new MutableList()
 
+  def blocking = {
+    synchronized {
+      while (res.isEmpty) wait()
+      res.get
+    }
+  }
+
   def map[U](f: T => U): Future[U] = {
     val fut = new Future[U]
     registerCB(x => fut.complete(f(x)))
@@ -50,6 +57,7 @@ class Future[T] {
         case Some(_) => sys.error("Future completed twice")
         case None    => res = Some(v)
       }
+      notifyAll()
     }
 
     // Execute callbacks

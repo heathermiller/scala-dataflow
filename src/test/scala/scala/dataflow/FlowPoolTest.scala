@@ -10,16 +10,13 @@ object FlowPoolTest extends App {
   
   pool.foreach(p("Foreach"))
   pool.map[Integer](_*2).foreach(p("Map"))
-  pool.map[Integer](_*3).foreach(p("Map"))
   pool.filter(_ % 2 == 0).foreach(p("Filter"))
-  pool.mappedFold(0)(_ + _)(x => x).map {
-    case (cnt,v) => p("Fold")(v)
-  }
+  val fold = pool.mappedFold(0)(_ + _)(x => x)
 
   for (i <- 1 to n) { b << i }
   b.seal(n)
-  
-  Thread.sleep(100)
+
+  p("Fold")(fold.blocking._2)
   
   def p(pref: String) =
     (x: Integer) => println(pref + ": " + x)
