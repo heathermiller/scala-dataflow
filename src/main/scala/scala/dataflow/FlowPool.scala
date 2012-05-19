@@ -7,7 +7,7 @@ import jsr166y._
 
 
 
-class FlowPool[T <: AnyRef] {
+class FlowPool[T] {
 
   import FlowPool._
   
@@ -38,7 +38,7 @@ class FlowPool[T <: AnyRef] {
 
   // Monadic Ops
 
-  def map[S <: AnyRef](f: T => S): FlowPool[S] = {
+  def map[S](f: T => S): FlowPool[S] = {
     val fp = new FlowPool[S]
     val b  = fp.builder
 
@@ -65,7 +65,7 @@ class FlowPool[T <: AnyRef] {
     fp
   }
 
-  def flatMap[S <: AnyRef](f: T => FlowPool[S]): FlowPool[S] = {
+  def flatMap[S](f: T => FlowPool[S]): FlowPool[S] = {
     val fp = new FlowPool[S]
     val b  = fp.builder
 
@@ -195,7 +195,7 @@ object FlowPool {
 }
 
 
-final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
+final class Builder[T](bl: Array[AnyRef]) {
   @volatile private var position = Next(bl)
   
   private val unsafe = getUnsafe()
@@ -219,7 +219,7 @@ final class Builder[T <: AnyRef](bl: Array[AnyRef]) {
 
     if (curo.isInstanceOf[CallbackList[_]] && ((next eq null) || next.isInstanceOf[CallbackList[_]])) {
       if (CAS(curblock, npos, next, curo)) {
-        if (CAS(curblock, pos, curo, x)) {
+        if (CAS(curblock, pos, curo, x.asInstanceOf[AnyRef])) {
           p.index = npos
           applyCallbacks(curo.asInstanceOf[CallbackList[T]])
           this
