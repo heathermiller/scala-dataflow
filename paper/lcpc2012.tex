@@ -167,7 +167,7 @@ standard library.
 
 \begin{verbatim}
 def iterate[T](start: T, len: Int)(f: (T) => T) = {
-  val p = new FlowPool[T]()
+  val p = new FlowPool[T]
   val b = p.builder
   future {
     var e = start
@@ -179,7 +179,7 @@ def iterate[T](start: T, len: Int)(f: (T) => T) = {
 
 \begin{verbatim}
 def tabulate[T](n: Int)(f: (Int) => T) = {
-  val p = new FlowPool[T]()
+  val p = new FlowPool[T]
   val b = p.builder
   future {
     for (i <- 0 to (n-1)) {
@@ -192,7 +192,7 @@ def tabulate[T](n: Int)(f: (Int) => T) = {
 
 \begin{verbatim}
 def fill[T](n: Int)(elem: => T) = {
-  val p = new FlowPool[T]()
+  val p = new FlowPool[T]
   val b = p.builder
   future {
     for (i <- 1 to n) { b << elem }
@@ -201,10 +201,48 @@ def fill[T](n: Int)(elem: => T) = {
 }
 \end{verbatim}
 
-\paragraph{Monadic Operations}
-%% TODO
-Examples with implementing map, flatMap, filter with the above.
-Show why we need futures as result types of foreach loops.
+\paragraph{Monadic Operations} In the following we'll present some
+monadic operations on top of the basic FlowPool operations. This will
+also show some use-cases of the futures as result type of
+\verb+doForAll+.
+
+\begin{verbatim}
+def map[S](f: T => S) = {
+  val fp = new FlowPool[S]
+  val b  = fp.builder
+  doForAll { x =>
+    b << f(x)
+  } map { b.seal _ }
+  fp
+}
+\end{verbatim}
+
+\begin{verbatim}
+def filter(f: T => Boolean) = {
+  val fp = new FlowPool[T]
+  val b  = fp.builder
+
+  mappedFold(0)(_ + _) { x =>
+    if (f(x)) { b << x; 1 } else 0
+  } map { case (c,fc) => b.seal(fc) }
+
+  fp
+}
+\end{verbatim}
+
+\begin{verbatim}
+def flatMap[S](f: T => FlowPool[S]) = {
+  val fp = new FlowPool[S]
+  val b  = fp.builder
+
+  mappedFold(future(0))(_ <+> _) { x =>
+    f(x).doForAll(b << _)
+  } map { case (c,cfut) => cfut.map(b.seal _) }
+
+  fp
+}
+\end{verbatim}
+where \verb|<+>| is the future of the sum of two \verb+Future[Int]+.
 
 \section{Implementation}
 
