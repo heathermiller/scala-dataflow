@@ -4,7 +4,7 @@ import java.lang.Integer
 
 object FlowPoolTest extends App {
 
-  val n = 10
+  val n = 300
   val pool = new FlowPool[Integer]()
   val b = new Builder[Integer](pool.initBlock)
   

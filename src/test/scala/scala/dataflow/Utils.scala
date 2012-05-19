@@ -17,8 +17,8 @@ object Utils {
   }
   
   trait Props {
-    val size = sys.props("size").toInt
-    val par = sys.props("par").toInt
+    lazy val size = sys.props("size").toInt
+    lazy val par = sys.props("par").toInt
   }
   
 }
