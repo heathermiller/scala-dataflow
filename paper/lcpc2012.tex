@@ -107,16 +107,102 @@ Introduction and motivation for data-flow programming model.
 Producer-consumer parallelism. Description and image of queue/stream of values, producer, and multiple consumers. 
 
 \section{Programming Model}
-\texttt{<<} (insert) and \texttt{seal} on builders. And
-\texttt{foreach} on flowpools.
-And \texttt{future} to start asynchronous computations.
+The FlowPool suite supports the following operations:
+\begin{itemize}
+\item \texttt{Builder.<<(x: T): Builder}\\
+  Inserts an element into the underlying FlowPool.
+\item \texttt{Builder.seal(n: Int): Unit}\\
+  Seals the underlying FlowPool at \texttt{n} elements. The need for
+  the size argument is explained below. A sealed FlowPool may only
+  contain \texttt{n} elements. This allows for callback cleanup and
+  termination.
+\item \texttt{FlowPool.doForAll(f: T => Unit): Future[Int]}\\
+  Instructs
+  the FlowPool to execute the closure \texttt{f} exactly once for each
+  element inserted into the FlowPool (asynchronously). The returned
+  future contains the number of elements in the FlowPool and completes
+  once \texttt{f} has been executed for all elements.
+\item \texttt{FlowPool.mappedFold[U, V <: U](acc: V)(cmb: (U,V) =>
+    V)(map: T => U): Future[(Int, V)]}
+  Reduces the FlowPool to a single value of type V, by first mapping
+  each element to an internal representation using \texttt{map} and
+  then aggregating using \texttt{cmb}. No guarantee is given about
+  synchronization or order. Returns a future containing a tuple with
+  number of elements in the FlowPool and the aggregated value.
+\item \texttt{FlowPool.builder}\\
+  Returns a builder for this FlowPool.
+\item \texttt{Future.map[U](f: T => U)}\\
+  Maps this future to another
+  future executing the function \texttt{f} exactly once when the first
+  future completes.
+\item \texttt{future[T](f: () => T): Future[T]}\\
+  Asynchronously dispatch execution of \texttt{f} an return a future
+  with its result.
+\end{itemize}
 
-Discussion why \texttt{seal} takes a size argument. Show
-nondeterminism without it.
+\paragraph{Determinism of \texttt{seal}} We will show that the final
+size of the FlowPool is required as an argument to the seal method in
+order to satisfy the determinism property of the FlowPool. Look at the
+following program:
 
-Examples of generators using the above constructs (e.g. iterate,
-tabulate, fill, ...).
+\begin{verbatim}
+val p = new FlowPool[Int]()
+val b = p.builder
 
+future {
+  for (i <- 1 to 10) { b << i }
+  b.seal
+}
+
+future { for (i <- 1 to 10) { b << i } }
+\end{verbatim}
+
+Depending on which for-loop completes first, this program completes
+successfully or yields an error. A similar program with
+\verb+b.seal(20)+ will always succeed.
+
+\paragraph{Generators} In the following we'll present a couple of
+generators for FlowPools based on common generators in the Scala
+standard library.
+
+\begin{verbatim}
+def iterate[T](start: T, len: Int)(f: (T) => T) = {
+  val p = new FlowPool[T]()
+  val b = p.builder
+  future {
+    var e = start
+    for (i <- 1 to len) { b << e; e = f(e) }
+    b.seal(len)
+  }; p
+}
+\end{verbatim}
+
+\begin{verbatim}
+def tabulate[T](n: Int)(f: (Int) => T) = {
+  val p = new FlowPool[T]()
+  val b = p.builder
+  future {
+    for (i <- 0 to (n-1)) {
+      b << f(i)
+    }
+    b.seal(n)
+  }; p
+}
+\end{verbatim}
+
+\begin{verbatim}
+def fill[T](n: Int)(elem: => T) = {
+  val p = new FlowPool[T]()
+  val b = p.builder
+  future {
+    for (i <- 1 to n) { b << elem }
+    b.seal(n)
+  }; p
+}
+\end{verbatim}
+
+\paragraph{Monadic Operations}
+%% TODO
 Examples with implementing map, flatMap, filter with the above.
 Show why we need futures as result types of foreach loops.
 
