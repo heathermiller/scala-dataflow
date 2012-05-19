@@ -190,11 +190,6 @@ object FlowPool {
       
     }
 
-    private def totalElems = {
-      val blockidx = cb.block(IDX_POS).asInstanceOf[Int]
-      blockidx * MAX_BLOCK_ELEMS + cb.pos
-    }
-
   }
   
 }
@@ -420,6 +415,7 @@ object CallbackElem {
   final class BatchTask[T](val callback: CallbackElem[T]) extends RecursiveAction {
     import FlowPool._
     
+    // when entering this method, we have to hold the lock!
     @tailrec
     protected def compute() {
       if (callback.pos >= LAST_CALLBACK_POS) {
@@ -435,29 +431,46 @@ object CallbackElem {
       val block = callback.block
       var pos = callback.pos
       var cur = block(pos)
-      while (!cur.isInstanceOf[CallbackList[_]] && !cur.isInstanceOf[Seal[_]]) {
+      while (!cur.isInstanceOf[CallbackHolder[_]]) {
         callback.func(cur.asInstanceOf[T])
         pos += 1
         cur = block(pos)
       }
       callback.pos = pos
+
+      // Check for seal
+      cur match {
+        case Seal(sz, null) => callback.endf(sz)
+        case _ =>
+      }
       
       // relinquish control
       callback.unOwn()
       
       // see if there are more elements available
       // if there are, try to regain control and start again
-      cur = block(pos)
-      cur match {
-        case cb: CallbackList[_] =>
-        case Seal(sz, null) =>
-          callback.endf(sz)
-        case Seal(sz, cbs) =>
-        case _ =>
-          if (callback.tryOwn()) {
-            if (callback.pos < LAST_CALLBACK_POS) compute()
-            else FlowPool.task(new CallbackElem.BatchTask(callback))
+
+      if (callback.pos >= LAST_CALLBACK_POS) {
+        block(MUST_EXPAND_POS) match {
+          case MustExpand() => // done
+          case Next(b) => if (callback.tryOwn()) {
+            callback.block = b
+            callback.pos = 0
+            FlowPool.task(new CallbackElem.BatchTask(callback))
           }
+        }
+      } else {
+        cur = block(pos)
+        cur match {
+          case Seal(sz, null) =>
+            // Shortcut
+            if (callback.tryOwn()) {
+              callback.endf(sz)
+              callback.unOwn()
+            }
+          case _: CallbackHolder[_] =>
+          case _ => if (callback.tryOwn()) { compute() }
+        }
       }
     }
   }
