@@ -18,6 +18,7 @@
 
 \documentclass[runningheads,a4paper]{llncs}
 
+\usepackage{amsmath}
 \usepackage{amssymb}
 \setcounter{tocdepth}{3}
 \usepackage{graphicx}
@@ -268,6 +269,81 @@ Forcing a bib, \cite{bowman:reasoning}, \cite{braams:babel}, \cite{clark:pct}, \
 
 \bibliographystyle{abbrv}
 \bibliography{bib}
+
+
+
+
+
+\begin{definition}[FlowPool]
+The \textbf{FlowPool} is defined as the references $start$ and $current$.
+The \textbf{FlowPool state} is defined as the configuration of objects transitively reachable from the reference $start$.
+
+We say that the FlowPool \textbf{has} an element $e$ at some time $t_0$ if and only if the relation $hasElem(start, e)$ holds.
+
+We say that a callback $f$ in a FlowPool \textbf{will be called} for the element $e$ at some time $t_0$ if and only if the relation $willBeCalled(start, e, f)$ holds.
+
+We say that the FlowPool is \textbf{sealed} at the size $s$ at tome $t_0$ if and only if the relation $sealedAt(start, s)$ holds.
+
+TODO formal definitions of these relations (involving the flowpool datatypes)
+
+\textbf{FlowPool operations} are \verb=append=, \verb=foreach= and \verb=seal=, and are defined by pseudocodes in figures ...
+\end{definition}
+
+
+\begin{definition}[Invariants]
+We define the following invariants for the \textbf{FlowPool}:
+\begin{description}
+\item[INV1] $start = b: Block, b \neq null, current \in reachable(start)$
+\item[INV2] $\forall b \in reachable(start), b \not \in following(b)$
+\item[INV3] $\forall b \in reachable(start), b \neq last(start) \Rightarrow size(b) = LASTELEMPOS \wedge b.array(BLOCKSIZE - 1) \in Terminal$
+\item[INV4]
+$\forall b = last(start), b.array = p \cdot t \cdot n$, where:
+
+$p = X^P, t = t_1 \cdot t_2, n = null^N$
+
+$x \in Elem, t_1 \in Terminal, t_2 \in \{null\} \cup Terminal$
+
+$P + N + 2 = BLOCKSIZE$
+\item[INV5] $\forall b \in reachable(start), b.index > 0 \Rightarrow b.array(b.index - 1) \in Elem$
+\end{description}
+\end{definition}
+
+
+\begin{definition}[Validity]
+A FlowPool state $\mathbb{S}$ is \textbf{valid} if and only if the invariants [INV1-5] hold for that state.
+\end{definition}
+
+
+\begin{definition}[Abstract pool]
+An \textbf{abstract pool} $\mathbb{P}$ is a function from time $t$ to a tuple of sets $(elems, callbacks, seal)$ such that:
+\begin{description}
+\item $seal \in \{ \emptyset, \{ w \} \}, w \in \mathbb{N}$
+\item $callbacks \subset \{ (f: Elem => Unit, called) \}$
+\item $called \subseteq elems \subseteq Elem$
+\end{description}
+We say that an abstract pool $\mathbb{P}$ \textbf{is in state} $(elems, callbacks, seal)$ at time $t$ if and only if $\mathbb{P}(t) = (elems, callbacks, seal)$.
+\end{definition}
+
+
+\begin{definition}[Abstract pool operations]
+We say that an abstract pool operation $op$ applied to an abstract pool $P_0 = (elems_0, callbacks_0, seal_0)$ at some time $t$ \textbf{changes} the state of the abstract pool to $P = (elems, callbacks, seal)$ if $\exists t_0, \forall \tau, t_0 < \tau < t, \mathbb{P}(\tau) = P_0$ and $\mathbb{P}(t) = P$.
+
+Abstract pool operation $foreach(f)$ changes the state at $t_0$ from $(elems, callbacks, seal)$ to $(elems, (f, \emptyset) \cup callbacks, seal)$. Furthermore:
+
+$\exists t_1 > t_0, \forall t_2 > t_1, \mathbb{P}(t_2) = (elems_2, (f, called_2) \cup callbacks_2, seal_2)$, where:
+
+$called_2 \subseteq elems_2 \subseteq elems$
+
+Append...
+
+Seal...
+
+\end{definition}
+
+
+\begin{definition}[Consistency]
+A FlowPool state $\mathbb{S}$ is \textbf{consistent} with an abstract pool $\mathbb{F}$ at $t_0$
+\end{definition}
 
 
 
