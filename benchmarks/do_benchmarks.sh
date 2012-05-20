@@ -4,7 +4,8 @@ CURV="v2"
 NOW=$(date '+%Y-%m-%dT%H.%M.%S')
 PARS=$(seq 1 1)
 LENS=$(seq 100000 10000 500000)
-BENCHES="FPInsertBench CLQInsertBench LTQInsertBench FPReduceBench FPSealedInsertBench FPUnsafeHistBench FPHistBenchg LTQHistBench LTQReduceBench"
+#BENCHES="FPInsertBench CLQInsertBench LTQInsertBench FPReduceBench FPSealedInsertBench FPUnsafeHistBench FPHistBenchg LTQHistBench LTQReduceBench"
+BENCHES="FPHistBench"
 N=20
 
 java -version > "data/${NOW}_javav.txt" 2>&1
