@@ -283,14 +283,16 @@ object, which contains an integer $term.sealed \in {-1} \cup \mathbb{N}$, and
 $term.callbacks$, a set of functions $f \in Elem \Rightarrow Unit$.
 
 \textbf{Definition 2} (FlowPool). A \textbf{FlowPool} $pool$ is an object that
-has a reference $pool.start$, to the first block $b_0$ (with $b_0.blockIndex= 0$), 
+has a reference $pool.start$, to the first block $b_0$ (with $b_0.blockIndex=0$), 
 as well as a reference $pool.current$ typically pointing to some
 subsequent block $b_n$ where $b_n=b_0$ or where $b_n$ is reachable from $b_0$
 following $next$ references. Initially, $pool.current = pool.start$. The pool
-\textbf{state} $\mathbb{S}$ is defined as the sequence of blocks reachable from
-$pool.start$ by following $next$ references within blocks. More formally, the
-relation $reachable(b,c)$ on two blocks $b,$ $c$ holds iff
+\textbf{state} $\mathbb{S}$ is defined as the sequence of blocks reachable
+from $pool.start$ by following $next$ references within blocks. More formally,
+the relation $reachable(b,c)$ on two blocks $b,$ $c$ holds iff
 $b=c~\vee~b.next=c~\vee~\exists b'~:~reachable(b,b')~\wedge~reachable(b',c)$.
+A \textbf{state changing} instruction is any atomic write or CAS instruction
+that changes an object that can be accessed from $pool.start$.
 
 \textbf{Definition 3} (Abstract state). An \textbf{abstract state} $\mathbb{A}$ 
 is a tuple $(elems,sealed)$ such that $\mathbb{A} \in \{(elems,sealed)~|~elems \subset Elem,~sealed \in \{-1\} \cup \mathbb{N}\}$. 
@@ -311,14 +313,16 @@ is a change from state $\mathbb{S}$ to state $\mathbb{S'}$ such that $\mathbb{S}
 is consistent with an abstract state $\mathbb{A}$ and $\mathbb{S'}$ is consistent 
 with an abstract set $\mathbb{A'}$, where $\mathbb{A} \neq \mathbb{A'}$.
 
-\textbf{Definition 5} (Lock-freedom). In a situation where some finite number
+\textbf{Definition 5} (Lock-freedom). In a scenario where some finite number
 of threads are executing a concurrent operation, that concurrent operation is
 \textit{lock-free} if and only if that concurrent operation is completed after
 a finite number of steps by some thread.
 
-\textbf{Theorem 1} (Lock-freedom). \textit{FlowPool operations append, seal, and doForAll are lock-free}.
+\textbf{Theorem 1} (Lock-freedom). \textit{FlowPool operations append, seal,
+and doForAll are lock-free}.
 
-We begin by first proving that there are a finite number of execution steps before a consistency change occurs. 
+We begin by first proving that there are a finite number of execution steps
+before a consistency change occurs.
 
 \textbf{Lemma 1}. \textit{After invoking an operation $op$, if non-consistency
 changing CAS operations $CAS1$, $CAS3$, or $CAS4$, in the pseudocode fail,
@@ -340,22 +344,79 @@ Like above, $CAS4$ is the only CAS which can change the $current$ reference,
 therefore in the case of a failure, some other thread must have already
 successfully completed $CAS4$ since $op$ began. \qed
 
+\textbf{Lemma 2}. \textit{Invoking the $expand$ operation will execute a  
+non-consistency changing instruction after a finite number of steps. Furthermore,
+given a total number of blocks $numBlocks$ reachable in a FlowPool $pool$
+before invoking $expand$, the number of blocks $numBlocks'$ after some finite
+number of steps is guaranteed to satisfy $numBlocks'>numBlocks$}.
 
-\textbf{Lemma 2}. \textit{Assume a concurrent operation $op$ is started. After
-a finite number of non-consistency changing CAS instructions, a consistency
-changing CAS instruction is guaranteed to be successfully completed}.
+\textit{Proof}. From inspection of the pseudocode, it is clear that the only
+point at which $expand$ can be invoked is under the condition that for some
+block $b$, $b.index > LASTELEMPOS$, where $LASTELEMPOS$ is the maximum size
+set aside for elements of type $Elem$ in any block. Given this, we will proceed 
+by showing that a new block will be created with all related references 
+$b.next$ and $current$ correctly set.
+
+There are two conditions under which a non-consistency changing CAS
+instruction will be carried out. 
+
+\begin{itemize} 
+\item \textbf{Case 1:} if $b.next=\bot$, a new block $nb$ will
+be created and $CAS3$ will be executed. From Lemma 1, we know that $CAS3$
+must complete successfully on some thread. Afterwards recursively calling 
+$expand$ on the original block $b$.
+\item \textbf{Case 2:} if $b.next\neq\bot$, $CAS4$ will be executed. 
+Lemma 1 guarantees that $CAS4$ will update $current$ to refer to $b.next$, 
+which we will show can only be a new block. Likewise, Lemma 1 has shown that 
+$CAS3$ is the only state changing instruction that can initiate a state change 
+at location $b.next$, therefore, since $CAS3$ takes place within Case 1, the 
+Case 2 can only be reachable after Case 1 has been executed successfully. Given 
+that Case 1 always creates a new block, therefore, $b.next$ in this case, must 
+always refer to a new block.
+\end{itemize}
+
+Therefore, since from Lemma 1 we know that both $CAS3$ and $CAS4$ can only fail 
+if already completed, thus guaranteeing their finite completion, and since 
+$CAS3$ and $CAS4$ are the only state changing operations invoked through 
+$expand$, the $expand$ operation must complete in a finite number of steps.
+
+Finally, since we saw in Case 2 that a new block is always created and related
+references are always correctly set, that is both $b.next $ and $current$ are
+correctly updated to refer to the new block, it follows that $numBlocks$
+strictly increases after some finite number of steps.
+
+\textbf{Lemma 3}. \textit{Each operation executes only a finite number of steps
+between each state changing instruction}.
+
+\textit{Proof}. We begin by inspecting each operation which contains a state
+changing instruction individually.
+
+The \textbf{$append$} operation involves the following state changing
+instructions; $CAS1$, $CAS2$, $WRITE1$, $WRITE2$, $CAS3$, and $CAS4$.
+
+\textbf{Lemma 4}. \textit{Assume a concurrent operation $op$ is started. After
+a finite number of state changing instructions, a consistency changing CAS
+instruction is guaranteed to be successfully completed}.
 
 \textit{Proof}. 
 
+\textbf{Lemma 5}. \textit{Assume a concurrent operation is started. If a
+consistency changing CAS instruction completes, some concurrent operation is
+guaranteed to be completed}.
 
+\textit{Proof}. 
 
-
+\textit{Lock-freedom}. 
 
 
 
 \pagebreak
 
+By 
+We have to show that we'll update $current$ after a finite number of steps.
 
+The $expand$ operation contains two CAS instructions; $CAS3$
+and $CAS4$.
 
 \textbf{Lemma 1}. \textit{In each operation there is a finite number of execution steps between consecutive CAS instructions.}.
 
