@@ -269,7 +269,50 @@ Forcing a bib, \cite{bowman:reasoning}, \cite{braams:babel}, \cite{clark:pct}, \
 \bibliographystyle{abbrv}
 \bibliography{bib}
 
+\appendix
+\section{Proof of Correctness}
 
+\textbf{Definition 1} (Data types). A \textbf{Block} $b$ is an object which contains an array $b.array$, which itself can contain elements, $e \in Elem$, where \textbf{Elem} represents the type of $e$ and can be any countable set. A given block $b$ additionally contains an index $b.index$ which represents an index location in $b.array$, a unique index identifying the array $b.blockIndex$, and $b.next$, a reference to a successor block $c$ where $c.blockIndex = b.blockIndex + 1$. A \textbf{Terminal} $term$ is a sentinel object, which contains an integer $term.sealed \in \{-1\} \cup \mathbb{N}$, and $term.callbacks$, a set of functions $f \in Elem \Rightarrow Unit$.
+
+\textbf{Definition 2} (FlowPool). A \textbf{FlowPool} $pool$ is an object that has a reference $pool.start$, to the first block $b_0$ (with $b_0.blockIndex = 0$), as well as a reference $pool.current$ typically pointing to some subsequent block $b_n$ where $b_n=b_0$ or where $b_n$ is reachable from $b_0$ following $next$ references. Initially, $pool.current = pool.start$. The pool \textbf{state} $\mathbb{S}$ is defined as the sequence of blocks reachable from $pool.start$ by following $next$ references within blocks. More formally, the relation $reachable(b,c)$ on two blocks $b,$ $c$ holds iff $b=c~\vee~b.next=c~\vee~\exists b'~:~reachable(b,b') \wedge reachable(b',c)$. 
+
+\textbf{Definition 3} (Abstract state). An \textbf{abstract state} $\mathbb{A}$ is a tuple $(elems,sealed)$ such that $\mathbb{A} \in \{(elems,sealed)~|~elems \subset Elem,~sealed \in \{-1\} \cup \mathbb{N}\}$. Abstract state operations on some abstract state $\mathbb{A}$ are $append(\mathbb{A},e) = \mathbb{A'}$ where $\mathbb{A'} = (elems \cup \{e\}, sealed)$ if $\mathbb{A}=(elems, sealed)$, $seal(\mathbb{A},sealSize) = \mathbb{A''}$ where $\mathbb{A''} = (elems, sealSize)~:~sealSize \in \mathbb{N}$ if $\mathbb{A}=(elems, sealed)$ and $sealed=-1$, the unsealed state, or $sealed=sealSize$ already.
+
+\textbf{Definition 4} (Consistency). A FlowPool state $\mathbb{S}$ of $pool$ with starting block $pool.start$ is consistent with an abstract state $\mathbb{A}=(elems,sealed)$ iff some element $e \in elems \Leftrightarrow \exists b,i~:~reachable(pool.start,b)~\wedge~b.array(i)=e,$ and $\exists c,j~:~c.array(j) \in Terminal~\wedge~c.array(j).sealed=sealed~\wedge~reachable(pool.start, c)$. A FlowPool operation $op$ is \textbf{consistent} with the corresponding abstract state operation $op'$ iff $\mathbb{S'}=op(\mathbb{S})$ is consistent with an abstract state $\mathbb{A'}=op'(\mathbb{A})$. A \textbf{consistency change} is a change from state $\mathbb{S}$ to state $\mathbb{S'}$ such that $\mathbb{S}$ is consistent with an abstract state $\mathbb{A}$ and $\mathbb{S'}$ is consistent with an abstract set $\mathbb{A'}$, where $\mathbb{A} \neq \mathbb{A'}$.
+
+\textbf{Definition 5} (Lock-freedom). In a situation where some finite number of threads are executing a concurrent operation, that concurrent operation is \textit{lock-free} if and only if that concurrent operation is completed after a finite number of steps by some thread.
+
+We proceed by...
+
+\textbf{Theorem 1} (Lock-freedom). \textit{FlowPool operations append, seal, and doForAll are lock-free}.
+
+\textbf{Lemma 1}. \textit{If non-consistency changing CAS operations $CAS1$ or $CAS3$, in the pseudocode fail, they must have already been successfully completed by another thread since their corresponding operation began}.
+
+\textit{Proof}. Trivial inspection of the pseudocode reveals that since $CAS1$ makes up a check that precedes $CAS2$, and since $CAS2$ is the only operation besides $CAS1$ which can change the expected value of $CAS1$, in the case of a failure of $CAS1$, $CAS2$ (and thus $CAS1$) must have already successfully completed or $CAS1$ must have already successfully completed by a different thread.
+
+Likewise, by trivial inspection $CAS3$ is the only CAS which can update the $b(next)$ reference, therefore in the case of a failure, some other thread must have already successfully completed $CAS3$ since the beginning of the operation. \qed
+
+\textbf{Lemma 2}. \textit{Non-consistency changing CAS operation $CAS4$ must successfully complete after a finite number of steps}.
+
+Expand must successfully complete after a finite number of steps.
+
+OLD: \textit{Proof}. Case 1: The failing $CAS4$ happens after a successful $CAS3$. From lemma 1, we know that $CAS3$, which is a check that precedes $CAS4$, is guaranteed to be successfully completed by some thread, so we focus on the implications of failure of $CAS4$. Case 2: $CAS5$ takes place if $nb$ is $null$. Therefore, in both cases, $CAS4$ and $CAS5$ successfully complete.
+
+\textbf{Lemma 3}. \textit{consistency-changing CAS operations ... will successfully complete}.
+
+\textit{Proof}. Uses $\mathbb{A}$.
+
+\textbf{Lemma 4}. \textit{Assume that the FlowPool is consistent with some abstract state $\mathbb{A}$. If one of the operations $advance$ or $expand$ succeeds, the FlowPool will remain consistent with the abstract state $\mathbb{A}$ following the operation.}
+
+\textit{Proof}. The CAS operations, denoted $CAS3$, and $CAS4$ in the pseudo-code,  within the $expand$ operation neither affect $elems$ nor $sealed$, thus by Definition 4, causes no consistency change. Likewise, the $advance$ operation either calls $expand$ once, or it invokes $CAS1$ it may update the index of the current block, neither of which cause a consistency change.
+
+\textbf{Lemma 5} (). \textit{If a consistency changing CAS completes, then the operation is guaranteed to successfully complete}.
+
+\textbf{Lemma 6} (). append operation is lock-free.
+
+\textbf{Lemma 7} (). seal operation is lock-free.
+
+\textbf{Lemma 8} (). doForAll operation is lock-free.
 
 % You are strongly encouraged to use \LaTeXe{} for the
 % preparation of your camera-ready manuscript together with the

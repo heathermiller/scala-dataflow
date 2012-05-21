@@ -59,9 +59,9 @@
 	  idx = READ(b.index)
 	  nextobj = READ(b.array(idx + 1))
 	  curobj = READ(b.array(idx))
-	  if (check(b, idx, curobj, nextobj)) {
-  	    if (CAS(b.array(idx + 1), nextobj, curobj)) {
- 	      if (CAS(b.array(idx), curobj, elem)) {
+	  if (check(b, idx, curobj)) {
+  	    if (CAS(b.array(idx + 1), nextobj, curobj)) { //CAS1
+ 	      if (CAS(b.array(idx), curobj, elem)) { //CAS2
 		    WRITE(b.index, idx + 1)
 			invokeCallbacks(elem, curobj)
 		  } else append(elem)
@@ -71,7 +71,7 @@
 		append(elem)
 	  }
 	
-	def check(b: Block, idx: Int, curobj: Object, nextobj: Object)
+	def check(b: Block, idx: Int, curobj: Object)
       // The check on the index is done implicitly in the real code
 	  if (idx > LASTELEMPOS) return false
 	  else curobj match {
@@ -100,10 +100,10 @@
 	  nb = READ(b.next)
 	  if (nb is null) {
 	    nb = createBlock(b.blockindex + 1)
-	    if (CAS(b.next, null, nb)) CAS(current, b, nb)
+	    if (CAS(b.next, null, nb)) expand(b) // CAS3
         // In the real code we take a shortcut here (read, and try to CAS)
 	  } else {
-	    CAS(current, b, nb)
+	    CAS(current, b, nb) // CAS4
 	  }
 	
 	def totalElems(b: Block, idx: Int)
@@ -144,7 +144,7 @@
 		  sealed = size
 		  callbacks = term.callbacks
 		}
-	    CAS(b.array(idx), term, nterm)
+	    CAS(b.array(idx), term, nterm) // CAS5
 	  } else if (term.sealed != size) {
 	    error("already sealed with different size")
 	  }
@@ -166,7 +166,7 @@
 			  sealed = term.sealed
 			  callbacks = f :: term.callbacks
 			}
-		    if (!CAS(b.array(idx), term, nterm)) asyncForeach(f, b, idx)
+		    if (!CAS(b.array(idx), term, nterm)) asyncForeach(f, b, idx) // CAS6 
 		  elem: Elem =>
 		    f(elem)
 			asyncForeach(f, b, idx + 1)
