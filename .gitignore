@@ -4,6 +4,7 @@
 *.bbl
 *.blg
 *.log
+*.pdf
 
 target
 .DS_Store
