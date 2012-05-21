@@ -327,9 +327,9 @@ def expand(b: Block)
   if (nb is null) {
     nb = createBlock(b.blockindex + 1)
     if (CAS(b.next, null, nb)) {\customlabel{cas_next}{\LineNumber}}
-      CAS(current, b, nb) {\customlabel{cas_block1}{\LineNumber}}
+      expand(b)
   } else {
-    CAS(current, b, nb) {\customlabel{cas_block2}{\LineNumber}}
+    CAS(current, b, nb) {\customlabel{cas_block}{\LineNumber}}
   }
 
 def totalElems(b: Block, idx: Int)
@@ -339,6 +339,66 @@ def invokeCallbacks(elem: Elem, term: Terminal)
   for (f <- term.callbacks) future {
     f(elem)
   }
+
+def seal(size: Int)
+  b = READ(current)
+  idx = READ(b.index)
+  if (idx <= LASTELEMPOS) {
+    curobj = READ(b.array(idx))
+    curobj match {
+      term: Terminal =>
+        tryWriteSeal(term, b, idx, size)
+      elem: Elem =>
+        WRITE(b.index, idx + 1)
+        seal(size)
+      null =>
+        error("unreachable")
+    }
+  } else {
+    expand(b)
+    seal(size)
+  }
+
+def tryWriteSeal(term: Terminal, b: Block, idx: Int, size: Int)
+  val total = totalElems(b, idx)
+  if (total > size) error("too many elements")
+  if (term.sealed == NOTSEALED) {
+    nterm = new Terminal {
+      sealed = size
+      callbacks = term.callbacks
+    }
+    CAS(b.array(idx), term, nterm) {\customlabel{cas_seal}{\LineNumber}}
+  } else if (term.sealed != size) {
+    error("already sealed with different size")
+  }
+
+def doForAll(f: Elem => Unit)
+  future {
+    asyncDoForAll(f, start, 0)
+  }
+
+def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
+  if (idx <= LASTELEMPOS) {
+    obj = READ(b.array(idx))
+    obj match {
+      term: Terminal =>
+        nterm = new Terminal {
+          sealed = term.sealed
+          callbacks = f :: term.callbacks
+        }
+        if (!CAS(b.array(idx), term, nterm)) asyncDoForAll(f, b, idx) {\customlabel{cas_callback}{\LineNumber}}
+      elem: Elem =>
+        f(elem)
+        asyncDoForAll(f, b, idx + 1)
+      null =>
+        error("unreachable")
+    }
+  } else {
+    // In the real code we take a shortcut when preparing the new block
+    expand(b)
+    asyncDoForAll(f, b.next, 0)
+  }
+
 }}}
 \end{alltt}
 
@@ -445,17 +505,55 @@ A FlowPool operation $op$ completing at some time $t_0$ is consistent with an ab
 \end{definition}
 
 
+\begin{proposition}
+Every valid state is consistent with some abstract pool.
+\end{proposition}
+
+
 \begin{theorem}[Abstract pool semantics]
 FlowPool operation \verb=create= creates a new FlowPool consistent with the abstract pool $\mathbb{P} = (\emptyset, \emptyset, \emptyset)$. FlowPool operations \verb=foreach=, \verb=append= and \verb=seal= are consistent with the abstract pool semantics.
 \end{theorem}
 
 
-\begin{lemma}
-Given a FlowPool in a valid state, all writes produce a FlowPool in a valid state.
+\begin{lemma}[End of life]\label{lemma-end-of-life}
+For all blocks $b \in reachable(start)$, if value $v \in Elem$ is
+written to $b.array$ at some position $idx$ at some time $t_0$, then
+$\forall t > t_0, b.array(idx) = v$.
 \end{lemma}
 
 \begin{proof}
+The CAS in line \ref{cas_append} is the only CAS which writes an
+element.
+No other CAS has a value of type $Elem$ as the expected value.
+This means that once the CAS in line \ref{cas_append} writes a value
+of type $Elem$, no other write can change it.
 \end{proof}
+
+
+\begin{lemma}[Valid hint]\label{lemma-valid-hint}
+For all blocks $b \in reachable(start)$, if $b.index > 0$ at some time $t_0$, then
+$b.array(b.index - 1) \in Elem$ at time $t_0$.
+\end{lemma}
+
+\begin{proof}
+Observe every write to $b.index$ -- they are all unconditional.
+However, at every such write occurring at some time $t_1$ that writes
+some value $idx$ we know that some previous value at $b.array$ entry $idx - 1$
+at some time $t_0 < t_1$ was of type $Elem$.
+Hence, from lemma \ref{lemma-end-of-life} it follows that
+$\forall t \geq t_1, b.array(idx - 1) \in Elem$.
+\end{proof}
+
+
+\begin{corollary}[Compactness]\label{cor-compactness}
+For all blocks $b \in reachable(start)$, if for some $idx$
+$b.array(idx) \in Elem$ at time $t_0$ then $b.array(idx - 1) \in Elem$
+at time $t_0$. This follows
+directly from the lemmas \ref{lemma-end-of-life} and
+\ref{lemma-valid-hint}, and the fact that the CAS in line
+\ref{cas_append} only writes to array entries $idx$ for which it
+previously read the value from $b.index$.
+\end{corollary}
 
 
 \begin{definition}[Transition]
@@ -469,6 +567,50 @@ $f: v_0 \rightarrow v_1$
 \end{definition}
 
 
+\begin{lemma}[Freshness]\label{lemma-freshness}
+For all blocks $b \in reachable(start)$, and for all $x \in b.array$,
+function $x$ has unique elements in its string of transitions.
+\end{lemma}
+
+\begin{proof}
+CAS instruction in line \ref{cas_append} writes a value of type
+$Elem$. No CAS instruction has a value of type $Elem$ as the expected value.
+
+Trivial analysis of CAS instructions in lines \ref{cas_seal} and
+\ref{cas_callback}, shows that their expected values are of type
+$Terminal$ or are $null$. Their new values are always freshly allocated.
+
+The more difficult part is to prove that CAS instruction in line
+\ref{cas_propagate} respects the statement of the lemma.
+
+Since the CAS instructions in lines \ref{cas_seal} and
+\ref{cas_callback} are preceeded by a read of $idx = b.index$,
+from \ref{lemma-valid-hint} it follows that $b.array(idx - 1)$ 
+contains a value of type $Elem$.
+These are also the only CAS instructions which replace a $Terminal$
+value with another $Terminal$ value. The new value is always unique, as
+shown above.
+
+A successful CAS in line \ref{cas_propagate} overwrites a value $cb_0$ at $idx + 1$
+read in line \ref{read_next} at $t_0$ with a new value $cb_2$ at time $t_2$. Value $cb_2$ was
+read in line \ref{read_current} at $t_1$ from the entry $idx$. The
+string of transitions of values at $idx$ is composed of unique values
+at least since $t_1$, since there is a value of type $Elem$ at the
+index $idx - 1$.
+
+Now assume that a thread T1 successfully CAS in line
+\ref{cas_propagate} at $idx + 1$ at time $t_2$ overwrites $cb_0$ with
+a value $cb_2$ read from $idx$ at $t_1$, and that another thread T2 subsequently successfully
+completes the CAS in line \ref{cas_propagate} at $idx + 1$ at time
+$t_2$ with a value $cb_{prev}$ which was at $idx + 1$ at some time
+$t < t_0$. That would mean that the thread T2 read the value
+$cb_{prev}$ in line \ref{read_current} at some time $t_{prev1} < t_1$
+and successfully completed the CAS at time $t_{prev2} > t_2$. If the
+CAS was successful, then the read in line \ref{read_next} by T2
+occured at $t_{prev0} < t_{prev1} < t_1$. TODO finish this
+\end{proof}
+
+
 \begin{lemma}[Lifecycle]
 For all blocks $b \in reachable(start)$, and for all $x \in b.array$, function $x$ goes through and only through the prefix of the following transitions:
 
@@ -478,19 +620,68 @@ $cb_i \in Terminal, i \neq j \Rightarrow cb_i \neq cb_j, elem \in Elem$
 \end{lemma}
 
 \begin{proof}
-First of all, it is obvious from the code that each block that becomes an element of $reachable(start)$ at some time $t_0$ has the value of all $x \in b.array$ set to $null$.
+First of all, it is obvious from the code that each block that becomes
+an element of $reachable(start)$ at some time $t_0$ has the value of
+all $x \in b.array$ set to $null$.
+
+Next, we inspect all the CAS instructions that operate on entries of
+$b.array$.
+
+The CAS in line \ref{cas_append} has a value $curobj \in Terminal$ as
+an expected value and writes an $elem \in Elem$.
+This means that the only transition that this CAS
+can cause is of type $cb_i \in Terminal \rightarrow elem \in Elem$.
+
+We will now prove that the CAS in line \ref{cas_propagate} at time $t_2$ is successful if and
+only if the entry at $idx + 1$ is $null$ or $nextobj \in
+Terminal$.
+We know that the entry at $idx + 1$ does not change $\forall t, t_0 < t < t_2$,
+where $t_0$ is the read in line \ref{read_next},
+because of lemma \ref{lemma-freshness} and the fact that CAS in line \ref{cas_propagate} is assumed to be successful.
+We know that during the read in line \ref{read_current} at time $t_1$,
+such that $t_0 < t_1 < t_2$, the entry at $idx$ was $curobj \in
+Terminal$, by trivial analysis of the \verb=check= procedure.
+It follows from corollary \ref{cor-compactness} that the array entry $idx
++ 1$ is not of type $Elem$ at time $t_1$, otherwise array entry $idx$
+would have to be of type $Elem$.
+Finally, we know that the entry at $idx + 1$ has the same value during
+the interval $\langle t_1, t_2 \rangle$, so its value is not $Elem$ at $t_2$.
+
+The above reasoning shows that the CAS in line \ref{cas_propagate}
+always overwrites a one value of type $Terminal$ (or $null$) with
+another value of type $Terminal$. We still have to show that it never
+overwrites the value $cb_0$ with a value $cb_2$ that was at
+$b.array(idx)$ at an earlier time. This follows from the
+\ref{lemma-freshness} directly.
+
+Finally, note that the statement for CAS instructions in lines \ref{cas_seal} and
+\ref{cas_callback} follows directly from the proof for lemma \ref{lemma-freshness}.
 \end{proof}
 
 
-\begin{lemma}
-Given a FlowPool in state $\mathbb{S}$ consistent with some abstract pool state $\mathbb{A}$, CAS instructions in lines \ref{cas_next}, \ref{cas_block1} and \ref{cas_block2} do not change the state of the abstract pool.
+\begin{lemma}[Valid writes]\label{lemma-valid}
+Given a FlowPool in a valid state, all writes in all operations produce a FlowPool in a valid state.
+\end{lemma}
+
+\begin{proof}
+A new FlowPool is trivially in a valid state.
+
+Otherwise, assume that the FlowPool is in a valid state
+$\mathbb{S}$. We analyze each write.
+\end{proof}
+
+
+\begin{lemma}[Housekeeping]
+Given a FlowPool in state $\mathbb{S}$ consistent with some abstract
+pool state $\mathbb{A}$, CAS instructions in lines \ref{cas_propagate}, \ref{cas_next} and
+\ref{cas_block} do not change the state of the abstract pool.
 \end{lemma}
 
 \begin{proof}
 \end{proof}
 
 
-\begin{lemma}
+\begin{lemma}[Append correctness]
 Given a FlowPool in state $\mathbb{S}$ consistent with some abstract pool state $\mathbb{A}$, a successful CAS in line \ref{cas_append} at some time $t_0$ changes the state of the FlowPool to $\mathbb{S}_0$ consistent with an abstract pool state $\mathbb{A}_0$, such that:
 
 $\mathbb{A} = (elems, callbacks, seal)$
@@ -501,6 +692,20 @@ Furthermore, given a fair scheduler, there exists a time $t_1 > t_0$ such that a
 \end{lemma}
 
 \begin{proof}
+\end{proof}
+
+
+\begin{definition}[Obstruction-freedom]
+Given a FlowPool in a valid state, any operation
+\end{definition}
+
+
+\begin{lemma}[Obstruction-free operations]
+The FlowPool operations are obstruction-free.
+\end{lemma}
+
+\begin{proof}
+By trivial sequential code analysis.
 \end{proof}
 
 
