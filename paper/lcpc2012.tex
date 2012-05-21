@@ -351,7 +351,7 @@ before invoking $expand$, the number of blocks $numBlocks'$ after some finite
 number of steps is guaranteed to satisfy $numBlocks'>numBlocks$}.
 
 \textit{Proof}. From inspection of the pseudocode, it is clear that the only
-point at which $expand$ can be invoked is under the condition that for some
+point at which $expand(b)$ can be invoked is under the condition that for some
 block $b$, $b.index > LASTELEMPOS$, where $LASTELEMPOS$ is the maximum size
 set aside for elements of type $Elem$ in any block. Given this, we will proceed 
 by showing that a new block will be created with all related references 
@@ -375,9 +375,9 @@ that Case 1 always creates a new block, therefore, $b.next$ in this case, must
 always refer to a new block.
 \end{itemize}
 
-Therefore, since from Lemma 1 we know that both $CAS3$ and $CAS4$ can only fail 
-if already completed, thus guaranteeing their finite completion, and since 
-$CAS3$ and $CAS4$ are the only state changing operations invoked through 
+Therefore, since from Lemma 1 we know that both $CAS3$ and $CAS4$ can only
+fail if already completed guaranteeing their finite completion, and since
+$CAS3$ and $CAS4$ are the only state changing operations invoked through
 $expand$, the $expand$ operation must complete in a finite number of steps.
 
 Finally, since we saw in Case 2 that a new block is always created and related
