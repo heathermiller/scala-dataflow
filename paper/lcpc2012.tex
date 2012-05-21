@@ -20,6 +20,8 @@
 
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{alltt}
+\usepackage{lineno}
 \setcounter{tocdepth}{3}
 \usepackage{graphicx}
 
@@ -27,6 +29,11 @@
 \urldef{\mails}\path|{firstname.lastname}@epfl.ch|    
 \newcommand{\keywords}[1]{\par\addvspace\baselineskip
 \noindent\keywordname\enspace\ignorespaces#1}
+
+\makeatletter
+\newcommand{\customlabel}[2]{%
+\protected@write \@auxout {}{\string \newlabel {#1}{{#2}{}}}}
+\makeatother
 
 \begin{document}
 
@@ -271,12 +278,97 @@ Forcing a bib, \cite{bowman:reasoning}, \cite{braams:babel}, \cite{clark:pct}, \
 \bibliography{bib}
 
 
+\begin{alltt}
+{\scriptsize
+{\internallinenumbers{def append(elem: Elem)
+  b = READ(current) {\customlabel{read_block}{\LineNumber}}
+  idx = READ(b.index) {\customlabel{read_index}{\LineNumber}}
+  nextobj = READ(b.array(idx + 1)) {\customlabel{read_next}{\LineNumber}}
+  curobj = READ(b.array(idx)) {\customlabel{read_current}{\LineNumber}}
+  if (check(b, idx, curobj, nextobj)) {
+    if (CAS(b.array(idx + 1), nextobj, curobj)) { {\customlabel{cas_propagate}{\LineNumber}}
+      if (CAS(b.array(idx), curobj, elem)) { {\customlabel{cas_append}{\LineNumber}}
+        WRITE(b.index, idx + 1) {\customlabel{write_index}{\LineNumber}}
+        invokeCallbacks(elem, curobj)
+      } else append(elem)
+    } else append(elem)
+  } else {
+    advance()
+    append(elem)
+  }
 
+def check(b: Block, idx: Int, curobj: Object, nextobj: Object)
+  // The check on the index is done implicitly in the real code
+  if (idx > LASTELEMPOS) return false
+  else curobj match {
+    elem: Elem =>
+      return false
+    term: Terminal =>
+      if (term.sealed == NOTSEALED) return true
+      else {
+        if (totalElems(b, idx) < term.sealed) return true
+        else error("sealed")
+      }
+    null =>
+      error("unreachable")
+  }
+
+def advance()
+  b = READ(current)
+  idx = READ(b.index)
+  if (idx > LASTELEMPOS) expand(b)
+  else {
+    obj = READ(b.array(idx))
+    if (obj is Elem) WRITE(b.index, idx + 1)
+  }
+
+def expand(b: Block)
+  nb = READ(b.next)
+  if (nb is null) {
+    nb = createBlock(b.blockindex + 1)
+    if (CAS(b.next, null, nb)) {\customlabel{cas_next}{\LineNumber}}
+      CAS(current, b, nb) {\customlabel{cas_block1}{\LineNumber}}
+  } else {
+    CAS(current, b, nb) {\customlabel{cas_block2}{\LineNumber}}
+  }
+
+def totalElems(b: Block, idx: Int)
+  return b.blockindex * (BLOCKSIZE - 1) + idx
+
+def invokeCallbacks(elem: Elem, term: Terminal)
+  for (f <- term.callbacks) future {
+    f(elem)
+  }
+}}}
+\end{alltt}
 
 
 \begin{definition}[FlowPool]
 The \textbf{FlowPool} is defined as the references $start$ and $current$.
 The \textbf{FlowPool state} is defined as the configuration of objects transitively reachable from the reference $start$.
+
+We define the following relations:
+
+\begin{equation*}
+following(b: Block) = 
+\begin{cases}
+\emptyset & \text{if b.next = null,}
+\\
+b.next \cup following(b.next) & \text{otherwise}
+\end{cases}
+\end{equation*}
+
+\begin{equation*}
+reachable(b: Block) = \{ b \} \cup following(b)
+\end{equation*}
+
+\begin{equation*}
+last(b: Block) = b' : b' \in reachable(b) \wedge b'.next = null
+\end{equation*}
+
+\begin{equation*}
+size(b: Block) = | \{ x : x \in b.array \wedge x \in Elem \} |
+\end{equation*}
 
 We say that the FlowPool \textbf{has} an element $e$ at some time $t_0$ if and only if the relation $hasElem(start, e)$ holds.
 
@@ -342,9 +434,69 @@ Seal...
 
 
 \begin{definition}[Consistency]
-A FlowPool state $\mathbb{S}$ is \textbf{consistent} with an abstract pool $\mathbb{F}$ at $t_0$
+A FlowPool state $\mathbb{S}$ is \textbf{consistent} with an abstract pool $\mathbb{P} = (elems, callbacks, seal)$ at $t_0$ if and only if $\mathbb{S}$ is a valid state and:
+\begin{description}
+\item $\forall e \in Elem, hasElem(start, e) \Leftrightarrow e \in elems$
+\item $\forall f \in Elem => Unit, \forall e \in Elem, willBeCalled(start, e, f) \Leftrightarrow \exists t_1 \geq t_0, \mathbb{P}(t_1) = (elems_1, (f, called_1) \cup callbacks_1, seal_1), elems \subseteq called_1$
+\item $\forall s \in \mathbb{N}, sealedAt(start, s) \Leftrightarrow s \in seal$
+\end{description}
+
+A FlowPool operation $op$ completing at some time $t_0$ is consistent with an abstract pool operation $op'$ if and only if $op$ changes the state of the FlowPool from $\mathbb{S}_1$ to $\mathbb{S}_2$, where $\mathbb{S}_1$ and $\mathbb{S}_2$ are consistent with the abstract pool states $\mathbb{A}_1$ and $\mathbb{A}_2$, respectively, and $op'$ changes the state of the abstract pool from $\mathbb{A}_1$ to $\mathbb{A}_2$.
 \end{definition}
 
+
+\begin{theorem}[Abstract pool semantics]
+FlowPool operation \verb=create= creates a new FlowPool consistent with the abstract pool $\mathbb{P} = (\emptyset, \emptyset, \emptyset)$. FlowPool operations \verb=foreach=, \verb=append= and \verb=seal= are consistent with the abstract pool semantics.
+\end{theorem}
+
+
+\begin{lemma}
+Given a FlowPool in a valid state, all writes produce a FlowPool in a valid state.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+
+\begin{definition}[Transition]
+If for a function $f(t)$ there exist times $t_0$ and $t_1$ such that $\forall t, t_0 < t < t_1, f(t) = v_0$ and $f(t_1) = v_1$, then we say that the function $f$ goes through a transition at $t_1$. We denote this as:
+
+$f: v_0 \stackrel{t_1}{\rightarrow} v_1$
+
+or, if we don't care about the exact time $t_1$ simply as:
+
+$f: v_0 \rightarrow v_1$
+\end{definition}
+
+
+\begin{lemma}[Lifecycle]
+
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+
+\begin{lemma}
+Given a FlowPool in state $\mathbb{S}$ consistent with some abstract pool state $\mathbb{A}$, CAS instructions in lines \ref{cas_next}, \ref{cas_block1} and \ref{cas_block2} do not change the state of the abstract pool.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+
+\begin{lemma}
+Given a FlowPool in state $\mathbb{S}$ consistent with some abstract pool state $\mathbb{A}$, a successful CAS in line \ref{cas_append} at some time $t_0$ changes the state of the FlowPool to $\mathbb{S}_0$ consistent with an abstract pool state $\mathbb{A}_0$, such that:
+
+$\mathbb{A} = (elems, callbacks, seal)$
+
+$\mathbb{A}_0 = (\{elem\} \cup elems, callbacks, seal)$
+
+Furthermore, given a fair scheduler, there exists a time $t_1 > t_0$ such that all the callback functions are called for $elem$.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
 
 
 % You are strongly encouraged to use \LaTeXe{} for the
