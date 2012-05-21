@@ -478,7 +478,7 @@ We say that an abstract pool $\mathbb{P}$ \textbf{is in state} $(elems, callback
 
 
 \begin{definition}[Abstract pool operations]
-We say that an abstract pool operation $op$ applied to an abstract pool $P_0 = (elems_0, callbacks_0, seal_0)$ at some time $t$ \textbf{changes} the state of the abstract pool to $P = (elems, callbacks, seal)$ if $\exists t_0, \forall \tau, t_0 < \tau < t, \mathbb{P}(\tau) = P_0$ and $\mathbb{P}(t) = P$.
+We say that an \textbf{abstract pool operation} $op$ applied to an abstract pool $P_0 = (elems_0, callbacks_0, seal_0)$ at some time $t$ \textbf{changes} the state of the abstract pool to $P = (elems, callbacks, seal)$ if $\exists t_0, \forall \tau, t_0 < \tau < t, \mathbb{P}(\tau) = P_0$ and $\mathbb{P}(t) = P$.
 
 Abstract pool operation $foreach(f)$ changes the state at $t_0$ from $(elems, callbacks, seal)$ to $(elems, (f, \emptyset) \cup callbacks, seal)$. Furthermore:
 
@@ -557,7 +557,7 @@ previously read the value from $b.index$.
 
 
 \begin{definition}[Transition]
-If for a function $f(t)$ there exist times $t_0$ and $t_1$ such that $\forall t, t_0 < t < t_1, f(t) = v_0$ and $f(t_1) = v_1$, then we say that the function $f$ goes through a transition at $t_1$. We denote this as:
+If for a function $f(t)$ there exist times $t_0$ and $t_1$ such that $\forall t, t_0 < t < t_1, f(t) = v_0$ and $f(t_1) = v_1$, then we say that the function $f$ goes through a \textbf{transition} at $t_1$. We denote this as:
 
 $f: v_0 \stackrel{t_1}{\rightarrow} v_1$
 
@@ -567,9 +567,14 @@ $f: v_0 \rightarrow v_1$
 \end{definition}
 
 
+\begin{definition}[Monotonicity]
+A function of time $f(t)$ is said to be \textbf{monotonic}, if every value in its string of transitions occurs only once.
+\end{definition}
+
+
 \begin{lemma}[Freshness]\label{lemma-freshness}
 For all blocks $b \in reachable(start)$, and for all $x \in b.array$,
-function $x$ has unique elements in its string of transitions.
+function $x$ is monotonic.
 \end{lemma}
 
 \begin{proof}
@@ -580,34 +585,67 @@ Trivial analysis of CAS instructions in lines \ref{cas_seal} and
 \ref{cas_callback}, shows that their expected values are of type
 $Terminal$ or are $null$. Their new values are always freshly allocated.
 
-The more difficult part is to prove that CAS instruction in line
+The more difficult part is to show that CAS instruction in line
 \ref{cas_propagate} respects the statement of the lemma.
 
 Since the CAS instructions in lines \ref{cas_seal} and
 \ref{cas_callback} are preceeded by a read of $idx = b.index$,
-from \ref{lemma-valid-hint} it follows that $b.array(idx - 1)$ 
+from lemma \ref{lemma-valid-hint} it follows that $b.array(idx - 1)$ 
 contains a value of type $Elem$.
 These are also the only CAS instructions which replace a $Terminal$
 value with another $Terminal$ value. The new value is always unique, as
 shown above.
 
+So the only potential CAS to write a non-fresh value to $idx + 1$ is the CAS
+in line \ref{cas_propagate}.
+
 A successful CAS in line \ref{cas_propagate} overwrites a value $cb_0$ at $idx + 1$
 read in line \ref{read_next} at $t_0$ with a new value $cb_2$ at time $t_2$. Value $cb_2$ was
 read in line \ref{read_current} at $t_1$ from the entry $idx$. The
 string of transitions of values at $idx$ is composed of unique values
-at least since $t_1$, since there is a value of type $Elem$ at the
-index $idx - 1$.
+at least since $t_1$ (by lemma \ref{lemma-end-of-life}), since there is
+a value of type $Elem$ at the index $idx - 1$.
 
-Now assume that a thread T1 successfully CAS in line
-\ref{cas_propagate} at $idx + 1$ at time $t_2$ overwrites $cb_0$ with
-a value $cb_2$ read from $idx$ at $t_1$, and that another thread T2 subsequently successfully
-completes the CAS in line \ref{cas_propagate} at $idx + 1$ at time
-$t_2$ with a value $cb_{prev}$ which was at $idx + 1$ at some time
-$t < t_0$. That would mean that the thread T2 read the value
-$cb_{prev}$ in line \ref{read_current} at some time $t_{prev1} < t_1$
+The conclusion above ensures that the values read in line \ref{read_current}
+to be subsequently used as new values for the CAS in line \ref{cas_propagate}
+form a monotonic function $f(t) = b.array(idx) \text{ at } t$.
+
+Now assume that a thread T1 successfully overwrites $cb_0$
+via CAS in line \ref{cas_propagate} at $idx + 1$ at time $t_2$ 
+to a value $cb_2$ read from $idx$ at $t_1$, and that another thread T2 
+is the \textbf{first} thread (since the FlowPool was created) to subsequently successfully
+complete the CAS in line \ref{cas_propagate} at $idx + 1$ at time
+$t_{prev2} > t_2$ with some value $cb_{prev2}$ which was at $idx + 1$ at some time
+$t < t_0$.
+
+That would mean that $b.array(idx + 1)$ does not change during $\langle t_0, t_2 \rangle$,
+since T2 was the first thread the write a non-fresh value to $idx + 1$, and any
+other write would cause the CAS in line \ref{cas_propagate} by T1 to fail.
+%That means that $t_0 > t_{prev0}$, otherwise the CAS in line \ref{cas_propagate}
+%by T2 would have failed.
+
+Also, that would mean that the thread T2 read the value
+$cb_{prev2}$ in line \ref{read_current} at some time $t_{prev1} < t_1$
 and successfully completed the CAS at time $t_{prev2} > t_2$. If the
 CAS was successful, then the read in line \ref{read_next} by T2
-occured at $t_{prev0} < t_{prev1} < t_1$. TODO finish this
+occured at $t_{prev0} < t_{prev1} < t_1$. Since we assumed that T2 is the
+first thread to write a value $cb_{prev2}$ to $idx + 1$ at time $t_{prev2}$
+which was previously in $idx + 1$ at some time $t < t_0$, then the CAS
+in line \ref{cas_propagate} at time $t_{prev2}$ could not have succeeded,
+since its expected value is $cb_{prev0}$ read at some time $t_{prev0}$, and
+we know that the value at $idx + 1$ was changed at least once in $\langle t_{prev0}, t_{prev2} \rangle$
+because of the write of a fresh value by thread T1 at $t_2 \in \langle t_{prev0}, t_{prev2} \rangle$.
+This value is known to be fresh because $b.array(idx)$ is a monotonic
+function at least since $t_{prev1}$, and the read of the new value
+written by T1 occurred at $t_1 > t_{prev1}$.
+We also know that there is no other thread T3 to write the value
+ $cb_{prev0}$ during $\langle t_{prev0}, t_{prev2} \rangle$
+back to $idx + 1$, since we assumed that T2 is the first to write
+a non-fresh value at that position.
+
+Hence, a contradiction shows that there is no thread T2 which is the \textbf{first}
+to write a non-fresh value via CAS in line \ref{cas_propagate} at $idx + 1$
+for any $idx$, so there is no thread that writes a non-fresh value at all.
 \end{proof}
 
 
@@ -652,7 +690,7 @@ always overwrites a one value of type $Terminal$ (or $null$) with
 another value of type $Terminal$. We still have to show that it never
 overwrites the value $cb_0$ with a value $cb_2$ that was at
 $b.array(idx)$ at an earlier time. This follows from the
-\ref{lemma-freshness} directly.
+lemma \ref{lemma-freshness} directly.
 
 Finally, note that the statement for CAS instructions in lines \ref{cas_seal} and
 \ref{cas_callback} follows directly from the proof for lemma \ref{lemma-freshness}.
@@ -681,7 +719,7 @@ pool state $\mathbb{A}$, CAS instructions in lines \ref{cas_propagate}, \ref{cas
 \end{proof}
 
 
-\begin{lemma}[Append correctness]
+\begin{lemma}[Append correctness]\label{lemma-append}
 Given a FlowPool in state $\mathbb{S}$ consistent with some abstract pool state $\mathbb{A}$, a successful CAS in line \ref{cas_append} at some time $t_0$ changes the state of the FlowPool to $\mathbb{S}_0$ consistent with an abstract pool state $\mathbb{A}_0$, such that:
 
 $\mathbb{A} = (elems, callbacks, seal)$
@@ -695,17 +733,37 @@ Furthermore, given a fair scheduler, there exists a time $t_1 > t_0$ such that a
 \end{proof}
 
 
+\begin{lemma}[Foreach correctness]\label{lemma-foreach}
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+
+\begin{lemma}[Seal correctness]\label{lemma-seal}
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+
 \begin{definition}[Obstruction-freedom]
-Given a FlowPool in a valid state, any operation
+Given a FlowPool in a valid state, an operation $op$ is \textbf{obstruction-free} if and only if a thread T executing the operation $op$ completes within a finite number of steps given that no other thread was executing the operation $op$ since T started executing it.
+
+We say that thread T executes the operation $op$ \textbf{in isolation}.
 \end{definition}
 
 
-\begin{lemma}[Obstruction-free operations]
+\begin{lemma}[Obstruction-free operations]\label{lemma-obstruction-free}
 The FlowPool operations are obstruction-free.
 \end{lemma}
 
 \begin{proof}
 By trivial sequential code analysis.
+\end{proof}
+
+\begin{proof}[Abstract pool semantics]
+From lemmas \ref{lemma-append}, \ref{lemma-foreach} and \ref{lemma-seal} directly, along with the fact that all operations executing in isolation complete after a finite number of steps by lemma \ref{lemma-obstruction-free}.
 \end{proof}
 
 
