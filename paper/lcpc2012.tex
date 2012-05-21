@@ -463,17 +463,22 @@ If for a function $f(t)$ there exist times $t_0$ and $t_1$ such that $\forall t,
 
 $f: v_0 \stackrel{t_1}{\rightarrow} v_1$
 
-or, if we don't care about the exact time $t_1$ simply as:
+Or, if we don't care about the exact time $t_1$, simply as:
 
 $f: v_0 \rightarrow v_1$
 \end{definition}
 
 
 \begin{lemma}[Lifecycle]
+For all blocks $b \in reachable(start)$, and for all $x \in b.array$, function $x$ goes through and only through the prefix of the following transitions:
 
+$null \rightarrow cb_1 \rightarrow \dots \rightarrow cb_n \rightarrow elem$, where:
+
+$cb_i \in Terminal, i \neq j \Rightarrow cb_i \neq cb_j, elem \in Elem$
 \end{lemma}
 
 \begin{proof}
+First of all, it is obvious from the code that each block that becomes an element of $reachable(start)$ at some time $t_0$ has the value of all $x \in b.array$ set to $null$.
 \end{proof}
 
 
