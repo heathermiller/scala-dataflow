@@ -272,6 +272,10 @@ Forcing a bib, \cite{bowman:reasoning}, \cite{braams:babel}, \cite{clark:pct}, \
 \appendix
 \section{Proof of Correctness}
 
+%-----
+% DEFINITION 1
+%-----
+
 \textbf{Definition 1} (Data types). A \textbf{Block} $b$ is an object which
 contains an array $b.array$, which itself can contain elements, $e \in Elem$,
 where \textbf{Elem} represents the type of $e$ and can be any countable set. A
@@ -281,6 +285,10 @@ $b.blockIndex$, and $b.next$, a reference to a successor block $c$ where
 $c.blockIndex = b.blockIndex + 1$. A \textbf{Terminal} $term$ is a sentinel
 object, which contains an integer $term.sealed \in {-1} \cup \mathbb{N}$, and
 $term.callbacks$, a set of functions $f \in Elem \Rightarrow Unit$.
+
+%-----
+% DEFINITION 2
+%-----
 
 \textbf{Definition 2} (FlowPool). A \textbf{FlowPool} $pool$ is an object that
 has a reference $pool.start$, to the first block $b_0$ (with $b_0.blockIndex=0$), 
@@ -294,6 +302,10 @@ $b=c~\vee~b.next=c~\vee~\exists b'~:~reachable(b,b')~\wedge~reachable(b',c)$.
 A \textbf{state changing} instruction is any atomic write or CAS instruction
 that changes an object that can be accessed from $pool.start$.
 
+%-----
+% DEFINITION 3
+%-----
+
 \textbf{Definition 3} (Abstract state). An \textbf{abstract state} $\mathbb{A}$ 
 is a tuple $(elems,sealed)$ such that $\mathbb{A} \in \{(elems,sealed)~|~elems \subset Elem,~sealed \in \{-1\} \cup \mathbb{N}\}$. 
 Abstract state operations on some abstract state $\mathbb{A}$ are $append(\mathbb{A},e) = \mathbb{A'}$ 
@@ -301,6 +313,10 @@ where $\mathbb{A'} = (elems \cup \{e\}, sealed)$ if $\mathbb{A}=(elems, sealed)$
 $seal(\mathbb{A},sealSize) = \mathbb{A''}$ where $\mathbb{A''} = (elems, sealSize)~:~sealSize \in \mathbb{N}$ 
 if $\mathbb{A}=(elems, sealed)$ and $sealed=-1$, the unsealed state, or 
 $sealed=sealSize$ already.
+
+%-----
+% DEFINITION 4
+%-----
 
 \textbf{Definition 4} (Consistency). A FlowPool state $\mathbb{S}$ of $pool$ 
 with starting block $pool.start$ is consistent with an abstract state 
@@ -313,16 +329,32 @@ is a change from state $\mathbb{S}$ to state $\mathbb{S'}$ such that $\mathbb{S}
 is consistent with an abstract state $\mathbb{A}$ and $\mathbb{S'}$ is consistent 
 with an abstract set $\mathbb{A'}$, where $\mathbb{A} \neq \mathbb{A'}$.
 
+%-----
+% DEFINITION 5
+%-----
+
 \textbf{Definition 5} (Lock-freedom). In a scenario where some finite number
 of threads are executing a concurrent operation, that concurrent operation is
 \textit{lock-free} if and only if that concurrent operation is completed after
 a finite number of steps by some thread.
+
+%==============================
+%==============================
+% 
+% THEOREM 1
+%
+%==============================
+%==============================
 
 \textbf{Theorem 1} (Lock-freedom). \textit{FlowPool operations append, seal,
 and doForAll are lock-free}.
 
 We begin by first proving that there are a finite number of execution steps
 before a consistency change occurs.
+
+%==============================
+% LEMMA 1
+%==============================
 
 \textbf{Lemma 1}. \textit{After invoking an operation $op$, if non-consistency
 changing CAS operations $CAS1$, $CAS3$, or $CAS4$, in the pseudocode fail,
@@ -343,6 +375,10 @@ have already successfully completed $CAS3$ since the beginning of $op$.
 Like above, $CAS4$ is the only CAS which can change the $current$ reference,
 therefore in the case of a failure, some other thread must have already
 successfully completed $CAS4$ since $op$ began. \qed
+
+%==============================
+% LEMMA 2
+%==============================
 
 \textbf{Lemma 2}. \textit{Invoking the $expand$ operation will execute a  
 non-consistency changing instruction after a finite number of steps. Furthermore,
@@ -369,7 +405,7 @@ $expand$ on the original block $b$.
 Lemma 1 guarantees that $CAS4$ will update $current$ to refer to $b.next$, 
 which we will show can only be a new block. Likewise, Lemma 1 has shown that 
 $CAS3$ is the only state changing instruction that can initiate a state change 
-at location $b.next$, therefore, since $CAS3$ takes place within Case 1, the 
+at location $b.next$, therefore, since $CAS3$ takes place within Case 1,  
 Case 2 can only be reachable after Case 1 has been executed successfully. Given 
 that Case 1 always creates a new block, therefore, $b.next$ in this case, must 
 always refer to a new block.
@@ -384,6 +420,10 @@ Finally, since we saw in Case 2 that a new block is always created and related
 references are always correctly set, that is both $b.next $ and $current$ are
 correctly updated to refer to the new block, it follows that $numBlocks$
 strictly increases after some finite number of steps.  \qed
+
+%==============================
+% LEMMA 3
+%==============================
 
 \textbf{Lemma 3}. \textit{After invoking $append(elem)$, if $CAS2$ fails, then
 some thread has successfully completed $CAS2$ or $CAS5$ (or likewise, $CAS6$)
@@ -423,24 +463,45 @@ $\{term.callbacks\in$\}).
 We omit the proof and detailed discussion of $CAS6$ because it can be proven 
 using the same steps as were taken for $CAS5$.
 
+%==============================
+% LEMMA 4
+%==============================
 \textbf{Lemma 4}. \textit{Each operation executes only a finite number of steps
 between each state changing instruction}.
 
-\textit{Proof}. We begin by inspecting each operation which contains a state
-changing instruction individually.
+\textit{Proof}. We proceed by individually inspecting each operation which
+contains a state changing instruction.
 
 The \textbf{$advance$}, \textbf{$check$}, \textbf{$totalElems$},
 \textbf{$invokeCallbacks$}, and \textbf{$tryWriteSeal$}  operations have a
-finite number of execution steps, as they contains no recursive calls, loops,
+finite number of execution steps, as they contain no recursive calls, loops,
 or other possibility to restart.
 
 The \textbf{$append$} operation is restarted in one of three cases:
 \begin{itemize} 
-\item \textbf{Case 1:} the call to the finite operation $check$ fails, 
-indicating that either at the current index location $idx$ in the block $b$ 
-is not a $Terminal$ or that $idx > LASTELEMPOS$, requiring in invocatin of 
-$advance$, which was shown above to complete in a finite number of steps, 
-followed by a recursive call $append(elem)$, on the same element $elem$. (still have to show that Case 1 is bounded somehow)
+\item \textbf{Case 1:} The call to the finite operation $check$ returns $false$,
+causing call to $advance$ followed by a recursive call to $append$ with the same 
+element $elem$ which in turn once again calls $check$. 
+
+We show that after a finite number of steps, the $check$ will evaluate to
+$true$, or some other thread will have completed a consistency changing
+operation since the initial invocation of $append$. In the case where $check$
+evaluates to $true$, Lemma 3 applies, as, it guarantees that a consistency
+changing CAS is completed after a finite number of steps.
+
+When the call to the finite operation $check$ returns $false$, if the
+subsequent $advance$ finds that a $Terminal$ object is at the current block
+index $idx$, then the next invocation of $append$ will evaluate $check$ to
+$true$. Otherwise, it must be the case that another thread has moved the
+Terminal to a subsequent index since the initial invocation of append, which
+is only possible using a consistency changing instruction.
+
+Second, as long as $advance$ finds that the element at $idx$ is an $Elem$, it
+will increment $idx$. This can only happen a finite number of times until a
+$Terminal$ is found in the current block, or some other thread has moved the
+$Terminal$ to a subsequent index. However, the latter is only possible by
+successfully completing $CAS2$ after the initial invocation of append.
+
 \item \textbf{Case 2:} $CAS1$ fails, which we know from Lemma 1 means that it 
 must've already been completed by another thread, triggering a recursive call 
 $append(elem)$ again on the same element $elem$.
@@ -449,17 +510,9 @@ $append(elem)$ again on the same element $elem$.
 
 After invoking append, if check is false, a consistency changing CAS (CAS2, CAS5, or CAS6) is completed after a finite number of steps.
 
-Proof.
-
-If the check fails, "advance" is called. If the index read at the beginning of "advance" is not greater than LASTELEMPOS, the index is updated to index + 1 using WRITE2. After that, append is repeated.
-
-We show that after a finite number of steps, the check will evaluate to true, or some other thread will have completed a consistency changing operation since the initial invocation of append. In the case where check evaluates to true, the previous Lemma applies ("When check is true it is guaranteed that a consistency changing CAS is completed after a finite number of steps").
-
-First, if advance finds that the element at the current index is a Terminal, then the next invocation of append will evaluate the check to true, or it must be the case that another thread has moved the Terminal to a subsequent index since the initial invocation of append, which is only possible using a consistency changing instruction.
-
-Second, as long as "advance" finds that the element at the current index is an Elem, it will increment the index. This can only happen a finite number of times until a Terminal is found in the current block, or some other thread has moved the Terminal to a subsequent index. However, the latter is only possible by successfully completing CAS2 after the initial invocation of append.
-
-
+%==============================
+% LEMMA 5
+%==============================
 
 \textbf{Lemma 5}. \textit{Assume a concurrent operation $op$ is started. After
 a finite number of state changing instructions, a consistency changing CAS
@@ -467,19 +520,27 @@ instruction is guaranteed to be successfully completed}.
 
 \textit{Proof}. 
 
+%==============================
+% LEMMA 6
+%==============================
+
 \textbf{Lemma 6}. \textit{Assume a concurrent operation is started. If a
 consistency changing CAS instruction completes, some concurrent operation is
 guaranteed to be completed}.
 
 \textit{Proof}. 
 
+%==============================
+% LOCK FREEDOM
+%==============================
+
 \textit{Lock-freedom}. 
 
 
 
 \pagebreak
+\subsection{Scratchpad}
 
-By 
 We have to show that we'll update $current$ after a finite number of steps.
 
 The $expand$ operation contains two CAS instructions; $CAS3$
