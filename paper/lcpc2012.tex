@@ -455,11 +455,11 @@ We define the following invariants for the \textbf{FlowPool}:
 \item[INV2] $\forall b \in reachable(start), b \not \in following(b)$
 \item[INV3] $\forall b \in reachable(start), b \neq last(start) \Rightarrow size(b) = LASTELEMPOS \wedge b.array(BLOCKSIZE - 1) \in Terminal$
 \item[INV4]
-$\forall b = last(start), b.array = p \cdot t \cdot n$, where:
+$\forall b = last(start), b.array = p \cdot c \cdot n$, where:
 
-$p = X^P, t = t_1 \cdot t_2, n = null^N$
+$p = X^P, c = c_1 \cdot c_2, n = null^N$
 
-$x \in Elem, t_1 \in Terminal, t_2 \in \{null\} \cup Terminal$
+$x \in Elem, c_1 \in Terminal, c_2 \in \{null\} \cup Terminal$
 
 $P + N + 2 = BLOCKSIZE$
 \item[INV5] $\forall b \in reachable(start), b.index > 0 \Rightarrow b.array(b.index - 1) \in Elem$
@@ -552,6 +552,12 @@ No other CAS has a value of type $Elem$ as the expected value.
 This means that once the CAS in line \ref{cas_append} writes a value
 of type $Elem$, no other write can change it.
 \end{proof}
+
+
+\begin{corollary}\label{cor-end-of-life}
+The end of life lemma implies that if all the values in $b.array$ are
+of type $Elem$ at $t_0$, then $\forall t > t_0$ there is no write to $b.array$.
+\end{corollary}
 
 
 \begin{lemma}[Valid hint]\label{lemma-valid-hint}
@@ -723,6 +729,30 @@ Finally, note that the statement for CAS instructions in lines \ref{cas_seal} an
 \end{proof}
 
 
+\begin{lemma}[Substring]\label{lemma-substring}
+Assume that for some block $b \in reachable(start)$ the transitions of
+$b.array(idx)$ are:
+
+\begin{equation}
+b.array(idx): null \rightarrow cb_1 \rightarrow \cdots \rightarrow
+cb_n \stackrel{t_0}{\rightarrow} elem: Elem
+\end{equation}
+
+Assume that the transitions of $b.array(idx + 1)$ up to time $t_0$ are:
+
+\begin{equation}
+b.array(idx + 1): null \rightarrow cb_1' \rightarrow \cdots
+\rightarrow cb_m'
+\end{equation}
+
+The string of transitions $null \rightarrow cb_1' \rightarrow \cdots
+\rightarrow cb_m'$ is a substring of $null \rightarrow cb_1 \rightarrow \cdots \rightarrow cb_n$.
+\end{lemma}
+
+\begin{proof}
+\end{proof}
+
+
 \begin{lemma}[Valid writes]\label{lemma-valid}
 Given a FlowPool in a valid state, all writes in all operations produce a FlowPool in a valid state.
 \end{lemma}
@@ -810,6 +840,42 @@ $\forall (f, called_1) \in callbacks_1, (f, called) \in callbacks \Rightarrow el
 \end{lemma}
 
 \begin{proof}
+Assume that the CAS in line \ref{cas_append} succeeds at some time
+$t_3$, the CAS in line \ref{cas_propagate} succeeds at some time $t_2 <
+t_3$, the read in line \ref{read_current} occurs at some time $t_1 <
+t_2$ and the read in line \ref{read_current} occurs at some time $t_0
+< t_1$.
+
+It is easy to see from the invariants, $check$ procedure and the
+corollary \ref{cor-end-of-life} that the CAS in line \ref{cas_append} can only
+occur if $b = last(start)$.
+
+We claim that for the block $b \in reachable(start)$ such that $b = last(b)$ the
+following holds at $t_2$:
+
+$b.array = elem^N \cdot cb_1 \cdot cb_2 \cdot null^{BLOCKSIZE - N - 2}$
+
+where $cb_1 = cb_2$, since there was no write to $idx$ after $cb_1$, otherwise the
+CAS in line \ref{cas_append} at $t_3$ would not have been successful
+(by lemma \ref{lemma-freshness}).
+
+Furthermore, $cb_1 = cb_2$ at $t_3$, as shown in the lemma
+\ref{lemma-substring}. Due to the same lemma, the entries of
+$b.array$ stay the same until $t_3$, otherwise the CAS in line
+\ref{cas_append} would not have been successful.
+After the successful CAS at $t_3$, we have:
+
+$b.array = elem^N \cdot e \cdot cb_1 \cdot null^{BLOCKSIZE - N - 2}$
+
+where $e: Elem$ is the newly appended element -- at $t_3$ the
+relation $hasElem(start, e)$ holds, $sealedAt(start, s)$ did not
+change between $t_2$ and $t_3$.
+
+It remains to shown that $willBeCalled(start, e, f)$ holds at $t_3$.
+Given a fair scheduler, within a finite number of steps the
+future store will contain a request for an asynchronous computation
+that invokes $f$ on $e$. The fair scheduler ensures that the future is
+scheduled within a finite number of steps.
 \end{proof}
 
 
