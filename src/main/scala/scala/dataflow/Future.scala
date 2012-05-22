@@ -52,10 +52,16 @@ class Future[T] {
   }
   
   private[dataflow] def complete(v: T) {
+    if (!tryComplete(v))
+      sys.error("Future completed twice")
+  }
+
+  private[dataflow] def tryComplete(v: T): Boolean = {
     synchronized {
       res match {
-        case Some(_) => sys.error("Future completed twice")
-        case None    => res = Some(v)
+        case Some(_) => return false
+        case None    =>
+          res = Some(v)
       }
       notifyAll()
     }
@@ -65,6 +71,8 @@ class Future[T] {
 
     // Release list
     cbs = null
+
+    true
   }
 
 }
