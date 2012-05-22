@@ -478,9 +478,12 @@ We say that an abstract pool $\mathbb{P}$ \textbf{is in state} $(elems, callback
 
 
 \begin{definition}[Abstract pool operations]
-We say that an \textbf{abstract pool operation} $op$ applied to an abstract pool $P_0 = (elems_0, callbacks_0, seal_0)$ at some time $t$ \textbf{changes} the state of the abstract pool to $P = (elems, callbacks, seal)$ if $\exists t_0, \forall \tau, t_0 < \tau < t, \mathbb{P}(\tau) = P_0$ and $\mathbb{P}(t) = P$.
+We say that an \textbf{abstract pool operation} $op$ applied to an abstract pool $P_0 = (elems_0, callbacks_0, seal_0)$ 
+at some time $t$ \textbf{changes} the state of the abstract pool to $P = (elems, callbacks, seal)$ 
+if $\exists t_0, \forall \tau, t_0 < \tau < t, \mathbb{P}(\tau) = P_0$ and $\mathbb{P}(t) = P$.
 
-Abstract pool operation $foreach(f)$ changes the state at $t_0$ from $(elems, callbacks, seal)$ to $(elems, (f, \emptyset) \cup callbacks, seal)$. Furthermore:
+Abstract pool operation $foreach(f)$ changes the state at $t_0$ from $(elems, callbacks, seal)$ 
+to $(elems, (f, \emptyset) \cup callbacks, seal)$. Furthermore:
 
 $\exists t_1 > t_0, \forall t_2 > t_1, \mathbb{P}(t_2) = (elems_2, (f, called_2) \cup callbacks_2, seal_2)$, where:
 
@@ -494,14 +497,19 @@ Seal...
 
 
 \begin{definition}[Consistency]
-A FlowPool state $\mathbb{S}$ is \textbf{consistent} with an abstract pool $\mathbb{P} = (elems, callbacks, seal)$ at $t_0$ if and only if $\mathbb{S}$ is a valid state and:
+A FlowPool state $\mathbb{S}$ is \textbf{consistent} with an abstract pool 
+$\mathbb{P} = (elems, callbacks, seal)$ at $t_0$ if and only if $\mathbb{S}$ 
+is a valid state and:
 \begin{description}
 \item $\forall e \in Elem, hasElem(start, e) \Leftrightarrow e \in elems$
 \item $\forall f \in Elem => Unit, \forall e \in Elem, willBeCalled(start, e, f) \Leftrightarrow \exists t_1 \geq t_0, \mathbb{P}(t_1) = (elems_1, (f, called_1) \cup callbacks_1, seal_1), elems \subseteq called_1$
 \item $\forall s \in \mathbb{N}, sealedAt(start, s) \Leftrightarrow s \in seal$
 \end{description}
 
-A FlowPool operation $op$ completing at some time $t_0$ is consistent with an abstract pool operation $op'$ if and only if $op$ changes the state of the FlowPool from $\mathbb{S}_1$ to $\mathbb{S}_2$, where $\mathbb{S}_1$ and $\mathbb{S}_2$ are consistent with the abstract pool states $\mathbb{A}_1$ and $\mathbb{A}_2$, respectively, and $op'$ changes the state of the abstract pool from $\mathbb{A}_1$ to $\mathbb{A}_2$.
+A FlowPool operation $op$ completing at some time $t_0$ is consistent with an abstract pool operation $op'$ if 
+and only if $op$ changes the state of the FlowPool from $\mathbb{S}_1$ to $\mathbb{S}_2$, where $\mathbb{S}_1$ 
+and $\mathbb{S}_2$ are consistent with the abstract pool states $\mathbb{A}_1$ and $\mathbb{A}_2$, respectively, 
+and $op'$ changes the state of the abstract pool from $\mathbb{A}_1$ to $\mathbb{A}_2$.
 \end{definition}
 
 
@@ -511,7 +519,9 @@ Every valid state is consistent with some abstract pool.
 
 
 \begin{theorem}[Abstract pool semantics]
-FlowPool operation \verb=create= creates a new FlowPool consistent with the abstract pool $\mathbb{P} = (\emptyset, \emptyset, \emptyset)$. FlowPool operations \verb=foreach=, \verb=append= and \verb=seal= are consistent with the abstract pool semantics.
+FlowPool operation \verb=create= creates a new FlowPool consistent with the abstract pool 
+$\mathbb{P} = (\emptyset, \emptyset, \emptyset)$. FlowPool operations \verb=foreach=, \verb=append= 
+and \verb=seal= are consistent with the abstract pool semantics.
 \end{theorem}
 
 
@@ -557,7 +567,9 @@ previously read the value from $b.index$.
 
 
 \begin{definition}[Transition]
-If for a function $f(t)$ there exist times $t_0$ and $t_1$ such that $\forall t, t_0 < t < t_1, f(t) = v_0$ and $f(t_1) = v_1$, then we say that the function $f$ goes through a \textbf{transition} at $t_1$. We denote this as:
+If for a function $f(t)$ there exist times $t_0$ and $t_1$ such that
+$\forall t, t_0 < t < t_1, f(t) = v_0$ and $f(t_1) = v_1$, then we say
+that the function $f$ goes through a \textbf{transition} at $t_1$. We denote this as:
 
 $f: v_0 \stackrel{t_1}{\rightarrow} v_1$
 
@@ -693,7 +705,7 @@ $b.array(idx)$ at an earlier time. This follows from the
 lemma \ref{lemma-freshness} directly.
 
 Finally, note that the statement for CAS instructions in lines \ref{cas_seal} and
-\ref{cas_callback} follows directly from the proof for lemma \ref{lemma-freshness}.
+\ref{cas_callback} also follows directly from the proof for lemma \ref{lemma-freshness}.
 \end{proof}
 
 
@@ -720,13 +732,20 @@ pool state $\mathbb{A}$, CAS instructions in lines \ref{cas_propagate}, \ref{cas
 
 
 \begin{lemma}[Append correctness]\label{lemma-append}
-Given a FlowPool in state $\mathbb{S}$ consistent with some abstract pool state $\mathbb{A}$, a successful CAS in line \ref{cas_append} at some time $t_0$ changes the state of the FlowPool to $\mathbb{S}_0$ consistent with an abstract pool state $\mathbb{A}_0$, such that:
+Given a FlowPool in state $\mathbb{S}$ consistent with some abstract pool state $\mathbb{A}$, 
+a successful CAS in line \ref{cas_append} at some time $t_0$ changes the state of the FlowPool 
+to $\mathbb{S}_0$ consistent with an abstract pool state $\mathbb{A}_0$, such that:
 
 $\mathbb{A} = (elems, callbacks, seal)$
 
 $\mathbb{A}_0 = (\{elem\} \cup elems, callbacks, seal)$
 
-Furthermore, given a fair scheduler, there exists a time $t_1 > t_0$ such that all the callback functions are called for $elem$.
+Furthermore, given a fair scheduler, there exists a time $t_1 > t_0$ at which the FlowPool 
+is consistent with an abstract pool in state $\mathbb{A}_1$, such that:
+
+$\mathbb{A}_1 = (elems_1, callbacks_1, seal_1)$, where:
+
+$\forall (f, called_1) \in callbacks_1, (f, called) \in callbacks \Rightarrow elem \in called_1$
 \end{lemma}
 
 \begin{proof}
@@ -734,6 +753,22 @@ Furthermore, given a fair scheduler, there exists a time $t_1 > t_0$ such that a
 
 
 \begin{lemma}[Foreach correctness]\label{lemma-foreach}
+Given a FlowPool in state $\mathbb{S}$ consistent with some abstract pool state $\mathbb{A}$, 
+a successful CAS in line \ref{cas_callback} at some time $t_0$ changes the state of the FlowPool 
+to $\mathbb{S}_0$ consistent with an abstract pool state $\mathbb{A}_0$, such that:
+
+$\mathbb{A} = (elems, callbacks, seal)$
+
+$\mathbb{A}_0 = (elems, (f, \emptyset) \cup callbacks, seal)$
+
+Furthermore, given a fair scheduler, there exists a time $t_1 > t_0$ at which the FlowPool 
+is consistent with an abstract pool in state $\mathbb{A}_1$, such that:
+
+$\mathbb{A}_1 = (elems_1, callbacks_1, seal_1)$, where:
+
+$elems \subseteq elems_1$
+
+$\forall (f, called_1) \in callbacks_1, elems \subseteq called_1$
 \end{lemma}
 
 \begin{proof}
@@ -741,6 +776,13 @@ Furthermore, given a fair scheduler, there exists a time $t_1 > t_0$ such that a
 
 
 \begin{lemma}[Seal correctness]\label{lemma-seal}
+Given a FlowPool in state $\mathbb{S}$ consistent with some abstract pool state $\mathbb{A}$, 
+a successful CAS in line \ref{cas_callback} at some time $t_0$ changes the state of the FlowPool 
+to $\mathbb{S}_0$ consistent with an abstract pool state $\mathbb{A}_0$, such that:
+
+$\mathbb{A} = (elems, callbacks, seal)$, where $seal \in \{ \emptyset, \{ s \} \}$
+
+$\mathbb{A}_0 = (elems, callbacks, \{ s \})$
 \end{lemma}
 
 \begin{proof}
