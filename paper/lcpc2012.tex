@@ -750,6 +750,21 @@ The string of transitions $null \rightarrow cb_1' \rightarrow \cdots
 \end{lemma}
 
 \begin{proof}
+Note that all the values written to $idx + 1$ before $t_0$ by CAS in line \ref{cas_propagate} were
+previously read from $idx$ in line \ref{read_current}.
+This means that the set of values occurring in $b.array(idx + 1)$
+before $t_0$ is a subset of the set of values in $b.array(idx)$.
+We have to prove that it is actually a substring.
+
+Assume that there exist two values $cb_1$ and $cb_2$ read by threads T1 and T2
+in line \ref{read_current} at times $t_1$ and $t_2 > t_1$, respectively.
+Assume that these values are written to $idx + 1$ by threads T1 and T2
+in line \ref{cas_propagate} in the opposite order, that is at times
+$t_{cas1}$ and $t_{cas2} < t_{cas1}$, respectively.
+That would mean that the CAS by thread T1 would have to fail, since its expected
+value $cb_0$ has changed between the time it was read in line \ref{read_next} and
+the $t_{cas1}$ at least once to a different value, and it could not have been
+changed back to $cb_0$ as we know from the lemma \ref{lemma-freshness}.
 \end{proof}
 
 
