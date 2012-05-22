@@ -288,7 +288,7 @@ Forcing a bib, \cite{bowman:reasoning}, \cite{braams:babel}, \cite{clark:pct}, \
   if (check(b, idx, curobj, nextobj)) {
     if (CAS(b.array(idx + 1), nextobj, curobj)) { {\customlabel{cas_propagate}{\LineNumber}}
       if (CAS(b.array(idx), curobj, elem)) { {\customlabel{cas_append}{\LineNumber}}
-        WRITE(b.index, idx + 1) {\customlabel{write_index}{\LineNumber}}
+        WRITE(b.index, idx + 1) {\customlabel{write_append}{\LineNumber}}
         invokeCallbacks(elem, curobj)
       } else append(elem)
     } else append(elem)
@@ -319,14 +319,14 @@ def advance()
   if (idx > LASTELEMPOS) expand(b)
   else {
     obj = READ(b.array(idx))
-    if (obj is Elem) WRITE(b.index, idx + 1)
+    if (obj is Elem) WRITE(b.index, idx + 1) {\customlabel{write_advance}{\LineNumber}}
   }
 
 def expand(b: Block)
   nb = READ(b.next)
   if (nb is null) {
     nb = createBlock(b.blockindex + 1)
-    if (CAS(b.next, null, nb)) {\customlabel{cas_next}{\LineNumber}}
+    if (CAS(b.next, null, nb)) {\customlabel{cas_expand}{\LineNumber}}
       expand(b)
   } else {
     CAS(current, b, nb) {\customlabel{cas_block}{\LineNumber}}
@@ -349,7 +349,7 @@ def seal(size: Int)
       term: Terminal =>
         tryWriteSeal(term, b, idx, size)
       elem: Elem =>
-        WRITE(b.index, idx + 1)
+        WRITE(b.index, idx + 1) {\customlabel{write_seal}{\LineNumber}}
         seal(size)
       null =>
         error("unreachable")
@@ -401,6 +401,12 @@ def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
 
 }}}
 \end{alltt}
+
+
+\setcounter{lemma}{0}
+\setcounter{theorem}{0}
+\setcounter{corollary}{0}
+\setcounter{definition}{0}
 
 
 \begin{definition}[FlowPool]
@@ -485,13 +491,21 @@ if $\exists t_0, \forall \tau, t_0 < \tau < t, \mathbb{P}(\tau) = P_0$ and $\mat
 Abstract pool operation $foreach(f)$ changes the state at $t_0$ from $(elems, callbacks, seal)$ 
 to $(elems, (f, \emptyset) \cup callbacks, seal)$. Furthermore:
 
-$\exists t_1 > t_0, \forall t_2 > t_1, \mathbb{P}(t_2) = (elems_2, (f, called_2) \cup callbacks_2, seal_2)$, where:
+$\exists t_1 > t_0, \forall t_2 > t_1, \mathbb{P}(t_2) = (elems_2,
+callbacks_2, seal_2) \wedge \forall (f, called_2) \in callbacks_2,
+elems \subseteq called_2 \subseteq elems_2$
 
-$called_2 \subseteq elems_2 \subseteq elems$
+Abstract pool operation $append(e)$ changes the state at $t_0$ from
+$(elems, callbacks, seal)$ to $(\{e\} \cup elems, callbacks, seal)$. Furthermore:
 
-Append...
+$\exists t_1 > t_0, \forall t_2 > t_1, \mathbb{P}(t_2) = (elems_2,
+callbacks_2, seal_2) \wedge \forall (f, called_2) \in callbacks_2,
+(f, called) \in callbacks \Rightarrow elem \in called_2$
 
-Seal...
+
+Abstract pool operation $seal(s)$ changes the state at $t_0$ from
+$(elems, callbacks, seal)$ to $(elems, callbacks, \{s\})$, assuming
+that $seal \in \{ \emptyset, \{s\} \}$.
 
 \end{definition}
 
@@ -518,7 +532,7 @@ Every valid state is consistent with some abstract pool.
 \end{proposition}
 
 
-\begin{theorem}[Abstract pool semantics]
+\begin{theorem}[Safety]
 FlowPool operation \verb=create= creates a new FlowPool consistent with the abstract pool 
 $\mathbb{P} = (\emptyset, \emptyset, \emptyset)$. FlowPool operations \verb=foreach=, \verb=append= 
 and \verb=seal= are consistent with the abstract pool semantics.
@@ -595,7 +609,7 @@ $Elem$. No CAS instruction has a value of type $Elem$ as the expected value.
 
 Trivial analysis of CAS instructions in lines \ref{cas_seal} and
 \ref{cas_callback}, shows that their expected values are of type
-$Terminal$ or are $null$. Their new values are always freshly allocated.
+$Terminal$. Their new values are always freshly allocated.
 
 The more difficult part is to show that CAS instruction in line
 \ref{cas_propagate} respects the statement of the lemma.
@@ -661,7 +675,7 @@ for any $idx$, so there is no thread that writes a non-fresh value at all.
 \end{proof}
 
 
-\begin{lemma}[Lifecycle]
+\begin{lemma}[Lifecycle]\label{lemma-lifecycle}
 For all blocks $b \in reachable(start)$, and for all $x \in b.array$, function $x$ goes through and only through the prefix of the following transitions:
 
 $null \rightarrow cb_1 \rightarrow \dots \rightarrow cb_n \rightarrow elem$, where:
@@ -699,10 +713,10 @@ the interval $\langle t_1, t_2 \rangle$, so its value is not $Elem$ at $t_2$.
 
 The above reasoning shows that the CAS in line \ref{cas_propagate}
 always overwrites a one value of type $Terminal$ (or $null$) with
-another value of type $Terminal$. We still have to show that it never
+another value of type $Terminal$.
+We have shown in lemma \ref{lemma-freshness} that it never
 overwrites the value $cb_0$ with a value $cb_2$ that was at
-$b.array(idx)$ at an earlier time. This follows from the
-lemma \ref{lemma-freshness} directly.
+$b.array(idx)$ at an earlier time.
 
 Finally, note that the statement for CAS instructions in lines \ref{cas_seal} and
 \ref{cas_callback} also follows directly from the proof for lemma \ref{lemma-freshness}.
@@ -717,13 +731,60 @@ Given a FlowPool in a valid state, all writes in all operations produce a FlowPo
 A new FlowPool is trivially in a valid state.
 
 Otherwise, assume that the FlowPool is in a valid state
-$\mathbb{S}$. We analyze each write.
+$\mathbb{S}$.
+In the rest of the proof, whenever some invariant is trivially
+unaffected by a write, we omit mentioning it.
+We start by noting that we already prooved the claim
+for atomic writes in lines \ref{write_append}, \ref{write_advance} and
+\ref{write_seal} (which only affect [INV5]) in lemma
+\ref{lemma-valid-hint}.
+We proceed by analyzing each atomic CAS instruction.
+
+CAS in line \ref{cas_expand} at time $t_1$ maintains the invariant
+[INV1].
+This is because its expected value is always
+$null$, which ensures that the lifecycle of $b.next$ is $null
+\rightarrow b': Block$, meaning that the function $reachable(start)$
+returns a monotonically growing set.
+So if $current \in reachable(start)$ at $t_0$, then this also holds at
+$t_1 > t_0$.
+It also maintains [INV2] because the new value $nb$ is always fresh,
+so $\forall b, b \not \in following(b)$.
+Finally, it maintains [INV3] because it is preceeded with a bounds
+check and we know from corollary \ref{cor-compactness} and the
+lemma \ref{lemma-end-of-life} that all the values in $b.array(idx),
+idx < LASTELEMPOS$ must be of type $Elem$.
+
+CAS in line \ref{cas_block} at time $t_1$ maintains the
+invariant [INV1], since the new value for the $current \neq null$ was read from
+$b.next$ at $t_0 < t_1$ when the invariant was assumed to hold, and
+it is still there a $t_1$, as shown before.
+
+For CAS instructions in lines \ref{cas_append}, \ref{cas_callback} and
+\ref{cas_seal} that write to index $idx$ we know from lemma
+\ref{lemma-valid-hint} that the value at $idx - 1$ is of type $Elem$.
+This immediately shows that CAS instructions in lines
+\ref{cas_callback} and \ref{cas_seal} maintain [INV3] and [INV4].
+
+For CAS in line \ref{cas_append} we additionally know that it must
+have been preceeded by a successful CAS in line \ref{cas_propagate}
+which previously wrote a $Terminal$ value to $idx + 1$. From lemma
+\ref{lemma-lifecycle} we know that $idx + 1$ is still $Terminal$ when
+the CAS in line \ref{cas_append} occurs, hence [INV4] is kept.
+
+Finally, CAS in line \ref{cas_propagate} succeeds only if the value at
+$idx + 1$ is of type $Terminal$, as shown before in lemma
+\ref{lemma-lifecycle}.
+By the same lemma, the value at $idx$ is either
+$Terminal$ or $Elem$ at that point, since $idx - 1$ is known to be
+$Elem$ by lemma \ref{lemma-valid-hint}.
+This means that [INV4] is kept.
 \end{proof}
 
 
 \begin{lemma}[Housekeeping]
 Given a FlowPool in state $\mathbb{S}$ consistent with some abstract
-pool state $\mathbb{A}$, CAS instructions in lines \ref{cas_propagate}, \ref{cas_next} and
+pool state $\mathbb{A}$, CAS instructions in lines \ref{cas_propagate}, \ref{cas_expand} and
 \ref{cas_block} do not change the state of the abstract pool.
 \end{lemma}
 
@@ -790,7 +851,10 @@ $\mathbb{A}_0 = (elems, callbacks, \{ s \})$
 
 
 \begin{definition}[Obstruction-freedom]
-Given a FlowPool in a valid state, an operation $op$ is \textbf{obstruction-free} if and only if a thread T executing the operation $op$ completes within a finite number of steps given that no other thread was executing the operation $op$ since T started executing it.
+Given a FlowPool in a valid state, an operation $op$ is
+\textbf{obstruction-free} if and only if a thread T executing the
+operation $op$ completes within a finite number of steps given that
+no other thread was executing the operation $op$ since T started executing it.
 
 We say that thread T executes the operation $op$ \textbf{in isolation}.
 \end{definition}
@@ -801,11 +865,14 @@ The FlowPool operations are obstruction-free.
 \end{lemma}
 
 \begin{proof}
-By trivial sequential code analysis.
+By trivial sequential code analysis supported by the fact that the
+invariants (especially [INV2]) hold in a valid state.
 \end{proof}
 
-\begin{proof}[Abstract pool semantics]
-From lemmas \ref{lemma-append}, \ref{lemma-foreach} and \ref{lemma-seal} directly, along with the fact that all operations executing in isolation complete after a finite number of steps by lemma \ref{lemma-obstruction-free}.
+\begin{proof}[Safety]
+From lemmas \ref{lemma-append}, \ref{lemma-foreach} and
+\ref{lemma-seal} directly, along with the fact that all operations
+executing in  isolation complete after a finite number of steps by lemma \ref{lemma-obstruction-free}.
 \end{proof}
 
 
