@@ -166,16 +166,16 @@
 			  sealed = term.sealed
 			  callbacks = f :: term.callbacks
 			}
-		    if (!CAS(b.array(idx), term, nterm)) asyncForeach(f, b, idx) // CAS6 
+		    if (!CAS(b.array(idx), term, nterm)) asyncDoForAll(f, b, idx) // CAS6 
 		  elem: Elem =>
 		    f(elem)
-			asyncForeach(f, b, idx + 1)
+			asyncDoForAll(f, b, idx + 1)
 		  null =>
 		    error("unreachable")
 		}
 	  } else {
         // In the real code we take a shortcut when preparing the new block
 	    expand(b)
-		asyncForeach(f, b.next, 0)
+		asyncDoForAll(f, b.next, 0)
 	  }
 	  

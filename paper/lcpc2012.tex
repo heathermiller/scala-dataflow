@@ -383,24 +383,91 @@ $expand$, the $expand$ operation must complete in a finite number of steps.
 Finally, since we saw in Case 2 that a new block is always created and related
 references are always correctly set, that is both $b.next $ and $current$ are
 correctly updated to refer to the new block, it follows that $numBlocks$
-strictly increases after some finite number of steps.
+strictly increases after some finite number of steps.  \qed
 
-\textbf{Lemma 3}. \textit{Each operation executes only a finite number of steps
+\textbf{Lemma 3}. \textit{After invoking $append(elem)$, if $CAS2$ fails, then
+some thread has successfully completed $CAS2$ or $CAS5$ (or likewise, $CAS6$)
+after some finite number of steps}.
+
+\textit{Proof}. First, we show that a thread attempting to complete $CAS2$
+can't fail due to a different thread completing $CAS1$ so long as $seal$ has
+not been invoked after completing the read of $currobj$. We address this
+exception later on.
+
+Since after $check$, the only condition under which $CAS1$, and by extension,
+$CAS2$ can be executed is the situation where the current object $currobj$
+with index location $idx$ is the $Terminal$ object, it follows that $CAS1$ can
+only ever serve to duplicate this $Terminal$ object at location $idx+1$,
+leaving at most two $Terminal$s in block refered to by $current$ momentarily
+until $CAS2$ can be executed. By Lemma 1, since $CAS1$ is a non-consistency
+changing instruction, it follows that any thread holding any element $elem'$
+can execute this instruction without changing the expected value of $currobj$
+in $CAS2$, as no new object is ever created and placed in location $idx$.
+Therefore, $CAS2$ cannot fail due to $CAS1$, so long as $seal$ has not been
+invoked by some other thread after the read of $currobj$.
+
+This leaves only two scenarios in which consistency changing $CAS2$ can fail:
+
+\begin{itemize}
+\item \textbf{Case 1:} Another thread has already completed $CAS2$ with a 
+different element $elem'$.
+\item \textbf{Case 2:} Another thread completes an invocation to the $seal$ 
+operation after the current thread completes the read of $currobj$. In this 
+case, $CAS2$ can fail because $CAS5$ (or, likewise $CAS6$) might have 
+completed before, in which case, it inserts a new $Terminal$ object $term$ 
+into location $idx$ (in the case of a $seal$ invocation, 
+$term.sealed\in\mathbb{N}$, or in the case of a $doForAll$ invocation, 
+$\{term.callbacks\in$\}). 
+\end{itemize}
+
+We omit the proof and detailed discussion of $CAS6$ because it can be proven 
+using the same steps as were taken for $CAS5$.
+
+\textbf{Lemma 4}. \textit{Each operation executes only a finite number of steps
 between each state changing instruction}.
 
 \textit{Proof}. We begin by inspecting each operation which contains a state
 changing instruction individually.
 
-The \textbf{$append$} operation involves the following state changing
-instructions; $CAS1$, $CAS2$, $WRITE1$, $WRITE2$, $CAS3$, and $CAS4$.
+The \textbf{$advance$}, \textbf{$check$}, \textbf{$totalElems$},
+\textbf{$invokeCallbacks$}, and \textbf{$tryWriteSeal$}  operations have a
+finite number of execution steps, as they contains no recursive calls, loops,
+or other possibility to restart.
 
-\textbf{Lemma 4}. \textit{Assume a concurrent operation $op$ is started. After
+The \textbf{$append$} operation is restarted in one of three cases:
+\begin{itemize} 
+\item \textbf{Case 1:} the call to the finite operation $check$ fails, 
+indicating that either at the current index location $idx$ in the block $b$ 
+is not a $Terminal$ or that $idx > LASTELEMPOS$, requiring in invocatin of 
+$advance$, which was shown above to complete in a finite number of steps, 
+followed by a recursive call $append(elem)$, on the same element $elem$. (still have to show that Case 1 is bounded somehow)
+\item \textbf{Case 2:} $CAS1$ fails, which we know from Lemma 1 means that it 
+must've already been completed by another thread, triggering a recursive call 
+$append(elem)$ again on the same element $elem$.
+\item \textbf{Case 3:} $CAS2$ fails, indicating that after the (have to prove here that after the read of currobj, some thread must have succeeded)
+\end{itemize}
+
+After invoking append, if check is false, a consistency changing CAS (CAS2, CAS5, or CAS6) is completed after a finite number of steps.
+
+Proof.
+
+If the check fails, "advance" is called. If the index read at the beginning of "advance" is not greater than LASTELEMPOS, the index is updated to index + 1 using WRITE2. After that, append is repeated.
+
+We show that after a finite number of steps, the check will evaluate to true, or some other thread will have completed a consistency changing operation since the initial invocation of append. In the case where check evaluates to true, the previous Lemma applies ("When check is true it is guaranteed that a consistency changing CAS is completed after a finite number of steps").
+
+First, if advance finds that the element at the current index is a Terminal, then the next invocation of append will evaluate the check to true, or it must be the case that another thread has moved the Terminal to a subsequent index since the initial invocation of append, which is only possible using a consistency changing instruction.
+
+Second, as long as "advance" finds that the element at the current index is an Elem, it will increment the index. This can only happen a finite number of times until a Terminal is found in the current block, or some other thread has moved the Terminal to a subsequent index. However, the latter is only possible by successfully completing CAS2 after the initial invocation of append.
+
+
+
+\textbf{Lemma 5}. \textit{Assume a concurrent operation $op$ is started. After
 a finite number of state changing instructions, a consistency changing CAS
 instruction is guaranteed to be successfully completed}.
 
 \textit{Proof}. 
 
-\textbf{Lemma 5}. \textit{Assume a concurrent operation is started. If a
+\textbf{Lemma 6}. \textit{Assume a concurrent operation is started. If a
 consistency changing CAS instruction completes, some concurrent operation is
 guaranteed to be completed}.
 
