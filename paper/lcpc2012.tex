@@ -416,9 +416,9 @@ $current$.
 
 The \textbf{FlowPool state} is defined as a pair of the directed graph of
 objects transitively reachable from the reference $start$ and the set
-of scheduled asynchronous computations called $futures$.
+of scheduled callback invocations called $futures$.
 
-A \textbf{scheduled asynchronous computation} is a pair $(f, e)$ of a function
+A \textbf{scheduled callback invocation} is a pair $(f, e)$ of a function
 $f \in Elem => Unit$ and an element $e \in Elem$.
 The programming construct that adds such a pair to the set of
 $futures$ is \verb=future { f(e) }=.
@@ -469,7 +469,7 @@ $willBeCalled(start, e, f)$ holds.
 
 \begin{equation*}
 willBeCalled(start, e, f) \Leftrightarrow \exists t_0, \forall t >
-t_0, (f, e) in futures
+t_0, (f, e) \in futures
 \end{equation*}
 
 We say that the FlowPool is \textbf{sealed} at the size $s$ at some
@@ -1020,7 +1020,7 @@ $\mathbb{A}_0 = (elems, callbacks, \{ s \})$
 \end{lemma}
 
 \begin{proof}
-Similar to proof of lemma \ref{lemma-foreach}.
+Similar to the proof of lemma \ref{lemma-foreach}.
 \end{proof}
 
 
