@@ -309,8 +309,8 @@ that changes an object that can be accessed from $pool.start$.
 \textbf{Definition 3} (Invariants).
 
 \textbf{INV1} let $b: Block$ such that $reachable(start,b)\wedge b.next=\bot$. 
-$\exists i$ such that $b.array(i) = Terminal \wedge \forall j>i$ 
-such that $j\leq LASTELEMPOS, b.array(j) = \bot$
+$\exists i$ such that $b.array(i) = Terminal \wedge \forall~i<j \leq LASTELEMPOS$, 
+$b.array(j) = \bot$
 
 %-----
 % DEFINITION 4
@@ -364,6 +364,8 @@ and doForAll are lock-free}.
 We begin by first proving that there are a finite number of execution steps
 before a consistency change occurs.
 
+CASes that fail by being completed by other CASes signify progress. 
+
 %==============================
 % LEMMA 1
 %==============================
@@ -386,17 +388,19 @@ have already successfully completed $CAS3$ since the beginning of $op$.
 
 Like above, $CAS4$ is the only CAS which can change the $current$ reference,
 therefore in the case of a failure, some other thread must have already
-successfully completed $CAS4$ since $op$ began. \qed
+successfully completed $CAS4$ since $op$ began.
+\qed
 
 %==============================
 % LEMMA 2 (EXPAND)
 %==============================
 
-\textbf{Lemma 2}. \textit{Invoking the $expand$ operation will execute a  
-non-consistency changing instruction after a finite number of steps. Furthermore,
-given a total number of blocks $numBlocks$ reachable in a FlowPool $pool$
-before invoking $expand$, the number of blocks $numBlocks'$ after some finite
-number of steps is guaranteed to satisfy $numBlocks'>numBlocks$}.
+\textbf{Lemma 2}. \textit{Invoking the $expand$ operation will execute a
+non-consistency changing instruction after a finite number of steps.
+Furthermore, given a total number of blocks $numBlocks$ reachable in a
+FlowPool $pool$ before invoking $expand$ through $append$, the number of
+blocks $numBlocks'$ after some finite number of steps is guaranteed to satisfy
+$numBlocks'>numBlocks$}.
 
 \textit{Proof}. From inspection of the pseudocode, it is clear that the only
 point at which $expand(b)$ can be invoked is under the condition that for some
@@ -431,7 +435,8 @@ $expand$, the $expand$ operation must complete in a finite number of steps.
 Finally, since we saw in Case 2 that a new block is always created and related
 references are always correctly set, that is both $b.next $ and $current$ are
 correctly updated to refer to the new block, it follows that $numBlocks$
-strictly increases after some finite number of steps.  \qed
+strictly increases after some finite number of steps.
+\qed
 
 %==============================
 % LEMMA 3 (CAS2)
@@ -473,29 +478,46 @@ $\{term.callbacks\in$\}).
 \end{itemize}
 
 We omit the proof and detailed discussion of $CAS6$ because it can be proven 
-using the same steps as were taken for $CAS5$.
+using the same steps as were taken for $CAS5$. 
+\qed
 
 %==============================
-% LEMMA 4 (FINITE EXEC BETWEEN CAS-ES)
+% LEMMA 4 (FINITE # STEPS BEFORE STATE CHANGE)
 %==============================
-\textbf{Lemma 4}. \textit{Each operation executes only a finite number of steps
-between each state changing instruction}.
 
-\textit{Proof}. We proceed by individually inspecting each operation which
-contains a state changing instruction.
+\textbf{Lemma 4}. \textit{All operations with the exception of $append$,
+$seal$, and $doForAll$ execute only a finite number of steps between each
+state changing instruction}
 
-The \textbf{advance}, \textbf{check}, \textbf{totalElems},
-\textbf{invokeCallbacks}, and \textbf{tryWriteSeal}  operations have a
-finite number of execution steps, as they contain no recursive calls, loops,
-or other possibility to restart.
+\textit{Proof}. The \textbf{advance}, \textbf{check}, \textbf{totalElems},
+\textbf{invokeCallbacks}, and \textbf{tryWriteSeal}  operations have a finite
+number of execution steps, as they contain no recursive calls, loops, or other
+possibility to restart.
 
-The \textbf{append} operation is restarted in one of three cases:
+While the \textbf{expand} operation contains a recursive call following a CAS
+instruction, it was shown in Lemma 2 that an invocation of $expand$ is
+guaranteed to execute a state changing instruction after a finite number of
+steps. 
+\qed
+
+%==============================
+% LEMMA 5 (APPEND: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
+%==============================
+
+\textbf{Lemma 5}. \textit{After invoking $append(elem)$, a consistency
+changing instruction will be completed after a finite number of steps.}
+
+\textit{Proof}.
+The \textbf{append} operation can be restarted in three cases. We show that in
+each case, it's guaranteed to either complete in a finite number of steps,  or
+leads to a state changing instruction:
+
 \begin{itemize} 
 
-% This case still needs a bit of work, and an additional invariant or two
-\item \textbf{Case 1:} The call to the finite operation $check$ returns $false$, 
-causing call to $advance$ followed by a recursive call to $append$ with the same 
-element $elem$ which in turn once again calls $check$. 
+\item \textbf{Case 1:} The call to $check$, a finite operation by Lemma 4,
+returns $false$,  causing a call to $advance$, also a finite operation by
+Lemma 4, followed by a recursive call to $append$ with the same  element
+$elem$ which in turn once again calls $check$.
 
 We show that after a finite number of steps, the $check$ will evaluate to
 $true$, or some other thread will have completed a consistency changing
@@ -510,12 +532,6 @@ $true$. Otherwise, it must be the case that another thread has moved the
 Terminal to a subsequent index since the initial invocation of append, which
 is only possible using a consistency changing instruction.
 
-% Mention something about the expand lemma here since expand is being invoked?
-% Do we need to give some other proof that this is terminating, i.e. that there
-% are certainly a finite number of elements before a Terminal block?
-% Add an invariant on initialization so as to address the fact that there is 
-% always at least one, but at most two Terminal objects in pool.array?
-
 Finally, if $advance$ finds that the element at $idx$ is an $Elem$, it will
 increment $idx$. By $INV1$, this can only happen a finite number of times
 until a $Terminal$ is found. In the case that $expand$ is meanwhile invoked
@@ -525,47 +541,135 @@ other thread has moved the $Terminal$ to a subsequent index. However, this
 latter case is only possible by successfully completing $CAS2$, a consistency
 changing instruction, after the initial invocation of append.
 
-\item \textbf{Case 2:} $CAS1$ fails, which we know from Lemma 1 means that it 
-must've already been completed by another thread, a state changing instruction.
+\item \textbf{Case 2:} $CAS1$ fails, which we know from Lemma 1 means that it
+must've already been completed by another thread, guaranteeing that $CAS2$
+will be attempted. If $CAS2$ fails, by Lemma 3, after a finite number of
+steps, a consistency changing instruction will be completed. If $CAS2$
+succeeds,  as a consistency changing instruction, consistency will have
+clearly been changed.
 
 \item \textbf{Case 3:} $CAS2$ fails, which, by Lemma 3, indicates that either
 some other thread has already completed $CAS2$ with another element, or
 another consistency changing instruction, $CAS5$ or $CAS6$ has successfully
 completed.  
 
+\end{itemize}
+
 Therefore, $append$ itself as well as all other operations reachable via an
 invocation of $append$ are guaranteed to have a finite number of steps between
-state changing instructions.
+\textit{consistency} changing instructions.
+
+%==============================
+% LEMMA 6 (CAS5)
+%==============================
+
+\textbf{Lemma 6}. \textit{After invoking $seal(size)$, if $CAS5$ fails, then
+some thread has successfully completed $CAS5$ or $CAS2$ after some finite
+number of steps}.
+
+\textit{Proof}. Since $CAS1$ only duplicates an existing $Terminal$, it can
+not be the cause for a failing $CAS5$. This leaves only two cases in which
+$CAS5$ can fail:
+
+\begin{itemize}
+\item \textbf{Case 1:} Another thread has already completed $CAS5$.
+\item \textbf{Case 2:} Another thread completes an invocation to the
+$append(elem)$ operation after the current thread completes the read of
+$currobj$. In this  case, $CAS5$ can fail because $CAS2$ might have  completed
+before, in which case, it inserts a new $Elem$ object $elem$  into location
+$idx$.
 
 \end{itemize}
 
 %==============================
-% LEMMA 5
+% LEMMA 7 (SEAL: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
 %==============================
 
-\textbf{Lemma 5}. \textit{Assume a concurrent operation $op$ is started. After
+\textbf{Lemma 7}. \textit{After invoking $seal(size)$, a consistency changing
+instruction will be completed after a finite number of steps, or the initial
+invocation of $seal(size)$ completes.}
+
+\textit{Proof}. The $seal$ operation can be restarted in two scenarios. 
+
+\begin{itemize}
+
+\item \textbf{Case 1:} The object at the current index location $idx$ is of
+type $Elem$, not $Terminal$, causing a recursive call to $seal$ with the same
+size $size$. 
+
+% proof about the WRITE in Elem case. Assuming one can reliably write the index...
+
+% then we can show that idx will eventually come to a terminal. DONE via INV1.
+% therefore, we will be able to complete seal.
+
+\item \textbf{Case 2:} The check $idx \leq LASTELEMPOS$ fails, indicating that
+we must move on to the next block, causing first a call to $expand$ followed
+by a recursive call to $seal$ with the same size $size$.
+
+% have to prove here that after a finite # of steps, we end up in case 1.
+
+% we also have to fix the current pointer in the case where it's broken,
+% necessitating a call to expand. We know by the expand lemma that the current
+% pointer will be updated after a finite number of steps to point to a
+% subsequent block.
+
+% if after expand but before READ(current) current.index > LASTELEMPOS, then a
+% consistency change must've occurred because append must've been completed.
+% otherwise, we'd go to case 1.
+
+% then we have to somehow fix the expand lemma
+
+% CRUFT
+% =====
+% Here, we have to show that idx = LASTELEMPOS after a finite number of
+% recursive calls.
+% In this case, we show that the check $idx < LASTELEMPOS$ will evaluate to
+% $true$ in some finite number of steps. 
+% After a finite number of steps, we'll end up in Case 2.
+
+% either the initial invocation of seal completes, by lemma 6, or a
+% consistency changing operation completes.
+
+% Here, we have to show that we don't infinitely invoke expand 
+% We know by the expand lemma that the current pointer will be updated after a
+% finite number of steps to point to a subsequent block.
+
+% expand is possibly incorrect because the lemma claims that when you invoke
+% expand, you're guaranteed to create a block and numBlocks monotonically
+% increases
+
+\end{itemize}
+
+
+%==============================
+% LEMMA 8 (DOFORALL: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
+%==============================
+
+\textbf{Lemma 8}. \textit{After invoking $doForAll(fun)$, a consistency
+changing instruction will be completed after a finite number of steps.}
+
+We omit the proof for $doForAll$ since it proceeds in the exactly the same way
+as does the proof for $seal$ in Lemma 7.
+
+%==============================
+% LEMMA 9
+%==============================
+
+\textbf{Lemma 9}. \textit{Assume a concurrent operation $op$ is started. After
 a finite number of state changing instructions, a consistency changing CAS
 instruction is guaranteed to be successfully completed}.
 
 \textit{Proof}. 
 
 %==============================
-% LEMMA 6
+% LEMMA 10
 %==============================
 
-\textbf{Lemma 6}. \textit{Assume a concurrent operation is started. If a
+\textbf{Lemma 10}. \textit{Assume a concurrent operation is started. If a
 consistency changing CAS instruction completes, some concurrent operation is
 guaranteed to be completed}.
 
 \textit{Proof}. 
-
-%==============================
-% LOCK FREEDOM
-%==============================
-
-\textit{Lock-freedom}. 
-
-
 
 %>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 %>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -577,6 +681,18 @@ guaranteed to be completed}.
 
 \pagebreak
 \subsection{Scratchpad}
+
+%==============================
+% LOCK FREEDOM
+%==============================
+
+\textit{Lock-freedom}. 
+
+
+
+By Lemma 2, we know that when we call
+$expand$, it's guaranteed that there will be a finite number of steps executed
+followed by a state changing operation.
 
 
 After invoking append, if check is false, a consistency changing CAS (CAS2, CAS5, or CAS6) is completed after a finite number of steps.
