@@ -316,18 +316,19 @@ def check(b: Block, idx: Int, curobj: Object, nextobj: Object)
 def advance()
   b = READ(current)
   idx = READ(b.index)
-  if (idx > LASTELEMPOS) expand(b)
+  if (idx > LASTELEMPOS) expand(b, b.array(idx))
   else {
     obj = READ(b.array(idx))
     if (obj is Elem) WRITE(b.index, idx + 1) {\customlabel{write_advance}{\LineNumber}}
   }
 
-def expand(b: Block)
+def expand(b: Block, t: Terminal)
   nb = READ(b.next)
   if (nb is null) {
     nb = createBlock(b.blockindex + 1)
+    nb.array(0) = t
     if (CAS(b.next, null, nb)) {\customlabel{cas_expand}{\LineNumber}}
-      expand(b)
+      expand(b, t)
   } else {
     CAS(current, b, nb) {\customlabel{cas_block}{\LineNumber}}
   }
@@ -355,7 +356,7 @@ def seal(size: Int)
         error("unreachable")
     }
   } else {
-    expand(b)
+    expand(b, b.array(idx))
     seal(size)
   }
 
@@ -395,7 +396,7 @@ def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
     }
   } else {
     // In the real code we take a shortcut when preparing the new block
-    expand(b)
+    expand(b, b.array(idx))
     asyncDoForAll(f, b.next, 0)
   }
 
@@ -411,7 +412,7 @@ def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
 
 \begin{definition}[FlowPool]
 The \textbf{FlowPool} is defined as the references $start$ and $current$.
-The \textbf{FlowPool state} is defined as the configuration of objects transitively reachable from the reference $start$.
+The \textbf{FlowPool state} is defined as the directed graph of objects transitively reachable from the reference $start$.
 
 We define the following relations:
 
@@ -501,7 +502,6 @@ $(elems, callbacks, seal)$ to $(\{e\} \cup elems, callbacks, seal)$. Furthermore
 $\exists t_1 > t_0, \forall t_2 > t_1, \mathbb{P}(t_2) = (elems_2,
 callbacks_2, seal_2) \wedge \forall (f, called_2) \in callbacks_2,
 (f, called) \in callbacks \Rightarrow elem \in called_2$
-
 
 Abstract pool operation $seal(s)$ changes the state at $t_0$ from
 $(elems, callbacks, seal)$ to $(elems, callbacks, \{s\})$, assuming
@@ -729,7 +729,7 @@ Finally, note that the statement for CAS instructions in lines \ref{cas_seal} an
 \end{proof}
 
 
-\begin{lemma}[Substring]\label{lemma-substring}
+\begin{lemma}[Subsequence]\label{lemma-subsequence}
 Assume that for some block $b \in reachable(start)$ the transitions of
 $b.array(idx)$ are:
 
@@ -746,7 +746,8 @@ b.array(idx + 1): null \rightarrow cb_1' \rightarrow \cdots
 \end{equation}
 
 The string of transitions $null \rightarrow cb_1' \rightarrow \cdots
-\rightarrow cb_m'$ is a substring of $null \rightarrow cb_1 \rightarrow \cdots \rightarrow cb_n$.
+\rightarrow cb_m'$ is a subsequence of $null \rightarrow cb_1
+\rightarrow \cdots \rightarrow cb_n$.
 \end{lemma}
 
 \begin{proof}
@@ -754,7 +755,7 @@ Note that all the values written to $idx + 1$ before $t_0$ by CAS in line \ref{c
 previously read from $idx$ in line \ref{read_current}.
 This means that the set of values occurring in $b.array(idx + 1)$
 before $t_0$ is a subset of the set of values in $b.array(idx)$.
-We have to prove that it is actually a substring.
+We have to prove that it is actually a subsequence.
 
 Assume that there exist two values $cb_1$ and $cb_2$ read by threads T1 and T2
 in line \ref{read_current} at times $t_1$ and $t_2 > t_1$, respectively.
@@ -764,7 +765,13 @@ $t_{cas1}$ and $t_{cas2} < t_{cas1}$, respectively.
 That would mean that the CAS by thread T1 would have to fail, since its expected
 value $cb_0$ has changed between the time it was read in line \ref{read_next} and
 the $t_{cas1}$ at least once to a different value, and it could not have been
-changed back to $cb_0$ as we know from the lemma \ref{lemma-freshness}.
+changed back to $cb_0$ as we know from the lemma
+\ref{lemma-freshness}.
+
+Notice that we have actually prooved a stronger result above.
+We have also shown that the string of values
+written at $idx + 1$ by CAS in line \ref{cas_propagate} successfully is a subsequence
+of \textbf{all} the transitions of values at $idx$ (not just until $t_0$).
 \end{proof}
 
 
@@ -827,13 +834,45 @@ This means that [INV4] is kept.
 \end{proof}
 
 
-\begin{lemma}[Housekeeping]
+\begin{lemma}[Housekeeping]\label{lemma-housekeeping}
 Given a FlowPool in state $\mathbb{S}$ consistent with some abstract
 pool state $\mathbb{A}$, CAS instructions in lines \ref{cas_propagate}, \ref{cas_expand} and
-\ref{cas_block} do not change the state of the abstract pool.
+\ref{cas_block} do not change the abstract pool state $\mathbb{A}$.
 \end{lemma}
 
 \begin{proof}
+Since none of the relations $hasElem$, $willBeCalled$ and $sealedAt$
+are defined by the value of $current$ CAS in line \ref{cas_block}
+does not change them, hence it does not change the abstract pool
+state.
+
+It is easy to see that the CAS in line \ref{cas_expand} does not remove any elements, nor make
+any additional elements reachable, since the new block $nb$ which
+becomes reachable does not contain any elements at that time.
+Hence the $hasElem$ relation is not affected.
+It does change the value $last(start)$ to $nb$, but since $nb.array =
+t \cdot null^{BLOCKSIZE - 1}$, where $t \in Terminal$ was previously
+the last non-null element in $b.array$, it does not change the
+$sealedAt$ relation either.
+Finally, the CAS does not change the set of scheduled futures, so
+it does not affect the $willBeCalled$ relation.
+
+The CAS in line \ref{cas_propagate} does not make some new element reachable,
+hence the $hasElem$ relation is preserved.
+
+Note now that this CAS does not change the relations $willBeCalled$
+and $sealedAt$ as long as there is a value of type $Terminal$ at the
+preceeding entry $idx$.
+We claim that if the CAS succeeds at $t_2$, then 
+either the value at $idx$ is of type $Terminal$ (trivially) or the CAS
+did not change the value at $idx + 1$.
+In other words, if the value at $idx$ at time $t_2$ is of type $Elem$,
+then the write by CAS in line \ref{cas_propagate} does not change
+the value at $idx + 1$ at $t_2$.
+This was, in fact, already shown in the proof of lemma \ref{lemma-subsequence}.
+
+The argument above proves directly that relations $willBeCalled$
+and $sealedAt$ are not changed by the CAS in line \ref{cas_propagate}.
 \end{proof}
 
 
@@ -875,7 +914,7 @@ CAS in line \ref{cas_append} at $t_3$ would not have been successful
 (by lemma \ref{lemma-freshness}).
 
 Furthermore, $cb_1 = cb_2$ at $t_3$, as shown in the lemma
-\ref{lemma-substring}. Due to the same lemma, the entries of
+\ref{lemma-subsequence}. Due to the same lemma, the entries of
 $b.array$ stay the same until $t_3$, otherwise the CAS in line
 \ref{cas_append} would not have been successful.
 After the successful CAS at $t_3$, we have:
@@ -886,7 +925,7 @@ where $e: Elem$ is the newly appended element -- at $t_3$ the
 relation $hasElem(start, e)$ holds, $sealedAt(start, s)$ did not
 change between $t_2$ and $t_3$.
 
-It remains to shown that $willBeCalled(start, e, f)$ holds at $t_3$.
+It remains to be shown that $willBeCalled(start, e, f)$ holds at $t_3$.
 Given a fair scheduler, within a finite number of steps the
 future store will contain a request for an asynchronous computation
 that invokes $f$ on $e$. The fair scheduler ensures that the future is
