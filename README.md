@@ -5,7 +5,7 @@ Runs with SBT 0.11.x
 
 
 
-## TODO list
+## DONE list
 
 ### FlowPool implementation
 
@@ -35,5 +35,56 @@ Runs with SBT 0.11.x
 - determinism
 
 
-### Paper
+## Paper Outline
+
+- Intro / Motivation (1.5 pages)
+- Model of Computation (0.75 page) **DEP**
+- Programming Model (2 pages) **DEP**
+	- First intro to API
+	- Small discussion and justification of API.
+		- Deterministic
+		- Can run arbitrarily long (GC point)
+	- Grammar (concise)
+		- point out that builder was left out in the grammar, etc, as a memory hack i.e. implementation detail
+- Implementation
+	- Pseudocode (1 page)
+	- Discussion of pseudocode (1 page)
+- Proofs (2-2.5 pages) **DEP**
+	- ...
+- Experimental Results (2 pages)
+	- Benchmarks, plots (Heather can generate plots)
+- Related Work (2 pages)
+	- Scala Futures
+	- CnC
+	- Sarkar's futures (Data-driven futures) Look at callback-related references
+	- Twitter futures
+	- Oz
+	- gpars (dataflow stuff)
+	- i-Structures (any other Arvind stuff)
+	- Dataflow Java?
+	- FlumeJava
+	- M$ TPL?
+	- CLQ
+	- LTQ
+	- Michael Scott CLQ
+	- take a look at source of LTQ
+	- research blocking queues
+	- Nir Shavit, Data Structures in the Multicore Age
+	- Introduction crap
+		- the Art of Multiprocessor Programming, 2008, Herlihy, Shavit, 
+		- Concurrent Data Structures, 2007, Moir, Shavit.
+		- Linearizability: A Correctness Condition for Concurrent Objects, 1990, Herlihy
+- Conclusion (0.25 page)
+	- see need to embed callbacks within the data structure themselves
+- Appendix A
+  - Abstract pool semantics
+  - Linearizability
+  - Lock-freedom
+- Appendix B
+	- Calculus
+	- Determinism Proof
+- Appendix C
+	- Extra plots (if they exist)
+
+
 
