@@ -254,6 +254,174 @@ where \verb|<+>| is the future of the sum of two \verb+Future[Int]+.
 
 \section{Implementation}
 
+\begin{alltt}
+{\scriptsize
+type Elem
+
+type Block \{
+  array: Array
+  next: Block
+  index: Int
+  blockindex: Int
+\}
+
+type FlowPool \{
+  start: Block
+  current: Block
+\}
+
+type Terminal \{
+  sealed: Int
+  callbacks: List[Elem => Unit]
+\}
+
+BLOCKSIZE = 256
+LASTELEMPOS = BLOCKSIZE - 2
+NOTSEALED = -1
+}
+\end{alltt}
+
+
+\begin{alltt}
+{\scriptsize
+{\internallinenumbers{def append(elem: Elem)
+  b = READ(current) {\customlabel{read_block}{\LineNumber}}
+  idx = READ(b.index) {\customlabel{read_index}{\LineNumber}}
+  nextobj = READ(b.array(idx + 1)) {\customlabel{read_next}{\LineNumber}}
+  curobj = READ(b.array(idx)) {\customlabel{read_current}{\LineNumber}}
+  if (check(b, idx, curobj, nextobj)) \{
+    if (CAS(b.array(idx + 1), nextobj, curobj)) \{ {\customlabel{cas_propagate}{\LineNumber}}
+      if (CAS(b.array(idx), curobj, elem)) \{ {\customlabel{cas_append}{\LineNumber}}
+        WRITE(b.index, idx + 1) {\customlabel{write_append}{\LineNumber}}
+        invokeCallbacks(elem, curobj)
+      \} else append(elem)
+    \} else append(elem)
+  \} else \{
+    advance()
+    append(elem)
+  \}
+
+def check(b: Block, idx: Int, curobj: Object, nextobj: Object)
+  // The check on the index is done implicitly in the real code
+  if (idx > LASTELEMPOS) return false
+  else curobj match \{
+    elem: Elem =>
+      return false
+    term: Terminal =>
+      if (term.sealed == NOTSEALED) return true
+      else \{
+        if (totalElems(b, idx) < term.sealed) return true
+        else error("sealed")
+      \}
+    null =>
+      error("unreachable")
+  \}
+
+def advance()
+  b = READ(current)
+  idx = READ(b.index)
+  if (idx > LASTELEMPOS) expand(b, b.array(idx))
+  else \{
+    obj = READ(b.array(idx))
+    if (obj is Elem) WRITE(b.index, idx + 1) {\customlabel{write_advance}{\LineNumber}}
+  \}
+
+def expand(b: Block, t: Terminal)
+  nb = READ(b.next)
+  if (nb is null) \{
+    nb = createBlock(b.blockindex + 1)
+    nb.array(0) = t
+    if (CAS(b.next, null, nb)) {\customlabel{cas_expand}{\LineNumber}}
+      expand(b, t)
+  \} else \{
+    CAS(current, b, nb) {\customlabel{cas_block}{\LineNumber}}
+  \}
+
+def totalElems(b: Block, idx: Int)
+  return b.blockindex * (BLOCKSIZE - 1) + idx
+
+def invokeCallbacks(elem: Elem, term: Terminal)
+  for (f <- term.callbacks) future \{
+    f(elem)
+  \}
+
+def seal(size: Int)
+  b = READ(current)
+  idx = READ(b.index)
+  if (idx <= LASTELEMPOS) \{
+    curobj = READ(b.array(idx)) {\customlabel{read_seal}{\LineNumber}}
+    curobj match \{
+      term: Terminal =>
+        tryWriteSeal(term, b, idx, size)
+      elem: Elem =>
+        WRITE(b.index, idx + 1) {\customlabel{write_seal}{\LineNumber}}
+        seal(size)
+      null =>
+        error("unreachable")
+    \}
+  \} else \{
+    expand(b, b.array(idx))
+    seal(size)
+  \}
+
+def tryWriteSeal(term: Terminal, b: Block, idx: Int, size: Int)
+  val total = totalElems(b, idx)
+  if (total > size) error("too many elements")
+  if (term.sealed == NOTSEALED) \{
+    nterm = new Terminal \{
+      sealed = size
+      callbacks = term.callbacks
+    \}
+    CAS(b.array(idx), term, nterm) {\customlabel{cas_seal}{\LineNumber}}
+  \} else if (term.sealed != size) \{
+    error("already sealed with different size")
+  \}
+
+def doForAll(f: Elem => Unit)
+  future \{
+    asyncDoForAll(f, start, 0)
+  \}
+
+def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
+  if (idx <= LASTELEMPOS) \{
+    obj = READ(b.array(idx)) {\customlabel{read_callback}{\LineNumber}}
+    obj match \{
+      term: Terminal =>
+        nterm = new Terminal \{
+          sealed = term.sealed
+          callbacks = f :: term.callbacks
+        \}
+        if (!CAS(b.array(idx), term, nterm)) asyncDoForAll(f, b, idx) {\customlabel{cas_callback}{\LineNumber}}
+      elem: Elem =>
+        f(elem) {\customlabel{call_callback}{\LineNumber}}
+        asyncDoForAll(f, b, idx + 1)
+      null =>
+        error("unreachable")
+    \}
+  \} else \{
+    // In the real code we take a shortcut when preparing the new block
+    expand(b, b.array(idx))
+    asyncDoForAll(f, b.next, 0)
+  \}
+
+}}}
+\end{alltt}
+
+We now describe the FlowPool and its basic operations.
+In doing so, we avoid the details not relevant to the algorithm
+(specifically, the builder abstraction) and
+focus on a high-level description of a non-blocking data structure.
+One straightforward way to implement a growing pool is to use a linked
+list of nodes that wrap elements.
+As we are concerned about the memory footprint and cache-locality, we
+store the elements into arrays instead, which we call blocks.
+Whenever a block becomes full, a new block is allocated and the
+previous block is made to point to the \verb=next= block.
+This way, most writes amount to a simple array-write, while allocation
+occurs only occasionally.
+
+
+
 \section{Proofs}
 \subsection{Abstract Pool Semantics}
 Alex
@@ -278,132 +446,6 @@ Forcing a bib, \cite{bowman:reasoning}, \cite{braams:babel}, \cite{clark:pct}, \
 \bibliography{bib}
 
 
-\begin{alltt}
-{\scriptsize
-{\internallinenumbers{def append(elem: Elem)
-  b = READ(current) {\customlabel{read_block}{\LineNumber}}
-  idx = READ(b.index) {\customlabel{read_index}{\LineNumber}}
-  nextobj = READ(b.array(idx + 1)) {\customlabel{read_next}{\LineNumber}}
-  curobj = READ(b.array(idx)) {\customlabel{read_current}{\LineNumber}}
-  if (check(b, idx, curobj, nextobj)) {
-    if (CAS(b.array(idx + 1), nextobj, curobj)) { {\customlabel{cas_propagate}{\LineNumber}}
-      if (CAS(b.array(idx), curobj, elem)) { {\customlabel{cas_append}{\LineNumber}}
-        WRITE(b.index, idx + 1) {\customlabel{write_append}{\LineNumber}}
-        invokeCallbacks(elem, curobj)
-      } else append(elem)
-    } else append(elem)
-  } else {
-    advance()
-    append(elem)
-  }
-
-def check(b: Block, idx: Int, curobj: Object, nextobj: Object)
-  // The check on the index is done implicitly in the real code
-  if (idx > LASTELEMPOS) return false
-  else curobj match {
-    elem: Elem =>
-      return false
-    term: Terminal =>
-      if (term.sealed == NOTSEALED) return true
-      else {
-        if (totalElems(b, idx) < term.sealed) return true
-        else error("sealed")
-      }
-    null =>
-      error("unreachable")
-  }
-
-def advance()
-  b = READ(current)
-  idx = READ(b.index)
-  if (idx > LASTELEMPOS) expand(b, b.array(idx))
-  else {
-    obj = READ(b.array(idx))
-    if (obj is Elem) WRITE(b.index, idx + 1) {\customlabel{write_advance}{\LineNumber}}
-  }
-
-def expand(b: Block, t: Terminal)
-  nb = READ(b.next)
-  if (nb is null) {
-    nb = createBlock(b.blockindex + 1)
-    nb.array(0) = t
-    if (CAS(b.next, null, nb)) {\customlabel{cas_expand}{\LineNumber}}
-      expand(b, t)
-  } else {
-    CAS(current, b, nb) {\customlabel{cas_block}{\LineNumber}}
-  }
-
-def totalElems(b: Block, idx: Int)
-  return b.blockindex * (BLOCKSIZE - 1) + idx
-
-def invokeCallbacks(elem: Elem, term: Terminal)
-  for (f <- term.callbacks) future {
-    f(elem)
-  }
-
-def seal(size: Int)
-  b = READ(current)
-  idx = READ(b.index)
-  if (idx <= LASTELEMPOS) {
-    curobj = READ(b.array(idx)) {\customlabel{read_seal}{\LineNumber}}
-    curobj match {
-      term: Terminal =>
-        tryWriteSeal(term, b, idx, size)
-      elem: Elem =>
-        WRITE(b.index, idx + 1) {\customlabel{write_seal}{\LineNumber}}
-        seal(size)
-      null =>
-        error("unreachable")
-    }
-  } else {
-    expand(b, b.array(idx))
-    seal(size)
-  }
-
-def tryWriteSeal(term: Terminal, b: Block, idx: Int, size: Int)
-  val total = totalElems(b, idx)
-  if (total > size) error("too many elements")
-  if (term.sealed == NOTSEALED) {
-    nterm = new Terminal {
-      sealed = size
-      callbacks = term.callbacks
-    }
-    CAS(b.array(idx), term, nterm) {\customlabel{cas_seal}{\LineNumber}}
-  } else if (term.sealed != size) {
-    error("already sealed with different size")
-  }
-
-def doForAll(f: Elem => Unit)
-  future {
-    asyncDoForAll(f, start, 0)
-  }
-
-def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
-  if (idx <= LASTELEMPOS) {
-    obj = READ(b.array(idx)) {\customlabel{read_callback}{\LineNumber}}
-    obj match {
-      term: Terminal =>
-        nterm = new Terminal {
-          sealed = term.sealed
-          callbacks = f :: term.callbacks
-        }
-        if (!CAS(b.array(idx), term, nterm)) asyncDoForAll(f, b, idx) {\customlabel{cas_callback}{\LineNumber}}
-      elem: Elem =>
-        f(elem) {\customlabel{call_callback}{\LineNumber}}
-        asyncDoForAll(f, b, idx + 1)
-      null =>
-        error("unreachable")
-    }
-  } else {
-    // In the real code we take a shortcut when preparing the new block
-    expand(b, b.array(idx))
-    asyncDoForAll(f, b.next, 0)
-  }
-
-}}}
-\end{alltt}
-
-
 \setcounter{lemma}{0}
 \setcounter{theorem}{0}
 \setcounter{corollary}{0}
@@ -411,7 +453,7 @@ def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
 
 
 \begin{definition}[FlowPool]
-The \textbf{FlowPool} is defined as the references $start$ and
+The \textbf{FlowPool} is defined as a pair of references $start$ and
 $current$.
 
 The \textbf{FlowPool state} is defined as a pair of the directed graph of
