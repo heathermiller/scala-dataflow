@@ -306,19 +306,31 @@ that changes an object that can be accessed from $pool.start$.
 % DEFINITION 3
 %-----
 
-\textbf{Definition 3} (Abstract state). An \textbf{abstract state} $\mathbb{A}$ 
-is a tuple $(elems,sealed)$ such that $\mathbb{A} \in \{(elems,sealed)~|~elems \subset Elem,~sealed \in \{-1\} \cup \mathbb{N}\}$. 
-Abstract state operations on some abstract state $\mathbb{A}$ are $append(\mathbb{A},e) = \mathbb{A'}$ 
-where $\mathbb{A'} = (elems \cup \{e\}, sealed)$ if $\mathbb{A}=(elems, sealed)$, 
-$seal(\mathbb{A},sealSize) = \mathbb{A''}$ where $\mathbb{A''} = (elems, sealSize)~:~sealSize \in \mathbb{N}$ 
-if $\mathbb{A}=(elems, sealed)$ and $sealed=-1$, the unsealed state, or 
-$sealed=sealSize$ already.
+\textbf{Definition 3} (Invariants).
+
+\textbf{INV1} let $b: Block$ such that $reachable(start,b)\wedge b.next=\bot$. 
+$\exists i$ such that $b.array(i) = Terminal \wedge \forall j>i$ 
+such that $j\leq LASTELEMPOS, b.array(j) = \bot$
 
 %-----
 % DEFINITION 4
 %-----
 
-\textbf{Definition 4} (Consistency). A FlowPool state $\mathbb{S}$ of $pool$ 
+\textbf{Definition 4} (Abstract state). An \textbf{abstract state} $\mathbb{A}$ 
+is a tuple $(elems,sealed,callbacks)$ such that 
+$\mathbb{A} \in \{(elems,sealed,callbacks)~|~elems \subset Elem,~sealed \in \{-1\} \cup \mathbb{N},~callbacks\subset Elem \Rightarrow Unit\}$ 
+Abstract state operations on some abstract state $\mathbb{A}$ are $append(\mathbb{A},e) = \mathbb{A'}$ 
+where $\mathbb{A'} = (elems \cup \{e\}, sealed, callbacks)$ if $\mathbb{A}=(elems, sealed, callbacks)$, 
+$seal(\mathbb{A},sealSize) = \mathbb{A''}$ where $\mathbb{A''} = (elems, sealSize, callbacks)~:~sealSize \in \mathbb{N}$ 
+if $\mathbb{A}=(elems, sealed, callbacks)$ and $sealed=-1$, the unsealed state, or 
+$sealed=sealSize$ already, and 
+$doForAll(\mathbb{A},fun)=\mathbb{A'''}$ where $\mathbb{A'''}=(elems, sealed, callbacks\cup \{fun\})$.
+
+%-----
+% DEFINITION 5
+%-----
+
+\textbf{Definition 5} (Consistency). A FlowPool state $\mathbb{S}$ of $pool$ 
 with starting block $pool.start$ is consistent with an abstract state 
 $\mathbb{A}=(elems,sealed)$ iff some element $e \in elems \Leftrightarrow \exists b,i~:~reachable(pool.start,b)~\wedge~b.array(i)=e,$ 
 and $\exists c,j~:~c.array(j) \in Terminal~\wedge~c.array(j).sealed=sealed~\wedge~reachable(pool.start, c)$. 
@@ -330,10 +342,10 @@ is consistent with an abstract state $\mathbb{A}$ and $\mathbb{S'}$ is consisten
 with an abstract set $\mathbb{A'}$, where $\mathbb{A} \neq \mathbb{A'}$.
 
 %-----
-% DEFINITION 5
+% DEFINITION 6
 %-----
 
-\textbf{Definition 5} (Lock-freedom). In a scenario where some finite number
+\textbf{Definition 6} (Lock-freedom). In a scenario where some finite number
 of threads are executing a concurrent operation, that concurrent operation is
 \textit{lock-free} if and only if that concurrent operation is completed after
 a finite number of steps by some thread.
@@ -377,7 +389,7 @@ therefore in the case of a failure, some other thread must have already
 successfully completed $CAS4$ since $op$ began. \qed
 
 %==============================
-% LEMMA 2
+% LEMMA 2 (EXPAND)
 %==============================
 
 \textbf{Lemma 2}. \textit{Invoking the $expand$ operation will execute a  
@@ -422,7 +434,7 @@ correctly updated to refer to the new block, it follows that $numBlocks$
 strictly increases after some finite number of steps.  \qed
 
 %==============================
-% LEMMA 3
+% LEMMA 3 (CAS2)
 %==============================
 
 \textbf{Lemma 3}. \textit{After invoking $append(elem)$, if $CAS2$ fails, then
@@ -464,7 +476,7 @@ We omit the proof and detailed discussion of $CAS6$ because it can be proven
 using the same steps as were taken for $CAS5$.
 
 %==============================
-% LEMMA 4
+% LEMMA 4 (FINITE EXEC BETWEEN CAS-ES)
 %==============================
 \textbf{Lemma 4}. \textit{Each operation executes only a finite number of steps
 between each state changing instruction}.
@@ -472,21 +484,23 @@ between each state changing instruction}.
 \textit{Proof}. We proceed by individually inspecting each operation which
 contains a state changing instruction.
 
-The \textbf{$advance$}, \textbf{$check$}, \textbf{$totalElems$},
-\textbf{$invokeCallbacks$}, and \textbf{$tryWriteSeal$}  operations have a
+The \textbf{advance}, \textbf{check}, \textbf{totalElems},
+\textbf{invokeCallbacks}, and \textbf{tryWriteSeal}  operations have a
 finite number of execution steps, as they contain no recursive calls, loops,
 or other possibility to restart.
 
-The \textbf{$append$} operation is restarted in one of three cases:
+The \textbf{append} operation is restarted in one of three cases:
 \begin{itemize} 
-\item \textbf{Case 1:} The call to the finite operation $check$ returns $false$,
+
+% This case still needs a bit of work, and an additional invariant or two
+\item \textbf{Case 1:} The call to the finite operation $check$ returns $false$, 
 causing call to $advance$ followed by a recursive call to $append$ with the same 
 element $elem$ which in turn once again calls $check$. 
 
 We show that after a finite number of steps, the $check$ will evaluate to
 $true$, or some other thread will have completed a consistency changing
 operation since the initial invocation of $append$. In the case where $check$
-evaluates to $true$, Lemma 3 applies, as, it guarantees that a consistency
+evaluates to $true$, Lemma 3 applies, as it guarantees that a consistency
 changing CAS is completed after a finite number of steps.
 
 When the call to the finite operation $check$ returns $false$, if the
@@ -496,19 +510,34 @@ $true$. Otherwise, it must be the case that another thread has moved the
 Terminal to a subsequent index since the initial invocation of append, which
 is only possible using a consistency changing instruction.
 
-Second, as long as $advance$ finds that the element at $idx$ is an $Elem$, it
-will increment $idx$. This can only happen a finite number of times until a
-$Terminal$ is found in the current block, or some other thread has moved the
-$Terminal$ to a subsequent index. However, the latter is only possible by
-successfully completing $CAS2$ after the initial invocation of append.
+% Mention something about the expand lemma here since expand is being invoked?
+% Do we need to give some other proof that this is terminating, i.e. that there
+% are certainly a finite number of elements before a Terminal block?
+% Add an invariant on initialization so as to address the fact that there is 
+% always at least one, but at most two Terminal objects in pool.array?
+
+Finally, if $advance$ finds that the element at $idx$ is an $Elem$, it will
+increment $idx$. By $INV1$, this can only happen a finite number of times
+until a $Terminal$ is found. In the case that $expand$ is meanwhile invoked
+through $advance$, by Lemma 2 it's guaranteed to complete state changing
+instructions $CAS3$ or $CAS4$ in a finite number of steps. Otherwise, some
+other thread has moved the $Terminal$ to a subsequent index. However, this
+latter case is only possible by successfully completing $CAS2$, a consistency
+changing instruction, after the initial invocation of append.
 
 \item \textbf{Case 2:} $CAS1$ fails, which we know from Lemma 1 means that it 
-must've already been completed by another thread, triggering a recursive call 
-$append(elem)$ again on the same element $elem$.
-\item \textbf{Case 3:} $CAS2$ fails, indicating that after the (have to prove here that after the read of currobj, some thread must have succeeded)
-\end{itemize}
+must've already been completed by another thread, a state changing instruction.
 
-After invoking append, if check is false, a consistency changing CAS (CAS2, CAS5, or CAS6) is completed after a finite number of steps.
+\item \textbf{Case 3:} $CAS2$ fails, which, by Lemma 3, indicates that either
+some other thread has already completed $CAS2$ with another element, or
+another consistency changing instruction, $CAS5$ or $CAS6$ has successfully
+completed.  
+
+Therefore, $append$ itself as well as all other operations reachable via an
+invocation of $append$ are guaranteed to have a finite number of steps between
+state changing instructions.
+
+\end{itemize}
 
 %==============================
 % LEMMA 5
@@ -538,8 +567,19 @@ guaranteed to be completed}.
 
 
 
+%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+% 
+% SCRATCHPAD
+%
+%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 \pagebreak
 \subsection{Scratchpad}
+
+
+After invoking append, if check is false, a consistency changing CAS (CAS2, CAS5, or CAS6) is completed after a finite number of steps.
 
 We have to show that we'll update $current$ after a finite number of steps.
 
