@@ -345,7 +345,7 @@ def seal(size: Int)
   b = READ(current)
   idx = READ(b.index)
   if (idx <= LASTELEMPOS) {
-    curobj = READ(b.array(idx))
+    curobj = READ(b.array(idx)) {\customlabel{read_seal}{\LineNumber}}
     curobj match {
       term: Terminal =>
         tryWriteSeal(term, b, idx, size)
@@ -380,7 +380,7 @@ def doForAll(f: Elem => Unit)
 
 def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
   if (idx <= LASTELEMPOS) {
-    obj = READ(b.array(idx))
+    obj = READ(b.array(idx)) {\customlabel{read_callback}{\LineNumber}}
     obj match {
       term: Terminal =>
         nterm = new Terminal {
@@ -389,7 +389,7 @@ def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
         }
         if (!CAS(b.array(idx), term, nterm)) asyncDoForAll(f, b, idx) {\customlabel{cas_callback}{\LineNumber}}
       elem: Elem =>
-        f(elem)
+        f(elem) {\customlabel{call_callback}{\LineNumber}}
         asyncDoForAll(f, b, idx + 1)
       null =>
         error("unreachable")
@@ -411,8 +411,17 @@ def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
 
 
 \begin{definition}[FlowPool]
-The \textbf{FlowPool} is defined as the references $start$ and $current$.
-The \textbf{FlowPool state} is defined as the directed graph of objects transitively reachable from the reference $start$.
+The \textbf{FlowPool} is defined as the references $start$ and
+$current$.
+
+The \textbf{FlowPool state} is defined as a pair of the directed graph of
+objects transitively reachable from the reference $start$ and the set
+of scheduled asynchronous computations called $futures$.
+
+A \textbf{scheduled asynchronous computation} is a pair $(f, e)$ of a function
+$f \in Elem => Unit$ and an element $e \in Elem$.
+The programming construct that adds such a pair to the set of
+$futures$ is \verb=future { f(e) }=.
 
 We define the following relations:
 
@@ -437,13 +446,39 @@ last(b: Block) = b' : b' \in reachable(b) \wedge b'.next = null
 size(b: Block) = | \{ x : x \in b.array \wedge x \in Elem \} |
 \end{equation*}
 
-We say that the FlowPool \textbf{has} an element $e$ at some time $t_0$ if and only if the relation $hasElem(start, e)$ holds.
+We say that the FlowPool \textbf{has an element} $e$ at some time
+$t_0$ if and only if the relation $hasElem(start, e)$ holds.
 
-We say that a callback $f$ in a FlowPool \textbf{will be called} for the element $e$ at some time $t_0$ if and only if the relation $willBeCalled(start, e, f)$ holds.
+\begin{equation*}
+hasElem(start, e) \Leftrightarrow \exists b \in reachable(start), e
+\in b.array
+\end{equation*}
 
-We say that the FlowPool is \textbf{sealed} at the size $s$ at tome $t_0$ if and only if the relation $sealedAt(start, s)$ holds.
+We say that the FlowPool \textbf{has a callback} $f$ at some time
+$t_0$ if and only if the relation $hasCallback(start, f)$ holds.
 
-TODO formal definitions of these relations (involving the flowpool datatypes)
+\begin{equation*}
+hasCallback(start, f) \Leftrightarrow \forall b = last(start), b.array
+= x^P \cdot t \cdot y^N, x \in Elem, t = Terminal(seal, callbacks), f
+\in callbacks
+\end{equation*}
+
+We say that a callback $f$ in a FlowPool \textbf{will be called} for
+the element $e$ at some time $t_0$ if and only if the relation
+$willBeCalled(start, e, f)$ holds.
+
+\begin{equation*}
+willBeCalled(start, e, f) \Leftrightarrow \exists t_0, \forall t >
+t_0, (f, e) in futures
+\end{equation*}
+
+We say that the FlowPool is \textbf{sealed} at the size $s$ at some
+$t_0$ if and only if the relation $sealedAt(start, s)$ holds.
+
+\begin{equation*}
+sealedAt(start, s) \Leftrightarrow \forall b = last(start), b.array
+= x^P \cdot t \cdot y^N, x \in Elem, t = Terminal(\{s\}, callbacks)
+\end{equation*}
 
 \textbf{FlowPool operations} are \verb=append=, \verb=foreach= and \verb=seal=, and are defined by pseudocodes in figures ...
 \end{definition}
@@ -733,17 +768,17 @@ Finally, note that the statement for CAS instructions in lines \ref{cas_seal} an
 Assume that for some block $b \in reachable(start)$ the transitions of
 $b.array(idx)$ are:
 
-\begin{equation}
+\begin{equation*}
 b.array(idx): null \rightarrow cb_1 \rightarrow \cdots \rightarrow
 cb_n \stackrel{t_0}{\rightarrow} elem: Elem
-\end{equation}
+\end{equation*}
 
 Assume that the transitions of $b.array(idx + 1)$ up to time $t_0$ are:
 
-\begin{equation}
+\begin{equation*}
 b.array(idx + 1): null \rightarrow cb_1' \rightarrow \cdots
 \rightarrow cb_m'
-\end{equation}
+\end{equation*}
 
 The string of transitions $null \rightarrow cb_1' \rightarrow \cdots
 \rightarrow cb_m'$ is a subsequence of $null \rightarrow cb_1
@@ -841,10 +876,14 @@ pool state $\mathbb{A}$, CAS instructions in lines \ref{cas_propagate}, \ref{cas
 \end{lemma}
 
 \begin{proof}
-Since none of the relations $hasElem$, $willBeCalled$ and $sealedAt$
+Since none of the relations $hasElem$, $hasCallback$, $willBeCalled$ and $sealedAt$
 are defined by the value of $current$ CAS in line \ref{cas_block}
 does not change them, hence it does not change the abstract pool
 state.
+
+No CAS changes the set of scheduled futures, nor is
+succeeded by a \verb=future= construct so it does not affect
+the $willBeCalled$ relation.
 
 It is easy to see that the CAS in line \ref{cas_expand} does not remove any elements, nor make
 any additional elements reachable, since the new block $nb$ which
@@ -852,15 +891,13 @@ becomes reachable does not contain any elements at that time.
 Hence the $hasElem$ relation is not affected.
 It does change the value $last(start)$ to $nb$, but since $nb.array =
 t \cdot null^{BLOCKSIZE - 1}$, where $t \in Terminal$ was previously
-the last non-null element in $b.array$, it does not change the
-$sealedAt$ relation either.
-Finally, the CAS does not change the set of scheduled futures, so
-it does not affect the $willBeCalled$ relation.
+the last non-null element in $b.array$, it does changes neither the
+$sealedAt$ nor the $hasCallback$ relation.
 
 The CAS in line \ref{cas_propagate} does not make some new element reachable,
 hence the $hasElem$ relation is preserved.
 
-Note now that this CAS does not change the relations $willBeCalled$
+Note now that this CAS does not change the relations $hasCallback$
 and $sealedAt$ as long as there is a value of type $Terminal$ at the
 preceeding entry $idx$.
 We claim that if the CAS succeeds at $t_2$, then 
@@ -871,7 +908,7 @@ then the write by CAS in line \ref{cas_propagate} does not change
 the value at $idx + 1$ at $t_2$.
 This was, in fact, already shown in the proof of lemma \ref{lemma-subsequence}.
 
-The argument above proves directly that relations $willBeCalled$
+The argument above proves directly that relations $hasCallback$
 and $sealedAt$ are not changed by the CAS in line \ref{cas_propagate}.
 \end{proof}
 
@@ -922,8 +959,8 @@ After the successful CAS at $t_3$, we have:
 $b.array = elem^N \cdot e \cdot cb_1 \cdot null^{BLOCKSIZE - N - 2}$
 
 where $e: Elem$ is the newly appended element -- at $t_3$ the
-relation $hasElem(start, e)$ holds, $sealedAt(start, s)$ did not
-change between $t_2$ and $t_3$.
+relation $hasElem(start, e)$ holds, and $sealedAt(start, s)$ and
+$hasCallback(start, f)$ did not change between $t_2$ and $t_3$.
 
 It remains to be shown that $willBeCalled(start, e, f)$ holds at $t_3$.
 Given a fair scheduler, within a finite number of steps the
@@ -942,7 +979,7 @@ $\mathbb{A} = (elems, callbacks, seal)$
 
 $\mathbb{A}_0 = (elems, (f, \emptyset) \cup callbacks, seal)$
 
-Furthermore, given a fair scheduler, there exists a time $t_1 > t_0$ at which the FlowPool 
+Furthermore, given a fair scheduler, there exists a time $t_1 \geq t_0$ at which the FlowPool 
 is consistent with an abstract pool in state $\mathbb{A}_1$, such that:
 
 $\mathbb{A}_1 = (elems_1, callbacks_1, seal_1)$, where:
@@ -953,6 +990,22 @@ $\forall (f, called_1) \in callbacks_1, elems \subseteq called_1$
 \end{lemma}
 
 \begin{proof}
+From lemma \ref{lemma-freshness} and the assumption that the CAS is
+successful we know that the value at $b.array(idx)$ has not changed
+between the read in line \ref{read_callbacks} and the CAS in line
+\ref{cas_callback}.
+From lemma \ref{lemma-valid-hint} we know that the value at $idx - 1$
+was of type $Elem$ since $b.index$ was read.
+This means that neither $hasElem(start, e)$ nor $sealedAt$ have changed after the CAS.
+Since after the CAS there is a $Terminal$ with an additional function $f$ at $idx$,
+the $hasCallback(start, f)$ holds after the CAS.
+Finally, the $willBeCalled(start, e, f)$ holds for all elements $e$
+for which the $hasElem(e)$ holds, since the CAS has been preceeded by
+a call $f(e)$ in line \ref{call_callback} for each element. The lemma
+\ref{lemma-end-of-life} ensures that for each element $f$ was called
+for stays in the pool indefinitely (i.e. is not removed).
+
+Trivially, the time $t_1$ from the statement of the lemma is such that $t_1 = t_0$.
 \end{proof}
 
 
@@ -967,6 +1020,7 @@ $\mathbb{A}_0 = (elems, callbacks, \{ s \})$
 \end{lemma}
 
 \begin{proof}
+Similar to proof of lemma \ref{lemma-foreach}.
 \end{proof}
 
 
@@ -990,7 +1044,7 @@ invariants (especially [INV2]) hold in a valid state.
 \end{proof}
 
 \begin{proof}[Safety]
-From lemmas \ref{lemma-append}, \ref{lemma-foreach} and
+From lemmas \ref{lemma-housekeeping}, \ref{lemma-append}, \ref{lemma-foreach} and
 \ref{lemma-seal} directly, along with the fact that all operations
 executing in  isolation complete after a finite number of steps by lemma \ref{lemma-obstruction-free}.
 \end{proof}
