@@ -38,6 +38,16 @@ class FlowPool[T] {
 
   // Monadic Ops
 
+  def exists(f: T => Boolean): Future[Boolean] = {
+    val fut = new Future[Boolean]
+    doForAll { x =>
+      if (f(x)) fut.tryComplete(true)
+    } map { c =>
+      fut.tryComplete(false)
+    }
+    fut
+  }
+
   def map[S](f: T => S): FlowPool[S] = {
     val fp = new FlowPool[S]
     val b  = fp.builder
