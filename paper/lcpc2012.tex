@@ -282,6 +282,9 @@ NOTSEALED = -1
 \end{alltt}
 
 
+\setlength\linenumbersep{2pt}
+
+
 \begin{alltt}
 {\scriptsize
 {\internallinenumbers{def append(elem: Elem)
@@ -302,7 +305,6 @@ NOTSEALED = -1
   \}
 
 def check(b: Block, idx: Int, curobj: Object, nextobj: Object)
-  // The check on the index is done implicitly in the real code
   if (idx > LASTELEMPOS) return false
   else curobj match \{
     elem: Elem =>
@@ -352,7 +354,7 @@ def seal(size: Int)
     curobj = READ(b.array(idx)) {\customlabel{read_seal}{\LineNumber}}
     curobj match \{
       term: Terminal =>
-        tryWriteSeal(term, b, idx, size)
+        if tryWriteSeal(term, b, idx, size)
       elem: Elem =>
         WRITE(b.index, idx + 1) {\customlabel{write_seal}{\LineNumber}}
         seal(size)
@@ -372,10 +374,10 @@ def tryWriteSeal(term: Terminal, b: Block, idx: Int, size: Int)
       sealed = size
       callbacks = term.callbacks
     \}
-    CAS(b.array(idx), term, nterm) {\customlabel{cas_seal}{\LineNumber}}
+    return CAS(b.array(idx), term, nterm) {\customlabel{cas_seal}{\LineNumber}}
   \} else if (term.sealed != size) \{
     error("already sealed with different size")
-  \}
+  \} else return true
 
 def doForAll(f: Elem => Unit)
   future \{
@@ -391,7 +393,8 @@ def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
           sealed = term.sealed
           callbacks = f :: term.callbacks
         \}
-        if (!CAS(b.array(idx), term, nterm)) asyncDoForAll(f, b, idx) {\customlabel{cas_callback}{\LineNumber}}
+        if (!CAS(b.array(idx), term, nterm))
+          asyncDoForAll(f, b, idx) {\customlabel{cas_callback}{\LineNumber}}
       elem: Elem =>
         f(elem) {\customlabel{call_callback}{\LineNumber}}
         asyncDoForAll(f, b, idx + 1)
@@ -399,7 +402,6 @@ def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
         error("unreachable")
     \}
   \} else \{
-    // In the real code we take a shortcut when preparing the new block
     expand(b, b.array(idx))
     asyncDoForAll(f, b.next, 0)
   \}
@@ -408,7 +410,7 @@ def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
 \end{alltt}
 
 We now describe the FlowPool and its basic operations.
-In doing so, we avoid the details not relevant to the algorithm
+In doing so, we omit the details not relevant to the algorithm
 (specifically, the builder abstraction) and
 focus on a high-level description of a non-blocking data structure.
 One straightforward way to implement a growing pool is to use a linked
@@ -474,14 +476,23 @@ If it succeeds, it updates the \verb=b.index= value and invokes all
 the callbacks (present at the point when the elements was added) with
 the \verb=future= construct.
 
-Interestingly, note that inverting the order of the reads in lines
+Interestingly, inverting the order of the reads in lines
 \ref{read_next} and \ref{read_current} would cause a race in which a
 thread could overwrite a \verb=Terminal= value with some older
 \verb=Terminal= value if some other thread appended an element in between.
 
-TODO seal
-
-TODO foreach
+The \verb=seal= operation continuously increases the \verb=index= in the block
+until it finds the first free entry. It then tries to replace the \verb=Terminal=
+value there with a new \verb=Terminal= value which has the seal size set.
+An error occurs if a different seal size is set already. The \verb=foreach=
+operation works in a similar way, but is executed asynchronously. Unlike
+\verb=seal=, it starts from the first element in the pool and calls the
+callback for each element until it finds the first free entry.
+It then replaces the \verb=Terminal= value with a new \verb=Terminal=
+value with the additional callback. From that point on the \verb=append=
+method is responsible for scheduling that callback for subsequently added elements.
+Note that all three operations call \verb=expand= to add an additional
+block once the current block is empty, to ensure lock-freedom.
 
 
 \section{Proofs}
@@ -518,14 +529,14 @@ Forcing a bib, \cite{bowman:reasoning}, \cite{braams:babel}, \cite{clark:pct}, \
 The \textbf{FlowPool} is defined as a pair of references $start$ and
 $current$.
 
-The \textbf{FlowPool state} is defined as a pair of the directed graph of
-objects transitively reachable from the reference $start$ and the set
-of scheduled callback invocations called $futures$.
-
 A \textbf{scheduled callback invocation} is a pair $(f, e)$ of a function
 $f \in Elem => Unit$ and an element $e \in Elem$.
 The programming construct that adds such a pair to the set of
 $futures$ is \verb=future { f(e) }=.
+
+The \textbf{FlowPool state} is defined as a pair of the directed graph of
+objects transitively reachable from the reference $start$ and the set
+of scheduled callback invocations called $futures$.
 
 We define the following relations:
 
@@ -655,6 +666,7 @@ $\mathbb{P} = (elems, callbacks, seal)$ at $t_0$ if and only if $\mathbb{S}$
 is a valid state and:
 \begin{description}
 \item $\forall e \in Elem, hasElem(start, e) \Leftrightarrow e \in elems$
+\item $\forall f \in Elem => Unit, hasCallback(start, f) \Leftrightarrow f \in callbacks$
 \item $\forall f \in Elem => Unit, \forall e \in Elem, willBeCalled(start, e, f) \Leftrightarrow \exists t_1 \geq t_0, \mathbb{P}(t_1) = (elems_1, (f, called_1) \cup callbacks_1, seal_1), elems \subseteq called_1$
 \item $\forall s \in \mathbb{N}, sealedAt(start, s) \Leftrightarrow s \in seal$
 \end{description}
