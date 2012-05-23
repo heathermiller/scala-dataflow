@@ -419,7 +419,69 @@ Whenever a block becomes full, a new block is allocated and the
 previous block is made to point to the \verb=next= block.
 This way, most writes amount to a simple array-write, while allocation
 occurs only occasionally.
+Each block contains a hint \verb=index= to the first free entry in
+the array, i.e. one that does not contain an element.
+An \verb=index= is a hint, since it may actually reference an earlier index.
+The FlowPool maintains a reference to the first block called
+\verb=start=.
+It also maintains a hint to the last block in the chain of blocks,
+called \verb=current=.
+This reference may not always be up to date, but it always points
+to some block in the chain.
 
+Each FlowPool is associated with a list of callbacks which have
+to be called in the future as new elements are added.
+Each FlowPool can be in a sealed state, meaning there is a bound on
+the number of elements it stores.
+This information is stored as a \verb=Terminal= value in the first
+free entry of the array.
+At all times we maintain the invariant that the array in each block
+starts with a sequence of elements, followed by a \verb=Terminal=
+delimiter. From a higher-level perspective, appending an element
+starts by copying the \verb=Terminal= value to the next entry and then
+overwriting the current entry with the element being appended.
+
+The \verb=append= operation starts by reading the \verb=current= block
+and the \verb=index= of the free position.
+It then reads the
+\verb=nextobj= after the first free entry, followed by a read of the
+\verb=curobj= at the free entry.
+The \verb=check= procedure checks the bounds conditions, whether the
+FlowPool was already sealed or if the current array entry contains an
+element.
+In either of these events, the \verb=current= and \verb=index= values
+need to be set -- this is done in the \verb=advance= procedure.
+We call this the \textbf{slow path} of the \verb=append= method.
+Notice that there are several causes that trigger the slow path.
+If some other thread completes the \verb=append= method but is
+preempted before updating the value of the hint \verb=index=, then the
+\verb=curobj= will have the type \verb=Elem=.
+The same happens if a preempted thread updates the value of the
+hint \verb=index= after additional elements have been added,
+via unconditional write in line \ref{write_append}.
+Finally, reaching an end of block triggers the slow path.
+
+Otherwise, the operation executes the \textbf{fast path} and appends
+an element.
+It first copies the \verb=Terminal= value to the next entry with a CAS
+instruction in line \ref{cas_propagate}, with \verb=nextobj= being the
+expected value. If it fails (e.g. due to a concurrent CAS), the append
+operation is restarted.
+Otherwise, it proceeds by writing the element to the current entry with
+a CAS in line \ref{cas_append}, the expected value being
+\verb=curobj=.
+If it succeeds, it updates the \verb=b.index= value and invokes all
+the callbacks (present at the point when the elements was added) with
+the \verb=future= construct.
+
+Interestingly, note that inverting the order of the reads in lines
+\ref{read_next} and \ref{read_current} would cause a race in which a
+thread could overwrite a \verb=Terminal= value with some older
+\verb=Terminal= value if some other thread appended an element in between.
+
+TODO seal
+
+TODO foreach
 
 
 \section{Proofs}
