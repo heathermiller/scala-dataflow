@@ -10,6 +10,7 @@ for (f in files) {
                   sep="\t",
                   header=FALSE,
                   col.names = c(
+                    "machine",
                     "version",
                     "bench",
                     "par",
@@ -41,6 +42,7 @@ dat[dat$bench %in% reduceCls   ,]$btype = "Reduce"
 attach(dat)
 mdat <- aggregate(time,
                   list(version = version,
+                       machine = machine,
                        bench = bench,
                        par = par,
                        size = size,
