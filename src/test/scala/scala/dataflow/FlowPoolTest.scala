@@ -5,8 +5,8 @@ import java.lang.Integer
 object FlowPoolTest extends App {
 
   val n = 300
-  val pool = new FlowPool[Integer]()
-  val b = new Builder[Integer](pool.initBlock)
+  val pool = new SingleLaneFlowPool[Integer]()
+  val b = new SingleLaneBuilder[Integer](pool.initBlock)
   
   pool.foreach(p("Foreach"))
   pool.map[Integer](_*2).foreach(p("Map"))

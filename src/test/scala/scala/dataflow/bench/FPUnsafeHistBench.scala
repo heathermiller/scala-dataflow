@@ -3,14 +3,14 @@ package scala.dataflow.bench
 import scala.dataflow._
 import scala.util.Random
 
-object FPUnsafeHistBench extends testing.Benchmark with Utils.Props {
+trait FPUnsafeHistBench extends testing.Benchmark with Utils.Props with FPBuilder {
   import Utils._
 
   val maxval = 100
   
   override def run() {
-    val pool = new FlowPool[Data]()
-    val builder = new Builder[Data](pool.initBlock)
+    val pool = newFP[Data]
+    val builder = pool.builder
     val work = size
     val bins = 5 to 20
     def data = new Data(Random.nextInt(maxval))
