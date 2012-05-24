@@ -180,25 +180,41 @@ etc, as a memory hack i.e. implementation detail}
 
 \section{Implementation}
 
+
+\begin{figure}
+
+\centering
+
+\begin{minipage}[b]{4.5 cm}
 \begin{alltt}
 {\scriptsize
-type Elem
+type Terminal \{
+  sealed: Int
+  callbacks: List[Elem => Unit]
+\}
 
+type Elem
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{3.5 cm}
+\begin{alltt}
+{\scriptsize
 type Block \{
   array: Array[Elem]
   next: Block
   index: Int
   blockindex: Int
 \}
-
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{4 cm}
+\begin{alltt}
+{\scriptsize
 type FlowPool \{
   start: Block
   current: Block
-\}
-
-type Terminal \{
-  sealed: Int
-  callbacks: List[Elem => Unit]
 \}
 
 BLOCKSIZE = 256
@@ -206,6 +222,11 @@ LASTELEMPOS = BLOCKSIZE - 2
 NOSEAL = -1
 }
 \end{alltt}
+\end{minipage}
+
+\caption{FlowPool data-types}
+\label{f-datatypes}
+\end{figure}
 
 
 \setlength\linenumbersep{2pt}
