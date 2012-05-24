@@ -24,6 +24,7 @@
 \usepackage{lineno}
 \setcounter{tocdepth}{3}
 \usepackage{graphicx}
+\usepackage[normalem]{ulem}
 
 \usepackage{url}
 \urldef{\mails}\path|{firstname.lastname}@epfl.ch|    
@@ -90,91 +91,92 @@ Implementing correct and deterministic parallel programs is hard (additional mot
 
 \section{Introduction}
 
+\textbf{Obligatory multicore motivation paragraph.} Multicore revolution is here, yadda yadda.
 
-\subsection{Motivation}
-
-- we want a deterministic model
-
-- we do not block in the programming model (i.e. there are no
-operations which cause blocking until a value becomes available)
-
-- we want a non-blocking data-structure (i.e. the operations on the
-data-structures should themselves be non-blocking)
-
-- programs run indefinitely => we need to GC parts of the
-data structure we no longer need
-
-- we want to reduce heap allocation and inline the datastructure as
-much as possible => lower memory consumption, better cache behaviour
-and fewer GC cycles
-
-
-Obligatory multicore motivation paragraph.
-
-Lock-free is better, and why.
+\textbf{Lock-free is better, and why.} 
+\sout{why the foreach instead of blocking?} blocking is bad in most
+   programming models (JVM, CLR, most native platforms)
 
 Introduction and motivation for data-flow programming model.
 
 
+\subsection{Motivation}
+
+\textbf{Paragraph(s) on shortcomings of typical approaches.} 
+-\sout{Plus,} iterators or streams would not be deterministic. Even if they
+are thread-safe, they have an inherent state which can lead to nondeterminism.
+- \sout{But this} leads to GC problems! We have to keep every element around
+forever. Computations can run arbitrarily long (GC point)
+
+\textbf{Paragraph(s) stating goals.} 
+- we want a deterministic model. we do not block in the programming model (i.e. there are no
+operations which cause blocking until a value becomes available)
+- we want a non-blocking data-structure (i.e. the operations on the
+data-structures should themselves be non-blocking)
+- programs run indefinitely $\Rightarrow$ we need to GC parts of the
+data structure we no longer need
+- we want to reduce heap allocation and inline the datastructure as
+much as possible $\Rightarrow$ lower memory consumption, better cache behaviour
+and fewer GC cycles
+
+\textbf{Paragraph(s) on contributions.} 
+
 \section{Model of Computation}
+
 Producer-consumer parallelism. Description and image of queue/stream of values, producer, and multiple consumers. 
 
 What do we mean by determinism?
 
 \section{Programming Model}
 
+\subsection{Append}
 Adding elements to the pool -- this is the basic operation.
 
+\subsection{Foreach}
 We have to do something with the added elements -- we need a foreach.
 
-notice -- we could have a stream returned from the pool instead and
-poll the stream until the value arrives -- but this leads to blocking.
--> why the foreach instead of blocking? blocking is bad in most
-   programming models (JVM, CLR, most native platforms)
+% notice -- we could have a stream returned from the pool instead and
+% poll the stream until the value arrives -- but this leads to blocking.
 
-Plus, iterators or streams would not be deterministic. Even if they
-are thread-safe, they have an inherent state which can lead to nondeterminism.
-
-what should be the semantics of the foreach - should it execute only
-for elements added to the flowpool after calling foreach? or should it
+\sout{what should be the semantics of the foreach - should it execute only
+for elements added to the flowpool after calling foreach? or} should it
 execute for all the elements ever added?
-The latter -- we want determinism, avoid races, same execution every
+\sout{The latter --} we want determinism, avoid races, same execution every
 time.
 
-But this leads to GC problems! We have to keep every element around
-forever.
-Computations can run arbitrarily long (GC point)
-We could get rid of the reference to the FlowPool after we install all
-the foreach callbacks... but we still need a reference to add new
-elements.
+\subsection{Builders}
 
 To solve this -- introduce builders -- anybody desiring to write into
 the flowpool must create a builder first.
 
+% We could get rid of the reference to the FlowPool after we install all
+% the foreach callbacks... but we still need a reference to add new
+% elements.
+
+\subsection{Seal}
+
+To resolve GC issue on callbacks, and to ensure determinism, we have the `seal` operation.
+
+% Plus, at some point we want to release callbacks as well -- we do not
+% want to keep them around forever.
+
+\sout{But, calling seal can lead to nondeterministic computations too!} 
+To avoid nondeterminism, there has to be some sort of on agreement on the
+state of the pool when it is sealed. One convenient and sufficient information
+to make `seal` deterministic is the expected size of the pool.
+
+\subsection{Monadic Operations}
+
 Show we can build higher-level combinators (map, flatMap, generators,
 either, etc.)
 
-What about the `reduce` patterns? How can you get back reduction of
-all the values in the flowpool if at any point an additional value
-could potentially arrive.
-Plus, at some point we want to release callbacks as well -- we do not
-want to keep them around forever.
+What about the `reduce` patterns? \sout{How can you get back reduction of all
+the values in the flowpool if at any point an additional value could
+potentially arrive.} Show how this can be used to implement reducing (we
+assume existence of promises in the framework).
 
-This is why we have the `seal` operation.
-
-But, calling seal can lead to nondeterministic computations too!
-To avoid nondeterminism, there has to be some sort of on agreement on
-the state of the pool when it is sealed.
-
-One convenient and sufficient information to make `seal` deterministic
-is the expected size of the pool.
-
-Show how this can be used to implement reducing (we assume existence
-of promises in the framework).
-
-Grammar (concise)
-point out that builder was left out in the grammar, etc, as
-a memory hack i.e. implementation detail
+\sout {Grammar (concise). point out that builder was left out in the grammar,
+etc, as a memory hack i.e. implementation detail}
 
 \section{Implementation}
 
