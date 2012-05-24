@@ -685,7 +685,7 @@ abstract pool $\mathbb{P}$ in abstract state $\mathbb{A}_0 = (elems_0, callbacks
 at some time $t$ \textbf{changes} the abstract state of the abstract pool to $\mathbb{A} = (elems, callbacks, seal)$ 
 if $\exists t_0, \forall \tau, t_0 < \tau < t, \mathbb{P}(\tau) = \mathbb{A}_0$
 and $\mathbb{P}(t) = \mathbb{A}$.
-We denote this as $\mathb{A} = op(\mathbb{A}_0)$.
+We denote this as $\mathbb{A} = op(\mathbb{A}_0)$.
 
 Abstract pool operation $foreach(f)$ changes the abstract state at $t_0$ from $(elems, callbacks, seal)$ 
 to $(elems, (f, \emptyset) \cup callbacks, seal)$. Furthermore:

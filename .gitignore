@@ -4,9 +4,18 @@
 *.bbl
 *.blg
 *.log
-*.pdf
+lcpc2012.pdf
+*.dvi
+
+.Rhistory
+.RData
+
+.cache
+.classpath
+.project
 
 target
 .DS_Store
 project/boot
 project/target
+paper/auto
