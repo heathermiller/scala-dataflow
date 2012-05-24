@@ -84,6 +84,8 @@ Runs with SBT 0.11.x
 		- Linearizability: A Correctness Condition for Concurrent Objects, 1990, Herlihy
 - Conclusion (0.25 page)
 	- see need to embed callbacks within the data structure themselves
+	- higher order combinators built on top of `<<` and `foreach`,
+      just like in sequential collections
 - Appendix A
   - Abstract pool semantics
   - Linearizability

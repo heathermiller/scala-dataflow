@@ -94,12 +94,16 @@ Implementing correct and deterministic parallel programs is hard (additional mot
 \subsection{Motivation}
 
 - we want a deterministic model
+
 - we do not block in the programming model (i.e. there are no
 operations which cause blocking until a value becomes available)
+
 - we want a non-blocking data-structure (i.e. the operations on the
 data-structures should themselves be non-blocking)
+
 - programs run indefinitely => we need to GC parts of the
 data structure we no longer need
+
 - we want to reduce heap allocation and inline the datastructure as
 much as possible => lower memory consumption, better cache behaviour
 and fewer GC cycles
@@ -111,146 +115,66 @@ Lock-free is better, and why.
 
 Introduction and motivation for data-flow programming model.
 
+
 \section{Model of Computation}
 Producer-consumer parallelism. Description and image of queue/stream of values, producer, and multiple consumers. 
 
+What do we mean by determinism?
+
 \section{Programming Model}
-The FlowPool suite supports the following operations:
-\begin{itemize}
-\item \texttt{Builder.<<(x: T): Builder}\\
-  Inserts an element into the underlying FlowPool.
-\item \texttt{Builder.seal(n: Int): Unit}\\
-  Seals the underlying FlowPool at \texttt{n} elements. The need for
-  the size argument is explained below. A sealed FlowPool may only
-  contain \texttt{n} elements. This allows for callback cleanup and
-  termination.
-\item \texttt{FlowPool.doForAll(f: T => Unit): Future[Int]}\\
-  Instructs
-  the FlowPool to execute the closure \texttt{f} exactly once for each
-  element inserted into the FlowPool (asynchronously). The returned
-  future contains the number of elements in the FlowPool and completes
-  once \texttt{f} has been executed for all elements.
-\item \texttt{FlowPool.mappedFold[U, V <: U](acc: V)(cmb: (U,V) =>
-    V)(map: T => U): Future[(Int, V)]}
-  Reduces the FlowPool to a single value of type V, by first mapping
-  each element to an internal representation using \texttt{map} and
-  then aggregating using \texttt{cmb}. No guarantee is given about
-  synchronization or order. Returns a future containing a tuple with
-  number of elements in the FlowPool and the aggregated value.
-\item \texttt{FlowPool.builder}\\
-  Returns a builder for this FlowPool.
-\item \texttt{Future.map[U](f: T => U)}\\
-  Maps this future to another
-  future executing the function \texttt{f} exactly once when the first
-  future completes.
-\item \texttt{future[T](f: () => T): Future[T]}\\
-  Asynchronously dispatch execution of \texttt{f} an return a future
-  with its result.
-\end{itemize}
 
-\paragraph{Determinism of \texttt{seal}} We will show that the final
-size of the FlowPool is required as an argument to the seal method in
-order to satisfy the determinism property of the FlowPool. Look at the
-following program:
+Adding elements to the pool -- this is the basic operation.
 
-\begin{verbatim}
-val p = new FlowPool[Int]()
-val b = p.builder
+We have to do something with the added elements -- we need a foreach.
 
-future {
-  for (i <- 1 to 10) { b << i }
-  b.seal
-}
+notice -- we could have a stream returned from the pool instead and
+poll the stream until the value arrives -- but this leads to blocking.
+-> why the foreach instead of blocking? blocking is bad in most
+   programming models (JVM, CLR, most native platforms)
 
-future { for (i <- 1 to 10) { b << i } }
-\end{verbatim}
+Plus, iterators or streams would not be deterministic. Even if they
+are thread-safe, they have an inherent state which can lead to nondeterminism.
 
-Depending on which for-loop completes first, this program completes
-successfully or yields an error. A similar program with
-\verb+b.seal(20)+ will always succeed.
+what should be the semantics of the foreach - should it execute only
+for elements added to the flowpool after calling foreach? or should it
+execute for all the elements ever added?
+The latter -- we want determinism, avoid races, same execution every
+time.
 
-\paragraph{Generators} In the following we'll present a couple of
-generators for FlowPools based on common generators in the Scala
-standard library.
+But this leads to GC problems! We have to keep every element around
+forever.
+Computations can run arbitrarily long (GC point)
+We could get rid of the reference to the FlowPool after we install all
+the foreach callbacks... but we still need a reference to add new
+elements.
 
-\begin{verbatim}
-def iterate[T](start: T, len: Int)(f: (T) => T) = {
-  val p = new FlowPool[T]
-  val b = p.builder
-  future {
-    var e = start
-    for (i <- 1 to len) { b << e; e = f(e) }
-    b.seal(len)
-  }; p
-}
-\end{verbatim}
+To solve this -- introduce builders -- anybody desiring to write into
+the flowpool must create a builder first.
 
-\begin{verbatim}
-def tabulate[T](n: Int)(f: (Int) => T) = {
-  val p = new FlowPool[T]
-  val b = p.builder
-  future {
-    for (i <- 0 to (n-1)) {
-      b << f(i)
-    }
-    b.seal(n)
-  }; p
-}
-\end{verbatim}
+Show we can build higher-level combinators (map, flatMap, generators,
+either, etc.)
 
-\begin{verbatim}
-def fill[T](n: Int)(elem: => T) = {
-  val p = new FlowPool[T]
-  val b = p.builder
-  future {
-    for (i <- 1 to n) { b << elem }
-    b.seal(n)
-  }; p
-}
-\end{verbatim}
+What about the `reduce` patterns? How can you get back reduction of
+all the values in the flowpool if at any point an additional value
+could potentially arrive.
+Plus, at some point we want to release callbacks as well -- we do not
+want to keep them around forever.
 
-\paragraph{Monadic Operations} In the following we'll present some
-monadic operations on top of the basic FlowPool operations. This will
-also show some use-cases of the futures as result type of
-\verb+doForAll+.
+This is why we have the `seal` operation.
 
-\begin{verbatim}
-def map[S](f: T => S) = {
-  val fp = new FlowPool[S]
-  val b  = fp.builder
-  doForAll { x =>
-    b << f(x)
-  } map { b.seal _ }
-  fp
-}
-\end{verbatim}
+But, calling seal can lead to nondeterministic computations too!
+To avoid nondeterminism, there has to be some sort of on agreement on
+the state of the pool when it is sealed.
 
-\begin{verbatim}
-def filter(f: T => Boolean) = {
-  val fp = new FlowPool[T]
-  val b  = fp.builder
+One convenient and sufficient information to make `seal` deterministic
+is the expected size of the pool.
 
-  mappedFold(0)(_ + _) { x =>
-    if (f(x)) { b << x; 1 } else 0
-  } map { case (c,fc) => b.seal(fc) }
+Show how this can be used to implement reducing (we assume existence
+of promises in the framework).
 
-  fp
-}
-\end{verbatim}
-
-\begin{verbatim}
-def flatMap[S](f: T => FlowPool[S]) = {
-  val fp = new FlowPool[S]
-  val b  = fp.builder
-
-  mappedFold(future(0))(_ <+> _) { x =>
-    f(x).doForAll(b << _)
-  } map { case (c,cfut) => cfut.map(b.seal _) }
-
-  fp
-}
-\end{verbatim}
-where \verb|<+>| is the future of the sum of two \verb+Future[Int]+.
+Grammar (concise)
+point out that builder was left out in the grammar, etc, as
+a memory hack i.e. implementation detail
 
 \section{Implementation}
 
@@ -604,6 +528,147 @@ Java, FlumeJava...
 
 Forcing a bib, \cite{bowman:reasoning}, \cite{braams:babel}, \cite{clark:pct}, \cite{herlihy:methodology}, \cite{Lamport:LaTeX}, \cite{salas:calculus}
 \section{Conclusion}
+
+\section{Programming model prev}
+
+
+The FlowPool suite supports the following operations:
+\begin{itemize}
+\item \texttt{Builder.<<(x: T): Builder}\\
+  Inserts an element into the underlying FlowPool.
+\item \texttt{Builder.seal(n: Int): Unit}\\
+  Seals the underlying FlowPool at \texttt{n} elements. The need for
+  the size argument is explained below. A sealed FlowPool may only
+  contain \texttt{n} elements. This allows for callback cleanup and
+  termination.
+\item \texttt{FlowPool.doForAll(f: T => Unit): Future[Int]}\\
+  Instructs
+  the FlowPool to execute the closure \texttt{f} exactly once for each
+  element inserted into the FlowPool (asynchronously). The returned
+  future contains the number of elements in the FlowPool and completes
+  once \texttt{f} has been executed for all elements.
+\item \texttt{FlowPool.mappedFold[U, V <: U](acc: V)(cmb: (U,V) =>
+    V)(map: T => U): Future[(Int, V)]}
+  Reduces the FlowPool to a single value of type V, by first mapping
+  each element to an internal representation using \texttt{map} and
+  then aggregating using \texttt{cmb}. No guarantee is given about
+  synchronization or order. Returns a future containing a tuple with
+  number of elements in the FlowPool and the aggregated value.
+\item \texttt{FlowPool.builder}\\
+  Returns a builder for this FlowPool.
+\item \texttt{Future.map[U](f: T => U)}\\
+  Maps this future to another
+  future executing the function \texttt{f} exactly once when the first
+  future completes.
+\item \texttt{future[T](f: () => T): Future[T]}\\
+  Asynchronously dispatch execution of \texttt{f} an return a future
+  with its result.
+\end{itemize}
+
+\paragraph{Determinism of \texttt{seal}} We will show that the final
+size of the FlowPool is required as an argument to the seal method in
+order to satisfy the determinism property of the FlowPool. Look at the
+following program:
+
+\begin{verbatim}
+val p = new FlowPool[Int]()
+val b = p.builder
+
+future {
+  for (i <- 1 to 10) { b << i }
+  b.seal
+}
+
+future { for (i <- 1 to 10) { b << i } }
+\end{verbatim}
+
+Depending on which for-loop completes first, this program completes
+successfully or yields an error. A similar program with
+\verb+b.seal(20)+ will always succeed.
+
+\paragraph{Generators} In the following we'll present a couple of
+generators for FlowPools based on common generators in the Scala
+standard library.
+
+\begin{verbatim}
+def iterate[T](start: T, len: Int)(f: (T) => T) = {
+  val p = new FlowPool[T]
+  val b = p.builder
+  future {
+    var e = start
+    for (i <- 1 to len) { b << e; e = f(e) }
+    b.seal(len)
+  }; p
+}
+\end{verbatim}
+
+\begin{verbatim}
+def tabulate[T](n: Int)(f: (Int) => T) = {
+  val p = new FlowPool[T]
+  val b = p.builder
+  future {
+    for (i <- 0 to (n-1)) {
+      b << f(i)
+    }
+    b.seal(n)
+  }; p
+}
+\end{verbatim}
+
+\begin{verbatim}
+def fill[T](n: Int)(elem: => T) = {
+  val p = new FlowPool[T]
+  val b = p.builder
+  future {
+    for (i <- 1 to n) { b << elem }
+    b.seal(n)
+  }; p
+}
+\end{verbatim}
+
+\paragraph{Monadic Operations} In the following we'll present some
+monadic operations on top of the basic FlowPool operations. This will
+also show some use-cases of the futures as result type of
+\verb+doForAll+.
+
+\begin{verbatim}
+def map[S](f: T => S) = {
+  val fp = new FlowPool[S]
+  val b  = fp.builder
+  doForAll { x =>
+    b << f(x)
+  } map { b.seal _ }
+  fp
+}
+\end{verbatim}
+
+\begin{verbatim}
+def filter(f: T => Boolean) = {
+  val fp = new FlowPool[T]
+  val b  = fp.builder
+
+  mappedFold(0)(_ + _) { x =>
+    if (f(x)) { b << x; 1 } else 0
+  } map { case (c,fc) => b.seal(fc) }
+
+  fp
+}
+\end{verbatim}
+
+\begin{verbatim}
+def flatMap[S](f: T => FlowPool[S]) = {
+  val fp = new FlowPool[S]
+  val b  = fp.builder
+
+  mappedFold(future(0))(_ <+> _) { x =>
+    f(x).doForAll(b << _)
+  } map { case (c,cfut) => cfut.map(b.seal _) }
+
+  fp
+}
+\end{verbatim}
+where \verb|<+>| is the future of the sum of two \verb+Future[Int]+.
+
 
 \bibliographystyle{abbrv}
 \bibliography{bib}
