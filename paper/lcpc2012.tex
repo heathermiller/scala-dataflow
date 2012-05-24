@@ -259,7 +259,7 @@ where \verb|<+>| is the future of the sum of two \verb+Future[Int]+.
 type Elem
 
 type Block \{
-  array: Array
+  array: Array[Elem]
   next: Block
   index: Int
   blockindex: Int
@@ -287,12 +287,26 @@ NOTSEALED = -1
 
 \begin{alltt}
 {\scriptsize
-{\internallinenumbers{def append(elem: Elem)
+{\internallinenumbers{def create()
+  new FlowPool \{
+    start = createBlock(0)
+    current = start
+  \}
+
+def createBlock(bidx: Int)
+  new Block \{
+    array = new Array(BLOCKSIZE)
+    index = 0
+    blockindex = bidx
+    next = null
+  \}
+
+def append(elem: Elem)
   b = READ(current) {\customlabel{read_block}{\LineNumber}}
   idx = READ(b.index) {\customlabel{read_index}{\LineNumber}}
   nextobj = READ(b.array(idx + 1)) {\customlabel{read_next}{\LineNumber}}
   curobj = READ(b.array(idx)) {\customlabel{read_current}{\LineNumber}}
-  if (check(b, idx, curobj, nextobj)) \{
+  if (check(b, idx, curobj)) \{
     if (CAS(b.array(idx + 1), nextobj, curobj)) \{ {\customlabel{cas_propagate}{\LineNumber}}
       if (CAS(b.array(idx), curobj, elem)) \{ {\customlabel{cas_append}{\LineNumber}}
         WRITE(b.index, idx + 1) {\customlabel{write_append}{\LineNumber}}
@@ -304,7 +318,7 @@ NOTSEALED = -1
     append(elem)
   \}
 
-def check(b: Block, idx: Int, curobj: Object, nextobj: Object)
+def check(b: Block, idx: Int, curobj: Object)
   if (idx > LASTELEMPOS) return false
   else curobj match \{
     elem: Elem =>
@@ -518,6 +532,9 @@ Forcing a bib, \cite{bowman:reasoning}, \cite{braams:babel}, \cite{clark:pct}, \
 \bibliographystyle{abbrv}
 \bibliography{bib}
 
+\appendix
+\section{Proof of Correctness}
+
 
 \setcounter{lemma}{0}
 \setcounter{theorem}{0}
@@ -525,20 +542,20 @@ Forcing a bib, \cite{bowman:reasoning}, \cite{braams:babel}, \cite{clark:pct}, \
 \setcounter{definition}{0}
 
 
-\begin{definition}[FlowPool]
-The \textbf{FlowPool} is defined as a pair of references $start$ and
-$current$.
 
-A \textbf{scheduled callback invocation} is a pair $(f, e)$ of a function
-$f \in Elem => Unit$ and an element $e \in Elem$.
-The programming construct that adds such a pair to the set of
-$futures$ is \verb=future { f(e) }=.
 
-The \textbf{FlowPool state} is defined as a pair of the directed graph of
-objects transitively reachable from the reference $start$ and the set
-of scheduled callback invocations called $futures$.
+\begin{definition}[Data types]
+A \textbf{Block} $b$ is an object which
+contains an array $b.array$, which itself can contain elements, $e \in Elem$,
+where \textbf{Elem} represents the type of $e$ and can be any countable set. A
+given block $b$ additionally contains an index $b.index$ which represents an
+index location in $b.array$, a unique index identifying the array
+$b.blockIndex$, and $b.next$, a reference to a successor block $c$ where
+$c.blockIndex = b.blockIndex + 1$. A \textbf{Terminal} $term$ is a sentinel
+object, which contains an integer $term.sealed \in \{-1\} \cup \mathbb{N}_0$, and
+$term.callbacks$, a set of functions $f \in Elem \Rightarrow Unit$.
 
-We define the following relations:
+We define the following functions:
 
 \begin{equation*}
 following(b: Block) = 
@@ -560,6 +577,32 @@ last(b: Block) = b' : b' \in reachable(b) \wedge b'.next = null
 \begin{equation*}
 size(b: Block) = | \{ x : x \in b.array \wedge x \in Elem \} |
 \end{equation*}
+
+Based on them we define the following relation:
+
+\begin{equation*}
+reachable(b, c) \Leftrightarrow c \in reachable(b)
+\end{equation*}
+\end{definition}
+
+
+\begin{definition}[FlowPool]
+A \textbf{FlowPool} $pool$ is an object that
+has a reference $pool.start$, to the first block $b_0$ (with $b_0.blockIndex=0$), 
+as well as a reference $pool.current$.
+We sometimes refer to these just as $start$ and $current$, respectively.
+
+A \textbf{scheduled callback invocation} is a pair $(f, e)$ of a function
+$f \in Elem => Unit$ and an element $e \in Elem$.
+The programming construct that adds such a pair to the set of
+$futures$ is \verb=future { f(e) }=.
+
+The \textbf{FlowPool state} is defined as a pair of the directed graph of
+objects transitively reachable from the reference $start$ and the set
+of scheduled callback invocations called $futures$.
+
+A \textbf{state changing} or \textbf{destructive} instruction is any
+atomic write or CAS instruction that changes the FlowPool state.
 
 We say that the FlowPool \textbf{has an element} $e$ at some time
 $t_0$ if and only if the relation $hasElem(start, e)$ holds.
@@ -583,19 +626,20 @@ the element $e$ at some time $t_0$ if and only if the relation
 $willBeCalled(start, e, f)$ holds.
 
 \begin{equation*}
-willBeCalled(start, e, f) \Leftrightarrow \exists t_0, \forall t >
-t_0, (f, e) \in futures
+willBeCalled(start, e, f) \Leftrightarrow \exists t_1, \forall t >
+t_1, (f, e) \in futures
 \end{equation*}
 
 We say that the FlowPool is \textbf{sealed} at the size $s$ at some
 $t_0$ if and only if the relation $sealedAt(start, s)$ holds.
 
 \begin{equation*}
-sealedAt(start, s) \Leftrightarrow \forall b = last(start), b.array
-= x^P \cdot t \cdot y^N, x \in Elem, t = Terminal(\{s\}, callbacks)
+sealedAt(start, s) \Leftrightarrow s \neq -1 \wedge \forall b = last(start), b.array
+= x^P \cdot t \cdot y^N, x \in Elem, t = Terminal(s, callbacks)
 \end{equation*}
 
-\textbf{FlowPool operations} are \verb=append=, \verb=foreach= and \verb=seal=, and are defined by pseudocodes in figures ...
+\textbf{FlowPool operations} are \verb=append=, \verb=foreach= and
+\verb=seal=, and are defined by pseudocodes in figures ...
 \end{definition}
 
 
@@ -624,39 +668,43 @@ A FlowPool state $\mathbb{S}$ is \textbf{valid} if and only if the invariants [I
 
 
 \begin{definition}[Abstract pool]
-An \textbf{abstract pool} $\mathbb{P}$ is a function from time $t$ to a tuple of sets $(elems, callbacks, seal)$ such that:
+An \textbf{abstract pool} $\mathbb{P}$ is a function from time $t$ to a tuple $(elems, callbacks, seal)$ such that:
 \begin{description}
-\item $seal \in \{ \emptyset, \{ w \} \}, w \in \mathbb{N}$
+\item $seal \in \{ -1 \} \cup \mathbb{N}_0$
 \item $callbacks \subset \{ (f: Elem => Unit, called) \}$
 \item $called \subseteq elems \subseteq Elem$
 \end{description}
-We say that an abstract pool $\mathbb{P}$ \textbf{is in state} $(elems, callbacks, seal)$ at time $t$ if and only if $\mathbb{P}(t) = (elems, callbacks, seal)$.
+We say that an abstract pool $\mathbb{P}$ \textbf{is in state}
+$\mathbb{A} = (elems, callbacks, seal)$ at time $t$ if and only if $\mathbb{P}(t) = (elems, callbacks, seal)$.
 \end{definition}
 
 
 \begin{definition}[Abstract pool operations]
-We say that an \textbf{abstract pool operation} $op$ applied to an abstract pool $P_0 = (elems_0, callbacks_0, seal_0)$ 
-at some time $t$ \textbf{changes} the state of the abstract pool to $P = (elems, callbacks, seal)$ 
-if $\exists t_0, \forall \tau, t_0 < \tau < t, \mathbb{P}(\tau) = P_0$ and $\mathbb{P}(t) = P$.
+We say that an \textbf{abstract pool operation} $op$ applied to an
+abstract pool $\mathbb{P}$ in abstract state $\mathbb{A}_0 = (elems_0, callbacks_0, seal_0)$ 
+at some time $t$ \textbf{changes} the abstract state of the abstract pool to $\mathbb{A} = (elems, callbacks, seal)$ 
+if $\exists t_0, \forall \tau, t_0 < \tau < t, \mathbb{P}(\tau) = \mathbb{A}_0$
+and $\mathbb{P}(t) = \mathbb{A}$.
+We denote this as $\mathb{A} = op(\mathbb{A}_0)$.
 
-Abstract pool operation $foreach(f)$ changes the state at $t_0$ from $(elems, callbacks, seal)$ 
+Abstract pool operation $foreach(f)$ changes the abstract state at $t_0$ from $(elems, callbacks, seal)$ 
 to $(elems, (f, \emptyset) \cup callbacks, seal)$. Furthermore:
 
-$\exists t_1 > t_0, \forall t_2 > t_1, \mathbb{P}(t_2) = (elems_2,
+$\exists t_1 \geq t_0, \forall t_2 > t_1, \mathbb{P}(t_2) = (elems_2,
 callbacks_2, seal_2) \wedge \forall (f, called_2) \in callbacks_2,
 elems \subseteq called_2 \subseteq elems_2$
 
-Abstract pool operation $append(e)$ changes the state at $t_0$ from
+Abstract pool operation $append(e)$ changes the abstract state at $t_0$ from
 $(elems, callbacks, seal)$ to $(\{e\} \cup elems, callbacks, seal)$. Furthermore:
 
-$\exists t_1 > t_0, \forall t_2 > t_1, \mathbb{P}(t_2) = (elems_2,
+$\exists t_1 \geq t_0, \forall t_2 > t_1, \mathbb{P}(t_2) = (elems_2,
 callbacks_2, seal_2) \wedge \forall (f, called_2) \in callbacks_2,
 (f, called) \in callbacks \Rightarrow elem \in called_2$
 
-Abstract pool operation $seal(s)$ changes the state at $t_0$ from
-$(elems, callbacks, seal)$ to $(elems, callbacks, \{s\})$, assuming
-that $seal \in \{ \emptyset, \{s\} \}$.
-
+Abstract pool operation $seal(s)$ changes the abstract state at $t_0$ from
+$(elems, callbacks, seal)$ to $(elems, callbacks, s)$, assuming
+that $seal \in \{-1\} \cup \{s\}$ and $s \in \mathbb{N}_0$, and
+$|elems| \leq s$.
 \end{definition}
 
 
@@ -668,13 +716,22 @@ is a valid state and:
 \item $\forall e \in Elem, hasElem(start, e) \Leftrightarrow e \in elems$
 \item $\forall f \in Elem => Unit, hasCallback(start, f) \Leftrightarrow f \in callbacks$
 \item $\forall f \in Elem => Unit, \forall e \in Elem, willBeCalled(start, e, f) \Leftrightarrow \exists t_1 \geq t_0, \mathbb{P}(t_1) = (elems_1, (f, called_1) \cup callbacks_1, seal_1), elems \subseteq called_1$
-\item $\forall s \in \mathbb{N}, sealedAt(start, s) \Leftrightarrow s \in seal$
+\item $\forall s \in \mathbb{N}_0, sealedAt(start, s) \Leftrightarrow s = seal$
 \end{description}
 
-A FlowPool operation $op$ completing at some time $t_0$ is consistent with an abstract pool operation $op'$ if 
-and only if $op$ changes the state of the FlowPool from $\mathbb{S}_1$ to $\mathbb{S}_2$, where $\mathbb{S}_1$ 
-and $\mathbb{S}_2$ are consistent with the abstract pool states $\mathbb{A}_1$ and $\mathbb{A}_2$, respectively, 
-and $op'$ changes the state of the abstract pool from $\mathbb{A}_1$ to $\mathbb{A}_2$.
+A FlowPool operation $op$ is \textbf{consistent} with the corresponding 
+abstract state operation $op'$ if and only if $\mathbb{S'}=op(\mathbb{S})$ is consistent 
+with an abstract state $\mathbb{A'}=op'(\mathbb{A})$.
+
+A \textbf{consistency change} 
+is a change from state $\mathbb{S}$ to state $\mathbb{S'}$ such that $\mathbb{S}$ 
+is consistent with an abstract state $\mathbb{A}$ and $\mathbb{S'}$ is consistent 
+with an abstract set $\mathbb{A'}$, where $\mathbb{A} \neq \mathbb{A'}$.
+
+%A FlowPool operation $op$ completing at some time $t_0$ is \textbf{consistent} with an abstract pool operation $op'$ if 
+%and only if $op$ changes the state of the FlowPool from $\mathbb{S}_1$ to $\mathbb{S}_2$, where $\mathbb{S}_1$ 
+%and $\mathbb{S}_2$ are consistent with the abstract pool states $\mathbb{A}_1$ and $\mathbb{A}_2$, respectively, 
+%and $op'$ changes the state of the abstract pool from $\mathbb{A}_1$ to $\mathbb{A}_2$.
 \end{definition}
 
 
@@ -1165,360 +1222,424 @@ From lemmas \ref{lemma-housekeeping}, \ref{lemma-append}, \ref{lemma-foreach} an
 executing in  isolation complete after a finite number of steps by lemma \ref{lemma-obstruction-free}.
 \end{proof}
 
+% \textbf{Definition 2} (FlowPool). typically pointing to some
+% subsequent block $b_n$ where $b_n=b_0$ or where $b_n$ is reachable from $b_0$
+% following $next$ references. Initially, $pool.current = pool.start$. The pool
+% \textbf{state} $\mathbb{S}$ is defined as the sequence of blocks reachable
+% from $pool.start$ by following $next$ references within blocks.
+% A \textbf{state changing} instruction is any atomic write or CAS instruction
+% that changes an object that can be accessed from $pool.start$.
+
+% \textbf{Definition 3} (Invariants).
+
+% \textbf{INV1} let $b: Block$ such that $reachable(start,b)\wedge b.next=null$. 
+% $\exists i$ such that $b.array(i) = Terminal \wedge \forall~i<j \leq LASTELEMPOS$, 
+% $b.array(j) = null$
+
+% \textbf{Definition 4} (Abstract state). An \textbf{abstract state} $\mathbb{A}$ 
+% is a tuple $(elems,sealed,callbacks)$ such that 
+% $\mathbb{A} \in \{(elems,sealed,callbacks)~|~elems \subset Elem,~sealed \in \{-1\} \cup \mathbb{N}_0,~callbacks\subset Elem \Rightarrow Unit\}$ 
+% Abstract state operations on some abstract state $\mathbb{A}$ are $append(\mathbb{A},e) = \mathbb{A'}$ 
+% where $\mathbb{A'} = (elems \cup \{e\}, sealed, callbacks)$ if $\mathbb{A}=(elems, sealed, callbacks)$, 
+% $seal(\mathbb{A},sealSize) = \mathbb{A''}$ where $\mathbb{A''} = (elems, sealSize, callbacks)~:~sealSize \in \mathbb{N}_0$ 
+% if $\mathbb{A}=(elems, sealed, callbacks)$ and $sealed=-1$, the unsealed state, or 
+% $sealed=sealSize$ already, and 
+% $doForAll(\mathbb{A},fun)=\mathbb{A'''}$ where $\mathbb{A'''}=(elems, sealed, callbacks\cup \{fun\})$.
+
+% \textbf{Definition 5} (Consistency). A FlowPool state $\mathbb{S}$ of $pool$ 
+% with starting block $pool.start$ is consistent with an abstract state 
+% $\mathbb{A}=(elems,sealed)$ iff some element $e \in elems \Leftrightarrow \exists b,i~:~reachable(pool.start,b)~\wedge~b.array(i)=e,$ 
+% and $\exists c,j~:~c.array(j) \in Terminal~\wedge~c.array(j).sealed=sealed~\wedge~reachable(pool.start, c)$. 
+
+\textbf{Definition 6} (Lock-freedom). In a scenario where some finite number
+of threads are executing a concurrent operation, that concurrent operation is
+\textit{lock-free} if and only if that concurrent operation is completed after
+a finite number of steps by some thread.
+
+%==============================
+%==============================
+% 
+% THEOREM 1
+%
+%==============================
+%==============================
+
+\textbf{Theorem 1} (Lock-freedom). \textit{FlowPool operations append, seal,
+and doForAll are lock-free}.
+
+We begin by first proving that there are a finite number of execution steps
+before a consistency change occurs.
+
+By Lemma 5, after invoking $append$, a consistency change occurs after a
+finite number of steps. Likewise, by Lemma 7, after invoking $seal$, a
+consistency change occurs after a finite number of steps. And finally, by
+Lemma 8, after invoking $doForAll$, a consistency change likewise occurs after
+a finite number of steps.
+
+By Lemma 10, this means a concurrent operation $append$, $seal$, or $doForAll$
+will successfully complete. Therefore, by Definition 6, these operations are
+lock-free.
+
+% CASes that fail by being completed by other CASes signify progress. 
+
+%==============================
+% LEMMA 1
+%==============================
+
+\textbf{Lemma 1}. \textit{After invoking an operation $op$, if non-consistency
+changing CAS operations $CAS1$, $CAS3$, or $CAS4$, in the pseudocode fail,
+they must have already been successfully completed by another thread since
+$op$ began}.
+
+\textit{Proof}. Trivial inspection of the pseudocode reveals that since $CAS1$
+makes up a check that precedes $CAS2$, and since $CAS2$ is the only operation
+besides $CAS1$ which can change the expected value of $CAS1$, in the case of
+a failure of $CAS1$, $CAS2$ (and thus $CAS1$) must have already successfully
+completed or $CAS1$ must have already successfully completed by a different
+thread since $op$ began executing.
+
+Likewise, by trivial inspection $CAS3$ is the only CAS which can update the
+$b.next$ reference, therefore in the case of a failure, some other thread must
+have already successfully completed $CAS3$ since the beginning of $op$.
+
+Like above, $CAS4$ is the only CAS which can change the $current$ reference,
+therefore in the case of a failure, some other thread must have already
+successfully completed $CAS4$ since $op$ began.
+\qed
+
+%==============================
+% LEMMA 2 (EXPAND)
+%==============================
+
+\textbf{Lemma 2}. \textit{Invoking the $expand$ operation will execute a non-
+consistency changing instruction after a finite number of steps. Moreover, it
+is guaranteed that the $current$ reference is updated to point to a subsequent
+block after a finite number of steps. Finally, $expand$ will return after a
+finite number of steps.
+% Furthermore, given a total number of blocks $numBlocks$ reachable in a
+% FlowPool $pool$ before invoking $expand$ through $append$, the number of
+% blocks $numBlocks'$ after some finite number of steps is guaranteed to satisfy
+% $numBlocks'>numBlocks$
+}.
+
+% There are some issues with this one. Later on, we only actually need the
+% point about the current reference, and also the point that expand returns
+% after a finite number of steps. So we don't actually need the points about
+% numBlocks. 
+%
+% Not guaranteed to create a new block, because invoking expand from seal goes
+% straight to case 2 in if/else. Should remove that.
+%
+% So, right before calling expand, some other thread might update the next
+% pointer, and then the only thing that remains to be done is to change
+% current. Because expand checks whether next is null. If not null, then the
+% only thing that it does is update current. So the wording in the 2 cases
+% below needs to be cleaned up and some stuff needs to be removed.
+
+\textit{Proof}. From inspection of the pseudocode, it is clear that the only
+point at which $expand(b)$ can be invoked is under the condition that for some
+block $b$, $b.index > LASTELEMPOS$, where $LASTELEMPOS$ is the maximum size
+set aside for elements of type $Elem$ in any block. Given this, we will proceed 
+by showing that a new block will be created with all related references 
+$b.next$ and $current$ correctly set.
+
+There are two conditions under which a non-consistency changing CAS
+instruction will be carried out. 
+
+\begin{itemize} 
+\item \textbf{Case 1:} if $b.next=null$, a new block $nb$ will
+be created and $CAS3$ will be executed. From Lemma 1, we know that $CAS3$
+must complete successfully on some thread. Afterwards recursively calling 
+$expand$ on the original block $b$.
+\item \textbf{Case 2:} if $b.next \neq null$, $CAS4$ will be executed. 
+Lemma 1 guarantees that $CAS4$ will update $current$ to refer to $b.next$, 
+which we will show can only be a new block. Likewise, Lemma 1 has shown that 
+$CAS3$ is the only state changing instruction that can initiate a state change 
+at location $b.next$, therefore, since $CAS3$ takes place within Case 1,  
+Case 2 can only be reachable after Case 1 has been executed successfully. Given 
+that Case 1 always creates a new block, therefore, $b.next$ in this case, must 
+always refer to a new block.
+\end{itemize}
+
+Therefore, since from Lemma 1 we know that both $CAS3$ and $CAS4$ can only
+fail if already completed guaranteeing their finite completion, and since
+$CAS3$ and $CAS4$ are the only state changing operations invoked through
+$expand$, the $expand$ operation must complete in a finite number of steps.
+
+Finally, since we saw in Case 2 that a new block is always created and related
+references are always correctly set, that is both $b.next $ and $current$ are
+correctly updated to refer to the new block, it follows that $numBlocks$
+strictly increases after some finite number of steps.
+\qed
+
+%==============================
+% LEMMA 3 (CAS2)
+%==============================
+
+\textbf{Lemma 3}. \textit{After invoking $append(elem)$, if $CAS2$ fails, then
+some thread has successfully completed $CAS2$ or $CAS5$ (or likewise, $CAS6$)
+after some finite number of steps}.
+
+\textit{Proof}. First, we show that a thread attempting to complete $CAS2$
+can't fail due to a different thread completing $CAS1$ so long as $seal$ has
+not been invoked after completing the read of $currobj$. We address this
+exception later on.
+
+Since after $check$, the only condition under which $CAS1$, and by extension,
+$CAS2$ can be executed is the situation where the current object $currobj$
+with index location $idx$ is the $Terminal$ object, it follows that $CAS1$ can
+only ever serve to duplicate this $Terminal$ object at location $idx+1$,
+leaving at most two $Terminal$s in block refered to by $current$ momentarily
+until $CAS2$ can be executed. By Lemma 1, since $CAS1$ is a non-consistency
+changing instruction, it follows that any thread holding any element $elem'$
+can execute this instruction without changing the expected value of $currobj$
+in $CAS2$, as no new object is ever created and placed in location $idx$.
+Therefore, $CAS2$ cannot fail due to $CAS1$, so long as $seal$ has not been
+invoked by some other thread after the read of $currobj$.
+
+This leaves only two scenarios in which consistency changing $CAS2$ can fail:
+
+\begin{itemize}
+\item \textbf{Case 1:} Another thread has already completed $CAS2$ with a 
+different element $elem'$.
+\item \textbf{Case 2:} Another thread completes an invocation to the $seal$ 
+operation after the current thread completes the read of $currobj$. In this 
+case, $CAS2$ can fail because $CAS5$ (or, likewise $CAS6$) might have 
+completed before, in which case, it inserts a new $Terminal$ object $term$ 
+into location $idx$ (in the case of a $seal$ invocation, 
+$term.sealed\in\mathbb{N}_0$, or in the case of a $doForAll$ invocation, 
+$\{term.callbacks\in$\}). 
+\end{itemize}
+
+We omit the proof and detailed discussion of $CAS6$ because it can be proven 
+using the same steps as were taken for $CAS5$. 
+\qed
+
+%==============================
+% LEMMA 4 (FINITE # STEPS BEFORE STATE CHANGE)
+%==============================
+
+\textbf{Lemma 4}. \textit{All operations with the exception of $append$,
+$seal$, and $doForAll$ execute only a finite number of steps between each
+state changing instruction}
+
+\textit{Proof}. The \textbf{advance}, \textbf{check}, \textbf{totalElems},
+\textbf{invokeCallbacks}, and \textbf{tryWriteSeal}  operations have a finite
+number of execution steps, as they contain no recursive calls, loops, or other
+possibility to restart.
+
+While the \textbf{expand} operation contains a recursive call following a CAS
+instruction, it was shown in Lemma 2 that an invocation of $expand$ is
+guaranteed to execute a state changing instruction after a finite number of
+steps. 
+\qed
+
+%==============================
+% LEMMA 5 (APPEND: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
+%==============================
+
+\textbf{Lemma 5}. \textit{After invoking $append(elem)$, a consistency
+changing instruction will be completed after a finite number of steps.}
+
+\textit{Proof}.
+The \textbf{append} operation can be restarted in three cases. We show that in
+each case, it's guaranteed to either complete in a finite number of steps,  or
+leads to a state changing instruction:
+
+\begin{itemize} 
+
+\item \textbf{Case 1:} The call to $check$, a finite operation by Lemma 4,
+returns $false$,  causing a call to $advance$, also a finite operation by
+Lemma 4, followed by a recursive call to $append$ with the same  element
+$elem$ which in turn once again calls $check$.
+
+We show that after a finite number of steps, the $check$ will evaluate to
+$true$, or some other thread will have completed a consistency changing
+operation since the initial invocation of $append$. In the case where $check$
+evaluates to $true$, Lemma 3 applies, as it guarantees that a consistency
+changing CAS is completed after a finite number of steps.
+
+When the call to the finite operation $check$ returns $false$, if the
+subsequent $advance$ finds that a $Terminal$ object is at the current block
+index $idx$, then the next invocation of $append$ will evaluate $check$ to
+$true$. Otherwise, it must be the case that another thread has moved the
+Terminal to a subsequent index since the initial invocation of append, which
+is only possible using a consistency changing instruction.
+
+Finally, if $advance$ finds that the element at $idx$ is an $Elem$, by Lemma
+9, $b.index$ will be incremented after a finite number of steps. By $INV1$,
+this can only happen a finite number of times until a $Terminal$ is found. In
+the case that $expand$ is meanwhile invoked through $advance$, by Lemma 2 it's
+guaranteed to complete state changing instructions $CAS3$ or $CAS4$ in a
+finite number of steps. Otherwise, some other thread has moved the $Terminal$
+to a subsequent index. However, this latter case is only possible by
+successfully completing $CAS2$, a consistency changing instruction, after the
+initial invocation of append.
+
+\item \textbf{Case 2:} $CAS1$ fails, which we know from Lemma 1 means that it
+must've already been completed by another thread, guaranteeing that $CAS2$
+will be attempted. If $CAS2$ fails, by Lemma 3, after a finite number of
+steps, a consistency changing instruction will be completed. If $CAS2$
+succeeds, as a consistency changing instruction, consistency will have
+clearly been changed.
+
+\item \textbf{Case 3:} $CAS2$ fails, which, by Lemma 3, indicates that either
+some other thread has already completed $CAS2$ with another element, or
+another consistency changing instruction, $CAS5$ or $CAS6$ has successfully
+completed.  
+
+\end{itemize}
+
+Therefore, $append$ itself as well as all other operations reachable via an
+invocation of $append$ are guaranteed to have a finite number of steps between
+\textit{consistency} changing instructions.
+
+%==============================
+% LEMMA 6 (CAS5)
+%==============================
+
+\textbf{Lemma 6}. \textit{After invoking $seal(size)$, if $CAS5$ fails, then
+some thread has successfully completed $CAS5$ or $CAS2$ after some finite
+number of steps}.
+
+\textit{Proof}. Since $CAS1$ only duplicates an existing $Terminal$, it can
+not be the cause for a failing $CAS5$. This leaves only two cases in which
+$CAS5$ can fail:
+
+\begin{itemize}
+\item \textbf{Case 1:} Another thread has already completed $CAS5$.
+\item \textbf{Case 2:} Another thread completes an invocation to the
+$append(elem)$ operation after the current thread completes the read of
+$currobj$. In this  case, $CAS5$ can fail because $CAS2$ might have  completed
+before, in which case, it inserts a new $Elem$ object $elem$  into location
+$idx$.
+
+\end{itemize}
+
+%==============================
+% LEMMA 7 (SEAL: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
+%==============================
+
+\textbf{Lemma 7}. \textit{After invoking $seal(size)$, a consistency changing
+instruction will be completed after a finite number of steps, or the initial
+invocation of $seal(size)$ completes.}
+
+\textit{Proof}. The $seal$ operation can be restarted in two scenarios. 
+
+\begin{itemize}
+
+\item \textbf{Case 1:} The check $idx \leq LASTELEMPOS$ succeeds, indicating
+that we are at a valid location in the current block $b$, but the object at
+the current index location $idx$ is of type $Elem$, not $Terminal$, causing a
+recursive call to $seal$ with the same size $size$.
+
+In this case, we begin by showing that the atomic write of $idx+1$ to
+$b.index$, required to iterate through the block $b$ for the recursive call to
+$seal$, will be correctly incremented after a finite number of steps. 
+
+Therefore, by both the guarantee that, in a finite number of steps, $b.index$
+will eventually be correctly incremented as we saw in Lemma 9, as well as by
+$INV1$ we know that the original invocation of $seal$ will correctly iterate
+through $b$ until a $Terminal$ is found. Thus, we know that the call to
+$tryWriteSeal$ will be invoked, and by both Lemma 4 and Lemma 5, we know that
+either $tryWriteSeal$, will successfully complete in a finite number of steps,
+in turn successfully completing $seal(size)$, or $CAS2$, another consistency
+changing operation will successfully complete.
+
+\item \textbf{Case 2:} The check $idx \leq LASTELEMPOS$ fails, indicating that
+we must move on to the next block, causing first a call to $expand$ followed
+by a recursive call to $seal$ with the same size $size$. 
+
+We proceed by showing that after a finite number of steps, we must end up in
+Case 1, which we have just showed itself completes in a finite number of
+steps, or that a consistency change must've already occurred. 
+
+By Lemma 2, we know that an invocation of $expand$ returns after a finite
+number of steps, and $pool.current$ is updated to point to a subsequent block.
+
+If we are in the recursive call to $seal$, and the $idx \leq LASTELEMPOS$
+condition is $false$, trivally, a consistency changing operation must have
+occurred, as, the only way for the condition to evaluate to $true$ is through
+a consistency changing operation, in the case that a block has been created
+during an invocation to $append$, for example.
+
+% In the case, where after the invocation $expand$, but before the read of $b$
+% ($READ(pool.current)$) in the recursive call to $seal$, we have that
+% $current.index > LASTELEMPOS$, the a consistency change must have occurred.
+% That is, another thread has already updated $pool.current$ by a different
+% invocation to $expand$, which means that, in the meantime, an element has
+% already been inserted via $append$. 
+
+% Trivally, a consistency changing operation must have occurred, as, the only
+% way for $current.index > LASTELEMPOS$ to evaluate to $true$ is if a block .
+
+% % Thus, as the only way for the index to
+% % change is via $WRITE1$ which occurs only if $CAS2$ succeeds, a consistency
+% % changing instruction must have completed.
+
+Otherwise, if we are in the recursive call to $seal$, and the $idx \leq
+LASTELEMPOS$ condition evaluates to $true$, we enter Case 1, which we just
+showed will successfully complete in a finite number of steps.
+
+\end{itemize}
+
+
+%==============================
+% LEMMA 8 (DOFORALL: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
+%==============================
+
+\textbf{Lemma 8}. \textit{After invoking $doForAll(fun)$, a consistency
+changing instruction will be completed after a finite number of steps.}
+
+We omit the proof for $doForAll$ since it proceeds in the exactly the same way
+as does the proof for $seal$ in Lemma 7.
+
+%==============================
+% LEMMA 9, WRITE2 AND WRITE3
+%==============================
+
+\textbf{Lemma 9}. \textit{After updating $b.index$ using $WRITE2$ or $WRITE3$, 
+$b.index$ is guaranteed to be incremented after a finite number of STEPS}.
+
+\textit{Proof}. For some index, $idx$, both calls to $WRITE2$ and $WRITE3$
+attempt to write $idx+1$ to $b.index$. In both cases, it's possible that
+another thread could complete either $WRITE2$ or $WRITE3$, once again writing
+$idx$ to $b.index$ after the current thread has completed, in effect
+overwriting the current thread's write with $idx+1$. By inspection of the
+pseudocode, both $WRITE2$ and $WRITE3$ will be repeated if $b.index$ has not
+been incremented. However, since the number of threads operating on the
+FlowPool is finite, $p$, we are guaranteed that in the worst case, this
+scenario can repeat at most $p$ times, before a write correctly updates
+$b.index$ with $idx+1$.
+\qed
+
+%==============================
+% LEMMA 10
+%==============================
+
+\textbf{Lemma 10}. \textit{Assume some concurrent operation is started. If
+some thread completes consistency changing CAS instruction, then some
+concurrent operation is guaranteed to be completed}.
+
+\textit{Proof}. 
+% By Lemma X and Y, we know that consistency changing
+% instructions $CAS2$, $CAS5$, and $CAS6$ are guaranteed to at some point
+% complete.
+
+By trival inspection of the pseudocode, if $CAS2$ successfully completes on
+some thread, then that thread is guaranteed to complete the corresponding
+invocation of $append$ in a finite number of steps.
+% we don't say anything about WRITE1 here because it's guaranteed to succeed, so it's trivial.
+
+Likewise by trivial inspection, if $CAS5$ successfully completes on some
+thread, then by Lemma 4, $tryWriteSeal$ is guaranteed to complete in a finite
+number of steps, and therefore, that thread is guaranteed to complete the
+corresponding invocation of $seal$ in a finite number of steps.
+
+The case for $CAS6$ is omitted since it follows the same steps as for the case
+of $CAS5$
+
+\pagebreak
 
-% You are strongly encouraged to use \LaTeXe{} for the
-% preparation of your camera-ready manuscript together with the
-% corresponding Springer class file \verb+llncs.cls+. Only if you use
-% \LaTeXe{} can hyperlinks be generated in the online version
-% of your manuscript.
-
-% The \LaTeX{} source of this instruction file for \LaTeX{} users may be
-% used as a template. This is
-% located in the ``authors'' subdirectory in
-% \url{ftp://ftp.springer.de/pub/tex/latex/llncs/latex2e/instruct/} and
-% entitled \texttt{typeinst.tex}. There is a separate package for Word 
-% users. Kindly send the final and checked source
-% and PDF files of your paper to the Contact Volume Editor. This is
-% usually one of the organizers of the conference. You should make sure
-% that the \LaTeX{} and the PDF files are identical and correct and that
-% only one version of your paper is sent. It is not possible to update
-% files at a later stage. Please note that we do not need the printed
-% paper.
-
-% We would like to draw your attention to the fact that it is not possible
-% to modify a paper in any way, once it has been published. This applies
-% to both the printed book and the online version of the publication.
-% Every detail, including the order of the names of the authors, should
-% be checked before the paper is sent to the Volume Editors.
-
-% \subsection{Checking the PDF File}
-
-% Kindly assure that the Contact Volume Editor is given the name and email
-% address of the contact author for your paper. The Contact Volume Editor
-% uses these details to compile a list for our production department at
-% SPS in India. Once the files have been worked upon, SPS sends a copy of
-% the final pdf of each paper to its contact author. The contact author is
-% asked to check through the final pdf to make sure that no errors have
-% crept in during the transfer or preparation of the files. This should
-% not be seen as an opportunity to update or copyedit the papers, which is
-% not possible due to time constraints. Only errors introduced during the
-% preparation of the files will be corrected.
-
-% This round of checking takes place about two weeks after the files have
-% been sent to the Editorial by the Contact Volume Editor, i.e., roughly
-% seven weeks before the start of the conference for conference
-% proceedings, or seven weeks before the volume leaves the printer's, for
-% post-proceedings. If SPS does not receive a reply from a particular
-% contact author, within the timeframe given, then it is presumed that the
-% author has found no errors in the paper. The tight publication schedule
-% of LNCS does not allow SPS to send reminders or search for alternative
-% email addresses on the Internet.
-
-% In some cases, it is the Contact Volume Editor that checks all the final
-% pdfs. In such cases, the authors are not involved in the checking phase.
-
-% \subsection{Additional Information Required by the Volume Editor}
-
-% If you have more than one surname, please make sure that the Volume Editor
-% knows how you are to be listed in the author index.
-
-% \subsection{Copyright Forms}
-
-% The copyright form may be downloaded from the ``For Authors"
-% (Information for LNCS Authors) section of the LNCS Website:
-% \texttt{www.springer.com/lncs}. Please send your signed copyright form
-% to the Contact Volume Editor, either as a scanned pdf or by fax or by
-% courier. One author may sign on behalf of all of the other authors of a
-% particular paper. Digital signatures are acceptable.
-
-% \section{Paper Preparation}
-
-% Springer provides you with a complete integrated \LaTeX{} document class
-% (\texttt{llncs.cls}) for multi-author books such as those in the LNCS
-% series. Papers not complying with the LNCS style will be reformatted.
-% This can lead to an increase in the overall number of pages. We would
-% therefore urge you not to squash your paper.
-
-% Please always cancel any superfluous definitions that are
-% not actually used in your text. If you do not, these may conflict with
-% the definitions of the macro package, causing changes in the structure
-% of the text and leading to numerous mistakes in the proofs.
-
-% If you wonder what \LaTeX{} is and where it can be obtained, see the
-% ``\textit{LaTeX project site}'' (\url{http://www.latex-project.org})
-% and especially the webpage ``\textit{How to get it}''
-% (\url{http://www.latex-project.org/ftp.html}) respectively.
-
-% When you use \LaTeX\ together with our document class file,
-% \texttt{llncs.cls},
-% your text is typeset automatically in Computer Modern Roman (CM) fonts.
-% Please do
-% \emph{not} change the preset fonts. If you have to use fonts other
-% than the preset fonts, kindly submit these with your files.
-
-% Please use the commands \verb+\label+ and \verb+\ref+ for
-% cross-references and the commands \verb+\bibitem+ and \verb+\cite+ for
-% references to the bibliography, to enable us to create hyperlinks at
-% these places.
-
-% For preparing your figures electronically and integrating them into
-% your source file we recommend using the standard \LaTeX{} \verb+graphics+ or
-% \verb+graphicx+ package. These provide the \verb+\includegraphics+ command.
-% In general, please refrain from using the \verb+\special+ command.
-
-% Remember to submit any further style files and
-% fonts you have used together with your source files.
-
-% \subsubsection{Headings.}
-
-% Headings should be capitalized
-% (i.e., nouns, verbs, and all other words
-% except articles, prepositions, and conjunctions should be set with an
-% initial capital) and should,
-% with the exception of the title, be aligned to the left.
-% Words joined by a hyphen are subject to a special rule. If the first
-% word can stand alone, the second word should be capitalized.
-
-% Here are some examples of headings: ``Criteria to Disprove
-% Context-Freeness of Collage Language", ``On Correcting the Intrusion of
-% Tracing Non-deterministic Programs by Software", ``A User-Friendly and
-% Extendable Data Distribution System", ``Multi-flip Networks:
-% Parallelizing GenSAT", ``Self-determinations of Man".
-
-% \subsubsection{Lemmas, Propositions, and Theorems.}
-
-% The numbers accorded to lemmas, propositions, and theorems, etc. should
-% appear in consecutive order, starting with Lemma 1, and not, for
-% example, with Lemma 11.
-
-% \subsection{Figures}
-
-% For \LaTeX\ users, we recommend using the \emph{graphics} or \emph{graphicx}
-% package and the \verb+\includegraphics+ command.
-
-% Please check that the lines in line drawings are not
-% interrupted and are of a constant width. Grids and details within the
-% figures must be clearly legible and may not be written one on top of
-% the other. Line drawings should have a resolution of at least 800 dpi
-% (preferably 1200 dpi). The lettering in figures should have a height of
-% 2~mm (10-point type). Figures should be numbered and should have a
-% caption which should always be positioned \emph{under} the figures, in
-% contrast to the caption belonging to a table, which should always appear
-% \emph{above} the table; this is simply achieved as matter of sequence in
-% your source.
-
-% Please center the figures or your tabular material by using the \verb+\centering+
-% declaration. Short captions are centered by default between the margins
-% and typeset in 9-point type (Fig.~\ref{fig:example} shows an example).
-% The distance between text and figure is preset to be about 8~mm, the
-% distance between figure and caption about 6~mm.
-
-% To ensure that the reproduction of your illustrations is of a reasonable
-% quality, we advise against the use of shading. The contrast should be as
-% pronounced as possible.
-
-% If screenshots are necessary, please make sure that you are happy with
-% the print quality before you send the files.
-% % \begin{figure}
-% % \centering
-% % \includegraphics[height=6.2cm]{eijkel2}
-% % \caption{One kernel at $x_s$ (\emph{dotted kernel}) or two kernels at
-% % $x_i$ and $x_j$ (\textit{left and right}) lead to the same summed estimate
-% % at $x_s$. This shows a figure consisting of different types of
-% % lines. Elements of the figure described in the caption should be set in
-% % italics, in parentheses, as shown in this sample caption.}
-% % \label{fig:example}
-% % \end{figure}
-
-% Please define figures (and tables) as floating objects. Please avoid
-% using optional location parameters like ``\verb+[h]+" for ``here".
-
-% \paragraph{Remark 1.}
-
-% In the printed volumes, illustrations are generally black and white
-% (halftones), and only in exceptional cases, and if the author is
-% prepared to cover the extra cost for color reproduction, are colored
-% pictures accepted. Colored pictures are welcome in the electronic
-% version free of charge. If you send colored figures that are to be
-% printed in black and white, please make sure that they really are
-% legible in black and white. Some colors as well as the contrast of
-% converted colors show up very poorly when printed in black and white.
-
-% \subsection{Formulas}
-
-% Displayed equations or formulas are centered and set on a separate
-% line (with an extra line or halfline space above and below). Displayed
-% expressions should be numbered for reference. The numbers should be
-% consecutive within each section or within the contribution,
-% with numbers enclosed in parentheses and set on the right margin --
-% which is the default if you use the \emph{equation} environment, e.g.,
-% \begin{equation}
-%   \psi (u) = \int_{o}^{T} \left[\frac{1}{2}
-%   \left(\Lambda_{o}^{-1} u,u\right) + N^{\ast} (-u)\right] dt \;  .
-% \end{equation}
-
-% Equations should be punctuated in the same way as ordinary
-% text but with a small space before the end punctuation mark.
-
-% \subsection{Footnotes}
-
-% The superscript numeral used to refer to a footnote appears in the text
-% either directly after the word to be discussed or -- in relation to a
-% phrase or a sentence -- following the punctuation sign (comma,
-% semicolon, or period). Footnotes should appear at the bottom of
-% the
-% normal text area, with a line of about 2~cm set
-% immediately above them.\footnote{The footnote numeral is set flush left
-% and the text follows with the usual word spacing.}
-
-% \subsection{Program Code}
-
-% Program listings or program commands in the text are normally set in
-% typewriter font, e.g., CMTT10 or Courier.
-
-% \medskip
-
-% \noindent
-% {\it Example of a Computer Program}
-% \begin{verbatim}
-% program Inflation (Output)
-%   {Assuming annual inflation rates of 7%, 8%, and 10%,...
-%    years};
-%    const
-%      MaxYears = 10;
-%    var
-%      Year: 0..MaxYears;
-%      Factor1, Factor2, Factor3: Real;
-%    begin
-%      Year := 0;
-%      Factor1 := 1.0; Factor2 := 1.0; Factor3 := 1.0;
-%      WriteLn('Year  7% 8% 10%'); WriteLn;
-%      repeat
-%        Year := Year + 1;
-%        Factor1 := Factor1 * 1.07;
-%        Factor2 := Factor2 * 1.08;
-%        Factor3 := Factor3 * 1.10;
-%        WriteLn(Year:5,Factor1:7:3,Factor2:7:3,Factor3:7:3)
-%      until Year = MaxYears
-% end.
-% \end{verbatim}
-% %
-% \noindent
-% {\small (Example from Jensen K., Wirth N. (1991) Pascal user manual and
-% report. Springer, New York)}
-
-% \subsection{Citations}
-
-% For citations in the text please use
-% square brackets and consecutive numbers: \cite{jour}, \cite{lncschap},
-% \cite{proceeding1} -- provided automatically
-% by \LaTeX 's \verb|\cite| \dots\verb|\bibitem| mechanism.
-
-% \subsection{Page Numbering and Running Heads}
-
-% There is no need to include page numbers. If your paper title is too
-% long to serve as a running head, it will be shortened. Your suggestion
-% as to how to shorten it would be most welcome.
-
-% \section{LNCS Online}
-
-% The online version of the volume will be available in LNCS Online.
-% Members of institutes subscribing to the Lecture Notes in Computer
-% Science series have access to all the pdfs of all the online
-% publications. Non-subscribers can only read as far as the abstracts. If
-% they try to go beyond this point, they are automatically asked, whether
-% they would like to order the pdf, and are given instructions as to how
-% to do so.
-
-% Please note that, if your email address is given in your paper,
-% it will also be included in the meta data of the online version.
-
-% \section{BibTeX Entries}
-
-% The correct BibTeX entries for the Lecture Notes in Computer Science
-% volumes can be found at the following Website shortly after the
-% publication of the book:
-% \url{http://www.informatik.uni-trier.de/~ley/db/journals/lncs.html}
-
-% \subsubsection*{Acknowledgments.} The heading should be treated as a
-% subsubsection heading and should not be assigned a number.
-
-% \section{The References Section}\label{references}
-
-% In order to permit cross referencing within LNCS-Online, and eventually
-% between different publishers and their online databases, LNCS will,
-% from now on, be standardizing the format of the references. This new
-% feature will increase the visibility of publications and facilitate
-% academic research considerably. Please base your references on the
-% examples below. References that don't adhere to this style will be
-% reformatted by Springer. You should therefore check your references
-% thoroughly when you receive the final pdf of your paper.
-% The reference section must be complete. You may not omit references.
-% Instructions as to where to find a fuller version of the references are
-% not permissible.
-
-% We only accept references written using the latin alphabet. If the title
-% of the book you are referring to is in Russian or Chinese, then please write
-% (in Russian) or (in Chinese) at the end of the transcript or translation
-% of the title.
-
-% The following section shows a sample reference list with entries for
-% journal articles \cite{jour}, an LNCS chapter \cite{lncschap}, a book
-% \cite{book}, proceedings without editors \cite{proceeding1} and
-% \cite{proceeding2}, as well as a URL \cite{url}.
-% Please note that proceedings published in LNCS are not cited with their
-% full titles, but with their acronyms!
-
-% \begin{thebibliography}{4}
-
-% \bibitem{jour} Smith, T.F., Waterman, M.S.: Identification of Common Molecular
-% Subsequences. J. Mol. Biol. 147, 195--197 (1981)
-
-% \bibitem{lncschap} May, P., Ehrlich, H.C., Steinke, T.: ZIB Structure Prediction Pipeline:
-% Composing a Complex Biological Workflow through Web Services. In: Nagel,
-% W.E., Walter, W.V., Lehner, W. (eds.) Euro-Par 2006. LNCS, vol. 4128,
-% pp. 1148--1158. Springer, Heidelberg (2006)
-
-% \bibitem{book} Foster, I., Kesselman, C.: The Grid: Blueprint for a New Computing
-% Infrastructure. Morgan Kaufmann, San Francisco (1999)
-
-% \bibitem{proceeding1} Czajkowski, K., Fitzgerald, S., Foster, I., Kesselman, C.: Grid
-% Information Services for Distributed Resource Sharing. In: 10th IEEE
-% International Symposium on High Performance Distributed Computing, pp.
-% 181--184. IEEE Press, New York (2001)
-
-% \bibitem{proceeding2} Foster, I., Kesselman, C., Nick, J., Tuecke, S.: The Physiology of the
-% Grid: an Open Grid Services Architecture for Distributed Systems
-% Integration. Technical report, Global Grid Forum (2002)
-
-% \bibitem{url} National Center for Biotechnology Information, \url{http://www.ncbi.nlm.nih.gov}
-
-% \end{thebibliography}
-
-
-% \section*{Appendix: Springer-Author Discount}
-
-% LNCS authors are entitled to a 33.3\% discount off all Springer
-% publications. Before placing an order, the author should send an email, 
-% giving full details of his or her Springer publication,
-% to \url{orders-HD-individuals@springer.com} to obtain a so-called token. This token is a
-% number, which must be entered when placing an order via the Internet, in
-% order to obtain the discount.
-
-% \section{Checklist of Items to be Sent to Volume Editors}
-% Here is a checklist of everything the volume editor requires from you:
-
-
-% \begin{itemize}
-% \settowidth{\leftmargin}{{\Large$\square$}}\advance\leftmargin\labelsep
-% \itemsep8pt\relax
-% \renewcommand\labelitemi{{\lower1.5pt\hbox{\Large$\square$}}}
-
-% \item The final \LaTeX{} source files
-% \item A final PDF file
-% \item A copyright form, signed by one author on behalf of all of the
-% authors of the paper.
-% \item A readme giving the name and email address of the
-% corresponding author.
-% \end{itemize}
+
 \end{document}

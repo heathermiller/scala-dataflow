@@ -59,10 +59,10 @@
 	  idx = READ(b.index)
 	  nextobj = READ(b.array(idx + 1))
 	  curobj = READ(b.array(idx))
-	  if (check(b, idx, curobj, nextobj)) {
-  	    if (CAS(b.array(idx + 1), nextobj, curobj)) {
- 	      if (CAS(b.array(idx), curobj, elem)) {
-		    WRITE(b.index, idx + 1)
+	  if (check(b, idx, curobj)) {
+  	    if (CAS(b.array(idx + 1), nextobj, curobj)) { //CAS1
+ 	      if (CAS(b.array(idx), curobj, elem)) { //CAS2
+		    WRITE(b.index, idx + 1) //WRITE1
 			invokeCallbacks(elem, curobj)
 		  } else append(elem)
 	    } else append(elem)
@@ -71,7 +71,7 @@
 		append(elem)
 	  }
 	
-	def check(b: Block, idx: Int, curobj: Object, nextobj: Object)
+	def check(b: Block, idx: Int, curobj: Object)
       // The check on the index is done implicitly in the real code
 	  if (idx > LASTELEMPOS) return false
 	  else curobj match {
@@ -93,17 +93,17 @@
 	  if (idx > LASTELEMPOS) expand(b)
 	  else {
 	    obj = READ(b.array(idx))
-	    if (obj is Elem) WRITE(b.index, idx + 1)
+	    if (obj is Elem) WRITE(b.index, idx + 1) //WRITE2
 	  }
 	
 	def expand(b: Block)
 	  nb = READ(b.next)
 	  if (nb is null) {
 	    nb = createBlock(b.blockindex + 1)
-	    if (CAS(b.next, null, nb)) CAS(current, b, nb)
+	    if (CAS(b.next, null, nb)) expand(b) // CAS3
         // In the real code we take a shortcut here (read, and try to CAS)
 	  } else {
-	    CAS(current, b, nb)
+	    CAS(current, b, nb) // CAS4
 	  }
 	
 	def totalElems(b: Block, idx: Int)
@@ -126,7 +126,7 @@
 		  term: Terminal =>
 		    tryWriteSeal(term, b, idx, size)
 		  elem: Elem =>
-		    WRITE(b.index, idx + 1)
+		    WRITE(b.index, idx + 1) //WRITE3
 		    seal(size)
 		  null =>
 		    error("unreachable")
@@ -144,7 +144,7 @@
 		  sealed = size
 		  callbacks = term.callbacks
 		}
-	    CAS(b.array(idx), term, nterm)
+	    CAS(b.array(idx), term, nterm) // CAS5
 	  } else if (term.sealed != size) {
 	    error("already sealed with different size")
 	  }
@@ -166,16 +166,16 @@
 			  sealed = term.sealed
 			  callbacks = f :: term.callbacks
 			}
-		    if (!CAS(b.array(idx), term, nterm)) asyncForeach(f, b, idx)
+		    if (!CAS(b.array(idx), term, nterm)) asyncDoForAll(f, b, idx) // CAS6 
 		  elem: Elem =>
 		    f(elem)
-			asyncForeach(f, b, idx + 1)
+			asyncDoForAll(f, b, idx + 1)
 		  null =>
 		    error("unreachable")
 		}
 	  } else {
         // In the real code we take a shortcut when preparing the new block
 	    expand(b)
-		asyncForeach(f, b.next, 0)
+		asyncDoForAll(f, b.next, 0)
 	  }
 	  
