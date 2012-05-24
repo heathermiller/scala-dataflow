@@ -4,8 +4,17 @@
 *.bbl
 *.blg
 *.log
+*.dvi
+
+.Rhistory
+.RData
+
+.cache
+.classpath
+.project
 
 target
 .DS_Store
 project/boot
 project/target
+paper/auto
