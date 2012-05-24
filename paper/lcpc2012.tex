@@ -410,9 +410,14 @@ operation is restarted.
 Otherwise, it proceeds by writing the element to the current entry with
 a CAS in line \ref{cas_append}, the expected value being
 \verb=curobj=.
-If it succeeds, it updates the \verb=b.index= value and invokes all
-the callbacks (present at the point when the elements was added) with
+On success it updates the \verb=b.index= value and invokes all
+the callbacks (present when the element was added) with
 the \verb=future= construct.
+In the implementation we do not schedule an asynchronous
+computation for each element.
+Instead, the callback invocations are batched to avoid the schedulling overhead
+-- the array is scanned for new elements
+until there are no more left.
 
 Interestingly, inverting the order of the reads in lines
 \ref{read_next} and \ref{read_current} would cause a race in which a
@@ -433,7 +438,8 @@ Note that all three operations call \verb=expand= to add an additional
 block once the current block is empty, to ensure lock-freedom.
 
 
-\section{Proofs}
+
+\section{Correctness}
 
 We give an outline of the correctness proof here. More formal
 definitions, complete set of lemmas and proofs can be found in the
@@ -515,7 +521,7 @@ FlowPool operations \verb=append= and \verb=seal= are linearizable.
 \end{theorem}
 
 We then proceed to show that operations are lock-free, i.e. that at
-least one operation completes after a finite number of steps.
+least one thread completes after a finite number of steps.
 
 
 \section{Experimental Results}
@@ -1595,7 +1601,7 @@ state changing instruction}
 number of execution steps, as they contain no recursive calls, loops, or other
 possibility to restart.
 
-While the \textbf{expand} operation contains a recursive call following a CAS
+While the \textbf{expand} operation contains a recursive call following a CAS
 instruction, it was shown in Lemma 2 that an invocation of $expand$ is
 guaranteed to execute a state changing instruction after a finite number of
 steps. 
