@@ -391,7 +391,7 @@ def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
       term: Terminal =>
         nterm = new Terminal \{
           sealed = term.sealed
-          callbacks = f :: term.callbacks
+          callbacks = f \(\cup\) term.callbacks
         \}
         if (!CAS(b.array(idx), term, nterm))
           asyncDoForAll(f, b, idx) {\customlabel{cas_callback}{\LineNumber}}
