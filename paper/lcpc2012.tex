@@ -364,7 +364,17 @@ and doForAll are lock-free}.
 We begin by first proving that there are a finite number of execution steps
 before a consistency change occurs.
 
-CASes that fail by being completed by other CASes signify progress. 
+By Lemma (append), after invoking $append$, a consistency change occurs after
+a finite number of steps. By Lemma 10, this means a concurrent operation will
+successfully complete. Therefore, by Definition 6, $append$ is lock-free. 
+
+By Lemma (seal), after invoking $seal$, a consistency change occurs after a
+finite number of steps. By Lemma 10, this means that a concurrent operation
+will successfully complete. Therefore, by Definition 6, $seal$ is lock-free.
+
+By Lemma (doforall), after invoking $doForAll$
+
+% CASes that fail by being completed by other CASes signify progress. 
 
 %==============================
 % LEMMA 1
@@ -532,14 +542,15 @@ $true$. Otherwise, it must be the case that another thread has moved the
 Terminal to a subsequent index since the initial invocation of append, which
 is only possible using a consistency changing instruction.
 
-Finally, if $advance$ finds that the element at $idx$ is an $Elem$, it will
-increment $idx$. By $INV1$, this can only happen a finite number of times
-until a $Terminal$ is found. In the case that $expand$ is meanwhile invoked
-through $advance$, by Lemma 2 it's guaranteed to complete state changing
-instructions $CAS3$ or $CAS4$ in a finite number of steps. Otherwise, some
-other thread has moved the $Terminal$ to a subsequent index. However, this
-latter case is only possible by successfully completing $CAS2$, a consistency
-changing instruction, after the initial invocation of append.
+Finally, if $advance$ finds that the element at $idx$ is an $Elem$, by Lemma
+9, $b.index$ will be incremented after a finite number of steps. By $INV1$,
+this can only happen a finite number of times until a $Terminal$ is found. In
+the case that $expand$ is meanwhile invoked through $advance$, by Lemma 2 it's
+guaranteed to complete state changing instructions $CAS3$ or $CAS4$ in a
+finite number of steps. Otherwise, some other thread has moved the $Terminal$
+to a subsequent index. However, this latter case is only possible by
+successfully completing $CAS2$, a consistency changing instruction, after the
+initial invocation of append.
 
 \item \textbf{Case 2:} $CAS1$ fails, which we know from Lemma 1 means that it
 must've already been completed by another thread, guaranteeing that $CAS2$
@@ -593,18 +604,128 @@ invocation of $seal(size)$ completes.}
 
 \begin{itemize}
 
-\item \textbf{Case 1:} The object at the current index location $idx$ is of
-type $Elem$, not $Terminal$, causing a recursive call to $seal$ with the same
-size $size$. 
+\item \textbf{Case 1:} The check $idx \leq LASTELEMPOS$ succeeds, indicating
+that we are at a valid location in the current block $b$, but the object at
+the current index location $idx$ is of type $Elem$, not $Terminal$, causing a
+recursive call to $seal$ with the same size $size$.
 
-% proof about the WRITE in Elem case. Assuming one can reliably write the index...
+In this case, we begin by showing that the atomic write of $idx+1$ to
+$b.index$, required to iterate through the block $b$ for the recursive call to
+$seal$, will be correctly incremented after a finite number of steps. 
 
-% then we can show that idx will eventually come to a terminal. DONE via INV1.
-% therefore, we will be able to complete seal.
+Therefore, by both the guarantee that, in a finite number of steps, $b.index$
+will eventually be correctly incremented as we saw in Lemma 9, as well as by
+$INV1$ we know that the original invocation of $seal$ will correctly iterate
+through $b$ until a $Terminal$ is found. Thus, we know that the call to
+$tryWriteSeal$ will be invoked, and by both Lemma 4 and Lemma 5, we know that
+either $tryWriteSeal$, will successfully complete in a finite number of steps,
+in turn successfully completing $seal(size)$, or $CAS2$, another consistency
+changing operation will successfully complete.
 
 \item \textbf{Case 2:} The check $idx \leq LASTELEMPOS$ fails, indicating that
 we must move on to the next block, causing first a call to $expand$ followed
-by a recursive call to $seal$ with the same size $size$.
+by a recursive call to $seal$ with the same size $size$. 
+
+We proceed by showing that after a finite number of steps, we must end up in
+Case 1, which we have just showed itself completes in a finite number of
+steps, or that a consistency change must've already occurred. 
+
+By Lemma 2, we know that an invocation of $expand$ returns after a finite
+number of steps, and $pool.current$ is updated to point to a subsequent block.
+
+If we are in the recursive call to $seal$, and the $idx \leq LASTELEMPOS$
+condition is $false$, trivally, a consistency changing operation must have
+occurred, as, the only way for the condition to evaluate to $true$ is through
+a consistency changing operation, in the case that a block has been created
+during an invocation to $append$, for example.
+
+% In the case, where after the invocation $expand$, but before the read of $b$
+% ($READ(pool.current)$) in the recursive call to $seal$, we have that
+% $current.index > LASTELEMPOS$, the a consistency change must have occurred.
+% That is, another thread has already updated $pool.current$ by a different
+% invocation to $expand$, which means that, in the meantime, an element has
+% already been inserted via $append$. 
+
+% Trivally, a consistency changing operation must have occurred, as, the only
+% way for $current.index > LASTELEMPOS$ to evaluate to $true$ is if a block .
+
+% % Thus, as the only way for the index to
+% % change is via $WRITE1$ which occurs only if $CAS2$ succeeds, a consistency
+% % changing instruction must have completed.
+
+Otherwise, if we are in the recursive call to $seal$, and the $idx \leq
+LASTELEMPOS$ condition evaluates to $true$, we enter Case 1, which we just
+showed will successfully complete in a finite number of steps.
+
+\end{itemize}
+
+
+%==============================
+% LEMMA 8 (DOFORALL: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
+%==============================
+
+\textbf{Lemma 8}. \textit{After invoking $doForAll(fun)$, a consistency
+changing instruction will be completed after a finite number of steps.}
+
+We omit the proof for $doForAll$ since it proceeds in the exactly the same way
+as does the proof for $seal$ in Lemma 7.
+
+%==============================
+% LEMMA 9, WRITE2 AND WRITE3
+%==============================
+
+\textbf{Lemma 9}. \textit{After updating $b.index$ using $WRITE2$ or $WRITE3$, 
+$b.index$ is guaranteed to be incremented after a finite number of STEPS}.
+
+\textit{Proof}. For some index, $idx$, both calls to $WRITE2$ and $WRITE3$
+attempt to write $idx+1$ to $b.index$. In both cases, it's possible that
+another thread could complete either $WRITE2$ or $WRITE3$, once again writing
+$idx$ to $b.index$ after the current thread has completed, in effect
+overwriting the current thread's write with $idx+1$. By inspection of the
+pseudocode, both $WRITE2$ and $WRITE3$ will be repeated if $b.index$ has not
+been incremented. However, since the number of threads operating on the
+FlowPool is finite, $p$, we are guaranteed that in the worst case, this
+scenario can repeat at most $p$ times, before a write correctly updates
+$b.index$ with $idx+1$.
+\qed
+
+%==============================
+% LEMMA 10
+%==============================
+
+\textbf{Lemma 10}. \textit{Assume a concurrent operation is started. If a
+consistency changing CAS instruction completes, some concurrent operation is
+guaranteed to be completed}.
+
+\textit{Proof}. Assume $CAS2$ successfully completes on some thread $t_0$. Then, 
+$t_0$ is guaranteed to complete an invocation of $append$.
+
+Assume $CAS5$ successfully completes on some thread $t_1$. Then,
+$tryWriteSeal$ is guaranteed to complete, and therefore, an invocation of
+$seal$ completes. 
+
+The case for $CAS6$ is omitted since it follows the same steps as for the case
+of $CAS5$
+
+%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+% 
+% SCRATCHPAD
+%
+%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+\pagebreak
+\subsection{Scratchpad}
+
+%==============================
+% LOCK FREEDOM
+%==============================
+
+\textit{Lock-freedom}. 
+
+% since current.index can onl be incremented after elements have been inr
+% if we find in the recursive call that current.index > LASTELEMPOS, then a consistency change must have occurred.
 
 % have to prove here that after a finite # of steps, we end up in case 1.
 
@@ -637,57 +758,6 @@ by a recursive call to $seal$ with the same size $size$.
 % expand is possibly incorrect because the lemma claims that when you invoke
 % expand, you're guaranteed to create a block and numBlocks monotonically
 % increases
-
-\end{itemize}
-
-
-%==============================
-% LEMMA 8 (DOFORALL: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
-%==============================
-
-\textbf{Lemma 8}. \textit{After invoking $doForAll(fun)$, a consistency
-changing instruction will be completed after a finite number of steps.}
-
-We omit the proof for $doForAll$ since it proceeds in the exactly the same way
-as does the proof for $seal$ in Lemma 7.
-
-%==============================
-% LEMMA 9
-%==============================
-
-\textbf{Lemma 9}. \textit{Assume a concurrent operation $op$ is started. After
-a finite number of state changing instructions, a consistency changing CAS
-instruction is guaranteed to be successfully completed}.
-
-\textit{Proof}. 
-
-%==============================
-% LEMMA 10
-%==============================
-
-\textbf{Lemma 10}. \textit{Assume a concurrent operation is started. If a
-consistency changing CAS instruction completes, some concurrent operation is
-guaranteed to be completed}.
-
-\textit{Proof}. 
-
-%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-% 
-% SCRATCHPAD
-%
-%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-%>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-\pagebreak
-\subsection{Scratchpad}
-
-%==============================
-% LOCK FREEDOM
-%==============================
-
-\textit{Lock-freedom}. 
-
 
 
 By Lemma 2, we know that when we call

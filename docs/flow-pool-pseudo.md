@@ -62,7 +62,7 @@
 	  if (check(b, idx, curobj)) {
   	    if (CAS(b.array(idx + 1), nextobj, curobj)) { //CAS1
  	      if (CAS(b.array(idx), curobj, elem)) { //CAS2
-		    WRITE(b.index, idx + 1)
+		    WRITE(b.index, idx + 1) //WRITE1
 			invokeCallbacks(elem, curobj)
 		  } else append(elem)
 	    } else append(elem)
@@ -93,7 +93,7 @@
 	  if (idx > LASTELEMPOS) expand(b)
 	  else {
 	    obj = READ(b.array(idx))
-	    if (obj is Elem) WRITE(b.index, idx + 1)
+	    if (obj is Elem) WRITE(b.index, idx + 1) //WRITE2
 	  }
 	
 	def expand(b: Block)
@@ -126,7 +126,7 @@
 		  term: Terminal =>
 		    tryWriteSeal(term, b, idx, size)
 		  elem: Elem =>
-		    WRITE(b.index, idx + 1)
+		    WRITE(b.index, idx + 1) //WRITE3
 		    seal(size)
 		  null =>
 		    error("unreachable")
