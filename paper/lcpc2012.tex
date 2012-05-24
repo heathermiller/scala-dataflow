@@ -201,7 +201,7 @@ type Terminal \{
 
 BLOCKSIZE = 256
 LASTELEMPOS = BLOCKSIZE - 2
-NOTSEALED = -1
+NOSEAL = -1
 }
 \end{alltt}
 
@@ -209,6 +209,11 @@ NOTSEALED = -1
 \setlength\linenumbersep{2pt}
 
 
+\begin{figure}
+
+\centering
+
+\begin{minipage}[b]{6 cm}
 \begin{alltt}
 {\scriptsize
 {\internallinenumbers{def create()
@@ -228,13 +233,13 @@ def createBlock(bidx: Int)
 def append(elem: Elem)
   b = READ(current) {\customlabel{read_block}{\LineNumber}}
   idx = READ(b.index) {\customlabel{read_index}{\LineNumber}}
-  nextobj = READ(b.array(idx + 1)) {\customlabel{read_next}{\LineNumber}}
-  curobj = READ(b.array(idx)) {\customlabel{read_current}{\LineNumber}}
-  if (check(b, idx, curobj)) \{
-    if (CAS(b.array(idx + 1), nextobj, curobj)) \{ {\customlabel{cas_propagate}{\LineNumber}}
-      if (CAS(b.array(idx), curobj, elem)) \{ {\customlabel{cas_append}{\LineNumber}}
+  nexto = READ(b.array(idx + 1)) {\customlabel{read_next}{\LineNumber}}
+  curo = READ(b.array(idx)) {\customlabel{read_current}{\LineNumber}}
+  if check(b, idx, curo) \{
+    if CAS(b.array(idx + 1), nexto, curo) \{ {\customlabel{cas_propagate}{\LineNumber}}
+      if CAS(b.array(idx), curo, elem) \{ {\customlabel{cas_append}{\LineNumber}}
         WRITE(b.index, idx + 1) {\customlabel{write_append}{\LineNumber}}
-        invokeCallbacks(elem, curobj)
+        invokeCallbacks(elem, curo)
       \} else append(elem)
     \} else append(elem)
   \} else \{
@@ -242,15 +247,16 @@ def append(elem: Elem)
     append(elem)
   \}
 
-def check(b: Block, idx: Int, curobj: Object)
-  if (idx > LASTELEMPOS) return false
-  else curobj match \{
+def check(b: Block, idx: Int, curo: Object)
+  if idx > LASTELEMPOS return false
+  else curo match \{
     elem: Elem =>
       return false
     term: Terminal =>
-      if (term.sealed == NOTSEALED) return true
+      if term.sealed = NOSEAL return true
       else \{
-        if (totalElems(b, idx) < term.sealed) return true
+        if totalElems(b, idx) < term.sealed
+          return true
         else error("sealed")
       \}
     null =>
@@ -260,39 +266,46 @@ def check(b: Block, idx: Int, curobj: Object)
 def advance()
   b = READ(current)
   idx = READ(b.index)
-  if (idx > LASTELEMPOS) expand(b, b.array(idx))
+  if idx > LASTELEMPOS
+    expand(b, b.array(idx))
   else \{
     obj = READ(b.array(idx))
-    if (obj is Elem) WRITE(b.index, idx + 1) {\customlabel{write_advance}{\LineNumber}}
+    if obj is Elem WRITE(b.index, idx + 1) {\customlabel{write_advance}{\LineNumber}}
   \}
 
 def expand(b: Block, t: Terminal)
   nb = READ(b.next)
-  if (nb is null) \{
+  if nb is null \{
     nb = createBlock(b.blockindex + 1)
     nb.array(0) = t
-    if (CAS(b.next, null, nb)) {\customlabel{cas_expand}{\LineNumber}}
+    if CAS(b.next, null, nb) {\customlabel{cas_expand}{\LineNumber}}
       expand(b, t)
   \} else \{
     CAS(current, b, nb) {\customlabel{cas_block}{\LineNumber}}
   \}
-
-def totalElems(b: Block, idx: Int)
+}}}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{6 cm}
+\begin{alltt}
+{\scriptsize
+{\internallinenumbers{def totalElems(b: Block, idx: Int)
   return b.blockindex * (BLOCKSIZE - 1) + idx
 
-def invokeCallbacks(elem: Elem, term: Terminal)
+def invokeCallbacks(e: Elem, term: Terminal)
   for (f <- term.callbacks) future \{
-    f(elem)
+    f(e)
   \}
 
 def seal(size: Int)
   b = READ(current)
   idx = READ(b.index)
-  if (idx <= LASTELEMPOS) \{
-    curobj = READ(b.array(idx)) {\customlabel{read_seal}{\LineNumber}}
-    curobj match \{
+  if idx <= LASTELEMPOS \{
+    curo = READ(b.array(idx)) {\customlabel{read_seal}{\LineNumber}}
+    curo match \{
       term: Terminal =>
-        if tryWriteSeal(term, b, idx, size)
+        if !tryWriteSeal(term, b, idx, size)
+          seal(size)
       elem: Elem =>
         WRITE(b.index, idx + 1) {\customlabel{write_seal}{\LineNumber}}
         seal(size)
@@ -304,26 +317,27 @@ def seal(size: Int)
     seal(size)
   \}
 
-def tryWriteSeal(term: Terminal, b: Block, idx: Int, size: Int)
+def tryWriteSeal(term: Terminal, b: Block,
+  idx: Int, size: Int)
   val total = totalElems(b, idx)
-  if (total > size) error("too many elements")
-  if (term.sealed == NOTSEALED) \{
+  if total > size error("too many elements")
+  if term.sealed = NOSEAL \{
     nterm = new Terminal \{
       sealed = size
       callbacks = term.callbacks
     \}
     return CAS(b.array(idx), term, nterm) {\customlabel{cas_seal}{\LineNumber}}
-  \} else if (term.sealed != size) \{
+  \} else if term.sealed != size \{
     error("already sealed with different size")
   \} else return true
 
-def doForAll(f: Elem => Unit)
+def foreach(f: Elem => Unit)
   future \{
-    asyncDoForAll(f, start, 0)
+    asyncFor(f, start, 0)
   \}
 
-def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
-  if (idx <= LASTELEMPOS) \{
+def asyncFor(f: Elem => Unit, b: Block, idx: Int)
+  if idx <= LASTELEMPOS \{
     obj = READ(b.array(idx)) {\customlabel{read_callback}{\LineNumber}}
     obj match \{
       term: Terminal =>
@@ -331,21 +345,26 @@ def asyncDoForAll(f: Elem => Unit, b: Block, idx: Int)
           sealed = term.sealed
           callbacks = f \(\cup\) term.callbacks
         \}
-        if (!CAS(b.array(idx), term, nterm))
-          asyncDoForAll(f, b, idx) {\customlabel{cas_callback}{\LineNumber}}
+        if !CAS(b.array(idx), term, nterm)
+          asyncFor(f, b, idx) {\customlabel{cas_callback}{\LineNumber}}
       elem: Elem =>
         f(elem) {\customlabel{call_callback}{\LineNumber}}
-        asyncDoForAll(f, b, idx + 1)
+        asyncFor(f, b, idx + 1)
       null =>
         error("unreachable")
     \}
   \} else \{
     expand(b, b.array(idx))
-    asyncDoForAll(f, b.next, 0)
+    asyncFor(f, b.next, 0)
   \}
-
 }}}
 \end{alltt}
+\end{minipage}
+
+\caption{FlowPool operations pseudocode}
+\label{f-pseudo}
+\end{figure}
+
 
 We now describe the FlowPool and its basic operations.
 In doing so, we omit the details not relevant to the algorithm
@@ -384,8 +403,8 @@ overwriting the current entry with the element being appended.
 The \verb=append= operation starts by reading the \verb=current= block
 and the \verb=index= of the free position.
 It then reads the
-\verb=nextobj= after the first free entry, followed by a read of the
-\verb=curobj= at the free entry.
+\verb=nexto= after the first free entry, followed by a read of the
+\verb=curo= at the free entry.
 The \verb=check= procedure checks the bounds conditions, whether the
 FlowPool was already sealed or if the current array entry contains an
 element.
@@ -395,7 +414,7 @@ We call this the \textbf{slow path} of the \verb=append= method.
 Notice that there are several causes that trigger the slow path.
 If some other thread completes the \verb=append= method but is
 preempted before updating the value of the hint \verb=index=, then the
-\verb=curobj= will have the type \verb=Elem=.
+\verb=curo= will have the type \verb=Elem=.
 The same happens if a preempted thread updates the value of the
 hint \verb=index= after additional elements have been added,
 via unconditional write in line \ref{write_append}.
@@ -404,12 +423,12 @@ Finally, reaching an end of block triggers the slow path.
 Otherwise, the operation executes the \textbf{fast path} and appends
 an element.
 It first copies the \verb=Terminal= value to the next entry with a CAS
-instruction in line \ref{cas_propagate}, with \verb=nextobj= being the
+instruction in line \ref{cas_propagate}, with \verb=nexto= being the
 expected value. If it fails (e.g. due to a concurrent CAS), the append
 operation is restarted.
 Otherwise, it proceeds by writing the element to the current entry with
 a CAS in line \ref{cas_append}, the expected value being
-\verb=curobj=.
+\verb=curo=.
 On success it updates the \verb=b.index= value and invokes all
 the callbacks (present when the element was added) with
 the \verb=future= construct.
@@ -1052,19 +1071,19 @@ all $x \in b.array$ set to $null$.
 Next, we inspect all the CAS instructions that operate on entries of
 $b.array$.
 
-The CAS in line \ref{cas_append} has a value $curobj \in Terminal$ as
+The CAS in line \ref{cas_append} has a value $curo \in Terminal$ as
 an expected value and writes an $elem \in Elem$.
 This means that the only transition that this CAS
 can cause is of type $cb_i \in Terminal \rightarrow elem \in Elem$.
 
 We will now prove that the CAS in line \ref{cas_propagate} at time $t_2$ is successful if and
-only if the entry at $idx + 1$ is $null$ or $nextobj \in
+only if the entry at $idx + 1$ is $null$ or $nexto \in
 Terminal$.
 We know that the entry at $idx + 1$ does not change $\forall t, t_0 < t < t_2$,
 where $t_0$ is the read in line \ref{read_next},
 because of lemma \ref{lemma-freshness} and the fact that CAS in line \ref{cas_propagate} is assumed to be successful.
 We know that during the read in line \ref{read_current} at time $t_1$,
-such that $t_0 < t_1 < t_2$, the entry at $idx$ was $curobj \in
+such that $t_0 < t_1 < t_2$, the entry at $idx$ was $curo \in
 Terminal$, by trivial analysis of the \verb=check= procedure.
 It follows from corollary \ref{cor-compactness} that the array entry $idx
 + 1$ is not of type $Elem$ at time $t_1$, otherwise array entry $idx$
