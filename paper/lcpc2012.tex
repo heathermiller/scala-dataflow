@@ -510,13 +510,89 @@ block once the current block is empty, to ensure lock-freedom.
 
 
 \section{Proofs}
-\subsection{Abstract Pool Semantics}
-Alex
-\subsection{Linearizability}
-Alex
-\subsection{Lock-Freedom}
 
-\subsection{Determinism}
+We give an outline of the correctness proof here. More formal
+definitions, complete set of lemmas and proofs can be found in the
+appendix.
+
+We define the notion of an abstract pool $\mathbb{A} = (elems,
+callbacks, seal)$ of elements in the pool, callbacks and the seal
+size.
+Given an abstract pool, abstract pool operations produce a new
+abstract pool.
+The key to showing correctness is to show that an abstract pool operation
+corresponds to a FlowPool operation in the sense that it produces a
+new abstract pool which corresponds to the state of the FlowPool after
+the FlowPool operation completed.
+
+\begin{lemma}
+For all blocks $b$ reachable from $start$, if $b.index > 0$ at some time $t_0$, then
+$b.array(b.index - 1) \in Elem$ at time $t_0$.
+\end{lemma}
+
+\begin{lemma}
+For all blocks $b$ reachable from $start$, and for all $x \in b.array$,
+function $x$ goes through and only through the prefix of transitions
+$null \rightarrow cb_1 \rightarrow \dots \rightarrow cb_n \rightarrow elem$, where
+$cb_i \in Terminal$, $i \neq j \Rightarrow cb_i \neq cb_j$ and $elem \in Elem$.
+\end{lemma}
+
+%\begin{lemma}
+%We define the following invariants for the FlowPool.
+%The reference $current$ is always reachable from $start$.
+%There are no cycles in the directed graph of references from $start$.
+%Each block $b.array$ is a string of elements, followed by a
+%$Terminal$ value, followed by a $null$ or a $Terminal$ value, followed
+%by $null$.
+%The $b.index$ is $0$ or the preceeding entry in $array$ contains an element.
+%
+%All writes in all operations retain these invariants.
+%\end{lemma}
+
+\begin{lemma}
+Given a FlowPool consistent with some abstract
+pool, CAS instructions in lines \ref{cas_propagate}, \ref{cas_expand} and
+\ref{cas_block} do not change the corresponding abstract pool.
+\end{lemma}
+
+\begin{lemma}
+Given a FlowPool consistent with an abstract pool $(elems, cbs,
+seal)$, a successful CAS in line \ref{cas_append}
+changes it to the state consistent with an abstract pool
+$(\{elem\} \cup elems, cbs, seal)$.
+There exists a time $t_1 \geq t_0$ at which every callback $f \in
+cbs$ has been called with $elem$.
+\end{lemma}
+
+\begin{lemma}
+Given a FlowPool consistent with an abstract pool $(elems, cbs, seal)$, 
+a successful CAS in line \ref{cas_callback} changes it 
+to the state consistent with an abstract pool $(elems, (f, \emptyset)
+\cup cbs, seal)$
+There exists a time $t_1 \geq t_0$ at which $f$ has been called for
+every element in $elems$.
+\end{lemma}
+
+\begin{lemma}
+Given a FlowPool consistent with an abstract pool $(elems, cbs, seal)$, 
+a successful CAS in line \ref{cas_callback} changes it to the state 
+consistent with an abstract pool $(elems, cbs, s)$, where either $seal
+= -1 \wedge s \in \mathbb{N}_0$ or $seal \in \mathbb{N}_0 \wedge s = seal$.
+\end{lemma}
+
+\begin{theorem}[Safety]
+FlowPool operations \verb=append=, \verb=foreach=
+and \verb=seal= are consistent with the abstract pool semantics.
+\end{theorem}
+
+
+\begin{theorem}[Linearizable operations]
+FlowPool operations \verb=append= and \verb=seal= are linearizable.
+\end{theorem}
+
+We then proceed to show that operations are lock-free, i.e. that at
+least one operation completes after a finite number of steps.
+
 
 \section{Experimental Results}
 
@@ -742,7 +818,7 @@ Every valid state is consistent with some abstract pool.
 
 \begin{theorem}[Safety]
 FlowPool operation \verb=create= creates a new FlowPool consistent with the abstract pool 
-$\mathbb{P} = (\emptyset, \emptyset, \emptyset)$. FlowPool operations \verb=foreach=, \verb=append= 
+$\mathbb{P} = (\emptyset, \emptyset, -1)$. FlowPool operations \verb=foreach=, \verb=append= 
 and \verb=seal= are consistent with the abstract pool semantics.
 \end{theorem}
 
@@ -1184,10 +1260,11 @@ Trivially, the time $t_1$ from the statement of the lemma is such that $t_1 = t_
 
 \begin{lemma}[Seal correctness]\label{lemma-seal}
 Given a FlowPool in state $\mathbb{S}$ consistent with some abstract pool state $\mathbb{A}$, 
-a successful CAS in line \ref{cas_callback} at some time $t_0$ changes the state of the FlowPool 
+a successful CAS in line \ref{cas_seal} at some time $t_0$ changes the state of the FlowPool 
 to $\mathbb{S}_0$ consistent with an abstract pool state $\mathbb{A}_0$, such that:
 
-$\mathbb{A} = (elems, callbacks, seal)$, where $seal \in \{ \emptyset, \{ s \} \}$
+$\mathbb{A} = (elems, callbacks, seal)$, where $seal \in \{ -1 \} \cup
+\{ s \}$
 
 $\mathbb{A}_0 = (elems, callbacks, \{ s \})$
 \end{lemma}
@@ -1216,11 +1293,36 @@ By trivial sequential code analysis supported by the fact that the
 invariants (especially [INV2]) hold in a valid state.
 \end{proof}
 
+
 \begin{proof}[Safety]
 From lemmas \ref{lemma-housekeeping}, \ref{lemma-append}, \ref{lemma-foreach} and
 \ref{lemma-seal} directly, along with the fact that all operations
-executing in  isolation complete after a finite number of steps by lemma \ref{lemma-obstruction-free}.
+executing in isolation complete after a finite number of steps by lemma \ref{lemma-obstruction-free}.
 \end{proof}
+
+
+\begin{definition}[Linearizability]
+We say that an operation $op$ is linearizable if every thread
+observers that it completes at some time $t_0$ after it was invoked
+and before it finished executing.
+\end{definition}
+
+
+\begin{theorem}[Linearizable operations]
+FlowPool operations \verb=append= and \verb=seal= are linearizable.
+\end{theorem}
+
+\begin{proof}[Linearizable operations]
+This follows directly from statements about CAS instructions in lemmas \ref{lemma-housekeeping},
+\ref{lemma-append} and \ref{lemma-seal}, along with the fact that a
+CAS instruction itself is linearizable.
+\end{proof}
+
+Note that \verb=foreach= starts by executing an asynchronous
+computation and then returns the control to the caller. This means
+that the linearization point may happen outside the execution interval
+of that procedure -- so, \verb=foreach= is not linearizable.
+
 
 % \textbf{Definition 2} (FlowPool). typically pointing to some
 % subsequent block $b_n$ where $b_n=b_0$ or where $b_n$ is reachable from $b_0$

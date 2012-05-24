@@ -42,10 +42,18 @@ Runs with SBT 0.11.x
 - Programming Model (2 pages) **DEP**
 	- First intro to API
 	- Small discussion and justification of API.
+	    - why the foreach instead of blocking? blocking is bad in most
+          programming models (JVM, CLR, most native platforms)
+	    - why there is no foreach on a builder - would not be
+          deterministic
+		- why there is no append on a pool - the GC argument
 		- Deterministic
 		- Can run arbitrarily long (GC point)
+		- how to build higher-level combinators (map, flatMap,
+          reducing, generators, either, etc.)
 	- Grammar (concise)
-		- point out that builder was left out in the grammar, etc, as a memory hack i.e. implementation detail
+		- point out that builder was left out in the grammar, etc, as
+          a memory hack i.e. implementation detail
 - Implementation
 	- Pseudocode (1 page)
 	- Discussion of pseudocode (1 page)
