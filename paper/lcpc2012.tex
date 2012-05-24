@@ -364,15 +364,15 @@ and doForAll are lock-free}.
 We begin by first proving that there are a finite number of execution steps
 before a consistency change occurs.
 
-By Lemma (append), after invoking $append$, a consistency change occurs after
-a finite number of steps. By Lemma 10, this means a concurrent operation will
-successfully complete. Therefore, by Definition 6, $append$ is lock-free. 
+By Lemma 5, after invoking $append$, a consistency change occurs after a
+finite number of steps. Likewise, by Lemma 7, after invoking $seal$, a
+consistency change occurs after a finite number of steps. And finally, by
+Lemma 8, after invoking $doForAll$, a consistency change likewise occurs after
+a finite number of steps.
 
-By Lemma (seal), after invoking $seal$, a consistency change occurs after a
-finite number of steps. By Lemma 10, this means that a concurrent operation
-will successfully complete. Therefore, by Definition 6, $seal$ is lock-free.
-
-By Lemma (doforall), after invoking $doForAll$
+By Lemma 10, this means a concurrent operation $append$, $seal$, or $doForAll$
+will successfully complete. Therefore, by Definition 6, these operations are
+lock-free.
 
 % CASes that fail by being completed by other CASes signify progress. 
 
@@ -405,12 +405,30 @@ successfully completed $CAS4$ since $op$ began.
 % LEMMA 2 (EXPAND)
 %==============================
 
-\textbf{Lemma 2}. \textit{Invoking the $expand$ operation will execute a
-non-consistency changing instruction after a finite number of steps.
-Furthermore, given a total number of blocks $numBlocks$ reachable in a
-FlowPool $pool$ before invoking $expand$ through $append$, the number of
-blocks $numBlocks'$ after some finite number of steps is guaranteed to satisfy
-$numBlocks'>numBlocks$}.
+\textbf{Lemma 2}. \textit{Invoking the $expand$ operation will execute a non-
+consistency changing instruction after a finite number of steps. Moreover, it
+is guaranteed that the $current$ reference is updated to point to a subsequent
+block after a finite number of steps. Finally, $expand$ will return after a
+finite number of steps.
+% Furthermore, given a total number of blocks $numBlocks$ reachable in a
+% FlowPool $pool$ before invoking $expand$ through $append$, the number of
+% blocks $numBlocks'$ after some finite number of steps is guaranteed to satisfy
+% $numBlocks'>numBlocks$
+}.
+
+% There are some issues with this one. Later on, we only actually need the
+% point about the current reference, and also the point that expand returns
+% after a finite number of steps. So we don't actually need the points about
+% numBlocks. 
+%
+% Not guaranteed to create a new block, because invoking expand from seal goes
+% straight to case 2 in if/else. Should remove that.
+%
+% So, right before calling expand, some other thread might update the next
+% pointer, and then the only thing that remains to be done is to change
+% current. Because expand checks whether next is null. If not null, then the
+% only thing that it does is update current. So the wording in the 2 cases
+% below needs to be cleaned up and some stuff needs to be removed.
 
 \textit{Proof}. From inspection of the pseudocode, it is clear that the only
 point at which $expand(b)$ can be invoked is under the condition that for some
@@ -556,7 +574,7 @@ initial invocation of append.
 must've already been completed by another thread, guaranteeing that $CAS2$
 will be attempted. If $CAS2$ fails, by Lemma 3, after a finite number of
 steps, a consistency changing instruction will be completed. If $CAS2$
-succeeds,  as a consistency changing instruction, consistency will have
+succeeds, as a consistency changing instruction, consistency will have
 clearly been changed.
 
 \item \textbf{Case 3:} $CAS2$ fails, which, by Lemma 3, indicates that either
@@ -693,16 +711,24 @@ $b.index$ with $idx+1$.
 % LEMMA 10
 %==============================
 
-\textbf{Lemma 10}. \textit{Assume a concurrent operation is started. If a
-consistency changing CAS instruction completes, some concurrent operation is
-guaranteed to be completed}.
+\textbf{Lemma 10}. \textit{Assume some concurrent operation is started. If
+some thread completes consistency changing CAS instruction, then some
+concurrent operation is guaranteed to be completed}.
 
-\textit{Proof}. Assume $CAS2$ successfully completes on some thread $t_0$. Then, 
-$t_0$ is guaranteed to complete an invocation of $append$.
+\textit{Proof}. 
+% By Lemma X and Y, we know that consistency changing
+% instructions $CAS2$, $CAS5$, and $CAS6$ are guaranteed to at some point
+% complete.
 
-Assume $CAS5$ successfully completes on some thread $t_1$. Then,
-$tryWriteSeal$ is guaranteed to complete, and therefore, an invocation of
-$seal$ completes. 
+By trival inspection of the pseudocode, if $CAS2$ successfully completes on
+some thread, then that thread is guaranteed to complete the corresponding
+invocation of $append$ in a finite number of steps.
+% we don't say anything about WRITE1 here because it's guaranteed to succeed, so it's trivial.
+
+Likewise by trivial inspection, if $CAS5$ successfully completes on some
+thread, then by Lemma 4, $tryWriteSeal$ is guaranteed to complete in a finite
+number of steps, and therefore, that thread is guaranteed to complete the
+corresponding invocation of $seal$ in a finite number of steps.
 
 The case for $CAS6$ is omitted since it follows the same steps as for the case
 of $CAS5$
