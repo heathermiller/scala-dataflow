@@ -173,10 +173,91 @@ to make `seal` deterministic is the expected size of the pool.
 Show we can build higher-level combinators (map, flatMap, generators,
 either, etc.)
 
+
+\begin{minipage}[b]{4 cm}
+\begin{alltt}
+{\scriptsize
+def iterate[T]
+  (s: T, f: T => T)
+  val p = new FlowPool[T]
+  val b = p.builder
+  def recurse(x: T) \{
+    b << x
+    recurse(f(x))
+  \}
+  future \{ recurse(s) \}
+  p
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{4 cm}
+\begin{alltt}
+{\scriptsize
+def tabulate[T]
+  (n: Int, f: Int => T)
+  val p = new FlowPool[T]
+  val b = p.builder
+  def recurse(i: Int) \{
+    b << f(i)
+    if i < n recurse(i + 1)
+  \}
+  future \{ recurse(0) \}
+  p
+}
+\end{alltt}
+\end{minipage}\begin{minipage}[b]{4 cm}
+\begin{alltt}
+{\scriptsize
+def map[S](f: T => S)
+  val p = new FlowPool[S]
+  val b = p.builder
+  val f = for (x <- this) \{
+    b << f(x)
+  \}
+  f map \{
+    sz => b.seal(sz)
+  \}
+  p
+}
+\end{alltt}
+\end{minipage}
+
 What about the `reduce` patterns? \sout{How can you get back reduction of all
 the values in the flowpool if at any point an additional value could
 potentially arrive.} Show how this can be used to implement reducing (we
 assume existence of promises in the framework).
+
+\begin{minipage}[b]{4 cm}
+\begin{alltt}
+{\scriptsize
+def reduce(p: T => Boolean)
+  TODO
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{4 cm}
+\begin{alltt}
+{\scriptsize
+def filter(pred: T => Boolean)
+  val p = new FlowPool[T]
+  val b = p.builder
+  reduce(0) \{ (acc, x) =>
+    if pred(x) \{
+      b << x
+      1
+    \} else 0
+  \}
+  p
+}
+\end{alltt}
+\end{minipage}\begin{minipage}[b]{4 cm}
+\begin{alltt}
+{\scriptsize
+def flatMap[S](f: T => FlowPool[S])
+  TODO
+}
+\end{alltt}
+\end{minipage}
 
 Show how seal makes reduce possible.
 
@@ -186,7 +267,7 @@ etc, as a memory hack i.e. implementation detail}
 \section{Implementation}
 
 
-\begin{figure}
+\begin{figure}[t]
 
 \centering
 
@@ -221,8 +302,6 @@ type FlowPool \{
   start: Block
   current: Block
 \}
-
-BLOCKSIZE = 256
 LASTELEMPOS = BLOCKSIZE - 2
 NOSEAL = -1
 }
