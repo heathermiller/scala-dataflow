@@ -1,0 +1,81 @@
+\section{Determinism}
+
+In this section we aim to show that the FlowPool abstraction is deterministic.
+
+% - Assume threads t_1, …, t_n are executing sequences of operations S_1, …, S_n on a FlowPool.
+
+% - We show that the outcome of the computation is deterministic in the sense that either a) an exception is thrown for every possible interleaving of ops, or b) the program always terminates with the same result.
+
+\smallrulenames
+
+\begin{figure}[t]
+%\figurebox{
+%{\bf Syntax}\medskip
+
+%$\ba{l@{\hspace{2mm}}|@{\hspace{2mm}}l}
+%$\ba[t]{l}
+
+$\ba[t]{l@{\hspace{2mm}}l}
+t    ::=                                                           & \mbox{terms}              \\
+\gap p << v                                                  & \mbox{append}           \\
+\gap \texttt{create}~p                                   & \mbox{pool creation}  \\
+\gap p~\texttt{foreach}~f                             & \mbox{foreach}           \\
+\gap p~\texttt{seal}~n                                  & \mbox{seal}                \\
+\gap t_1~;~t_2                                               & \mbox{sequence}        \\
+\ea$
+
+$\ba{l@{\hspace{2mm}}|@{\hspace{2mm}}l@{\hspace{2mm}}l}
+p \in \set{(vs, \sigma, cbs)~|~vs \subseteq Elem, \sigma \in \set{-1} \cup \mathbb{N}, cbs \subset Elem \Rightarrow Unit} & v \in Elem \\
+f \in Elem \Rightarrow Unit & n \in \mathbb{N}
+\ea$
+
+%\ea$
+
+%}
+\caption{Syntax}\label{fig:syntax}
+\end{figure}
+
+\infrule[\textsc{Create}]
+{ t = \texttt{create}~p~;~t' \quad p = (\emptyset, -1, \emptyset)
+}
+{ \reduce {t, T} P {t', T} {p, P}
+}
+
+\infrule[\textsc{Append1}]
+{ t = p << v~;~t' \quad p = (vs, -1, cbs) \quad p' = (\set{v} \cup vs, -1, cbs)
+}
+{ \reduce {t, T} {p, P} {t', T} {p', P}
+}
+
+\infrule[\textsc{Append2}]
+{ t = p << v~;~t' \quad p = (vs, n, cbs) \quad |\set{v} \cup vs| \leq n \\
+  p' = (\set{v} \cup vs, n, cbs) \quad T' = \set{ f(v)~|~f \in cbs }
+}
+{ \reduce {t, T} {p, P} {t', T, T'} {p', P}
+}
+
+\infrule[\textsc{Foreach1}]
+{ t = p~\texttt{foreach}~f~;~t' \quad p = (vs, -1, cbs) \quad p' = (vs, -1, \set{f} \cup cbs)
+}
+{ \reduce {t, T} {p, P} {t', T} {p', P}
+}
+
+\infrule[\textsc{Foreach2}]
+{ t = p~\texttt{foreach}~f~;~t' \quad p = (vs, n, cbs) \\
+  T' = \set{g(v)~|~g \in \set{f} \cup cbs, v \in vs} \quad p' = (vs, n, \set{f} \cup cbs)
+}
+{ \reduce {t, T} {p, P} {t', T, T'} {p', P}
+}
+
+\infrule[\textsc{Seal1}]
+{ t = p~\texttt{seal}~n~;~t' \quad p = (vs, -1, cbs) \\
+  T' = \set{g(v)~|~g \in cbs, v \in vs} \quad p' = (vs, n, cbs)
+}
+{ \reduce {t, T} {p, P} {t', T, T'} {p', P}
+}
+
+\infrule[\textsc{Seal2}]
+{ t = p~\texttt{seal}~n~;~t' \quad p = (vs, n, cbs)
+}
+{ \reduce {t, T} {p, P} {t', T} {p, P}
+}

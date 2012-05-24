@@ -26,6 +26,125 @@
 \usepackage{graphicx}
 \usepackage[normalem]{ulem}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% stuff added by phaller
+
+\usepackage{fleqn}
+\usepackage{math}
+\usepackage{bcprules}
+\usepackage{prooftree}
+
+% commas and semicolons
+\newcommand{\comma}{,\,}
+\newcommand{\commadots}{\comma \ldots \comma}
+\newcommand{\semi}{;\mbox{;};}
+\newcommand{\semidots}{\semi \ldots \semi}
+
+% spacing
+\newcommand{\gap}{\quad\quad}
+\newcommand{\biggap}{\quad\quad\quad}
+\newcommand{\nextline}{\\ \\}
+\newcommand{\htabwidth}{0.5cm}
+\newcommand{\tabwidth}{1cm}
+\newcommand{\htab}{\hspace{\htabwidth}}
+\newcommand{\tab}{\hspace{\tabwidth}}
+\newcommand{\linesep}{\ \hrulefill \ \smallskip}
+
+% math stuff
+\newenvironment{myproof}{{\em Proof:}}{$\Box$}
+\renewenvironment{proofsketch}{{\em Proof Sketch:}}{$\Box$}
+\newcommand{\Case}{{\em Case\ }}
+
+% brackets
+\newcommand{\set}[1]{\{#1\}}
+\newcommand{\sbs}[1]{\lquote #1 \rquote}
+
+% arrays
+\newcommand{\ba}{\begin{array}}
+\newcommand{\ea}{\end{array}}
+\newcommand{\bda}{\[\ba}
+\newcommand{\eda}{\ea\]}
+\newcommand{\ei}{\end{array}}
+\newcommand{\bcases}{\left\{\begin{array}{ll}}
+\newcommand{\ecases}{\end{array}\right.}
+
+% misc symbols
+\newcommand{\dhd}{\!\!\!\!\!\rightarrow}
+\newcommand{\Dhd}{\!\!\!\!\!\Rightarrow}
+%\newcommand{\ts}{\,\vdash\,}
+%\renewcommand{\ts}{\,\vdash\,}
+\newcommand{\la}{\langle}
+\newcommand{\ra}{\rangle}
+\newcommand{\ie}{{\em i.e.}}
+\newcommand{\eg}{{\em e.g.}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   Language abstraction commands     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Relations
+% Subtype 
+\newcommand{\sub}{<:}
+% Type assignment
+\newcommand{\typ}{:}
+% reduction
+\newcommand{\reduces}{\;\rightarrow\;}
+% well-formedness
+\newcommand{\wf}{\;\mbox{\textbf{wf}}}
+
+%% Operators
+% Type selection
+\newcommand{\tsel}{\#}
+% Function type
+\newcommand{\tfun}{\rightarrow}
+\newcommand{\dfun}[3]{(#1\!:\!#2) \Rightarrow #3}
+% Conjunction
+\newcommand{\tand}{\wedge}
+% Disjunction
+\newcommand{\tor}{\vee}
+% Singleton type suffix
+\newcommand{\sing}{.\textbf{type}}
+
+%% Syntax
+% Header for typing rules
+\newcommand{\judgement}[2]{{\bf #1} \hfill \fbox{#2}}
+% Refinement
+\newcommand{\refine}[2]{\left\{#1 \Rightarrow #2 \right\}}
+% Field definitions
+\newcommand{\ldefs}[1]{\left\{#1\right\}}
+% Member sequences
+\newcommand{\seq}[1]{\overline{#1}}
+% Lambda
+\newcommand{\dabs}[3]{(#1\!:\!#2)\Rightarrow #3}
+\newcommand{\abs}[3]{\lambda #1\!:\!#2.#3}
+% Application
+\newcommand{\app}[2]{#1\;#2}
+% Substitution
+\newcommand{\subst}[3]{[#1/#2]#3}
+% Object creation
+\newcommand{\new}[3]{\textbf{val }#1 = \textbf{new }#2 ;\; #3}
+%\renewcommand{\new}[3]{#1 \leftarrow #2 \,\textbf{in}\, #3}
+% Field declaration
+\newcommand{\Ldecl}[3]{#1 \typ #2..#3}%{#1 \operatorname{>:} #2 \operatorname{<:} #3}
+\newcommand{\ldecl}[2]{#1 \typ #2}
+% Top and Bottom
+\newcommand{\Top}{\top}%{\textbf{Top}}
+\newcommand{\Bot}{\bot}%\textbf{Bot}}
+% Environment extension
+\newcommand{\envplus}[1]{\uplus \{ #1 \}}
+% Reduction
+%\newcommand{\reduction}[4]{#1 \operatorname{|} #2 \reduces #3 \operatorname{|} #4}
+\newcommand{\reduction}[6]{#1, #2, #3 \reduces #4, #5, #6}
+\newcommand{\reduce}[4]{#1~|~#2 \;\longrightarrow\; #3~|~#4}
+\newcommand{\reducebreak}[4]{#1, #2 \\ \;\longrightarrow\; #3, #4}
+
+\newcommand{\sreduce}[8]{#1, #2, #3, #4 \;\longrightarrow\; #5, #6, #7, #8}
+\newcommand{\sreducebreak}[8]{#1, #2, #3, #4 \\ \;\longrightarrow\; #5, #6, #7, #8}
+\newcommand{\sreducestar}[8]{#1, #2, #3, #4 \;\longrightarrow^{\ast}\; #5, #6, #7, #8}
+
+% end stuff added by phaller
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \usepackage{url}
 \urldef{\mails}\path|{firstname.lastname}@epfl.ch|    
 \newcommand{\keywords}[1]{\par\addvspace\baselineskip
@@ -440,6 +559,7 @@ Note that all three operations call \verb=expand= to add an additional
 block once the current block is empty, to ensure lock-freedom.
 
 
+\include{determinism}
 
 \section{Correctness}
 
