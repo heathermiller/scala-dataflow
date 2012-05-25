@@ -1,5 +1,7 @@
 package scala.dataflow
 
+import jsr166y._
+
 trait FlowPool[T] {
   
   def builder: Builder[T]
@@ -60,4 +62,29 @@ trait FlowPool[T] {
     fp
   }
 
+}
+
+object FlowPool {
+  def BLOCKSIZE = 256
+  def LAST_CALLBACK_POS = BLOCKSIZE - 3
+  def MUST_EXPAND_POS = BLOCKSIZE - 2
+  def IDX_POS = BLOCKSIZE - 1
+  def MAX_BLOCK_ELEMS = LAST_CALLBACK_POS
+  
+  def newBlock(idx: Int, initEl: AnyRef = CallbackNil) = {
+    val bl = new Array[AnyRef](BLOCKSIZE)
+    bl(0) = initEl
+    bl(MUST_EXPAND_POS) = MustExpand
+    bl(IDX_POS) = idx.asInstanceOf[AnyRef]
+    bl
+  }
+  
+  val forkjoinpool = new ForkJoinPool
+  
+  def task[T](fjt: ForkJoinTask[T]) = Thread.currentThread match {
+    case fjw: ForkJoinWorkerThread =>
+      fjt.fork()
+    case _ =>
+      forkjoinpool.execute(fjt)
+  }
 }
