@@ -2203,9 +2203,9 @@ def fill[T]
 \end{minipage}
  
 
-\subsection{Determinism}
+\section{Determinism}
 
-\paragraph{Reduction rules}
+\subsection{Reduction rules}
 
 \infrule[\textsc{Create}]
 { t = \texttt{create}~p~;~t' \quad p = (\emptyset, -1, \emptyset)
@@ -2252,5 +2252,38 @@ def fill[T]
 { \reduce {t, T} {p, P} {t', T} {p, P}
 }
 
+\subsection{Definitions}
+
+\begin{definition}[Termination]
+A term $t$ terminates with result $P$ if its reduction ends in execution state $\set{nop}~|~P$.
+\end{definition}
+
+\begin{definition}[Interleaving]
+Consider the reduction of a term $t$: $T_1~|~P_1 \;\longrightarrow\; T_2~|~P_2 \;\longrightarrow\; \ldots \;\longrightarrow\; \set{\texttt{nop}}~|~P_n$. An \emph{interleaving} is a permutation 
+$T_{i_1}~|~P_{i_1} \;\longrightarrow\; T_{i_2}~|~P_{i_2} \;\longrightarrow\; \ldots \;\longrightarrow\; \set{\texttt{nop}}~|~P_n$ of that reduction.
+\end{definition}
+
+\begin{definition}[Valid Interleaving]
+An interleaving $S', c, S''$ of a reduction sequence $S$ is \emph{valid}
+\emph{iff} for any reduction step $c$ using rule (\textsc{Create}), if
+$c$ creates pool $p$, $p$ is not used in any reduction step in $S'$.
+\end{definition}
+
+\begin{definition}[Determinism]
+The reduction of a term $t$ is \emph{deterministic} \emph{iff} either (a) $t$ does not terminate for any possible interleaving, or (b) $t$ always terminates with the same result for all possible interleavings.
+\end{definition}
+
+\subsection{Theorems and Lemmas}
+
+\begin{theorem}[Determinism]
+The reduction of terms $t$ is deterministic.
+\end{theorem}
+
+The proof is based on commutativity of transitions in the reduction.
+
+\begin{lemma}
+Consider a reduction sequence $S$ that does not contain a transition which creates a new pool.
+If $S$ terminates with result $P$ then all permutations of $S$ terminate with the same result.
+\end{lemma}
 
 \end{document}
