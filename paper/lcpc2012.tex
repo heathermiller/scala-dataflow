@@ -124,15 +124,37 @@ and fewer GC cycles
 
 \section{Model of Computation}
 
-Producer-consumer parallelism. Description and image of queue/stream of
-values, producer, and multiple consumers. (Description of how parallelism is
-achieved)
+TODO What is producer-consumer parallelism.
 
-Want to build directed dependency graph. This ensures that we have some parallelism in the model. 
-Nodes in dependency graph should be first class model.
+TODO Description and image of queue/stream of values, producer, and multiple consumers.
+A directed dependency graph of a dataflow computation provides parallelism.
+This ensures that we have some parallelism in the model.
 
-What do we mean by determinism? Concise but rather formal description.
-Talk about ordering here. Deterministic, but no guarantee on ordering.
+TODO Nodes in dependency graph should be first class model.
+
+What do we mean by determinism? We aspire for a definition which is
+practically useful in the sense that it makes debugging parallel programs
+easier.
+In doing so, we rely on the definition of declarative concurrency from the Oz
+programming language \ref{TODO} -- a concurrent program is declaratively concurrent
+if and only if all possible executions either do not terminate or they all
+eventually reach logically equivalent results.
+Here non-termination also entails exceptions that happen at runtime.
+Logically equivalent results roughly denote that the data structures are in 
+the same state.
+This is convenient for the programmer -- if an exception occurs in some
+execution, then it is guaranteed to occur in every execution of the program.
+However, if there are no exceptions, then the program is guaranteed
+to be deterministic.
+
+In this paper we describe a deterministic pool abstraction which allows
+appending elements and then traversing the contained elements.
+Such an abstraction may seem similar to the dataflow streams seen in Oz,
+but there are some important differences.
+We argue that both of these are deterministic, but our pool abstraction
+does not define the order between contained elements, hence there is
+no traversal order.
+
 
 \section{Programming Interface}
 \label{sec:programming-interface}
@@ -306,14 +328,14 @@ def foreach[U](f: T => U)
 \end{alltt}
 \end{minipage}
 
-One typical higher-level collection operations \verb=map= is used to
-map each element of a dataset to produce new one.
+A typical higher-level collection operation \verb=map= is used to
+map each element of a dataset to produce a new one.
 This corresponds to chaining the nodes in the dataflow graph.
 We implement it by traversing the elements of \verb=this= FlowPool and
 appending each mapped element to the builder.
 The \verb=for= loop is the syntactic sugar for calling the
 \verb=foreach= method on \verb=this=.
-We assume that the \verb=foreach= return value \verb=Future[Int]=
+We assume that the \verb=foreach= returns value \verb=Future[Int]=
 has \verb=map= and \verb=flatMap= operations, executed
 once the future value becomes available.
 The \verb=Future.map= above ensures that if the \verb=this= pool is ever
