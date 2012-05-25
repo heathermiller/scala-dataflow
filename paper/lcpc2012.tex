@@ -147,23 +147,67 @@ operations of on FlowPools is the append operation. As its name suggests, it
 simply takes an argument of type \texttt{Elem} and appends it to a given
 FlowPool. 
 
-\noindent \textbf{Foreach}.
-We have to do something with the added elements -- we need a foreach.
-
 % notice -- we could have a stream returned from the pool instead and
 % poll the stream until the value arrives -- but this leads to blocking.
 
-\sout{what should be the semantics of the foreach - should it execute only
-for elements added to the flowpool after calling foreach? or} should it
-execute for all the elements ever added?
-\sout{The latter --} we want determinism, avoid races, same execution every
-time.
+% \sout{what should be the semantics of the foreach - should it execute only
+% for elements added to the flowpool after calling foreach? or} should it
+% execute for all the elements ever added?
+% \sout{The latter --} we want determinism, avoid races, same execution every
+% time.
+
+\textbf{Foreach and Fold.}
+A pool containing a set of elements is of little use if the elements
+cannot be manipulated in some manner.
+One of the basic data-structure operations is element traversal,
+often provided by iterators or streams -- stateful
+objects storing the current position in the data-structure.
+Since they can be manipulated by several threads, they allow
+nondeterministic executions.
+
+Another way to traverse the elements is to provide a higher-level
+\verb=foreach= operations which takes a user-specified function and
+applies it to every element.
+To ensure determinism, it is called for every element that is
+eventually in the FlowPool, rather than only those present
+when \verb=foreach= is called.
+To ensure non-blocking behaviour, it must not wait until
+additional elements are added to the FlowPool.
+For these reasons, the \verb=foreach= operation must execute
+asynchronously and is eventually applied to every element.
+Its signature is \verb+def foreach[U](f: T => U): Future[Int]+.
+The return type \verb=Future[Int]= is an integer value which becomes
+available once \verb=foreach= traverses all the elements added to the
+pool.
+It denotes the number of times the \verb=foreach= has been called.
+The user-specified function return value of type \verb=U= is ignored.
+
+The \verb=fold= operation aggregates the elements of the pool
+Its signature is \verb+def fold[S](zero: S)(op: T => S): Future[S]+,
+where \verb=zero= is the initial aggregation, \verb=op= is an
+associative aggregation operator, and \verb=Future[S]= is the aggregation
+of all the elements which becomes available once all the elements have
+been added.
+It is applied to every element of the FlowPool
+eventually.
+
+We conclude by saying that the \verb=fold= is more general than the
+\verb=foreach=.
+While in an imperative programming model \verb=foreach= and \verb=fold= are
+equivalent in the sense that one can be implemented in terms of the
+other, in a single-assignment programming model \verb=fold= is more
+expressive than \verb=foreach=.
+The \verb=foreach= can be implemented using \verb=fold=, but not vice versa,
+due to the absence of side-effects.
 
 \subsection{Builders}
 
 GC problem.
 To solve this -- introduce builders -- anybody desiring to write into
 the flowpool must create a builder first.
+
+foreach must not go to the builder to be called only for the
+subsequently added elements - doing so would break determinism.
 
 % We could get rid of the reference to the FlowPool after we install all
 % the foreach callbacks... but we still need a reference to add new
@@ -186,17 +230,124 @@ to make `seal` deterministic is the expected size of the pool.
 Show we can build higher-level combinators (map, flatMap, generators,
 either, etc.)
 
-What about the `reduce` patterns? \sout{How can you get back reduction of all
+\noindent
+\begin{minipage}[b]{4.2 cm}
+\begin{alltt}
+{\scriptsize
+def tabulate[T]
+  (n: Int, f: Int => T)
+  val p = new FlowPool[T]
+  val b = p.builder
+  def recurse(i: Int) \{
+    b << f(i)
+    if i < n recurse(i + 1)
+  \}
+  future \{ recurse(0) \}
+  p
+}
+\end{alltt}
+\end{minipage}\begin{minipage}[b]{4 cm}
+\begin{alltt}
+{\scriptsize
+def map[S](f: T => S)
+  val p = new FlowPool[S]
+  val b = p.builder
+  for (x <- this) \{
+    b << f(x)
+  \} map \{
+    sz => b.seal(sz)
+  \}
+  p
+
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{2.5 cm}
+\begin{alltt}
+{\scriptsize
+def foreach[U]
+  (f: T => U)
+  fold(()) \{
+    (unit, x) =>
+    f(x)
+    ()
+  \}
+
+
+
+}
+\end{alltt}
+\end{minipage}
+
+What about the `fold` patterns? \sout{How can you get back reduction of all
 the values in the flowpool if at any point an additional value could
 potentially arrive.} Show how this can be used to implement reducing (we
 assume existence of promises in the framework).
 
-Show how seal makes reduce possible.
+Show how seal makes fold possible.
+
+\noindent
+\begin{minipage}[b]{4.2 cm}
+\begin{alltt}
+{\scriptsize
+def filter
+  (pred: T => Boolean)
+  val p = new FlowPool[T]
+  val b = p.builder
+  fold(0) \{ (acc, x) =>
+    if pred(x) \{
+      b << x
+      1
+    \} else 0
+  \} map \{ sz => b.seal(sz) \}
+  p
+}
+\end{alltt}
+\end{minipage}\begin{minipage}[b]{4.6 cm}
+\begin{alltt}
+{\scriptsize
+def flatMap[S]
+  (f: T => FlowPool[S])
+  val p = new FlowPool[S]
+  val b = p.builder
+  fold(future(0)) \{ (af, x) =>
+    val sf = for (y <- f(x))
+      b << y
+    for (a <- af; s <- sf)
+      yield a + s
+  \} map \{ sz => b.seal(sz) \}
+  p
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{3.4 cm}
+\begin{alltt}
+{\scriptsize
+def either[T]
+  (a: FlowPool[T],
+   b: FlowPool[T])
+  val p = new FlowPool[T]
+  val b = p.builder
+  for (x <- a) b << x
+  for (y <- b) b << y
+  p
+
+
+
+}
+\end{alltt}
+\end{minipage}
+
+Note that even if we could somehow merge the two foreach loops, we
+could write a zip. But we cannot do this, since that would be
+nondeterministic.
+Zip is more suited for data structures with deterministic ordering,
+such as Oz streams, but either is nondeterministic there.
 
 \sout {Grammar (concise). point out that builder was left out in the grammar,
 etc, as a memory hack i.e. implementation detail}
 
-\begin{figure}
+\begin{figure}[t]
 
 \centering
 
@@ -231,8 +382,6 @@ type FlowPool \{
   start: Block
   current: Block
 \}
-
-BLOCKSIZE = 256
 LASTELEMPOS = BLOCKSIZE - 2
 NOSEAL = -1
 }
@@ -405,8 +554,10 @@ def asyncFor(f: Elem => Unit, b: Block, idx: Int)
 \section{Implementation}
 
 We now describe the FlowPool and its basic operations.
-In doing so, we omit the details not relevant to the algorithm
-(specifically, the builder abstraction) and
+In doing so, we omit the details not relevant to the
+algorithm\footnote{Specifically the builder abstraction and the \texttt{fold}
+operation. The \texttt{fold} can be implemented trivially in our model
+using a side-effecting accumulator variable.} and
 focus on a high-level description of a non-blocking data structure.
 One straightforward way to implement a growing pool is to use a linked
 list of nodes that wrap elements.
@@ -590,147 +741,9 @@ Things we should probably have a look at: Microsoft TPL, Dataflow
 Java, FlumeJava...
 
 Forcing a bib, \cite{bowman:reasoning}, \cite{braams:babel}, \cite{clark:pct}, \cite{herlihy:methodology}, \cite{Lamport:LaTeX}, \cite{salas:calculus}
+
 \section{Conclusion}
 
-\section{Programming model prev}
-
-
-The FlowPool suite supports the following operations:
-\begin{itemize}
-\item \texttt{Builder.<<(x: T): Builder}\\
-  Inserts an element into the underlying FlowPool.
-\item \texttt{Builder.seal(n: Int): Unit}\\
-  Seals the underlying FlowPool at \texttt{n} elements. The need for
-  the size argument is explained below. A sealed FlowPool may only
-  contain \texttt{n} elements. This allows for callback cleanup and
-  termination.
-\item \texttt{FlowPool.doForAll(f: T => Unit): Future[Int]}\\
-  Instructs
-  the FlowPool to execute the closure \texttt{f} exactly once for each
-  element inserted into the FlowPool (asynchronously). The returned
-  future contains the number of elements in the FlowPool and completes
-  once \texttt{f} has been executed for all elements.
-\item \texttt{FlowPool.mappedFold[U, V <: U](acc: V)(cmb: (U,V) =>
-    V)(map: T => U): Future[(Int, V)]}
-  Reduces the FlowPool to a single value of type V, by first mapping
-  each element to an internal representation using \texttt{map} and
-  then aggregating using \texttt{cmb}. No guarantee is given about
-  synchronization or order. Returns a future containing a tuple with
-  number of elements in the FlowPool and the aggregated value.
-\item \texttt{FlowPool.builder}\\
-  Returns a builder for this FlowPool.
-\item \texttt{Future.map[U](f: T => U)}\\
-  Maps this future to another
-  future executing the function \texttt{f} exactly once when the first
-  future completes.
-\item \texttt{future[T](f: () => T): Future[T]}\\
-  Asynchronously dispatch execution of \texttt{f} an return a future
-  with its result.
-\end{itemize}
-
-\paragraph{Determinism of \texttt{seal}} We will show that the final
-size of the FlowPool is required as an argument to the seal method in
-order to satisfy the determinism property of the FlowPool. Look at the
-following program:
-
-\begin{verbatim}
-val p = new FlowPool[Int]()
-val b = p.builder
-
-future {
-  for (i <- 1 to 10) { b << i }
-  b.seal
-}
-
-future { for (i <- 1 to 10) { b << i } }
-\end{verbatim}
-
-Depending on which for-loop completes first, this program completes
-successfully or yields an error. A similar program with
-\verb+b.seal(20)+ will always succeed.
-
-\paragraph{Generators} In the following we'll present a couple of
-generators for FlowPools based on common generators in the Scala
-standard library.
-
-\begin{verbatim}
-def iterate[T](start: T, len: Int)(f: (T) => T) = {
-  val p = new FlowPool[T]
-  val b = p.builder
-  future {
-    var e = start
-    for (i <- 1 to len) { b << e; e = f(e) }
-    b.seal(len)
-  }; p
-}
-\end{verbatim}
-
-\begin{verbatim}
-def tabulate[T](n: Int)(f: (Int) => T) = {
-  val p = new FlowPool[T]
-  val b = p.builder
-  future {
-    for (i <- 0 to (n-1)) {
-      b << f(i)
-    }
-    b.seal(n)
-  }; p
-}
-\end{verbatim}
-
-\begin{verbatim}
-def fill[T](n: Int)(elem: => T) = {
-  val p = new FlowPool[T]
-  val b = p.builder
-  future {
-    for (i <- 1 to n) { b << elem }
-    b.seal(n)
-  }; p
-}
-\end{verbatim}
-
-\paragraph{Monadic Operations} In the following we'll present some
-monadic operations on top of the basic FlowPool operations. This will
-also show some use-cases of the futures as result type of
-\verb+doForAll+.
-
-\begin{verbatim}
-def map[S](f: T => S) = {
-  val fp = new FlowPool[S]
-  val b  = fp.builder
-  doForAll { x =>
-    b << f(x)
-  } map { b.seal _ }
-  fp
-}
-\end{verbatim}
-
-\begin{verbatim}
-def filter(f: T => Boolean) = {
-  val fp = new FlowPool[T]
-  val b  = fp.builder
-
-  mappedFold(0)(_ + _) { x =>
-    if (f(x)) { b << x; 1 } else 0
-  } map { case (c,fc) => b.seal(fc) }
-
-  fp
-}
-\end{verbatim}
-
-\begin{verbatim}
-def flatMap[S](f: T => FlowPool[S]) = {
-  val fp = new FlowPool[S]
-  val b  = fp.builder
-
-  mappedFold(future(0))(_ <+> _) { x =>
-    f(x).doForAll(b << _)
-  } map { case (c,cfut) => cfut.map(b.seal _) }
-
-  fp
-}
-\end{verbatim}
-where \verb|<+>| is the future of the sum of two \verb+Future[Int]+.
 
 
 \bibliographystyle{abbrv}
@@ -1908,5 +1921,81 @@ of \verb=seal= in a finite number of steps.
 The case for $CAS6$ is omitted since it follows the same steps as for the case
 of $CAS5$
 \end{proof}
+
+
+\section{More programming examples}
+
+% we can comment this one out, but keep these here for reference
+
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+def iterate[T]
+  (s: T, f: T => T)
+  val p = new FlowPool[T]
+  val b = p.builder
+  def recurse(x: T) \{
+    b << x
+    recurse(f(x))
+  \}
+  future \{ recurse(s) \}
+  p
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{3.9 cm}
+\begin{alltt}
+{\scriptsize
+def exists
+  (pred: T => Boolean)
+  val p = new FlowPool[T]
+  val b = p.builder
+  fold(false) \{
+    (acc, x) =>
+    acc \(\vee\) pred(x)
+  \}
+  p
+
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{4.7 cm}
+\begin{alltt}
+{\scriptsize
+def flatten[S]
+  (q: FlowPool[FlowPool[S]])
+  val p = new FlowPool[S]
+  val b = p.builder
+  q.fold(future(0)) \{ (af, r) =>
+    val sf = for (x <- r) b << x
+    for (a <- af; s <- sf)
+      yield a + s
+  \} map \{ sz => b.seal(sz) \}
+  p
+}
+\end{alltt}
+\end{minipage}
+
+
+
+\begin{minipage}[b]{4 cm}
+\begin{alltt}
+{\scriptsize
+def fill[T]
+  (n: Int, elem: =>T)
+  val p = new FlowPool[T]
+  val b = p.builder
+  future \{
+    for (i <- 1 to n) b << elem
+    b.seal(n)
+  \}
+  p
+
+}
+\end{alltt}
+\end{minipage}
+ 
+
 
 \end{document}
