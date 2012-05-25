@@ -1771,6 +1771,28 @@ $idx$.
 \end{proof}
 
 %==============================
+% Lemma \ref{lemma-write2-write3}, WRITE2 AND WRITE3
+%==============================
+
+\begin{lemma}[WRITE2 and WRITE3]\label{lemma-write2-write3}
+After updating $b.index$ using $WRITE2$ or $WRITE3$,  $b.index$ is guaranteed
+to be incremented after a finite number of steps.
+\end{lemma}
+
+\begin{proof}
+For some index, $idx$, both calls to $WRITE2$ and $WRITE3$ attempt to write
+$idx+1$ to $b.index$. In both cases, it's possible that another thread could
+complete either $WRITE2$ or $WRITE3$, once again writing $idx$ to $b.index$
+after the current thread has completed, in effect overwriting the current
+thread's write with $idx+1$. By inspection of the pseudocode, both $WRITE2$
+and $WRITE3$ will be repeated if $b.index$ has not been incremented. However,
+since the number of threads operating on the FlowPool is finite, $p$, we are
+guaranteed that in the worst case, this scenario can repeat at most $p$ times,
+before a write correctly updates $b.index$ with $idx+1$.
+\qed
+\end{proof}
+
+%==============================
 % Lemma \ref{lemma-finite-steps-consistency-change} (SEAL: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
 %==============================
 
@@ -1856,28 +1878,6 @@ be completed after a finite number of steps.
 We omit the proof for \verb=foreach= since it proceeds in the exactly the same way
 as does the proof for \verb=seal= in Lemma 
 \ref{lemma-finite-steps-consistency-change}.
-
-%==============================
-% Lemma \ref{lemma-write2-write3}, WRITE2 AND WRITE3
-%==============================
-
-\begin{lemma}[WRITE2 and WRITE3]\label{lemma-write2-write3}
-After updating $b.index$ using $WRITE2$ or $WRITE3$,  $b.index$ is guaranteed
-to be incremented after a finite number of steps.
-\end{lemma}
-
-\begin{proof}
-For some index, $idx$, both calls to $WRITE2$ and $WRITE3$ attempt to write
-$idx+1$ to $b.index$. In both cases, it's possible that another thread could
-complete either $WRITE2$ or $WRITE3$, once again writing $idx$ to $b.index$
-after the current thread has completed, in effect overwriting the current
-thread's write with $idx+1$. By inspection of the pseudocode, both $WRITE2$
-and $WRITE3$ will be repeated if $b.index$ has not been incremented. However,
-since the number of threads operating on the FlowPool is finite, $p$, we are
-guaranteed that in the worst case, this scenario can repeat at most $p$ times,
-before a write correctly updates $b.index$ with $idx+1$.
-\qed
-\end{proof}
 
 %==============================
 % Lemma \ref{lemma-operation-completes}
