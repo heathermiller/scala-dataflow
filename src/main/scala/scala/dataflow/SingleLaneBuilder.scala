@@ -89,11 +89,9 @@ final class SingleLaneBuilder[T](bl: Array[AnyRef]) extends Builder[T] {
 
     val at = MUST_EXPAND_POS
     val curidx = curblock(IDX_POS).asInstanceOf[Int]
-    val nextblock = new Array[AnyRef](BLOCKSIZE)
-    // copy callbacks to next block
-    nextblock(0) = curblock(at - 1)
-    nextblock(MUST_EXPAND_POS) = MustExpand
-    nextblock(IDX_POS) = (curidx + 1).asInstanceOf[AnyRef]
+
+    // Prepare new block with CBs
+    val nextblock = newBlock(curidx + 1,curblock(at - 1))
     
     val next = Next(nextblock)
     if (CAS(curblock, at, MustExpand, next)) {

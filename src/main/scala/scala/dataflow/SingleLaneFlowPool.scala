@@ -98,17 +98,17 @@ object SingleLaneFlowPool {
         }
         case me @ MustExpand => {
           val curidx = cb.block(IDX_POS).asInstanceOf[Int]
-          val nextblock = new Array[AnyRef](BLOCKSIZE)
           val curblock = cb.block
 
-          // prepare callback to be added
-          cb.block = nextblock
-          cb.pos = 0
+          // Insert CB in List
+          val newel = curcb.asInstanceOf[CallbackHolder[_]].insertedCallback(cb)
 
           // prepare next block
-          nextblock(0) = curcb.asInstanceOf[CallbackHolder[_]].insertedCallback(cb)
-          nextblock(MUST_EXPAND_POS) = MustExpand
-          nextblock(IDX_POS) = (curidx + 1).asInstanceOf[AnyRef]
+          val nextblock = newBlock(curidx+1,newel)
+
+          // prepare callback (that has been added)
+          cb.block = nextblock
+          cb.pos = 0
     
           // Swap block in an end.
           if (CAS(curblock, MUST_EXPAND_POS, me, Next(nextblock))) return
