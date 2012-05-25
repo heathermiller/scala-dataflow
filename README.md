@@ -86,6 +86,8 @@ Runs with SBT 0.11.x
 	- see need to embed callbacks within the data structure themselves
 	- higher order combinators built on top of `<<` and `foreach`,
       just like in sequential collections
+	- postulate a range of other collection-types in the
+      single-assignment model, which haven't been addressed before
 - Appendix A
   - Abstract pool semantics
   - Linearizability
