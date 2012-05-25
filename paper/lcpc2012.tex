@@ -27,7 +27,7 @@
 \usepackage[normalem]{ulem}
 
 \usepackage{url}
-\urldef{\mails}\path|{firstname.lastname}@epfl.ch|    
+\urldef{\mails}\path|firstname.lastname@epfl.ch|    
 \newcommand{\keywords}[1]{\par\addvspace\baselineskip
 \noindent\keywordname\enspace\ignorespaces#1}
 
@@ -95,8 +95,8 @@ proof of correctness, showing that the implementation is linearizable, lock-
 free, and deterministic. Finally, we provide experimental results which
 compare our \emph{FlowPool} against corresponding operations on other popular
 concurrent data structures, and show that in addition to offering new
-features, FlowPools perform XYZ-XYZ\% better than their blocking counterparts.
-\keywords{data-flow, concurrent data-structure, determinism}
+capabilities, FlowPools perform XYZ-XYZ\% better than their blocking counterparts.
+\keywords{dataflow, concurrent data-structure, deterministic parallelism}
 \end{abstract}
 
 
@@ -110,6 +110,14 @@ features, FlowPools perform XYZ-XYZ\% better than their blocking counterparts.
    programming models (JVM, CLR, most native platforms) \cite{Herlihy90}
 
 Introduction and motivation for data-flow programming model.
+
+
+Data structures for the multicore age, Shavit 2011, Comm. ACM \cite{Shavit11}
+
+Concurrent data structures, Moir, Shavit 2008, \cite{Moir05}
+
+A Methodology for Implementing Highly Concurrent Data Structures, Herlihy, 1990 \cite{Herlihy90}
+
 
 
 \subsection{Motivation}
@@ -154,7 +162,7 @@ no guarantees on ordering. In this section, we describe the semantics of a
 handful of functional combinators and other basic operations defined on
 FlowPools.
 
-\noindent \textbf{Append (\texttt{<<})}. The most fundamental of all
+\textbf{Append (\texttt{<<})}. The most fundamental of all
 operations of on FlowPools is the append operation. As its name suggests, it
 simply takes an argument of type \texttt{Elem} and appends it to a given
 FlowPool. 
@@ -175,7 +183,7 @@ One of the basic data structure operations is element traversal,
 often provided by iterators or streams -- stateful
 objects storing the current position in the data structure.
 Since they can be manipulated by several threads, they allow
-nondeterministic executions.
+nondeterministic execution.
 
 Another way to traverse the elements is to provide a higher-level
 \verb=foreach= operations which takes a user-specified function and
@@ -807,10 +815,12 @@ least one thread completes after a finite number of steps.
 \section{Experimental Results}
 
 \section{Related Work}
-Things to probably cite: Oz, gpars, Java CLQ, our futures writeup.
+Things to probably cite: Oz, gpars, i-Structures \cite{Arvind89}, Java CLQ \cite{Michael96}, our futures writeup, twitter futures, MultiLISP futures \cite{Halstead85}, FlumeJava \cite{Chambers10}.
 
 Things we should probably have a look at: Microsoft TPL, Dataflow
 Java, FlumeJava...
+
+Art of Multicore Programming book, cite that somewhere?: \cite{Herlihy08}
 
 \section{Conclusion}
 
