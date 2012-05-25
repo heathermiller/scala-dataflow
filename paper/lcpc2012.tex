@@ -1936,5 +1936,54 @@ of $CAS5$
 
 \pagebreak
 
+\subsection{Determinism}
+
+\paragraph{Reduction rules}
+
+\infrule[\textsc{Create}]
+{ t = \texttt{create}~p~;~t' \quad p = (\emptyset, -1, \emptyset)
+}
+{ \reduce {t, T} P {t', T} {p, P}
+}
+
+\infrule[\textsc{Append1}]
+{ t = p << v~;~t' \quad p = (vs, -1, cbs) \quad p' = (\set{v} \cup vs, -1, cbs)
+}
+{ \reduce {t, T} {p, P} {t', T} {p', P}
+}
+
+\infrule[\textsc{Append2}]
+{ t = p << v~;~t' \quad p = (vs, n, cbs) \quad |\set{v} \cup vs| \leq n \\
+  p' = (\set{v} \cup vs, n, cbs) \quad T' = \set{ f(v)~|~f \in cbs }
+}
+{ \reduce {t, T} {p, P} {t', T, T'} {p', P}
+}
+
+\infrule[\textsc{Foreach1}]
+{ t = p~\texttt{foreach}~f~;~t' \quad p = (vs, -1, cbs) \quad p' = (vs, -1, \set{f} \cup cbs)
+}
+{ \reduce {t, T} {p, P} {t', T} {p', P}
+}
+
+\infrule[\textsc{Foreach2}]
+{ t = p~\texttt{foreach}~f~;~t' \quad p = (vs, n, cbs) \\
+  T' = \set{g(v)~|~g \in \set{f} \cup cbs, v \in vs} \quad p' = (vs, n, \set{f} \cup cbs)
+}
+{ \reduce {t, T} {p, P} {t', T, T'} {p', P}
+}
+
+\infrule[\textsc{Seal1}]
+{ t = p~\texttt{seal}~n~;~t' \quad p = (vs, -1, cbs) \\
+  T' = \set{g(v)~|~g \in cbs, v \in vs} \quad p' = (vs, n, cbs)
+}
+{ \reduce {t, T} {p, P} {t', T, T'} {p', P}
+}
+
+\infrule[\textsc{Seal2}]
+{ t = p~\texttt{seal}~n~;~t' \quad p = (vs, n, cbs)
+}
+{ \reduce {t, T} {p, P} {t', T} {p, P}
+}
+
 
 \end{document}
