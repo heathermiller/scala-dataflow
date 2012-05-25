@@ -250,7 +250,7 @@ NOSEAL = -1
 
 \centering
 
-\begin{minipage}[b]{6 cm}
+\begin{minipage}[b]{6.1 cm}
 \begin{alltt}
 {\scriptsize
 {\internallinenumbers{def create()
@@ -273,7 +273,7 @@ def append(elem: Elem)
   nexto = READ(b.array(idx + 1)) {\customlabel{read_next}{\LineNumber}}
   curo = READ(b.array(idx)) {\customlabel{read_current}{\LineNumber}}
   if check(b, idx, curo) \{
-    if CAS(b.array(idx + 1), nexto, curo) \{ {\customlabel{cas_propagate}{\LineNumber}}
+    if CAS(b.array(idx + 1), nexto, curo) //CAS1 \{ {\customlabel{cas_propagate}{\LineNumber}}
       if CAS(b.array(idx), curo, elem) \{ {\customlabel{cas_append}{\LineNumber}}
         WRITE(b.index, idx + 1) {\customlabel{write_append}{\LineNumber}}
         invokeCallbacks(elem, curo)
@@ -1335,9 +1335,9 @@ After the successful CAS at $t_3$, we have:
 
 $b.array = elem^N \cdot e \cdot cb_1 \cdot null^{BLOCKSIZE - N - 2}$
 
-where $e: Elem$ is the newly appended element -- at $t_3$ the
-relation $hasElem(start, e)$ holds, and $sealedAt(start, s)$ and
-$hasCallback(start, f)$ did not change between $t_2$ and $t_3$.
+where $e: Elem$ is the newly appended element-- at $t_3$ the relation
+$hasElem(start, e)$ holds, and $sealedAt(start, s)$ and $hasCallback(start,
+f)$ did not change between $t_2$ and $t_3$.
 
 It remains to be shown that $willBeCalled(start, e, f)$ holds at $t_3$.
 Given a fair scheduler, within a finite number of steps the
@@ -1481,34 +1481,33 @@ of that procedure -- so, \verb=foreach= is not linearizable.
 % $\mathbb{A}=(elems,sealed)$ iff some element $e \in elems \Leftrightarrow \exists b,i~:~reachable(pool.start,b)~\wedge~b.array(i)=e,$ 
 % and $\exists c,j~:~c.array(j) \in Terminal~\wedge~c.array(j).sealed=sealed~\wedge~reachable(pool.start, c)$. 
 
-\textbf{Definition 6} (Lock-freedom). In a scenario where some finite number
-of threads are executing a concurrent operation, that concurrent operation is
-\textit{lock-free} if and only if that concurrent operation is completed after
-a finite number of steps by some thread.
+\begin{definition}[Lock-freedom]\label{def-lock-freedom} 
+In a scenario where some finite number of threads are executing a concurrent
+operation, that concurrent operation is \textit{lock-free} if and only if that
+concurrent operation is completed after a finite number of steps by some
+thread. 
+\end{definition}
 
-%==============================
-%==============================
-% 
-% THEOREM 1
-%
-%==============================
-%==============================
 
-\textbf{Theorem 1} (Lock-freedom). \textit{FlowPool operations append, seal,
-and doForAll are lock-free}.
+\begin{theorem}[Lock-freedom]\label{theorem-lock-freedom}
+FlowPool operations append, seal, and foreach are lock-free.
 
 We begin by first proving that there are a finite number of execution steps
 before a consistency change occurs.
 
-By Lemma 5, after invoking $append$, a consistency change occurs after a
-finite number of steps. Likewise, by Lemma 7, after invoking $seal$, a
-consistency change occurs after a finite number of steps. And finally, by
-Lemma 8, after invoking $doForAll$, a consistency change likewise occurs after
-a finite number of steps.
+By Lemma \ref{lemma-append}, after invoking \verb=append=, a consistency
+change occurs after a finite number of steps. Likewise, by Lemma 
+\ref{lemma-finite-steps-consistency-change}, after invoking \verb=seal=, a consistency
+change occurs after a finite number of steps. And finally, by Lemma \ref
+{lemma-foreach}, after invoking \verb=foreach=, a consistency change likewise
+occurs after a finite number of steps.
 
-By Lemma 10, this means a concurrent operation $append$, $seal$, or $doForAll$
-will successfully complete. Therefore, by Definition 6, these operations are
-lock-free.
+By Lemma \ref{lemma-operation-completes}, this means a concurrent operation
+\verb=append=, \verb=seal=, or \verb=foreach= will successfully complete.
+Therefore, by Definition \ref{def-lock-freedom},  these operations are lock-
+free.
+
+\end{theorem}
 
 % CASes that fail by being completed by other CASes signify progress. 
 
@@ -1516,17 +1515,19 @@ lock-free.
 % LEMMA 1
 %==============================
 
-\textbf{Lemma 1}. \textit{After invoking an operation $op$, if non-consistency
-changing CAS operations $CAS1$, $CAS3$, or $CAS4$, in the pseudocode fail,
-they must have already been successfully completed by another thread since
-$op$ began}.
+\begin{lemma}\label{lemma-non-consistency-cas}
+After invoking an operation $op$, if non-consistency changing CAS operations
+$CAS1$, $CAS3$, or $CAS4$, in the pseudocode fail, they must have already been
+successfully completed by another thread since $op$ began.
+\end{lemma}
 
-\textit{Proof}. Trivial inspection of the pseudocode reveals that since $CAS1$
-makes up a check that precedes $CAS2$, and since $CAS2$ is the only operation
-besides $CAS1$ which can change the expected value of $CAS1$, in the case of
-a failure of $CAS1$, $CAS2$ (and thus $CAS1$) must have already successfully
-completed or $CAS1$ must have already successfully completed by a different
-thread since $op$ began executing.
+\begin{proof}
+Trivial inspection of the pseudocode reveals that since $CAS1$ makes up a
+check that precedes $CAS2$, and since $CAS2$ is the only operation besides
+$CAS1$ which can change the expected value of $CAS1$, in the case of a failure
+of $CAS1$, $CAS2$ (and thus $CAS1$) must have already successfully completed
+or $CAS1$ must have already successfully completed by a different thread since
+$op$ began executing.
 
 Likewise, by trivial inspection $CAS3$ is the only CAS which can update the
 $b.next$ reference, therefore in the case of a failure, some other thread must
@@ -1536,22 +1537,25 @@ Like above, $CAS4$ is the only CAS which can change the $current$ reference,
 therefore in the case of a failure, some other thread must have already
 successfully completed $CAS4$ since $op$ began.
 \qed
+\end{proof}
 
 %==============================
-% LEMMA 2 (EXPAND)
+% Lemma \ref{lemma-expand} (EXPAND)
 %==============================
 
-\textbf{Lemma 2}. \textit{Invoking the $expand$ operation will execute a non-
-consistency changing instruction after a finite number of steps. Moreover, it
-is guaranteed that the $current$ reference is updated to point to a subsequent
-block after a finite number of steps. Finally, $expand$ will return after a
-finite number of steps.
+\begin{lemma}[Expand]\label{lemma-expand}
+Invoking the $expand$ operation will execute a non- consistency changing
+instruction after a finite number of steps. Moreover, it is guaranteed that
+the $current$ reference is updated to point to a subsequent block after a
+finite number of steps. Finally, $expand$ will return after a finite number of
+steps
 % Furthermore, given a total number of blocks $numBlocks$ reachable in a
-% FlowPool $pool$ before invoking $expand$ through $append$, the number of
+% FlowPool $pool$ before invoking $expand$ through \verb=append=, the number of
 % blocks $numBlocks'$ after some finite number of steps is guaranteed to satisfy
 % $numBlocks'>numBlocks$
-}.
+\end{lemma}
 
+\begin{proof}
 % There are some issues with this one. Later on, we only actually need the
 % point about the current reference, and also the point that expand returns
 % after a finite number of steps. So we don't actually need the points about
@@ -1566,54 +1570,58 @@ finite number of steps.
 % only thing that it does is update current. So the wording in the 2 cases
 % below needs to be cleaned up and some stuff needs to be removed.
 
-\textit{Proof}. From inspection of the pseudocode, it is clear that the only
-point at which $expand(b)$ can be invoked is under the condition that for some
-block $b$, $b.index > LASTELEMPOS$, where $LASTELEMPOS$ is the maximum size
-set aside for elements of type $Elem$ in any block. Given this, we will proceed 
-by showing that a new block will be created with all related references 
-$b.next$ and $current$ correctly set.
+From inspection of the pseudocode, it is clear that the only point at which
+$expand(b)$ can be invoked is under the condition that for some block $b$,
+$b.index > LASTELEMPOS$, where $LASTELEMPOS$ is the maximum size set aside for
+elements of type $Elem$ in any block. Given this, we will proceed  by showing
+that a new block will be created with all related references  $b.next$ and
+$current$ correctly set.
 
 There are two conditions under which a non-consistency changing CAS
 instruction will be carried out. 
 
-\begin{itemize} 
-\item \textbf{Case 1:} if $b.next=null$, a new block $nb$ will
-be created and $CAS3$ will be executed. From Lemma 1, we know that $CAS3$
-must complete successfully on some thread. Afterwards recursively calling 
-$expand$ on the original block $b$.
-\item \textbf{Case 2:} if $b.next \neq null$, $CAS4$ will be executed. 
-Lemma 1 guarantees that $CAS4$ will update $current$ to refer to $b.next$, 
-which we will show can only be a new block. Likewise, Lemma 1 has shown that 
-$CAS3$ is the only state changing instruction that can initiate a state change 
-at location $b.next$, therefore, since $CAS3$ takes place within Case 1,  
-Case 2 can only be reachable after Case 1 has been executed successfully. Given 
-that Case 1 always creates a new block, therefore, $b.next$ in this case, must 
-always refer to a new block.
+\begin{itemize}  \item \textbf{Case 1:} if $b.next=null$, a new block $nb$
+will be created and $CAS3$ will be executed. From Lemma 1, we know that $CAS3$
+must complete successfully on some thread. Afterwards recursively calling
+$expand$ on the original block $b$. \item \textbf{Case 2:} if $b.next \neq
+null$, $CAS4$ will be executed. Lemma \ref{lemma-non-consistency-cas}
+guarantees that $CAS4$ will update $current$ to refer to $b.next$,  which we
+will show can only be a new block. Likewise, Lemma \ref{lemma-non-consistency-cas} 
+has shown that  $CAS3$ is the only state changing instruction that can
+initiate a state change  at location $b.next$, therefore, since $CAS3$ takes
+place within Case 1,   Case 2 can only be reachable after Case 1 has been
+executed successfully. Given  that Case 1 always creates a new block,
+therefore, $b.next$ in this case, must  always refer to a new block.
 \end{itemize}
 
-Therefore, since from Lemma 1 we know that both $CAS3$ and $CAS4$ can only
-fail if already completed guaranteeing their finite completion, and since
-$CAS3$ and $CAS4$ are the only state changing operations invoked through
-$expand$, the $expand$ operation must complete in a finite number of steps.
+Therefore, since from Lemma \ref{lemma-non-consistency-cas} we know that both
+$CAS3$ and $CAS4$ can only fail if already completed guaranteeing their finite
+completion, and since $CAS3$ and $CAS4$ are the only state changing operations
+invoked through $expand$, the $expand$ operation must complete in a finite
+number of steps.
 
 Finally, since we saw in Case 2 that a new block is always created and related
 references are always correctly set, that is both $b.next $ and $current$ are
 correctly updated to refer to the new block, it follows that $numBlocks$
 strictly increases after some finite number of steps.
 \qed
+\end{proof}
+
 
 %==============================
-% LEMMA 3 (CAS2)
+% Lemma \ref{lemma-cas2} (CAS2)
 %==============================
 
-\textbf{Lemma 3}. \textit{After invoking $append(elem)$, if $CAS2$ fails, then
-some thread has successfully completed $CAS2$ or $CAS5$ (or likewise, $CAS6$)
-after some finite number of steps}.
+\begin{lemma}[CAS2]\label{lemma-cas2}
+After invoking \verb=append(elem)=, if $CAS2$ fails, then some thread has
+successfully completed $CAS2$ or $CAS5$ (or likewise, $CAS6$) after some
+finite number of steps}.
+\end{lemma}
 
-\textit{Proof}. First, we show that a thread attempting to complete $CAS2$
-can't fail due to a different thread completing $CAS1$ so long as $seal$ has
-not been invoked after completing the read of $currobj$. We address this
-exception later on.
+\begin{proof}
+First, we show that a thread attempting to complete $CAS2$ can't fail due to a
+different thread completing $CAS1$ so long as \verb=seal= has not been invoked
+after completing the read of $currobj$. We address this exception later on.
 
 Since after $check$, the only condition under which $CAS1$, and by extension,
 $CAS2$ can be executed is the situation where the current object $currobj$
@@ -1624,7 +1632,7 @@ until $CAS2$ can be executed. By Lemma 1, since $CAS1$ is a non-consistency
 changing instruction, it follows that any thread holding any element $elem'$
 can execute this instruction without changing the expected value of $currobj$
 in $CAS2$, as no new object is ever created and placed in location $idx$.
-Therefore, $CAS2$ cannot fail due to $CAS1$, so long as $seal$ has not been
+Therefore, $CAS2$ cannot fail due to $CAS1$, so long as \verb=seal= has not been
 invoked by some other thread after the read of $currobj$.
 
 This leaves only two scenarios in which consistency changing $CAS2$ can fail:
@@ -1632,110 +1640,124 @@ This leaves only two scenarios in which consistency changing $CAS2$ can fail:
 \begin{itemize}
 \item \textbf{Case 1:} Another thread has already completed $CAS2$ with a 
 different element $elem'$.
-\item \textbf{Case 2:} Another thread completes an invocation to the $seal$ 
+\item \textbf{Case 2:} Another thread completes an invocation to the \verb=seal= 
 operation after the current thread completes the read of $currobj$. In this 
 case, $CAS2$ can fail because $CAS5$ (or, likewise $CAS6$) might have 
 completed before, in which case, it inserts a new $Terminal$ object $term$ 
-into location $idx$ (in the case of a $seal$ invocation, 
-$term.sealed\in\mathbb{N}_0$, or in the case of a $doForAll$ invocation, 
+into location $idx$ (in the case of a \verb=seal= invocation, 
+$term.sealed\in\mathbb{N}_0$, or in the case of a \verb=foreach= invocation, 
 $\{term.callbacks\in$\}). 
 \end{itemize}
 
 We omit the proof and detailed discussion of $CAS6$ because it can be proven 
 using the same steps as were taken for $CAS5$. 
 \qed
+\end{proof}
 
 %==============================
-% LEMMA 4 (FINITE # STEPS BEFORE STATE CHANGE)
+% Lemma \ref{lemma-finite-steps-state-change} (FINITE # STEPS BEFORE STATE CHANGE)
 %==============================
 
-\textbf{Lemma 4}. \textit{All operations with the exception of $append$,
-$seal$, and $doForAll$ execute only a finite number of steps between each
-state changing instruction}
+\begin{lemma}[Finite Steps Before State Change]\label{lemma-finite-steps-state-change}
+All operations with the exception of \verb=append=, \verb=seal=, and
+\verb=foreach= execute only a finite number of steps between each state
+changing instruction.
+\end{lemma}
 
-\textit{Proof}. The \textbf{advance}, \textbf{check}, \textbf{totalElems},
-\textbf{invokeCallbacks}, and \textbf{tryWriteSeal}  operations have a finite
+\begin{proof} The \verb=advance=, \verb=check=, \verb=totalElems=,
+\verb=invokeCallbacks=, and \verb=tryWriteSeal= operations have a finite
 number of execution steps, as they contain no recursive calls, loops, or other
 possibility to restart.
 
-While the \textbf{expand} operation contains a recursive call following a CAS
+While the \verb=expand= operation contains a recursive call following a CAS
 
-instruction, it was shown in Lemma 2 that an invocation of $expand$ is
+instruction, it was shown in Lemma \ref{lemma-expand} that an invocation of \verb=expand= is
 guaranteed to execute a state changing instruction after a finite number of
 steps. 
 \qed
+\end{proof}
 
 %==============================
-% LEMMA 5 (APPEND: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
+% Lemma \ref{lemma-append} (APPEND: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
 %==============================
 
-\textbf{Lemma 5}. \textit{After invoking $append(elem)$, a consistency
-changing instruction will be completed after a finite number of steps.}
+\begin{lemma}[Append]\label{lemma-append}
+After invoking \verb=append(elem)=, a consistency changing instruction will be
+completed after a finite number of steps.
+\end{lemma}
 
-\textit{Proof}.
-The \textbf{append} operation can be restarted in three cases. We show that in
+\begin{proof}
+The \verb=append= operation can be restarted in three cases. We show that in
 each case, it's guaranteed to either complete in a finite number of steps,  or
 leads to a state changing instruction:
 
 \begin{itemize} 
 
-\item \textbf{Case 1:} The call to $check$, a finite operation by Lemma 4,
-returns $false$,  causing a call to $advance$, also a finite operation by
-Lemma 4, followed by a recursive call to $append$ with the same  element
-$elem$ which in turn once again calls $check$.
+\item \textbf{Case 1:} The call to \verb=check=, a finite operation by Lemma
+\ref{lemma-finite-steps-state-change}, returns $false$,  causing a call to
+\verb=advance=, also a finite operation by Lemma 
+\ref{lemma-finite-steps-state-change}, followed by a recursive call to 
+\verb=append= with the same element $elem$ which in turn once again calls 
+\verb=check=.
 
-We show that after a finite number of steps, the $check$ will evaluate to
+We show that after a finite number of steps, the \verb=check= will evaluate to
 $true$, or some other thread will have completed a consistency changing
-operation since the initial invocation of $append$. In the case where $check$
-evaluates to $true$, Lemma 3 applies, as it guarantees that a consistency
-changing CAS is completed after a finite number of steps.
+operation since the initial invocation of \verb=append=. In the case where
+\verb=check= evaluates to $true$, Lemma \ref{lemma-cas2} applies, as it
+guarantees that a consistency changing CAS is completed after a finite number
+of steps.
 
-When the call to the finite operation $check$ returns $false$, if the
-subsequent $advance$ finds that a $Terminal$ object is at the current block
-index $idx$, then the next invocation of $append$ will evaluate $check$ to
-$true$. Otherwise, it must be the case that another thread has moved the
-Terminal to a subsequent index since the initial invocation of append, which
-is only possible using a consistency changing instruction.
+When the call to the finite operation \verb=check= returns $false$, if the
+subsequent \verb=advance= finds that a $Terminal$ object is at the current
+block index $idx$, then the next invocation of \verb=append= will evaluate
+\verb=check= to $true$. Otherwise, it must be the case that another thread has
+moved the Terminal to a subsequent index since the initial invocation of
+append, which is only possible using a consistency changing instruction.
 
-Finally, if $advance$ finds that the element at $idx$ is an $Elem$, by Lemma
-9, $b.index$ will be incremented after a finite number of steps. By $INV1$,
-this can only happen a finite number of times until a $Terminal$ is found. In
-the case that $expand$ is meanwhile invoked through $advance$, by Lemma 2 it's
-guaranteed to complete state changing instructions $CAS3$ or $CAS4$ in a
-finite number of steps. Otherwise, some other thread has moved the $Terminal$
-to a subsequent index. However, this latter case is only possible by
-successfully completing $CAS2$, a consistency changing instruction, after the
-initial invocation of append.
+Finally, if \verb=advance= finds that the element at $idx$ is an $Elem$, by
+Lemma 9, $b.index$ will be incremented after a finite number of steps. By
+$INV1$, this can only happen a finite number of times until a $Terminal$ is
+found. In the case that \verb=expand= is meanwhile invoked through
+\verb=advance=, by Lemma \ref{lemma-expand} it's guaranteed to complete state
+changing instructions $CAS3$ or $CAS4$ in a finite number of steps. Otherwise,
+some other thread has moved the $Terminal$ to a subsequent index. However,
+this latter case is only possible by successfully completing $CAS2$, a
+consistency changing instruction, after the initial invocation of append.
 
-\item \textbf{Case 2:} $CAS1$ fails, which we know from Lemma 1 means that it
-must've already been completed by another thread, guaranteeing that $CAS2$
-will be attempted. If $CAS2$ fails, by Lemma 3, after a finite number of
-steps, a consistency changing instruction will be completed. If $CAS2$
-succeeds, as a consistency changing instruction, consistency will have
-clearly been changed.
+\item \textbf{Case 2:} $CAS1$ fails, which we know from Lemma 
+\ref{lemma-non-consistency-cas}means that it must've already been completed by another
+thread, guaranteeing that $CAS2$ will be attempted. If $CAS2$ fails, by Lemma
+3, after a finite number of steps, a consistency changing instruction will be
+completed. If $CAS2$ succeeds, as a consistency changing instruction,
+consistency will have clearly been changed.
 
-\item \textbf{Case 3:} $CAS2$ fails, which, by Lemma 3, indicates that either
-some other thread has already completed $CAS2$ with another element, or
-another consistency changing instruction, $CAS5$ or $CAS6$ has successfully
-completed.  
+\item \textbf{Case 3:} $CAS2$ fails, which, by Lemma \ref{lemma-cas2},
+indicates that either some other thread has already completed $CAS2$ with
+another element, or another consistency changing instruction, $CAS5$ or $CAS6$
+has successfully completed.
 
 \end{itemize}
 
-Therefore, $append$ itself as well as all other operations reachable via an
-invocation of $append$ are guaranteed to have a finite number of steps between
+Therefore, \verb=append= itself as well as all other operations reachable via an
+invocation of \verb=append= are guaranteed to have a finite number of steps between
 \textit{consistency} changing instructions.
+\qed
+\end{proof}
 
 %==============================
 % LEMMA 6 (CAS5)
 %==============================
 
-\textbf{Lemma 6}. \textit{After invoking $seal(size)$, if $CAS5$ fails, then
-some thread has successfully completed $CAS5$ or $CAS2$ after some finite
-number of steps}.
+% We don't actually cite this lemma? Really?
 
-\textit{Proof}. Since $CAS1$ only duplicates an existing $Terminal$, it can
-not be the cause for a failing $CAS5$. This leaves only two cases in which
-$CAS5$ can fail:
+\begin{lemma}[CAS5]\label{lemma-cas5}
+After invoking \verb=seal(size)=, if $CAS5$ fails, then some thread has
+successfully completed $CAS5$ or $CAS2$ after some finite number of steps.
+\end{lemma}
+
+\begin{proof} Since by Lemma \ref{lemma-cas2}, we know that $CAS1$ only
+duplicates an existing $Terminal$, it can not be the cause for a failing
+$CAS5$. This leaves only two cases in which $CAS5$ can fail:
 
 \begin{itemize}
 \item \textbf{Case 1:} Another thread has already completed $CAS5$.
@@ -1744,62 +1766,68 @@ $append(elem)$ operation after the current thread completes the read of
 $currobj$. In this  case, $CAS5$ can fail because $CAS2$ might have  completed
 before, in which case, it inserts a new $Elem$ object $elem$  into location
 $idx$.
-
+\qed
 \end{itemize}
+\end{proof}
 
 %==============================
-% LEMMA 7 (SEAL: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
+% Lemma \ref{lemma-finite-steps-consistency-change} (SEAL: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
 %==============================
 
-\textbf{Lemma 7}. \textit{After invoking $seal(size)$, a consistency changing
-instruction will be completed after a finite number of steps, or the initial
-invocation of $seal(size)$ completes.}
+\begin{lemma}[Finite Steps Before Consistency Change]\label{lemma-finite-steps-consistency-change}
+After invoking \verb=seal(size)=, a consistency changing instruction will be
+completed after a finite number of steps, or the initial invocation of
+\verb=seal(size)= completes.
+\end{lemma}
 
-\textit{Proof}. The $seal$ operation can be restarted in two scenarios. 
+\begin{proof}
+The \verb=seal= operation can be restarted in two scenarios. 
 
 \begin{itemize}
 
 \item \textbf{Case 1:} The check $idx \leq LASTELEMPOS$ succeeds, indicating
 that we are at a valid location in the current block $b$, but the object at
 the current index location $idx$ is of type $Elem$, not $Terminal$, causing a
-recursive call to $seal$ with the same size $size$.
+recursive call to \verb=seal= with the same size $size$.
 
 In this case, we begin by showing that the atomic write of $idx+1$ to
 $b.index$, required to iterate through the block $b$ for the recursive call to
-$seal$, will be correctly incremented after a finite number of steps. 
+\verb=seal=, will be correctly incremented after a finite number of steps. 
 
 Therefore, by both the guarantee that, in a finite number of steps, $b.index$
-will eventually be correctly incremented as we saw in Lemma 9, as well as by
-$INV1$ we know that the original invocation of $seal$ will correctly iterate
-through $b$ until a $Terminal$ is found. Thus, we know that the call to
-$tryWriteSeal$ will be invoked, and by both Lemma 4 and Lemma 5, we know that
-either $tryWriteSeal$, will successfully complete in a finite number of steps,
-in turn successfully completing $seal(size)$, or $CAS2$, another consistency
-changing operation will successfully complete.
+will eventually be correctly incremented as we saw in Lemma 
+\ref{lemma-write2-write3}, as well as by $INV1$ we know that the original invocation of
+\verb=seal= will correctly iterate through $b$ until a $Terminal$ is found.
+Thus, we know that the call to \verb=tryWriteSeal= will be invoked, and by
+both Lemma \ref{lemma-finite-steps-state-change} and Lemma \ref{lemma-append},
+we know that either \verb=tryWriteSeal=, will successfully complete in a
+finite number of steps, in turn successfully completing \verb=seal(size)=, or
+$CAS2$, another consistency changing operation will successfully complete.
 
 \item \textbf{Case 2:} The check $idx \leq LASTELEMPOS$ fails, indicating that
-we must move on to the next block, causing first a call to $expand$ followed
-by a recursive call to $seal$ with the same size $size$. 
+we must move on to the next block, causing first a call to \verb=expand= followed
+by a recursive call to \verb=seal= with the same size $size$. 
 
 We proceed by showing that after a finite number of steps, we must end up in
 Case 1, which we have just showed itself completes in a finite number of
 steps, or that a consistency change must've already occurred. 
 
-By Lemma 2, we know that an invocation of $expand$ returns after a finite
-number of steps, and $pool.current$ is updated to point to a subsequent block.
+By Lemma \ref{lemma-expand}, we know that an invocation of \verb=expand=
+returns after a finite number of steps, and $pool.current$ is updated to point
+to a subsequent block.
 
-If we are in the recursive call to $seal$, and the $idx \leq LASTELEMPOS$
+If we are in the recursive call to \verb=seal=, and the $idx \leq LASTELEMPOS$
 condition is $false$, trivally, a consistency changing operation must have
 occurred, as, the only way for the condition to evaluate to $true$ is through
 a consistency changing operation, in the case that a block has been created
-during an invocation to $append$, for example.
+during an invocation to \verb=append=, for example.
 
 % In the case, where after the invocation $expand$, but before the read of $b$
-% ($READ(pool.current)$) in the recursive call to $seal$, we have that
+% ($READ(pool.current)$) in the recursive call to \verb=seal=, we have that
 % $current.index > LASTELEMPOS$, the a consistency change must have occurred.
 % That is, another thread has already updated $pool.current$ by a different
 % invocation to $expand$, which means that, in the meantime, an element has
-% already been inserted via $append$. 
+% already been inserted via \verb=append=. 
 
 % Trivally, a consistency changing operation must have occurred, as, the only
 % way for $current.index > LASTELEMPOS$ to evaluate to $true$ is if a block .
@@ -1808,69 +1836,77 @@ during an invocation to $append$, for example.
 % % change is via $WRITE1$ which occurs only if $CAS2$ succeeds, a consistency
 % % changing instruction must have completed.
 
-Otherwise, if we are in the recursive call to $seal$, and the $idx \leq
-LASTELEMPOS$ condition evaluates to $true$, we enter Case 1, which we just
+Otherwise, if we are in the recursive call to \verb=seal=, and the $idx \leq LASTELEMPOS$ 
+condition evaluates to $true$, we enter Case 1, which we just
 showed will successfully complete in a finite number of steps.
 
 \end{itemize}
-
-
-%==============================
-% LEMMA 8 (DOFORALL: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
-%==============================
-
-\textbf{Lemma 8}. \textit{After invoking $doForAll(fun)$, a consistency
-changing instruction will be completed after a finite number of steps.}
-
-We omit the proof for $doForAll$ since it proceeds in the exactly the same way
-as does the proof for $seal$ in Lemma 7.
-
-%==============================
-% LEMMA 9, WRITE2 AND WRITE3
-%==============================
-
-\textbf{Lemma 9}. \textit{After updating $b.index$ using $WRITE2$ or $WRITE3$, 
-$b.index$ is guaranteed to be incremented after a finite number of STEPS}.
-
-\textit{Proof}. For some index, $idx$, both calls to $WRITE2$ and $WRITE3$
-attempt to write $idx+1$ to $b.index$. In both cases, it's possible that
-another thread could complete either $WRITE2$ or $WRITE3$, once again writing
-$idx$ to $b.index$ after the current thread has completed, in effect
-overwriting the current thread's write with $idx+1$. By inspection of the
-pseudocode, both $WRITE2$ and $WRITE3$ will be repeated if $b.index$ has not
-been incremented. However, since the number of threads operating on the
-FlowPool is finite, $p$, we are guaranteed that in the worst case, this
-scenario can repeat at most $p$ times, before a write correctly updates
-$b.index$ with $idx+1$.
 \qed
+\end{proof}
 
 %==============================
-% LEMMA 10
+% Lemma \ref{lemma-foreach} (FOREACH: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
 %==============================
 
-\textbf{Lemma 10}. \textit{Assume some concurrent operation is started. If
-some thread completes consistency changing CAS instruction, then some
-concurrent operation is guaranteed to be completed}.
+\begin{lemma}[Foreach]\label{lemma-foreach}
+After invoking \verb=foreach(fun)=, a consistency changing instruction will
+be completed after a finite number of steps.
+\end{lemma}
 
-\textit{Proof}. 
+We omit the proof for \verb=foreach= since it proceeds in the exactly the same way
+as does the proof for \verb=seal= in Lemma 
+\ref{lemma-finite-steps-consistency-change}.
+
+%==============================
+% Lemma \ref{lemma-write2-write3}, WRITE2 AND WRITE3
+%==============================
+
+\begin{lemma}[WRITE2 and WRITE3]\label{lemma-write2-write3}
+After updating $b.index$ using $WRITE2$ or $WRITE3$,  $b.index$ is guaranteed
+to be incremented after a finite number of steps.
+\end{lemma}
+
+\begin{proof}
+For some index, $idx$, both calls to $WRITE2$ and $WRITE3$ attempt to write
+$idx+1$ to $b.index$. In both cases, it's possible that another thread could
+complete either $WRITE2$ or $WRITE3$, once again writing $idx$ to $b.index$
+after the current thread has completed, in effect overwriting the current
+thread's write with $idx+1$. By inspection of the pseudocode, both $WRITE2$
+and $WRITE3$ will be repeated if $b.index$ has not been incremented. However,
+since the number of threads operating on the FlowPool is finite, $p$, we are
+guaranteed that in the worst case, this scenario can repeat at most $p$ times,
+before a write correctly updates $b.index$ with $idx+1$.
+\qed
+\end{proof}
+
+%==============================
+% Lemma \ref{lemma-operation-completes}
+%==============================
+
+\begin{lemma}\label{lemma-operation-completes}
+Assume some concurrent operation is started. If some thread completes
+consistency changing CAS instruction, then some concurrent operation is
+guaranteed to be completed.
+\end{lemma}
+
+\begin{proof}
 % By Lemma X and Y, we know that consistency changing
 % instructions $CAS2$, $CAS5$, and $CAS6$ are guaranteed to at some point
 % complete.
 
 By trival inspection of the pseudocode, if $CAS2$ successfully completes on
 some thread, then that thread is guaranteed to complete the corresponding
-invocation of $append$ in a finite number of steps.
+invocation of \verb=append= in a finite number of steps.
 % we don't say anything about WRITE1 here because it's guaranteed to succeed, so it's trivial.
 
 Likewise by trivial inspection, if $CAS5$ successfully completes on some
-thread, then by Lemma 4, $tryWriteSeal$ is guaranteed to complete in a finite
-number of steps, and therefore, that thread is guaranteed to complete the
-corresponding invocation of $seal$ in a finite number of steps.
+thread, then by Lemma \ref{lemma-finite-steps-state-change},
+\verb=tryWriteSeal= is guaranteed to complete in a finite number of steps, and
+therefore, that thread is guaranteed to complete the corresponding invocation
+of \verb=seal= in a finite number of steps.
 
 The case for $CAS6$ is omitted since it follows the same steps as for the case
 of $CAS5$
-
-\pagebreak
-
+\end{proof}
 
 \end{document}
