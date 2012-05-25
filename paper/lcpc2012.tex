@@ -137,9 +137,9 @@ Adding elements to the pool -- this is the basic operation.
 \textbf{Foreach and fold.}
 A pool containing a set of elements is of little use if the elements
 cannot be manipulated in some manner.
-One of the basic data-structure operations is element traversal,
+One of the basic data structure operations is element traversal,
 often provided by iterators or streams -- stateful
-objects storing the current position in the data-structure.
+objects storing the current position in the data structure.
 Since they can be manipulated by several threads, they allow
 nondeterministic executions.
 
@@ -178,8 +178,7 @@ expressive than \verb=foreach=.
 The \verb=foreach= can be implemented using \verb=fold=, but not vice versa,
 due to the absence of side-effects.
 
-\subsection{Builders}
-
+\textbf{Builders.}
 GC problem.
 To solve this -- introduce builders -- anybody desiring to write into
 the flowpool must create a builder first.
@@ -191,8 +190,7 @@ subsequently added elements - doing so would break determinism.
 % the foreach callbacks... but we still need a reference to add new
 % elements.
 
-\subsection{Seal}
-
+\textbf{Seal.}
 To resolve GC issue on callbacks, and to ensure determinism, we have the `seal` operation.
 
 % Plus, at some point we want to release callbacks as well -- we do not
@@ -203,10 +201,26 @@ To avoid nondeterminism, there has to be some sort of on agreement on the
 state of the pool when it is sealed. One convenient and sufficient information
 to make `seal` deterministic is the expected size of the pool.
 
-\subsection{Monadic Operations}
+finally -- seal lets us know when a fold can complete
 
-Show we can build higher-level combinators (map, flatMap, generators,
-either, etc.)
+\textbf{Higher-level operations.}
+We now show how the basic abstractions above can be used
+to build higher-level abstractions.
+To begin with, in addition to a regular FlowPool constructor, it is
+convenient to have generators which create certain types of pools.
+In a dataflow graph FlowPools created using generators
+are source nodes.
+As a simple example, \verb=tabulate= creates a sequence of elements
+by applying a user-specified function \verb=f= to each natural number.
+One can imagine more complicated generators, adding elements from a
+network socket or a file.
+
+Generator \verb=tabulate= starts by creating a FlowPool of an
+arbitrary type \verb=T= and creating its builder instance.
+It then starts an asynchronous computation using the \verb=future=
+construct, which recursively applies \verb=f= to each number and
+appends it to the builder.
+Finally, the reference to the pool is returned.
 
 \noindent
 \begin{minipage}[b]{4.2 cm}
@@ -243,13 +257,13 @@ def map[S](f: T => S)
 \begin{minipage}[b]{2.5 cm}
 \begin{alltt}
 {\scriptsize
-def foreach[U]
-  (f: T => U)
-  fold(()) \{
-    (unit, x) =>
+def foreach[U](f: T => U)
+  fold(0) \{
+    (acc, x) =>
     f(x)
-    ()
+    acc + 1
   \}
+
 
 
 
@@ -257,15 +271,33 @@ def foreach[U]
 \end{alltt}
 \end{minipage}
 
-What about the `fold` patterns? \sout{How can you get back reduction of all
-the values in the flowpool if at any point an additional value could
-potentially arrive.} Show how this can be used to implement reducing (we
-assume existence of promises in the framework).
+One typical higher-level collection operations \verb=map= is used to
+map each element of a dataset to produce new one.
+This corresponds to chaining the nodes in the dataflow graph.
+We implement it by traversing the elements of \verb=this= FlowPool and
+appending each mapped element to the builder.
+The \verb=for= loop is the syntactic sugar for calling the
+\verb=foreach= method on \verb=this=.
+We assume that the \verb=foreach= return value \verb=Future[Int]=
+has \verb=map= and \verb=flatMap= operations, executed
+once the future value becomes available.
+The \verb=Future.map= above ensures that if the \verb=this= pool is ever
+sealed, the mapped pool is sealed to the appropriate size.
 
-Show how seal makes fold possible.
+As argued before, the \verb=foreach= can be expressed in terms of a
+\verb=fold= by accumulating the number of elements and invoking the
+callback \verb=f= each time.
+But we argue that some patterns cannot be expressed in terms of a mere
+\verb=foreach=.
+The \verb=filter= combinator filters out the elements for which a
+specified predicate does not hold.
+The part where it appends elements to a new pool can proceed as
+before, but the seal needs to know the exact number of elements added.
+The accumulator of the \verb=fold= is thus used to track how many
+elements were added.
 
 \noindent
-\begin{minipage}[b]{4.2 cm}
+\begin{minipage}[b]{4 cm}
 \begin{alltt}
 {\scriptsize
 def filter
@@ -281,7 +313,7 @@ def filter
   p
 }
 \end{alltt}
-\end{minipage}\begin{minipage}[b]{4.6 cm}
+\end{minipage}\begin{minipage}[b]{4.3 cm}
 \begin{alltt}
 {\scriptsize
 def flatMap[S]
@@ -298,32 +330,46 @@ def flatMap[S]
 }
 \end{alltt}
 \end{minipage}
-\begin{minipage}[b]{3.4 cm}
+\begin{minipage}[b]{4 cm}
 \begin{alltt}
 {\scriptsize
 def either[T]
-  (a: FlowPool[T],
-   b: FlowPool[T])
+  (q: FlowPool[T],
+   r: FlowPool[T])
   val p = new FlowPool[T]
   val b = p.builder
-  for (x <- a) b << x
-  for (y <- b) b << y
+  val f = for (x <- q) b << x
+  val g = for (y <- r) b << y
+  for (s1 <- f; s2 <- g)
+    b.seal(s1 + s2)
   p
-
-
 
 }
 \end{alltt}
 \end{minipage}
 
-Note that even if we could somehow merge the two foreach loops, we
-could write a zip. But we cannot do this, since that would be
-nondeterministic.
-Zip is more suited for data structures with deterministic ordering,
-such as Oz streams, but either is nondeterministic there.
+The \verb=flatMap= operation retrieves a pool for each element of
+\verb=this= pool and adds its elements to the resulting pool.
+Given two FlowPools, it can be used to generate the cartesian product
+of their elements.
+The implementation is similar to that of the \verb=filter=,
+but we reduce on the future values of the sizes, because each
+intermediate pool may not be sealed.
+%Implementing this operation is sufficient to show that a FlowPool is
+%a monad.
+The \verb=either= operation produces a new pool which has elements of
+both pool \verb=q= and pool \verb=r=.
 
-\sout {Grammar (concise). point out that builder was left out in the grammar,
-etc, as a memory hack i.e. implementation detail}
+The last two operations correspond to joining nodes in the dataflow
+graph.
+Note that if we could somehow merge the two different \verb=foreach=
+loops to implement the third join type \verb=zip=, we would
+yield a nondeterministic operation.
+The programming model does not allow us to do so, however.
+The \verb=zip= is more suited for data structures with deterministic ordering,
+such as Oz streams -- which would in turn have a nondeterministic \verb=either=.
+
+
 
 \section{Implementation}
 
@@ -537,9 +583,10 @@ def asyncFor(f: Elem => Unit, b: Block, idx: Int)
 We now describe the FlowPool and its basic operations.
 In doing so, we omit the details not relevant to the
 algorithm\footnote{Specifically the builder abstraction and the \texttt{fold}
-operation. The \texttt{fold} can be implemented trivially in our model
-using a side-effecting accumulator variable.} and
-focus on a high-level description of a non-blocking data structure.
+operation. The \texttt{fold} can be implemented using \texttt{foreach}
+in an imperative model using a side-effecting accumulator.}
+and focus on a high-level description of a non-blocking
+data structure.
 One straightforward way to implement a growing pool is to use a linked
 list of nodes that wrap elements.
 As we are concerned about the memory footprint and cache-locality, we
