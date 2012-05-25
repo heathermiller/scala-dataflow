@@ -1693,7 +1693,8 @@ strictly increases after some finite number of steps.
 \begin{lemma}[CAS2]\label{lemma-cas2} After invoking \verb=append(elem)=, if
 $CAS_{append-inn}$ fails, then some thread has successfully completed 
 $CAS_{append-inn}$ or $CAS_{seal}$ (or likewise, $CAS_{foreach}$) after some 
-finite number of steps}. \end{lemma}
+finite number of steps.
+\end{lemma}
 
 \begin{proof}
 First, we show that a thread attempting to complete $CAS_{append-inn}$ can't fail due to a
