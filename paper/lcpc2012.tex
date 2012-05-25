@@ -91,6 +91,7 @@ Implementing correct and deterministic parallel programs is hard (additional mot
 
 \section{Introduction}
 
+
 \textbf{Obligatory multicore motivation paragraph.} Multicore revolution is here, yadda yadda.
 
 \textbf{Lock-free is better, and why.} 
@@ -123,18 +124,30 @@ and fewer GC cycles
 
 \section{Model of Computation}
 
-Producer-consumer parallelism. Description and image of queue/stream of values, producer, and multiple consumers. (Description of how parallelism is achieved)
+Producer-consumer parallelism. Description and image of queue/stream of
+values, producer, and multiple consumers. (Description of how parallelism is
+achieved)
 
 Want to build directed dependency graph. This ensures that we have some parallelism in the model. 
+Nodes in dependency graph should be first class model.
 
 What do we mean by determinism? Concise but rather formal description.
+Talk about ordering here. Deterministic, but no guarantee on ordering.
 
-\section{Programming Model}
+\section{Programming Interface}
+\label{sec:programming-interface}
 
-\subsection{Append}
-Adding elements to the pool -- this is the basic operation.
+A FlowPool can be viewed as a concurrent pool data structure, and as such has
+no guarantees on ordering. In this section, we describe the semantics of a
+handful of functional combinators and other basic operations defined on
+FlowPools.
 
-\subsection{Foreach}
+\noindent \textbf{Append (\texttt{<<})}. The most fundamental of all
+operations of on FlowPools is the append operation. As its name suggests, it
+simply takes an argument of type \texttt{Elem} and appends it to a given
+FlowPool. 
+
+\noindent \textbf{Foreach}.
 We have to do something with the added elements -- we need a foreach.
 
 % notice -- we could have a stream returned from the pool instead and
@@ -183,9 +196,6 @@ Show how seal makes reduce possible.
 \sout {Grammar (concise). point out that builder was left out in the grammar,
 etc, as a memory hack i.e. implementation detail}
 
-\section{Implementation}
-
-
 \begin{figure}
 
 \centering
@@ -232,7 +242,6 @@ NOSEAL = -1
 \caption{FlowPool data-types}
 \label{f-datatypes}
 \end{figure}
-
 
 \setlength\linenumbersep{2pt}
 
@@ -393,6 +402,7 @@ def asyncFor(f: Elem => Unit, b: Block, idx: Int)
 \label{f-pseudo}
 \end{figure}
 
+\section{Implementation}
 
 We now describe the FlowPool and its basic operations.
 In doing so, we omit the details not relevant to the algorithm
