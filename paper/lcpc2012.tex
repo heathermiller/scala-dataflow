@@ -174,7 +174,7 @@ Show we can build higher-level combinators (map, flatMap, generators,
 either, etc.)
 
 
-\begin{minipage}[b]{4 cm}
+\begin{minipage}[b]{3.75 cm}
 \begin{alltt}
 {\scriptsize
 def iterate[T]
@@ -211,55 +211,126 @@ def tabulate[T]
 def map[S](f: T => S)
   val p = new FlowPool[S]
   val b = p.builder
-  val f = for (x <- this) \{
+  for (x <- this) \{
     b << f(x)
-  \}
-  f map \{
+  \} map \{
     sz => b.seal(sz)
   \}
   p
+
 }
 \end{alltt}
 \end{minipage}
 
-What about the `reduce` patterns? \sout{How can you get back reduction of all
+What about the `fold` patterns? \sout{How can you get back reduction of all
 the values in the flowpool if at any point an additional value could
 potentially arrive.} Show how this can be used to implement reducing (we
 assume existence of promises in the framework).
 
-\begin{minipage}[b]{4 cm}
+\begin{minipage}[b]{2.5 cm}
 \begin{alltt}
 {\scriptsize
-def reduce(p: T => Boolean)
-  TODO
+def foreach[U]
+  (f: T => U)
+  fold(()) \{
+    (unit, x) =>
+    f(x)
+    ()
+  \}
+
+
+
 }
 \end{alltt}
 \end{minipage}
-\begin{minipage}[b]{4 cm}
+\begin{minipage}[b]{4.25 cm}
 \begin{alltt}
 {\scriptsize
 def filter(pred: T => Boolean)
   val p = new FlowPool[T]
   val b = p.builder
-  reduce(0) \{ (acc, x) =>
+  fold(0) \{ (acc, x) =>
     if pred(x) \{
       b << x
       1
     \} else 0
-  \}
+  \} map \{ sz => b.seal(sz) \}
   p
 }
 \end{alltt}
-\end{minipage}\begin{minipage}[b]{4 cm}
+\end{minipage}\begin{minipage}[b]{4.5 cm}
 \begin{alltt}
 {\scriptsize
 def flatMap[S](f: T => FlowPool[S])
-  TODO
+  val p = new FlowPool[S]
+  val b = p.builder
+  fold(future(0)) \{ (af, x) =>
+    val sf = for (y <- f(x))
+      b << y
+    for (a <- af; s <- sf)
+      yield a + s
+  \} map \{ sz => b.seal(sz) \}
+  p
 }
 \end{alltt}
 \end{minipage}
 
-Show how seal makes reduce possible.
+Show how seal makes fold possible.
+
+\begin{minipage}[b]{3.4 cm}
+\begin{alltt}
+{\scriptsize
+def either[T]
+  (a: FlowPool[T],
+   b: FlowPool[T])
+  val p = new FlowPool[T]
+  val b = p.builder
+  for (x <- a) b << x
+  for (y <- b) b << y
+  p
+
+
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{3.9 cm}
+\begin{alltt}
+{\scriptsize
+def exists
+  (pred: T => Boolean)
+  val p = new FlowPool[T]
+  val b = p.builder
+  fold(false) \{
+    (acc, x) =>
+    acc \(\vee\) pred(x)
+  \}
+  p
+
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{4.7 cm}
+\begin{alltt}
+{\scriptsize
+def flatten[S]
+  (q: FlowPool[FlowPool[S]])
+  val p = new FlowPool[S]
+  val b = p.builder
+  q.fold(future(0)) \{ (af, r) =>
+    val sf = for (x <- r) b << x
+    for (a <- af; s <- sf)
+      yield a + s
+  \} map \{ sz => b.seal(sz) \}
+  p
+}
+\end{alltt}
+\end{minipage}
+
+Note that even if we could somehow merge the two foreach loops, we
+could write a zip. But we cannot do this, since that would be
+nondeterministic.
+Zip is more suited for data structures with deterministic ordering,
+such as Oz streams, but either is nondeterministic there.
 
 \sout {Grammar (concise). point out that builder was left out in the grammar,
 etc, as a memory hack i.e. implementation detail}
