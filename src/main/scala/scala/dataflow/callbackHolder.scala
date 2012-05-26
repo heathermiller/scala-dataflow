@@ -27,6 +27,15 @@ final case class Seal[T](size: Int, callbacks: CallbackList[T]) extends Callback
   def insertedCallback[U <: T](el: CallbackElem[U]) = Seal(size, callbacks.insertedCallback(el))
 }
 
+final case class SealTag[T](
+    p: MLSealHolder.Proposition,
+    callbacks: CallbackList[T]
+) extends CallbackHolder[T] {
+  def insertedCallback[U <: T](el: CallbackElem[U]) =
+    SealTag(p, callbacks.insertedCallback(el))
+  def toSeal(size: Int) = Seal(size, callbacks)
+}
+
 final case object MustExpand
 
 final case class Next(val block: Array[AnyRef]) {

@@ -3,18 +3,25 @@ package scala.dataflow
 import scala.annotation.tailrec
 import jsr166y._
 
-final class MultiLaneBuilder[T](bls: Array[Array[AnyRef]]) extends Builder[T] {
+final class MultiLaneBuilder[T](
+  bls: Array[Array[AnyRef]],
+  sealHolder: MLSealHolder
+) extends Builder[T] {
+
+  import MLSealHolder._
+
   @volatile private var positions = bls.map(bl => Next(bl))
   
   private val unsafe = getUnsafe()
   private val ARRAYOFFSET      = unsafe.arrayBaseOffset(classOf[Array[AnyRef]])
   private val ARRAYSTEP        = unsafe.arrayIndexScale(classOf[Array[AnyRef]])
-  private val BLOCKFIELDOFFSET = unsafe.objectFieldOffset(classOf[SingleLaneBuilder[_]].getDeclaredField("position"))
   @inline private def RAWPOS(idx: Int) = ARRAYOFFSET + idx * ARRAYSTEP
   @inline private def CAS(bl: Array[AnyRef], idx: Int, ov: AnyRef, nv: AnyRef) =
     unsafe.compareAndSwapObject(bl, RAWPOS(idx), ov, nv)
-  def CAS_BLOCK_PTR(ov: Next, nv: Next) =
-    unsafe.compareAndSwapObject(this, BLOCKFIELDOFFSET, ov, nv)
+  private val SH_OFFSET = unsafe.objectFieldOffset(
+    classOf[MLSealHolder].getDeclaredField("s"))
+  @inline private def CAS_SH(ov: State, nv: State) = 
+    unsafe.compareAndSwapObject(this, SH_OFFSET, ov, nv)
   
   @tailrec
   def <<(x: T): this.type = {
@@ -42,42 +49,115 @@ final class MultiLaneBuilder[T](bls: Array[Array[AnyRef]]) extends Builder[T] {
     }
   }
   
+  @tailrec
   def seal(size: Int) {
-    // TODO
-    // val p = /*READ*/position
-    // val curblock = p.block
-    // val pos = /*READ*/p.index
-    // seal(size, curblock, pos)
+    // TODO like this, seal is not linearizable
+    
+    val st = /*READ*/sealHolder.s
+    st match {
+      case Unsealed => {
+        val ns = Proposition(size)
+        if (!CAS_SH(st, ns)) seal(size)
+        else {
+          helpSeal(ns)
+          // We succeeded. Our job now to clean up SealTags
+          // TODO
+        }
+      }
+      case p: Proposition => helpSeal(p)
+      case MLSeal(sz) if size != sz =>
+        sys.error("already sealed at %d (!= %d)".format(sz, size))
+    }
+
+  }
+
+  private def helpSeal(p: Proposition) {
+    var sizes: Int = 0
+    
+    for ((pos,bli) <- positions zipWithIndex) {
+      sealTag(p, bli, /*READ*/pos.block, /*READ*/pos.index) match {
+        case Some(v) => sizes = sizes + v
+        case None => return
+      }
+    }
+
+    
+    if (sizes <= p.size) {
+      // At this point we know that the seal MUST succeed
+      val nv = new MLSeal(p.size, p.size - sizes)
+      CAS_SH(p, nv)
+    } else {
+      // At this point we know that the seal MUST fail
+      CAS_SH(p, Unsealed)
+      sys.error("Seal size too small (total size %d>%d)".format(
+        sizes, p.size))
+    }
+
   }
   
-  //@tailrec
-  private def seal(size: Int, curblock: Array[AnyRef], pos: Int) {
-    // TODO
-    /*
+  @tailrec
+  private def sealTag(
+      p: Proposition,
+      bli: Int,
+      curblock: Array[AnyRef],
+      pos: Int
+    ): Option[Int] = {
+
     import FlowPool._
 
     curblock(pos) match {
       case MustExpand =>
         expand(curblock, bli)
+        sealTag(p, bli, curblock, pos)
       case Next(block) =>
-        seal(size, block, 0)
+        sealTag(p, bli, block, 0)
       case cbl: CallbackList[_] =>
         if (pos < LAST_CALLBACK_POS) {
-          val total = totalElems(curblock, pos)
-          val nseal =
-            if (total < size) Seal(size, cbl)
-            else if (total == size) Seal(size, null)
-            else sys.error("sealing with %d < number of elements in flow-pool %d".format(size, total))
-          if (CAS(curblock, pos, cbl, nseal)) {
-            applyCallbacks(cbl)
-          } else seal(size, curblock, pos)
-        } else seal(size, curblock, pos + 1)
+          val cnt = totalElems(curblock, pos)
+          val nv = SealTag(p, cbl)
+          if (cnt > p.size)
+            sys.error("Seal size too small " +
+                      "(found %d>%d in a block)".format(cnt,p.size))
+          else if (CAS(curblock, pos, cbl, nv)) Some(cnt)
+          else sealTag(p, bli, curblock, pos)
+        } else sealTag(p, bli, curblock, pos + 1)
       case Seal(sz, _) =>
-        if (size != sz) sys.error("already sealed at %d (!= %d)".format(sz, size))
+        /*READ*/sealHolder.s match {
+          case MLSeal(ssz) =>
+            if (sz == ssz) None
+            else sys.error("Seal failed (by other thread)")
+          case _ =>
+            sys.error("MultiLaneFlowPool in inconsistent" +
+                      "state. (Seal found without global seal)")
+        }
+      case ov @ SealTag(op, cbl) =>
+        val cnt = totalElems(curblock, pos)
+        if (op eq p) Some(cnt)
+        else {
+          /*READ*/sealHolder.s match {
+            case gpr: Proposition =>
+              if (gpr ne p) sys.error("Seal failed (by other thread)")
+              else {
+                val nv = SealTag(p, cbl)
+                if (cnt > p.size)
+                  sys.error("Seal size too small (found %d>" +
+                            "%d in a block)".format(cnt,p.size))
+                else if (CAS(curblock, pos, ov, nv))
+                  Some(cnt)
+                else
+                  sealTag(p, bli, curblock, pos)
+              }
+            case MLSeal(sz) => 
+              val nv = ov.toSeal(cnt)
+              if (CAS(curblock, pos, ov, nv)) None
+              else sealTag(p, bli, curblock, pos)
+            case Unsealed =>
+              sys.error("Seal failed (by other thread)")
+          }
+        }
       case _ =>
-        seal(size, curblock, pos + 1)
+        sealTag(p, bli, curblock, pos + 1)
     }
-    */
   }
   
   private def totalElems(curblock: Array[AnyRef], pos: Int) = {
