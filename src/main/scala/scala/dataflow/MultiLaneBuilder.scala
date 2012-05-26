@@ -26,9 +26,7 @@ final class MultiLaneBuilder[T](
   @tailrec
   def <<(x: T): this.type = {
     val bli = getblocki
-    val position = positions(bli)
-
-    val p = /*READ*/position
+    val p = /*READ*/positions(bli)
     val curblock = p.block
     val pos = /*READ*/p.index
     val npos = pos + 1
@@ -51,46 +49,51 @@ final class MultiLaneBuilder[T](
   
   @tailrec
   def seal(size: Int) {
-    // TODO like this, seal is not linearizable
-    
     val st = /*READ*/sealHolder.s
     st match {
       case Unsealed => {
         val ns = Proposition(size)
         if (!CAS_SH(st, ns)) seal(size)
         else {
-          helpSeal(ns)
-          // We succeeded. Our job now to clean up SealTags
-          // TODO
+          // Check if we succeeded. SealTags will be cleaned up by writers
+          if (!helpSeal(ns)) sys.error("Seal failed")
         }
       }
-      case p: Proposition => helpSeal(p)
+      case p: Proposition => {
+        // Another seal is running. Help it finish. If it succeeds, this one fails.
+        // Otherwise --> retry
+        if (helpSeal(p)) sys.error("Seal failed")
+        else seal(size)
+      }
       case MLSeal(sz) if size != sz =>
         sys.error("already sealed at %d (!= %d)".format(sz, size))
     }
 
   }
 
-  private def helpSeal(p: Proposition) {
+  /**
+   * helps sealing (any thread may call this)
+   * @return true if succeess, false if failure
+   */
+  private def helpSeal(p: Proposition): Boolean = {
     var sizes: Int = 0
     
     for ((pos,bli) <- positions zipWithIndex) {
       sealTag(p, bli, /*READ*/pos.block, /*READ*/pos.index) match {
-        case Some(v) => sizes = sizes + v
-        case None => return
+        case Left(v) => sizes = sizes + v
+        case Right(success) => return success
       }
     }
 
-    
     if (sizes <= p.size) {
       // At this point we know that the seal MUST succeed
       val nv = new MLSeal(p.size, p.size - sizes)
       CAS_SH(p, nv)
+      true
     } else {
       // At this point we know that the seal MUST fail
       CAS_SH(p, Unsealed)
-      sys.error("Seal size too small (total size %d>%d)".format(
-        sizes, p.size))
+      false
     }
 
   }
@@ -101,7 +104,7 @@ final class MultiLaneBuilder[T](
       bli: Int,
       curblock: Array[AnyRef],
       pos: Int
-    ): Option[Int] = {
+    ): Either[Int,Boolean] = {
 
     import FlowPool._
 
@@ -115,44 +118,35 @@ final class MultiLaneBuilder[T](
         if (pos < LAST_CALLBACK_POS) {
           val cnt = totalElems(curblock, pos)
           val nv = SealTag(p, cbl)
-          if (cnt > p.size)
-            sys.error("Seal size too small " +
-                      "(found %d>%d in a block)".format(cnt,p.size))
-          else if (CAS(curblock, pos, cbl, nv)) Some(cnt)
+          if (cnt > p.size) Right(false)
+          else if (CAS(curblock, pos, cbl, nv)) Left(cnt)
           else sealTag(p, bli, curblock, pos)
         } else sealTag(p, bli, curblock, pos + 1)
       case Seal(sz, _) =>
         /*READ*/sealHolder.s match {
-          case MLSeal(ssz) =>
-            if (sz == ssz) None
-            else sys.error("Seal failed (by other thread)")
-          case _ =>
+          case MLSeal(ssz) => Right(sz == ssz)
+          case _ => 
             sys.error("MultiLaneFlowPool in inconsistent" +
                       "state. (Seal found without global seal)")
         }
       case ov @ SealTag(op, cbl) =>
         val cnt = totalElems(curblock, pos)
-        if (op eq p) Some(cnt)
+        if (op eq p) Left(cnt)
         else {
           /*READ*/sealHolder.s match {
             case gpr: Proposition =>
-              if (gpr ne p) sys.error("Seal failed (by other thread)")
+              if (gpr ne p) Right(false)
               else {
                 val nv = SealTag(p, cbl)
-                if (cnt > p.size)
-                  sys.error("Seal size too small (found %d>" +
-                            "%d in a block)".format(cnt,p.size))
-                else if (CAS(curblock, pos, ov, nv))
-                  Some(cnt)
-                else
-                  sealTag(p, bli, curblock, pos)
+                if (cnt > p.size) Right(false)
+                else if (CAS(curblock, pos, ov, nv)) Left(cnt)
+                else sealTag(p, bli, curblock, pos)
               }
             case MLSeal(sz) => 
               val nv = ov.toSeal(cnt)
-              if (CAS(curblock, pos, ov, nv)) None
+              if (CAS(curblock, pos, ov, nv)) Right(true)
               else sealTag(p, bli, curblock, pos)
-            case Unsealed =>
-              sys.error("Seal failed (by other thread)")
+            case Unsealed => Right(false)
           }
         }
       case _ =>
@@ -186,56 +180,109 @@ final class MultiLaneBuilder[T](
     }
   }
   
-  
+  @tailrec
   private def tryAdd(x: T, bli: Int): Boolean = {
     import FlowPool._
 
-    val position = positions(bli)
-    
-    val p = /*READ*/position
+    val p = /*READ*/positions(bli)
     val curblock = p.block
     val pos = /*READ*/p.index
     val obj = curblock(pos)
 
+    val total = totalElems(curblock, pos)
+
     obj match {
-      case Seal(sz, null) => // flowpool sealed here - error
-        sys.error("Insert on a sealed structure.")
-      case MustExpand => // must extend with a new block
-        expand(curblock, bli)
-      case ne @ Next(_) => // the next block already exists - go to it
-        goToNext(ne, bli)
-      case cbh: CallbackHolder[_] => // a list of callbacks here - check if this is the end of the block
+      case Seal(sz, null) =>
+        // FlowPool sealed here - take another block
+        findFreeBlock match {
+          case Some(fbli) => tryAdd(x, fbli)
+          case None => sys.error("Insert on a sealed structure.")
+        }
+      case os @ Seal(sz, cbs) if sz <= total =>
+        // TODO --> we have issues here!
+        // Try to steal some slots
+        val gs = /*READ*/sealHolder.s.asInstanceOf[MLSeal]
+        val stolen = gs.stageSteal()
+        if (stolen == 0) {
+          // Close this Lane
+          CAS(curblock, pos, os, Seal(sz, null))
+        } else {
+          val ns = Seal(sz + stolen, cbs)
+          if (!CAS(curblock, pos, os, ns))
+            gs.revertSteal(stolen)
+        }; false
+      case MustExpand =>
+        // must extend with a new block
+        expand(curblock, bli); false
+      case ne @ Next(_) =>
+        // the next block already exists - go to it
+        goToNext(ne, bli); false
+      case t: SealTag[_] =>
+        // Need to remove tag (i.e. finish or abort seal)
+        resolveTag(t, curblock, pos); false
+      case cbh: CallbackHolder[_] =>
+        // a list of callbacks here - check if this is the end of the block
         val nextelem = curblock(pos + 1)
         nextelem match {
           case MustExpand =>
-            expand(curblock, bli)
+            expand(curblock, bli); false
           case ne @ Next(_) =>
-            goToNext(ne, bli)
+            goToNext(ne, bli); false
           case _: CallbackHolder[_] | null =>
             // current is Seal(sz, _ != null), next is not at the end
             // check size and append
             val curelem = curblock(pos)
             curelem match {
               case Seal(sz, cbs) =>
-                val total = totalElems(curblock, pos)
-                val nseal = if (total < (sz - 1)) curelem else Seal(sz, null)
-                if (CAS(curblock, pos + 1, nextelem, nseal)) {
+                if (CAS(curblock, pos + 1, nextelem, curelem)) {
                   if (CAS(curblock, pos, curelem, null)) {
                     p.index = pos + 1
                     applyCallbacks(cbh.callbacks)
-                    return true
-                  }
-                }
-              case _ =>
+                    true
+                  } else false
+                } else false
+              case _ => false
             }
-          case _ =>
+          case _ => false // Someone has written
         }
       case _ => // a regular object - advance
-        throw new Exception
         p.index = pos + 1
-        tryAdd(x, bli)
+        false
     }
-    false
+  }
+
+  private def findFreeBlock = {
+    // This only checks the current block. No advancing is done
+    @tailrec
+    def isFree(curblock: Array[AnyRef], pos: Int): Boolean = {
+      /*READ*/curblock(pos) match {
+        case Seal(_, null) => false
+        case _: CallbackList[_] | _: SealTag[_] | Seal => true
+        case _ => isFree(curblock, pos+1)
+      }
+    }
+
+    positions.zipWithIndex find {
+      case (/*READ*/p, bli) => 
+        val curblock = p.block
+        val pos = /*READ*/p.index
+        isFree(curblock,pos)
+    } map (_._2)
+  }
+
+  private def resolveTag[T](t: SealTag[T], curblock: Array[AnyRef], pos: Int) {
+    val st = /*READ*/sealHolder.s
+    st match {
+      case p: Proposition if (p eq t.p) =>
+        // Still sealing --> help
+        helpSeal(p)
+      case MLSeal(_) => 
+        // Seal succeeded --> confirm tag
+        CAS(curblock, pos, t, t.toSeal(totalElems(curblock, pos)))
+      case _ =>
+        // Something failed --> revert tag
+        CAS(curblock, pos, t, t.callbacks)
+    }
   }
   
   @tailrec
