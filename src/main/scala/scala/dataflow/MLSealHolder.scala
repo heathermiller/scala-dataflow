@@ -12,6 +12,18 @@ object MLSealHolder {
 
   def STEAL_CNT = 256
 
+  final class StealState(
+    val rem:    Int,
+    val stolen: Map[Int,Int] 
+  ) {
+    def stolenFor(bli: Int) = {
+      val nv = math.max(0, rem - STEAL_CNT)
+      new StealState(nv, stolen + (bli -> (rem - nv)))
+    }
+    def commitedFor(bli: Int) =
+      new StealState(rem, stolen - bli)
+  }
+
   sealed abstract class State
   
   final case class Proposition(val size: Int) extends State
@@ -21,36 +33,33 @@ object MLSealHolder {
   ) extends State {
 
     private val unsafe = getUnsafe()
-    private val REM_OFFSET =
-      unsafe.objectFieldOffset(classOf[MLSeal].getDeclaredField("remaining"))
-    private val STL_OFFSET =
-      unsafe.objectFieldOffset(classOf[MLSeal].getDeclaredField("remaining"))
-    @inline private def CAS(ov: Int, nv: Int) =
-      unsafe.compareAndSwapInt(this, REM_OFFSET, ov, nv)
+    private val SS_OFFSET =
+      unsafe.objectFieldOffset(classOf[MLSeal].getDeclaredField("stealState"))
+    @inline private def CAS_SS(ov: StealState, nv: StealState) =
+      unsafe.compareAndSwapObject(this, SS_OFFSET, ov, nv)
 
-    @volatile var remaining: Int = remain
-    @volatile var stealing: Int = 0
+    @volatile var stealState = new StealState(remain, Map.empty)
+
+    def stageSteal(bli: Int): Int = {
+      val st = /*READ*/stealState
+      
+      if (!st.stolen.contains(bli)) {
+        val nst = st.stolenFor(bli)
+        if (CAS_SS(st, nst))
+          nst.stolen(bli)
+        else
+          stageSteal(bli)
+      }
+
+      st.stolen(bli)
+    }
 
     @tailrec
-    def stageSteal(): Int = {
-      // TODO --> we have issues here! (how to steal without blocking and busy-waiting)
-      val cstl = /*READ*/stealing
-      val crem = /*READ*/remaining
-      if (crem > 0) {
-        val nv = math.max(0, crem - STEAL_CNT)
-        if (CAS(crem, nv)) crem - nv
-        else stageSteal()
-      } else 0
-    }
-
-
-    def commitSteal(c: Int) = {
-
-    }
-
-
-    def revertSteal(c: Int) = {
-
+    def commitSteal(bli: Int) {
+      val st = /*READ*/stealState
+      val nst = st.commitedFor(bli)
+      if (!CAS_SS(st,nst))
+        commitSteal(bli)
     }
 
   }

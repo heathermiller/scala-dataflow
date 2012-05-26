@@ -199,18 +199,18 @@ final class MultiLaneBuilder[T](
           case None => sys.error("Insert on a sealed structure.")
         }
       case os @ Seal(sz, cbs) if sz <= total =>
-        // TODO --> we have issues here!
-        // Try to steal some slots
+        // Prepare stealing some slots
+        val ns = os.stealing
+        CAS(curblock, pos, os, ns)
+        tryAdd(x,bli)
+      case os @ StealSeal(sz, cbs) =>
         val gs = /*READ*/sealHolder.s.asInstanceOf[MLSeal]
-        val stolen = gs.stageSteal()
-        if (stolen == 0) {
-          // Close this Lane
-          CAS(curblock, pos, os, Seal(sz, null))
-        } else {
-          val ns = Seal(sz + stolen, cbs)
-          if (!CAS(curblock, pos, os, ns))
-            gs.revertSteal(stolen)
-        }; false
+        val stolen = gs.stageSteal(bli)
+        val ns = os.stolen(stolen)
+
+        if (CAS(curblock, pos, os, ns))
+          gs.commitSteal(bli)
+        tryAdd(x,bli)
       case MustExpand =>
         // must extend with a new block
         expand(curblock, bli); false
