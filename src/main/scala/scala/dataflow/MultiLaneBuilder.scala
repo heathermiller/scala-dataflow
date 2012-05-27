@@ -87,8 +87,10 @@ final class MultiLaneBuilder[T](
 
     if (sizes <= p.size) {
       // At this point we know that the seal MUST succeed
-      val nv = new MLSeal(p.size, p.size - sizes)
-      CAS_SH(p, nv)
+      val rem = p.size - sizes
+      val nv = new MLSeal(p.size, rem)
+      if (CAS_SH(p, nv) && rem == 0)
+        finalizeSeals 
       true
     } else {
       // At this point we know that the seal MUST fail
@@ -276,7 +278,8 @@ final class MultiLaneBuilder[T](
           else
             applyCallbacks(cbs)
         case os @ SealTag(_, cbs) =>
-          if (!CAS(curblock, pos, os, Seal(totalElems(curblock, pos), null)))
+          val sz = totalElems(curblock, pos)
+          if (!CAS(curblock, pos, os, Seal(sz, null)))
             finalize(curblock, pos)
           else
             applyCallbacks(cbs)

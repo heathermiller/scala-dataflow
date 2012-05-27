@@ -19,7 +19,7 @@ class MultiLaneFlowPool[T](val lanes: Int) extends FlowPool[T] {
 
     // Note: Final sync of callback goes through SumFuture
     for (b <- initBlocks) {
-      val cbe = new CallbackElem(f, fut.complete _, CallbackNil, initBlocks(0), 0)
+      val cbe = new CallbackElem(f, fut.complete _, CallbackNil, b, 0)
       task(new RegisterCallbackTask(cbe))
     }
 
