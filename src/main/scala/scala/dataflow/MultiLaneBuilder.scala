@@ -300,7 +300,7 @@ final class MultiLaneBuilder[T](
     def isFree(curblock: Array[AnyRef], pos: Int): Boolean = {
       /*READ*/curblock(pos) match {
         case Seal(_, null) => false
-        case _: CallbackList[_] | _: SealTag[_] | Seal => true
+        case _: CallbackHolder[_] => true
         case _ => isFree(curblock, pos+1)
       }
     }
