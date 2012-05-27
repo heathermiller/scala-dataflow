@@ -21,22 +21,6 @@ trait FlowPool[T] {
     fut
   }
 
-  def map[S](f: T => S): FlowPool[S] = {
-    val fp = newPool[S]
-    val b  = fp.builder
-
-    doForAll { x =>
-      b << f(x)
-    } map { b.seal _ }
-
-    fp
-  }
-
-  def foreach[U](f: T => U) { doForAll(f) }
-
-  def fold[U >: T](z: U)(op: (U, U) => U): Future[U] =
-    mappedFold(z)(op)(x => x).map(_._2) 
-
   def filter(f: T => Boolean): FlowPool[T] = {
     val fp = newPool[T]
     val b  = fp.builder
@@ -61,6 +45,22 @@ trait FlowPool[T] {
     } map { 
       case (c,cfut) => cfut.map(b.seal _)
     }
+
+    fp
+  }
+
+  def foreach[U](f: T => U) { doForAll(f) }
+
+  def fold[U >: T](z: U)(op: (U, U) => U): Future[U] =
+    mappedFold(z)(op)(x => x).map(_._2) 
+
+  def map[S](f: T => S): FlowPool[S] = {
+    val fp = newPool[S]
+    val b  = fp.builder
+
+    doForAll { x =>
+      b << f(x)
+    } map { b.seal _ }
 
     fp
   }
