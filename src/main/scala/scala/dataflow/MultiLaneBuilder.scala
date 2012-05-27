@@ -191,8 +191,6 @@ final class MultiLaneBuilder[T](
     val pos = /*READ*/p.index
     val obj = curblock(pos)
 
-    val total = totalElems(curblock, pos)
-
     obj match {
       case Seal(sz, null) =>
         // FlowPool sealed here - take another block
@@ -234,6 +232,7 @@ final class MultiLaneBuilder[T](
             // current is Seal(sz, _ != null), next is not at the end
             // check size and append
             val curelem = curblock(pos)
+            val total = totalElems(curblock, pos)
             curelem match {
               case os @ Seal(sz, cbs) if sz <= total =>
                 // Prepare stealing some slots
@@ -241,8 +240,9 @@ final class MultiLaneBuilder[T](
                 CAS(curblock, pos, os, ns)
                 tryAdd(x,bli)
               case Seal(sz, cbs) =>
-                if (CAS(curblock, pos + 1, nextelem, curelem)) {
-                  if (CAS(curblock, pos, curelem, null)) {
+                val nseal = if (total < (sz - 1)) curelem else Seal(sz, null)
+                if (CAS(curblock, pos + 1, nextelem, nseal)) {
+                  if (CAS(curblock, pos, curelem, x.asInstanceOf[AnyRef])) {
                     p.index = pos + 1
                     applyCallbacks(cbs)
                     true

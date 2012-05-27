@@ -132,7 +132,7 @@ final class SingleLaneBuilder[T](bl: Array[AnyRef]) extends Builder[T] {
                 val total = totalElems(curblock, pos)
                 val nseal = if (total < (sz - 1)) curelem else Seal(sz, null)
                 if (CAS(curblock, pos + 1, nextelem, nseal)) {
-                  if (CAS(curblock, pos, curelem, null)) {
+                  if (CAS(curblock, pos, curelem, x.asInstanceOf[AnyRef])) {
                     p.index = pos + 1
                     applyCallbacks(cbh.callbacks)
                     return true
