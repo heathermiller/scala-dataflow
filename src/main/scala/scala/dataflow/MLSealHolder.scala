@@ -10,7 +10,7 @@ class MLSealHolder {
 
 object MLSealHolder {
 
-  def STEAL_CNT = 256
+  def STEAL_CNT = FlowPool.MAX_BLOCK_ELEMS
 
   final class StealState(
     val rem:    Int,

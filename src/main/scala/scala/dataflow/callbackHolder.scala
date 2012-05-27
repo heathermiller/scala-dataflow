@@ -26,6 +26,7 @@ final object CallbackNil extends CallbackList[Any]
 final case class Seal[T](size: Int, callbacks: CallbackList[T]) extends CallbackHolder[T] {
   def insertedCallback[U <: T](el: CallbackElem[U]) = Seal(size, callbacks.insertedCallback(el))
   def stealing = new StealSeal(size, callbacks)
+  def noStealing = new NoStealSeal(size, callbacks)
 }
 
 final case class SealTag[T](
@@ -43,6 +44,11 @@ final case class StealSeal[T](size: Int, callbacks: CallbackList[T]) extends Cal
   def stolen(cnt: Int) = 
     if (cnt > 0) new Seal(size + cnt, callbacks)
     else new Seal(size, null)
+}
+
+final case class NoStealSeal[T](size: Int, callbacks: CallbackList[T]) extends CallbackHolder[T] {
+  def insertedCallback[U <: T](el: CallbackElem[U]) =
+    StealSeal(size, callbacks.insertedCallback(el))
 }
 
 final case object MustExpand

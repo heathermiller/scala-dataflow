@@ -240,6 +240,14 @@ final class MultiLaneBuilder[T](
                 CAS(curblock, pos, os, ns)
                 tryAdd(x,bli)
               case Seal(sz, cbs) =>
+                if (CAS(curblock, pos + 1, nextelem, curelem)) {
+                  if (CAS(curblock, pos, curelem, x.asInstanceOf[AnyRef])) {
+                    p.index = pos + 1
+                    applyCallbacks(cbs)
+                    true
+                  } else false
+                } else false
+              case NoStealSeal(sz, cbs) =>
                 val nseal = if (total < (sz - 1)) curelem else Seal(sz, null)
                 if (CAS(curblock, pos + 1, nextelem, nseal)) {
                   if (CAS(curblock, pos, curelem, x.asInstanceOf[AnyRef])) {
@@ -248,7 +256,6 @@ final class MultiLaneBuilder[T](
                     true
                   } else false
                 } else false
-
               case _ => false
             }
           case _ => false // Someone has written
@@ -260,11 +267,12 @@ final class MultiLaneBuilder[T](
   }
 
   private def finalizeSeals {
-    
+
     @tailrec
     def finalize(curblock: Array[AnyRef], pos: Int) {
       curblock(pos) match {
         case Seal(_, null) =>
+        case NoStealSeal(_,_) =>
         case null =>
         case MustExpand =>
         case os @ Seal(sz, cbs) if sz <= totalElems(curblock, pos) =>
@@ -272,6 +280,9 @@ final class MultiLaneBuilder[T](
             finalize(curblock, pos)
           else
             applyCallbacks(cbs)
+        case os @ Seal(sz, cbs) =>
+          if (!CAS(curblock, pos, os, os.noStealing))
+            finalize(curblock, pos)
         case os @ StealSeal(sz, cbs) =>
           if (!CAS(curblock, pos, os, Seal(sz, null)))
             finalize(curblock, pos)
