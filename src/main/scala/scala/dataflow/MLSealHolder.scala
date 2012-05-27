@@ -40,18 +40,14 @@ object MLSealHolder {
 
     @volatile var stealState = new StealState(remain, Map.empty)
 
-    def stageSteal(bli: Int): Int = {
+    def stageSteal(bli: Int): StealState = {
       val st = /*READ*/stealState
       
       if (!st.stolen.contains(bli)) {
         val nst = st.stolenFor(bli)
-        if (CAS_SS(st, nst))
-          nst.stolen(bli)
-        else
-          stageSteal(bli)
-      }
-
-      st.stolen(bli)
+        if (CAS_SS(st, nst)) nst
+        else stageSteal(bli)
+      } else st
     }
 
     @tailrec

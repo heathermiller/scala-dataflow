@@ -21,7 +21,7 @@ final class MultiLaneBuilder[T](
   private val SH_OFFSET = unsafe.objectFieldOffset(
     classOf[MLSealHolder].getDeclaredField("s"))
   @inline private def CAS_SH(ov: State, nv: State) = 
-    unsafe.compareAndSwapObject(this, SH_OFFSET, ov, nv)
+    unsafe.compareAndSwapObject(sealHolder, SH_OFFSET, ov, nv)
   
   @tailrec
   def <<(x: T): this.type = {
@@ -198,18 +198,18 @@ final class MultiLaneBuilder[T](
           case Some(fbli) => tryAdd(x, fbli)
           case None => sys.error("Insert on a sealed structure.")
         }
-      case os @ Seal(sz, cbs) if sz <= total =>
-        // Prepare stealing some slots
-        val ns = os.stealing
-        CAS(curblock, pos, os, ns)
-        tryAdd(x,bli)
       case os @ StealSeal(sz, cbs) =>
         val gs = /*READ*/sealHolder.s.asInstanceOf[MLSeal]
-        val stolen = gs.stageSteal(bli)
-        val ns = os.stolen(stolen)
+        val stealState = gs.stageSteal(bli)
+        val stC = stealState.stolen(bli)
+        val ns = os.stolen(stC)
 
-        if (CAS(curblock, pos, os, ns))
+        if (CAS(curblock, pos, os, ns)) {
           gs.commitSteal(bli)
+          if (stC > 0 && stealState.rem == 0)
+            // We stole the last count
+            finalizeSeals
+        }
         tryAdd(x,bli)
       case MustExpand =>
         // must extend with a new block
@@ -233,14 +233,20 @@ final class MultiLaneBuilder[T](
             // check size and append
             val curelem = curblock(pos)
             curelem match {
+              case os @ Seal(sz, cbs) if sz <= total =>
+                // Prepare stealing some slots
+                val ns = os.stealing
+                CAS(curblock, pos, os, ns)
+                tryAdd(x,bli)
               case Seal(sz, cbs) =>
                 if (CAS(curblock, pos + 1, nextelem, curelem)) {
                   if (CAS(curblock, pos, curelem, null)) {
                     p.index = pos + 1
-                    applyCallbacks(cbh.callbacks)
+                    applyCallbacks(cbs)
                     true
                   } else false
                 } else false
+
               case _ => false
             }
           case _ => false // Someone has written
@@ -249,6 +255,40 @@ final class MultiLaneBuilder[T](
         p.index = pos + 1
         false
     }
+  }
+
+  private def finalizeSeals {
+    
+    @tailrec
+    def finalize(curblock: Array[AnyRef], pos: Int) {
+      curblock(pos) match {
+        case Seal(_, null) =>
+        case null =>
+        case MustExpand =>
+        case os @ Seal(sz, cbs) if sz <= totalElems(curblock, pos) =>
+          if (!CAS(curblock, pos, os, Seal(sz, null)))
+            finalize(curblock, pos)
+          else
+            applyCallbacks(cbs)
+        case os @ StealSeal(sz, cbs) =>
+          if (!CAS(curblock, pos, os, Seal(sz, null)))
+            finalize(curblock, pos)
+          else
+            applyCallbacks(cbs)
+        case os @ SealTag(_, cbs) =>
+          if (!CAS(curblock, pos, os, Seal(totalElems(curblock, pos), null)))
+            finalize(curblock, pos)
+          else
+            applyCallbacks(cbs)
+        case Next(block) =>
+          finalize(block,0)
+        case _ =>
+          finalize(curblock, pos + 1)
+      }
+    }
+
+    positions foreach { /*READ*/p => finalize(p.block, /*READ*/p.index) }
+
   }
 
   private def findFreeBlock = {

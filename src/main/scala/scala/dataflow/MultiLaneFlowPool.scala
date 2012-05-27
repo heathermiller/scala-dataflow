@@ -15,10 +15,9 @@ class MultiLaneFlowPool[T](val lanes: Int) extends FlowPool[T] {
   def builder = new MultiLaneBuilder[T](initBlocks, sealHolder)
 
   def doForAll[U](f: T => U): Future[Int] = {
-    val fut = new Future[Int]()
+    val fut = new SumFuture[Int](lanes)
 
-    // TODO find way to sync CB completion
-    // Have a thing that, when called N times, fetches Seal count and ends
+    // Note: Final sync of callback goes through SumFuture
     for (b <- initBlocks) {
       val cbe = new CallbackElem(f, fut.complete _, CallbackNil, initBlocks(0), 0)
       task(new RegisterCallbackTask(cbe))
