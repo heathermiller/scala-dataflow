@@ -6,7 +6,7 @@ trait FlowPool[T] {
   
   def builder: Builder[T]
   def doForAll[U](f: T => U): Future[Int]
-  def mappedFold[U, V <: U](accInit: V)(cmb: (U,V) => V)(map: T => U): Future[(Int, V)]
+  def mappedFold[U, V >: U](accInit: V)(cmb: (V,V) => V)(map: T => U): Future[(Int, V)]
   def newPool[S]: FlowPool[S]
 
   // Monadic Ops
@@ -33,6 +33,9 @@ trait FlowPool[T] {
   }
 
   def foreach[U](f: T => U) { doForAll(f) }
+
+  def fold[U >: T](z: U)(op: (U, U) => U): Future[U] =
+    mappedFold(z)(op)(x => x).map(_._2) 
 
   def filter(f: T => Boolean): FlowPool[T] = {
     val fp = newPool[T]
