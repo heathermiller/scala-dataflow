@@ -6,6 +6,7 @@ import jsr166y._
 class MultiLaneFlowPool[T](val lanes: Int) extends FlowPool[T] {
 
   import FlowPool._
+  import MultiLaneFlowPool._
   
   val initBlocks = Array.fill(lanes)(newBlock(0))
   val sealHolder = new MLSealHolder()
@@ -26,19 +27,36 @@ class MultiLaneFlowPool[T](val lanes: Int) extends FlowPool[T] {
     fut
   }
 
-  // TODO the following is uttermost bullshit when having multiple lanes!!!
   def mappedFold[U, V <: U](accInit: V)(cmb: (U,V) => V)(map: T => U): Future[(Int, V)] = {
     /* We do not need to synchronize on this var, because IN THE
-     * CURRENT SETTING, callbacks are only executed in sequence.
+     * CURRENT SETTING, callbacks are only executed in sequence ON EACH BLOCK
      * This WILL break if the scheduling changes
      */
-    @volatile var acc = accInit
 
-    doForAll { x =>
-      acc = cmb(map(x), acc)
-    } map {
-      c => (c,acc)
+    val fut = new SumFuture[Int](lanes)
+
+    def accf(h: AccHolder[V])(x: T) =
+      h.acc = cmb(map(x), h.acc)
+
+    val holders = initBlocks map { b =>
+      val h = new AccHolder(accInit)
+      val cbe = new CallbackElem(accf(h) _, fut.complete _, CallbackNil, b, 0)
+      task(new RegisterCallbackTask(cbe))
+      h                            
     }
+
+    fut map {
+      c => (c, holders.map(_.acc).reduce(cmb))
+    }
+
+  }
+
+}
+
+object MultiLaneFlowPool {
+
+  final class AccHolder[T](init: T) {
+    @volatile var acc = init
   }
 
 }
