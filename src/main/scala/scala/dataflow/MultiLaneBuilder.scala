@@ -124,13 +124,8 @@ final class MultiLaneBuilder[T](
           else if (CAS(curblock, pos, cbl, nv)) Left(cnt)
           else sealTag(p, bli, curblock, pos)
         } else sealTag(p, bli, curblock, pos + 1)
-      case AnySeal(sz, _) =>
-        /*READ*/sealHolder.s match {
-          case MLSeal(ssz) => Right(sz == ssz)
-          case _ => 
-            sys.error("MultiLaneFlowPool in inconsistent" +
-                      "state. (Seal found without global seal)")
-        }
+      case AnySeal(sz, _) => Right(true)
+        // TODO is this OK?
       case ov @ SealTag(op, cbl) =>
         val cnt = totalElems(curblock, pos)
         if (op eq p) Left(cnt)
