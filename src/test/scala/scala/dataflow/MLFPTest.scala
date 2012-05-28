@@ -5,9 +5,10 @@ import java.util.concurrent.ThreadLocalRandom
 import scala.collection.mutable.{ Set => MSet }
 
 object MLFPTest extends App {
+  import Utils._
 
-  val tasks = 10
-  val n = 1000
+  val tasks = 1000
+  val n = 10
   val pool = new MultiLaneFlowPool[(Int,Int)](tasks/2)
   val b = pool.builder
 
@@ -24,7 +25,11 @@ object MLFPTest extends App {
   val rc = n * (n + 1) / 2 * tasks
   val sc = tasks * (tasks + 1) / 2 * n
 
-  b.seal(n * tasks)
+  task {
+    val v = ThreadLocalRandom.current()
+    Thread.sleep(v.nextLong(1000))
+    b.seal(n * tasks)
+  }
 
   for (i <- 1 to tasks) {
     task {
@@ -47,10 +52,7 @@ object MLFPTest extends App {
   println("Count: Reported: %d, should: %d".format(c,n * tasks))
   println("%d values missing (diff)".format(missing))
   println("%d values missing (sub)".format(vals_should.size - vals.size))
-  println("Done: r: %d (should: %d), s: %d (should: %d)".format(rv,rc,sv,sc))
-
-  def task(f: => Unit) {
-    new Thread(new Runnable() { def run() = f }).start()
-  }
+  println("Done: r: %d (should: %d, %s), s: %d (should: %d, %s)".format(
+    rv,rc,if(rv==rc) "eq" else "ne",sv,sc, if(sv==sc) "eq" else "ne"))
 
 }

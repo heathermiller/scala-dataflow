@@ -143,7 +143,6 @@ final class SingleLaneBuilder[T](bl: Array[AnyRef]) extends Builder[T] {
           case _ =>
         }
       case _ => // a regular object - advance
-        throw new Exception
         p.index = pos + 1
         tryAdd(x)
     }

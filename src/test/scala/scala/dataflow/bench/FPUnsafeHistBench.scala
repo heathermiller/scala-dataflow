@@ -1,7 +1,7 @@
 package scala.dataflow.bench
 
 import scala.dataflow._
-import scala.util.Random
+import java.util.concurrent.ThreadLocalRandom
 
 trait FPUnsafeHistBench extends testing.Benchmark with Utils.Props with FPBuilder {
   import Utils._
@@ -13,17 +13,19 @@ trait FPUnsafeHistBench extends testing.Benchmark with Utils.Props with FPBuilde
     val builder = pool.builder
     val work = size
     val bins = 5 to 20
-    def data = new Data(Random.nextInt(maxval))
-    var i = 0
+    def data = new Data(ThreadLocalRandom.current.nextInt(maxval))
 
     val res = bins.map(s => binning(s,pool))
-    
-    while (i < work) {
-      builder << data
-      i += 1
+
+    for (ti <- 1 to par) yield task {
+      var i = 0
+      while (i < work) {
+        builder << data
+        i += 1
+      }
     }
 
-    builder.seal(work)
+    builder.seal(size)
 
     res.foreach(_.blocking)
 

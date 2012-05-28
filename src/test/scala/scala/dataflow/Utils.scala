@@ -19,6 +19,13 @@ object Utils {
   trait Props {
     lazy val size = sys.props("size").toInt
     lazy val par = sys.props("par").toInt
+    lazy val lanes = sys.props("lanes").toInt
+  }
+
+  def task(f: => Unit) = {
+    val t = new Thread(new Runnable() { def run() = f })
+    t.start()
+    t
   }
   
 }

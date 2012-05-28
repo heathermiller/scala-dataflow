@@ -7,14 +7,18 @@ trait QInsertBench extends testing.Benchmark with Utils.Props with QBuilder {
 
   override def run() {
     val queue = newQ[Data]
-    val work = size
-    val data = new Data(0)
-    var i = 0
+    val work = size / par
 
-    while (i < work) {
-      queue.add(data)
-      i += 1
-    }    
+    val writers = for (ti <- 1 to par) yield task {
+      val data = new Data(0)
+      var i = 0
+      while (i < work) {
+        queue.add(data)
+        i += 1
+      }    
+    }
+
+    writers.foreach(_.join())
 
   }
   

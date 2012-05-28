@@ -8,17 +8,21 @@ trait FPInsertBench extends testing.Benchmark with Utils.Props with FPBuilder {
   override def run() {
     val pool = newFP[Data]
     val builder = pool.builder
-    val work = size
+    val work = size / par
     val data = new Data(0)
-    var i = 0
     
-    while (i < work) {
-      builder << data
-      i += 1
+    val writers = for (ti <- 1 to par) yield task {
+      var i = 0
+      while (i < work) {
+        builder << data
+        i += 1
+      }
     }
 
+    writers.foreach(_.join())
+
     // Seal FP to make it comparable to FPSealedInsertBench
-    builder.seal(work)
+    builder.seal(size)
 
   }
   

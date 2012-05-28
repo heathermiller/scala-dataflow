@@ -9,18 +9,20 @@ trait FPReduceBench extends testing.Benchmark with Utils.Props with FPBuilder {
   override def run() {
     val pool = newFP[Data]
     val builder = pool.builder
-    val work = size
+    val work = size / par
     val data = new Data(0)
-    var i = 0
 
     val res = pool.mappedFold(0)(_ + _)(_.i)
     
-    while (i < work) {
-      builder << data
-      i += 1
+    for (ti <- 1 to par) yield task {
+      var i = 0
+      while (i < work) {
+        builder << data
+        i += 1
+      }
     }
 
-    builder.seal(work)
+    builder.seal(size)
 
     res.blocking
 

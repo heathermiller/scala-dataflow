@@ -8,17 +8,22 @@ trait FPSealedInsertBench extends testing.Benchmark with Utils.Props with FPBuil
   override def run() {
     val pool = newFP[Data]
     val builder = pool.builder
-    val work = size
+    val work = size / par
     val data = new Data(0)
-    var i = 0
 
     // Seal the FP first
     builder.seal(work)
-    
-    while (i < work) {
-      builder << data
-      i += 1
+
+    val writers = for (ti <- 1 to par) yield task {
+      var i = 0
+      while (i < work) {
+        builder << data
+        i += 1
+      }
     }
+
+    writers.foreach(_.join())
+
   }
   
 }
