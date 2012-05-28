@@ -124,7 +124,7 @@ final class MultiLaneBuilder[T](
           else if (CAS(curblock, pos, cbl, nv)) Left(cnt)
           else sealTag(p, bli, curblock, pos)
         } else sealTag(p, bli, curblock, pos + 1)
-      case Seal(sz, _) =>
+      case AnySeal(sz, _) =>
         /*READ*/sealHolder.s match {
           case MLSeal(ssz) => Right(sz == ssz)
           case _ => 

@@ -28,10 +28,6 @@ class MultiLaneFlowPool[T](val lanes: Int) extends FlowPool[T] {
   }
 
   def mappedFold[U, V >: U](accInit: V)(cmb: (V,V) => V)(map: T => U): Future[(Int, V)] = {
-    /* We do not need to synchronize on this var, because IN THE
-     * CURRENT SETTING, callbacks are only executed in sequence ON EACH BLOCK
-     * This WILL break if the scheduling changes
-     */
 
     val fut = new SumFuture[Int](lanes)
 
@@ -56,6 +52,10 @@ class MultiLaneFlowPool[T](val lanes: Int) extends FlowPool[T] {
 object MultiLaneFlowPool {
 
   final class AccHolder[T](init: T) {
+    /* We do not need to synchronize on this var, because IN THE
+     * CURRENT SETTING, callbacks are only executed in sequence ON EACH BLOCK
+     * This WILL break if the scheduling changes
+     */
     @volatile var acc = init
   }
 
