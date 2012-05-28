@@ -41,9 +41,6 @@ final case class SealTag[T](
 final case class StealSeal[T](size: Int, callbacks: CallbackList[T]) extends CallbackHolder[T] {
   def insertedCallback[U <: T](el: CallbackElem[U]) =
     StealSeal(size, callbacks.insertedCallback(el))
-  def stolen(cnt: Int) = 
-    if (cnt > 0) new Seal(size + cnt, callbacks)
-    else new Seal(size, null)
 }
 
 final case class NoStealSeal[T](size: Int, callbacks: CallbackList[T]) extends CallbackHolder[T] {
@@ -65,6 +62,7 @@ final class CallbackElem[-T] (
   var pos: Int
 ) extends CallbackList[T] {
   @volatile var lock: Int = -1
+  var done: Boolean = false
   
   /* ATTENTION:
    * If you change the scheduling, make sure that SingleLaneFlowPool.mappedFold
@@ -78,7 +76,8 @@ final class CallbackElem[-T] (
       if (tryOwn()) {
         // we are now responsible for starting the active batch
         // so we start a new fork-join task to call the callbacks
-        FlowPool.task(new CallbackElem.BatchTask(this))
+        if (!done)
+          FlowPool.task(new CallbackElem.BatchTask(this))
       } else awakeCallback()
     }
   }
@@ -104,6 +103,8 @@ object CallbackElem {
     // when entering this method, we have to hold the lock!
     @tailrec
     protected def compute() {
+      if (callback.done) return
+
       if (callback.pos >= LAST_CALLBACK_POS) {
         callback.block(MUST_EXPAND_POS) match {
           case MustExpand => // don't do anything
@@ -126,12 +127,16 @@ object CallbackElem {
 
       // Check for seal
       cur match {
-        case Seal(sz, null) => callback.endf(sz)
+        case Seal(sz, null) =>
+          callback.endf(sz)
+          callback.done = true
         case _ =>
       }
       
       // relinquish control
       callback.unOwn()
+
+      if (callback.done) return
       
       // see if there are more elements available
       // if there are, try to regain control and start again
@@ -152,6 +157,7 @@ object CallbackElem {
             // Shortcut
             if (callback.tryOwn()) {
               callback.endf(sz)
+              callback.done = true
               callback.unOwn()
             }
           case _: CallbackHolder[_] =>

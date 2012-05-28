@@ -202,11 +202,18 @@ final class MultiLaneBuilder[T](
         val gs = /*READ*/sealHolder.s.asInstanceOf[MLSeal]
         val stealState = gs.stageSteal(bli)
         val stC = stealState.stolen(bli)
-        val ns = os.stolen(stC)
+        val ns =
+          if (stC > 0) {
+            if (stealState.rem == 0) new NoStealSeal(sz + stC, cbs)
+            else new Seal(sz + stC, cbs)
+          } else new Seal(sz, null)
 
         if (CAS(curblock, pos, os, ns)) {
           gs.commitSteal(bli)
-          if (stC > 0 && stealState.rem == 0)
+          if (stC == 0)
+            // We just sealed
+            applyCallbacks(cbs)
+          else if (stealState.rem == 0)
             // We stole the last count
             finalizeSeals
         }
@@ -219,7 +226,7 @@ final class MultiLaneBuilder[T](
         goToNext(ne, bli); false
       case t: SealTag[_] =>
         // Need to remove tag (i.e. finish or abort seal)
-        resolveTag(t, curblock, pos); false
+        tryResolveTag(t, curblock, pos); false
       case cbh: CallbackHolder[_] =>
         // a list of callbacks here - check if this is the end of the block
         val nextelem = curblock(pos + 1)
@@ -324,7 +331,7 @@ final class MultiLaneBuilder[T](
     } map (_._2)
   }
 
-  private def resolveTag[T](t: SealTag[T], curblock: Array[AnyRef], pos: Int) {
+  private def tryResolveTag[T](t: SealTag[T], curblock: Array[AnyRef], pos: Int) {
     val st = /*READ*/sealHolder.s
     st match {
       case p: Proposition if (p eq t.p) =>
