@@ -23,18 +23,8 @@ sealed class CallbackList[-T] extends CallbackHolder[T] {
 
 final object CallbackNil extends CallbackList[Any]
 
-sealed abstract class AnySeal[T] extends CallbackHolder[T] {
-  def size: Int
-}
-
-object AnySeal {
-  def unapply[T](x: AnySeal[T]) = Some((x.size, x.callbacks))
-}
-
-final case class Seal[T](size: Int, callbacks: CallbackList[T]) extends AnySeal[T] {
+final case class Seal[T](size: Int, callbacks: CallbackList[T]) extends CallbackHolder[T] {
   def insertedCallback[U <: T](el: CallbackElem[U]) = Seal(size, callbacks.insertedCallback(el))
-  def stealing = new StealSeal(size, callbacks)
-  def noStealing = new NoStealSeal(size, callbacks)
 }
 
 final case class SealTag[T](
@@ -43,18 +33,10 @@ final case class SealTag[T](
 ) extends CallbackHolder[T] {
   def insertedCallback[U <: T](el: CallbackElem[U]) =
     SealTag(p, callbacks.insertedCallback(el))
-  def toSeal(size: Int) = Seal(size, callbacks)
-}
-
-
-final case class StealSeal[T](size: Int, callbacks: CallbackList[T]) extends AnySeal[T] {
-  def insertedCallback[U <: T](el: CallbackElem[U]) =
-    StealSeal(size, callbacks.insertedCallback(el))
-}
-
-final case class NoStealSeal[T](size: Int, callbacks: CallbackList[T]) extends AnySeal[T] {
-  def insertedCallback[U <: T](el: CallbackElem[U]) =
-    StealSeal(size, callbacks.insertedCallback(el))
+  def toSeal(cursz: Int, addsz: Int) = {
+    val nsz = cursz + addsz;
+    if (nsz > cursz) Seal(nsz, callbacks) else Seal(nsz, null)
+  }
 }
 
 final case object MustExpand

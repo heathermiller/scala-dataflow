@@ -141,7 +141,7 @@ final class SingleLaneBuilder[T](bl: Array[AnyRef]) extends Builder[T] {
                 }
               case _ =>
             }
-          case _ =>
+          case _ => // Someone has written
         }
       case _ => // a regular object - advance
         p.index = pos + 1
