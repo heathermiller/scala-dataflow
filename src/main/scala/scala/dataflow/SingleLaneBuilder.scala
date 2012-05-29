@@ -53,6 +53,7 @@ final class SingleLaneBuilder[T](bl: Array[AnyRef]) extends Builder[T] {
     curblock(pos) match {
       case MustExpand =>
         expand(curblock)
+        seal(size, curblock, pos)
       case Next(block) =>
         seal(size, block, 0)
       case cbl: CallbackList[_] =>
@@ -144,7 +145,6 @@ final class SingleLaneBuilder[T](bl: Array[AnyRef]) extends Builder[T] {
         }
       case _ => // a regular object - advance
         p.index = pos + 1
-        tryAdd(x)
     }
     false
   }
