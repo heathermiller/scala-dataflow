@@ -2,8 +2,8 @@ package scala.dataflow.bench
 
 import scala.dataflow.Utils
 
-// TODO should we parallelize the aggregation? How?
-trait QReduceBench extends testing.Benchmark with Utils.Props with BQBuilder {
+// Par level: Number of maps you do, single writer
+trait QMapBench extends testing.Benchmark with Utils.Props with BQBuilder {
   import Utils._
 
   override def run() {
