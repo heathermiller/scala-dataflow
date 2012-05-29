@@ -27,7 +27,7 @@
 \usepackage[normalem]{ulem}
 
 \usepackage{url}
-\urldef{\mails}\path|{firstname.lastname}@epfl.ch|    
+\urldef{\mails}\path|firstname.lastname@epfl.ch|    
 \newcommand{\keywords}[1]{\par\addvspace\baselineskip
 \noindent\keywordname\enspace\ignorespaces#1}
 
@@ -41,10 +41,10 @@
 \mainmatter  % start of an individual contribution
 
 % first the title is needed
-\title{FlowPools: Lock-Free Deterministic Concurrent Data-Flow Queues}
+\title{FlowPools: Lock-Free Deterministic Concurrent Dataflow Queues}
 
 % a short form should be given in case it is too long for the running head
-\titlerunning{FlowPools: Lock-Free Deterministic Concurrent Data-Flow Queues}
+\titlerunning{FlowPools: Lock-Free Deterministic Concurrent Dataflow Queues}
 
 % the name(s) of the author(s) follow(s) next
 %
@@ -62,7 +62,7 @@
 % Anna Kramer\and Leonie Kunz\and Christine Rei\ss\and\\
 % Nicole Sator\and Erika Siebert-Cole\and Peter Stra\ss er}
 
-\authorrunning{FlowPools: Lock-Free Deterministic Concurrent Data-Flow Queues}
+\authorrunning{FlowPools: Lock-Free Deterministic Concurrent Dataflow Queues}
 % (feature abused for this document to repeat the title also on left hand pages)
 
 % the affiliations are given next; don't give your e-mail address
@@ -84,8 +84,19 @@
 
 
 \begin{abstract}
-Implementing correct and deterministic parallel programs is hard (additional motivation sentence after this). We present the design and implementation of a fundamental data structure for deterministic parallel data-flow computation. Aditionally, we provide a proof of correctness, showing that the implementation is linearizable, lock-free, and deterministic. Finally, we provide microbenchmarks which compare our \emph{flow pools} against corresponding operations on other popular concurrent data structures, in addition to performance benchmarks on a real \emph{XYZ} application using real data. (Keep abstract between 70 and 150 words).
-\keywords{data-flow, concurrent data-structure, determinism}
+Implementing correct and deterministic parallel programs is challenging. Even
+though concurrency constructs exist in popular programming languages to
+facilitate the task of deterministic parallel programming, they're often too
+low level, or do not compose well due to underlying blocking mechanisms. In
+this paper, we present the design and implementation of a fundamental data
+structure for composable deterministic parallel dataflow computation through
+the use of functional programming abstractions. Additionally, we provide a
+proof of correctness, showing that the implementation is linearizable, lock-
+free, and deterministic. Finally, we provide experimental results which
+compare our \emph{FlowPool} against corresponding operations on other popular
+concurrent data structures, and show that in addition to offering new
+capabilities, FlowPools perform XYZ-XYZ\% better than their blocking counterparts.
+\keywords{dataflow, concurrent data-structure, deterministic parallelism}
 \end{abstract}
 
 
@@ -96,9 +107,17 @@ Implementing correct and deterministic parallel programs is hard (additional mot
 
 \textbf{Lock-free is better, and why.} 
 \sout{why the foreach instead of blocking?} blocking is bad in most
-   programming models (JVM, CLR, most native platforms)
+   programming models (JVM, CLR, most native platforms) \cite{Herlihy90}
 
 Introduction and motivation for data-flow programming model.
+
+
+Data structures for the multicore age, Shavit 2011, Comm. ACM \cite{Shavit11}
+
+Concurrent data structures, Moir, Shavit 2008, \cite{Moir05}
+
+A Methodology for Implementing Highly Concurrent Data Structures, Herlihy, 1990 \cite{Herlihy90}
+
 
 
 \subsection{Motivation}
@@ -119,6 +138,7 @@ data structure we no longer need
 - we want to reduce heap allocation and inline the datastructure as
 much as possible $\Rightarrow$ lower memory consumption, better cache behaviour
 and fewer GC cycles
+- composability
 
 \textbf{Paragraph(s) on contributions.} 
 
@@ -164,7 +184,7 @@ no guarantees on ordering. In this section, we describe the semantics of a
 handful of functional combinators and other basic operations defined on
 FlowPools.
 
-\noindent \textbf{Append (\texttt{<<})}. The most fundamental of all
+\textbf{Append (\texttt{<<})}. The most fundamental of all
 operations of on FlowPools is the append operation. As its name suggests, it
 simply takes an argument of type \texttt{Elem} and appends it to a given
 FlowPool. 
@@ -185,7 +205,7 @@ One of the basic data structure operations is element traversal,
 often provided by iterators or streams -- stateful
 objects storing the current position in the data structure.
 Since they can be manipulated by several threads, they allow
-nondeterministic executions.
+nondeterministic execution.
 
 Another way to traverse the elements is to provide a higher-level
 \verb=foreach= operations which takes a user-specified function and
@@ -741,9 +761,9 @@ size.
 Given an abstract pool, abstract pool operations produce a new
 abstract pool.
 The key to showing correctness is to show that an abstract pool operation
-corresponds to a FlowPool operation in the sense that it produces a
-new abstract pool which corresponds to the state of the FlowPool after
-the FlowPool operation completed.
+corresponds to a FlowPool operation-- that is, it produces a
+new abstract pool corresponding to the state of the FlowPool after
+the FlowPool operation has been completed.
 
 \begin{lemma}
 For all blocks $b$ reachable from $start$, if $b.index > 0$ at some time $t_0$, then
@@ -817,12 +837,12 @@ least one thread completes after a finite number of steps.
 \section{Experimental Results}
 
 \section{Related Work}
-Things to probably cite: Oz, gpars, Java CLQ, our futures writeup.
+Things to probably cite: Oz, gpars, i-Structures \cite{Arvind89}, Java CLQ \cite{Michael96}, our futures writeup, twitter futures, MultiLISP futures \cite{Halstead85}, FlumeJava \cite{Chambers10}.
 
 Things we should probably have a look at: Microsoft TPL, Dataflow
 Java, FlumeJava...
 
-Forcing a bib, \cite{bowman:reasoning}, \cite{braams:babel}, \cite{clark:pct}, \cite{herlihy:methodology}, \cite{Lamport:LaTeX}, \cite{salas:calculus}
+Art of Multicore Programming book, cite that somewhere?: \cite{Herlihy08}
 
 \section{Conclusion}
 
@@ -1725,7 +1745,7 @@ strictly increases after some finite number of steps.
 % Lemma \ref{lemma-cas2} (CAS2)
 %==============================
 
-\begin{lemma}[CAS2]\label{lemma-cas2} After invoking \verb=append(elem)=, if
+\begin{lemma}[$CAS_{append-inn}$]\label{lemma-cas2} After invoking \verb=append(elem)=, if
 $CAS_{append-inn}$ fails, then some thread has successfully completed 
 $CAS_{append-inn}$ or $CAS_{seal}$ (or likewise, $CAS_{foreach}$) after some 
 finite number of steps.
@@ -1762,7 +1782,7 @@ case, $CAS_{append-inn}$ can fail because $CAS_{seal}$ (or, likewise $CAS_{forea
 might have completed before, in which case, it inserts a new $Terminal$ object $term$ 
 into location $idx$ (in the case of a \verb=seal= invocation, 
 $term.sealed\in\mathbb{N}_0$, or in the case of a \verb=foreach= invocation, 
-$\{term.callbacks\in$\}). 
+$term.callbacks\in\{Elem \Rightarrow Unit\}$). 
 \end{itemize}
 
 We omit the proof and detailed discussion of $CAS_{foreach}$ because it can be proven 
@@ -1868,7 +1888,7 @@ invocation of \verb=append= are guaranteed to have a finite number of steps betw
 
 % We don't actually cite this lemma? Really?
 
-\begin{lemma}[CAS5]\label{lemma-cas5}
+\begin{lemma}[$CAS_{seal}$]\label{lemma-cas5}
 After invoking \verb=seal(size)=, if $CAS_{seal}$ fails, then some thread has
 successfully completed $CAS_{seal}$ or $CAS_{append-inn}$ after some finite number of steps.
 \end{lemma}
