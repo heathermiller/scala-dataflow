@@ -870,21 +870,36 @@ consumer's part when the queue is empty.
 While the abstractions above fit well in the concurrent imperative
 model, they have the disadvantage that the programs written using them
 are inherently nondeterministic.
-In the book by \cite{RoyH2004}, the Oz programming language is
-described, which offers a range
+Book by \cite{RoyH2004} describes the Oz programming language 
+a subset of which yields programs deterministic by construction.
+The dataflow streams described there are built on top of
+single-assignment variables and are deterministically ordered.
+While they allow multiple consumers, only one producer can write
+at a time.
+Oz has its own runtime, thus assuming continuation-based blocking
+can be implemented efficiently, which is not the case on the JVM,
+CLR and many native environments.
+
+The concept of single-assignment variables is also embodied in
+futures proposed by Baker and Hewitt \cite{Hewitt77}, and promises
+first mentioned by Friedman and Wise \cite{Wise76}.
+Futures were first implemented in MultiLISP \cite{Halstead85},
+and have been employed in many languages and frameworks since.
+Scala futures \cite{TODO} and Finagle futures \cite{TODO} are
+interesting to mention, because they define monadic operators and a
+number of high-level combinators which produce new futures.
+
+The concept of single assignment variables has been 
 
 
-Things to probably cite: Oz, gpars, i-Structures \cite{Arvind89}, our futures writeup, twitter futures, MultiLISP futures \cite{Halstead85}, FlumeJava \cite{Chambers10}.
+Things to probably cite: Oz, gpars, i-Structures \cite{Arvind89}, FlumeJava \cite{Chambers10}.
 
 Things we should probably have a look at: Microsoft TPL, Dataflow
 Java, FlumeJava...
 
 
-	- Scala Futures
 	- CnC
 	- Sarkar's futures (Data-driven futures) Look at callback-related references
-	- Twitter futures
-	- Oz
 	- gpars (dataflow stuff)
 	- i-Structures (any other Arvind stuff)
 	- Dataflow Java?
