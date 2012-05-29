@@ -124,8 +124,7 @@ final class MultiLaneBuilder[T](
           else if (CAS(curblock, pos, cbl, nv)) Left(cnt)
           else sealTag(p, bli, curblock, pos)
         } else sealTag(p, bli, curblock, pos + 1)
-      case AnySeal(sz, _) => Right(true)
-        // TODO is this OK?
+      case _: AnySeal[_] => Right(true)
       case ov @ SealTag(op, cbl) =>
         val cnt = totalElems(curblock, pos)
         if (op eq p) Left(cnt)
