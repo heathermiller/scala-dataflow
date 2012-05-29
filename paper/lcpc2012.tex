@@ -144,13 +144,21 @@ and fewer GC cycles
 
 \section{Model of Computation}
 
-TODO What is producer-consumer parallelism.
+Pipeline-based applications are composed of a sequence
+of producer/consumer stages, each one depending on the output of its
+predecessor. More generally, the computation forms a directed
+dependency graph in which parallelism is achieved by operations in the
+nodes executing concurrently.
 
-TODO Description and image of queue/stream of values, producer, and multiple consumers.
-A directed dependency graph of a dataflow computation provides parallelism.
-This ensures that we have some parallelism in the model.
-
-TODO Nodes in dependency graph should be first class model.
+One design goal is to make the nodes in the dependency graph first
+class values.
+The advantage of this is that the programmer is able to use
+nodes as procedure arguments or receive them as return values.
+This allows for a better modularity and increases the
+composability of the programming model.
+This also provides a higher degree of flexibility.
+The dependency graph does not have to be specified at compile time,
+but can be computed at runtime instead.
 
 What do we mean by determinism? We aspire for a definition which is
 practically useful in the sense that it makes debugging parallel programs
@@ -355,8 +363,8 @@ We implement it by traversing the elements of \verb=this= FlowPool and
 appending each mapped element to the builder.
 The \verb=for= loop is the syntactic sugar for calling the
 \verb=foreach= method on \verb=this=.
-We assume that the \verb=foreach= returns value \verb=Future[Int]=
-has \verb=map= and \verb=flatMap= operations, executed
+We assume that the \verb=foreach= return value \verb=Future[Int]=
+has \verb=map= and \verb=flatMap= operations, which are executed
 once the future value becomes available.
 The \verb=Future.map= above ensures that if the \verb=this= pool is ever
 sealed, the mapped pool is sealed to the appropriate size.
@@ -658,7 +666,7 @@ We now describe the FlowPool and its basic operations.
 In doing so, we omit the details not relevant to the
 algorithm\footnote{Specifically the builder abstraction and the \texttt{fold}
 operation. The \texttt{fold} can be implemented using \texttt{foreach}
-in an imperative model using a side-effecting accumulator.}
+in an imperative model with a side-effecting accumulator.}
 and focus on a high-level description of a non-blocking
 data structure.
 One straightforward way to implement a growing pool is to use a linked
@@ -843,6 +851,31 @@ Things we should probably have a look at: Microsoft TPL, Dataflow
 Java, FlumeJava...
 
 Art of Multicore Programming book, cite that somewhere?: \cite{Herlihy08}
+
+	- Scala Futures
+	- CnC
+	- Sarkar's futures (Data-driven futures) Look at callback-related references
+	- Twitter futures
+	- Oz
+	- gpars (dataflow stuff)
+	- i-Structures (any other Arvind stuff)
+	- Dataflow Java?
+	- FlumeJava
+	- Msoft TPL?
+	- CLQ
+	- LTQ
+	- Michael Scott CLQ
+	- take a look at source of LTQ
+	- research blocking queues
+	- Nir Shavit, Data Structures in the Multicore Age
+        - type-systematic approach to determinism - cite Deterministic
+        Parallel Java and X10's dependent types
+        - need to go through the work of the program committee
+	- Introduction crap
+		- the Art of Multiprocessor Programming, 2008, Herlihy, Shavit, 
+		- Concurrent Data Structures, 2007, Moir, Shavit.
+		- Linearizability: A Correctness Condition for Concurrent Objects, 1990, Herlihy
+
 
 \section{Conclusion}
 
