@@ -1,15 +1,13 @@
 package scala.dataflow
 
-import java.lang.Integer
-
-object FlowPoolTest extends App {
+object SLFPTest extends App {
 
   val n = 300
-  val pool = new FlowPool[Integer]()
-  val b = new Builder[Integer](pool.initBlock)
+  val pool = new SingleLaneFlowPool[Int]()
+  val b = pool.builder
   
   pool.foreach(p("Foreach"))
-  pool.map[Integer](_*2).foreach(p("Map"))
+  pool.map[Int](_*2).foreach(p("Map"))
   pool.filter(_ % 2 == 0).foreach(p("Filter"))
   val fold = pool.mappedFold(0)(_ + _)(x => x)
 
@@ -19,8 +17,6 @@ object FlowPoolTest extends App {
   p("Fold")(fold.blocking._2)
   
   def p(pref: String) =
-    (x: Integer) => println(pref + ": " + x)
+    (x: Int) => println(pref + ": " + x)
 
 }
-
-
