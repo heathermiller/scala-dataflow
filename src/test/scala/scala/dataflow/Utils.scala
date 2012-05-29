@@ -18,7 +18,19 @@ object Utils {
   
   trait Props {
     lazy val size = sys.props("size").toInt
-    lazy val par = sys.props("par").toInt
+    lazy val par = {
+      val tmp = sys.props("par").toInt
+      if (size % tmp == 0) tmp
+      else sys.error("size not divisible by par")
+    }
+      
+    lazy val lanes = sys.props("lanes").toInt
+  }
+
+  def task(f: => Unit) = {
+    val t = new Thread(new Runnable() { def run() = f })
+    t.start()
+    t
   }
   
 }

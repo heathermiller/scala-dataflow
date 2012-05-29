@@ -13,6 +13,7 @@ lcpc2012.pdf
 .cache
 .classpath
 .project
+.settings
 
 target
 .DS_Store

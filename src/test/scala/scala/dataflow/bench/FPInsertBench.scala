@@ -2,24 +2,27 @@ package scala.dataflow.bench
 
 import scala.dataflow._
 
-
-object FPInsertBench extends testing.Benchmark with Utils.Props {
+trait FPInsertBench extends testing.Benchmark with Utils.Props with FPBuilder {
   import Utils._
   
   override def run() {
-    val pool = new FlowPool[Data]()
-    val builder = new Builder[Data](pool.initBlock)
-    val work = size
+    val pool = newFP[Data]
+    val builder = pool.builder
+    val work = size / par
     val data = new Data(0)
-    var i = 0
     
-    while (i < work) {
-      builder << data
-      i += 1
+    val writers = for (ti <- 1 to par) yield task {
+      var i = 0
+      while (i < work) {
+        builder << data
+        i += 1
+      }
     }
 
+    writers.foreach(_.join())
+
     // Seal FP to make it comparable to FPSealedInsertBench
-    builder.seal(work)
+    builder.seal(size)
 
   }
   

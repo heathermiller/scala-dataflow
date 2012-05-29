@@ -2,7 +2,8 @@ package scala.dataflow.bench
 
 import scala.dataflow._
 
-trait FPReduceBench extends testing.Benchmark with Utils.Props with FPBuilder {
+// Par level: Number of maps you do, single writer
+trait FPMapBench extends testing.Benchmark with Utils.Props with FPBuilder {
   import Utils._
   
   override def run() {

@@ -1,9 +1,6 @@
 package scala.dataflow
 
-
-
 import scala.collection.mutable.MutableList
-
 
 class Future[T] {
 
@@ -51,7 +48,7 @@ class Future[T] {
     }
   }
   
-  private[dataflow] def complete(v: T) {
+  final private[dataflow] def complete(v: T) {
     if (!tryComplete(v))
       sys.error("Future completed twice")
   }
