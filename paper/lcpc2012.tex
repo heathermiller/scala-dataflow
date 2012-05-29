@@ -156,15 +156,15 @@ The advantage of this is that the programmer is able to use
 nodes as procedure arguments or receive them as return values.
 This allows for a better modularity and increases the
 composability of the programming model.
-This also provides a higher degree of flexibility.
-The dependency graph does not have to be specified at compile time,
-but can be computed at runtime instead.
+It also provides a higher degree of flexibility -- the dependency
+graph does not have to be specified at compile time, but can be
+computed at runtime instead.
 
 What do we mean by determinism? We aspire for a definition which is
 practically useful in the sense that it makes debugging parallel programs
 easier.
 In doing so, we rely on the definition of declarative concurrency from the Oz
-programming language \ref{TODO} -- a concurrent program is declaratively concurrent
+programming language \cite{RoyH2004} -- a concurrent program is declaratively concurrent
 if and only if all possible executions either do not terminate or they all
 eventually reach logically equivalent results.
 Here non-termination also entails exceptions that happen at runtime.
@@ -291,7 +291,7 @@ is greater than the desired size.
 \textbf{Higher-level operations.}
 We now show how the basic abstractions above can be used
 to build higher-level abstractions.
-To begin with, in addition to a regular FlowPool constructor, it is
+To begin with, in addition to a default FlowPool constructor, it is
 convenient to have generators which create certain types of pools.
 In a dataflow graph FlowPools created using generators
 are source nodes.
@@ -438,8 +438,8 @@ The \verb=flatMap= operation retrieves a pool for each element of
 Given two FlowPools, it can be used to generate the cartesian product
 of their elements.
 The implementation is similar to that of the \verb=filter=,
-but we reduce on the future values of the sizes, because each
-intermediate pool may not be sealed.
+but we reduce the size on the future values of the sizes, because each
+intermediate pool may not yet be sealed.
 %Implementing this operation is sufficient to show that a FlowPool is
 %a monad.
 The \verb=either= operation produces a new pool which has elements of
@@ -841,16 +841,44 @@ FlowPool operations \verb=append= and \verb=seal= are linearizable.
 We then proceed to show that operations are lock-free, i.e. that at
 least one thread completes after a finite number of steps.
 
-
 \section{Experimental Results}
 
+
+
 \section{Related Work}
-Things to probably cite: Oz, gpars, i-Structures \cite{Arvind89}, Java CLQ \cite{Michael96}, our futures writeup, twitter futures, MultiLISP futures \cite{Halstead85}, FlumeJava \cite{Chambers10}.
+
+An introduction to linearizability, lock-freedom and basic
+concurrent programming techniques is given by Herlihy and Shavit
+\cite{Herlihy08}.
+A detailed overview of concurrent data structures is given
+by Moir and Shavit \cite{Moir05}.
+To date, concurrent data structures remain an active area of
+research -- it is out of scope to list them all, so we restrict
+ourselves to those relevant to this work.
+
+Concurrently accessible queues have been present for a while --
+an implementation is described by \cite{Mellor87}.
+Non-blocking concurrent linked queues are described by Michael and
+Scott \cite{Michael96}. This CAS-based linked-list
+queue implementation is cited and used widely today, a variant of
+which is present in the Java standard library.
+More recently, Scherer, Lea and Scott \cite{SchererLS09} describe a
+synchronous queues which internally hold both data and requests.
+Both approaches above entail blocking (or spinning) at least on the
+consumer's part when the queue is empty.
+
+While the abstractions above fit well in the concurrent imperative
+model, they have the disadvantage that the programs written using them
+are inherently nondeterministic.
+In the book by \cite{RoyH2004}, the Oz programming language is
+described, which offers a range
+
+
+Things to probably cite: Oz, gpars, i-Structures \cite{Arvind89}, our futures writeup, twitter futures, MultiLISP futures \cite{Halstead85}, FlumeJava \cite{Chambers10}.
 
 Things we should probably have a look at: Microsoft TPL, Dataflow
 Java, FlumeJava...
 
-Art of Multicore Programming book, cite that somewhere?: \cite{Herlihy08}
 
 	- Scala Futures
 	- CnC
@@ -862,23 +890,30 @@ Art of Multicore Programming book, cite that somewhere?: \cite{Herlihy08}
 	- Dataflow Java?
 	- FlumeJava
 	- Msoft TPL?
-	- CLQ
-	- LTQ
-	- Michael Scott CLQ
-	- take a look at source of LTQ
 	- research blocking queues
 	- Nir Shavit, Data Structures in the Multicore Age
         - type-systematic approach to determinism - cite Deterministic
         Parallel Java and X10's dependent types
         - need to go through the work of the program committee
-	- Introduction crap
-		- the Art of Multiprocessor Programming, 2008, Herlihy, Shavit, 
-		- Concurrent Data Structures, 2007, Moir, Shavit.
-		- Linearizability: A Correctness Condition for Concurrent Objects, 1990, Herlihy
 
 
 \section{Conclusion}
 
+We have shown that deterministic higher-level operations can be build
+on top of \verb=<<= and \verb=foreach=, which corresponds to
+sequential collections.
+The prerequisite is that \verb=<<= can be invoked concurrently and
+that \verb=foreach= executes asynchronously.
+
+We postulate the existence of a range of other concurrent collection
+types with deterministic semantics fitting the presented
+correct-by-construction single-assignment model, such as bounded
+buffers, dataflow streams and maps, all of which have higher-level
+operations expressed in terms of the same basic primitives.
+On the implementation level, we anticipate the need of embedding the
+callbacks within the data-structure itself, as is the case with
+futures and FlowPools -- this offers a particular benefit on platforms
+which do not by default support efficient continuations.
 
 
 \bibliographystyle{abbrv}
