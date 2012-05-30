@@ -11,7 +11,7 @@ trait FPUnsafeHistBench extends testing.Benchmark with Utils.Props with FPBuilde
   override def run() {
     val pool = newFP[Data]
     val builder = pool.builder
-    val work = size
+    val work = size / par
     val bins = 5 to 20
     def data = new Data(ThreadLocalRandom.current.nextInt(maxval))
 
