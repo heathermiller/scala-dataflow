@@ -12,6 +12,8 @@ final class MultiLaneBuilder[T](
 
   @volatile private var positions = bls.map(bl => Next(bl))
   private val lanes = bls.length
+
+  @volatile private var hasher: MLHasher = null
   
   private val unsafe = getUnsafe()
   private val ARRAYOFFSET      = unsafe.arrayBaseOffset(classOf[Array[AnyRef]])
@@ -187,10 +189,14 @@ final class MultiLaneBuilder[T](
 
     obj match {
       case Seal(sz, null) =>
-        // FlowPool sealed here - take another block
-        return findFreeBlock map {
-          fbli => tryAdd(x, fbli)
-        } getOrElse sys.error("Insert on a sealed structure.")
+        // Rehash. We don't care about races
+        val h = /*READ*/hasher
+        if (h eq null) hasher = new MLHasher(lanes)
+        else if (h.advance > lanes) {
+          return findFreeBlock map {
+            fbli => tryAdd(x, fbli)
+          } getOrElse sys.error("Insert on a sealed structure.")
+        }
       case MustExpand =>
         // must extend with a new block
         expand(curblock, bli)
@@ -311,7 +317,12 @@ final class MultiLaneBuilder[T](
    * gets index of block index to use, based on current thread
    */
   private def getblocki = {
-    (Thread.currentThread.getId % lanes).asInstanceOf[Int]
+    val tid = Thread.currentThread.getId
+    val h = /*READ*/hasher
+    if (h eq null)
+      (tid % lanes).asInstanceOf[Int]
+    else
+      h.getblocki(tid)
   }
   
 }
