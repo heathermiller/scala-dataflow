@@ -135,7 +135,7 @@ final class SingleLaneBuilder[T](bl: Array[AnyRef]) extends Builder[T] {
                 if (CAS(curblock, pos + 1, nextelem, nseal)) {
                   if (CAS(curblock, pos, curelem, x.asInstanceOf[AnyRef])) {
                     p.index = pos + 1
-                    applyCallbacks(cbh.callbacks)
+                    applyCallbacks(cbs)
                     return true
                   }
                 }

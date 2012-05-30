@@ -34,8 +34,8 @@ final case class SealTag[T](
   def insertedCallback[U <: T](el: CallbackElem[U]) =
     SealTag(p, callbacks.insertedCallback(el))
   def toSeal(cursz: Int, addsz: Int) = {
-    val nsz = cursz + addsz;
-    if (nsz > cursz) Seal(nsz, callbacks) else Seal(nsz, null)
+    val nsz = cursz + addsz
+    if (addsz > 0) Seal(nsz, callbacks) else Seal(nsz, null)
   }
 }
 

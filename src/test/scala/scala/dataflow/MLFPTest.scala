@@ -8,8 +8,8 @@ object MLFPTest extends App {
   import Utils._
 
   val tasks = 1000
-  val n = 10
-  val pool = new MultiLaneFlowPool[(Int,Int)](tasks/2)
+  val n = 100
+  val pool = new MultiLaneFlowPool[(Int,Int)](tasks)
   val b = pool.builder
 
   val vals = MSet.empty[(Int,Int)]

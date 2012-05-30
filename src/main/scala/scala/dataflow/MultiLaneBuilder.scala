@@ -139,13 +139,7 @@ final class MultiLaneBuilder[T](
                 else if (CAS(curblock, pos, ov, nv)) Left(cnt)
                 else sealTag(p, bli, curblock, pos)
               }
-            case MLSeal(_,rem) => 
-              val sz = sealSize(bli, rem)
-              val ns = ov.toSeal(cnt, sz)
-              if (CAS(curblock, pos, ov, ns)) {
-                if (sz == 0) applyCallbacks(cbs)
-                Right(true)
-              } else sealTag(p, bli, curblock, pos)
+            case _: MLSeal => Right(true)
             case Unsealed => Right(false)
           }
         }
@@ -194,10 +188,9 @@ final class MultiLaneBuilder[T](
     obj match {
       case Seal(sz, null) =>
         // FlowPool sealed here - take another block
-        findFreeBlock match {
-          case Some(fbli) => tryAdd(x, fbli)
-          case None => sys.error("Insert on a sealed structure.")
-        }
+        return findFreeBlock map {
+          fbli => tryAdd(x, fbli)
+        } getOrElse sys.error("Insert on a sealed structure.")
       case MustExpand =>
         // must extend with a new block
         expand(curblock, bli)
@@ -219,7 +212,6 @@ final class MultiLaneBuilder[T](
             // current is Seal(sz, _ != null), next is not at the end
             // check size and append
             val curelem = curblock(pos)
-            val total = totalElems(curblock, pos)
             curelem match {
               case Seal(sz, cbs) =>
                 val total = totalElems(curblock, pos)
@@ -227,7 +219,7 @@ final class MultiLaneBuilder[T](
                 if (CAS(curblock, pos + 1, nextelem, nseal)) {
                   if (CAS(curblock, pos, curelem, x.asInstanceOf[AnyRef])) {
                     p.index = pos + 1
-                    applyCallbacks(cbh.callbacks)
+                    applyCallbacks(cbs)
                     return true
                   }
                 }
