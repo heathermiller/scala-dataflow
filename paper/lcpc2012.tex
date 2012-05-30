@@ -147,8 +147,8 @@ and fewer GC cycles
 Pipeline-based applications are composed of a sequence
 of producer/consumer stages, each one depending on the output of its
 predecessor. More generally, the computation forms a directed
-dependency graph in which parallelism is achieved by operations in the
-nodes executing concurrently.
+dependency graph in which parallelism is achieved by operations in
+different nodes executing concurrently.
 
 One design goal is to make the nodes in the dependency graph first
 class values.
@@ -181,7 +181,7 @@ Such an abstraction may seem similar to the dataflow streams seen in Oz,
 but there are some important differences.
 We argue that both of these are deterministic, but our pool abstraction
 does not define the order between contained elements, hence there is
-no traversal order.
+no predefined traversal order.
 
 
 \section{Programming Interface}
@@ -872,9 +872,9 @@ model, they have the disadvantage that the programs written using them
 are inherently nondeterministic.
 Book by Roy and Haridi \cite{RoyH2004} describes the Oz programming language 
 a subset of which yields programs deterministic by construction.
-The dataflow streams described there are built on top of
+The Oz dataflow streams are built on top of
 single-assignment variables and are deterministically ordered.
-These allow multiple consumers, but only one producer writes
+They allow multiple consumers, but only one producer
 at a time.
 Oz has its own runtime which implements blocking using
 continuations.
@@ -941,8 +941,9 @@ buffers, dataflow streams and maps, all of which have higher-level
 operations expressed in terms of the same basic primitives.
 On the implementation level, we anticipate the need of embedding the
 callbacks within the data-structure itself, as is the case with
-futures and FlowPools -- this offers a particular benefit on platforms
-which do not by default support efficient continuations.
+callback-based futures and FlowPools -- this offers a particular
+benefit on platforms which do not by default support efficient
+continuations.
 
 
 \bibliographystyle{abbrv}
