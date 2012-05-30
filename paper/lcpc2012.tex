@@ -147,8 +147,8 @@ and fewer GC cycles
 Pipeline-based applications are composed of a sequence
 of producer/consumer stages, each one depending on the output of its
 predecessor. More generally, the computation forms a directed
-dependency graph in which parallelism is achieved by operations in the
-nodes executing concurrently.
+dependency graph in which parallelism is achieved by operations in
+different nodes executing concurrently.
 
 One design goal is to make the nodes in the dependency graph first
 class values.
@@ -181,7 +181,7 @@ Such an abstraction may seem similar to the dataflow streams seen in Oz,
 but there are some important differences.
 We argue that both of these are deterministic, but our pool abstraction
 does not define the order between contained elements, hence there is
-no traversal order.
+no predefined traversal order.
 
 
 \section{Programming Interface}
@@ -870,11 +870,11 @@ consumer's part when the queue is empty.
 While the abstractions above fit well in the concurrent imperative
 model, they have the disadvantage that the programs written using them
 are inherently nondeterministic.
-Book by \cite{RoyH2004} describes the Oz programming language 
+Book by Roy and Haridi \cite{RoyH2004} describes the Oz programming language 
 a subset of which yields programs deterministic by construction.
-The dataflow streams described there are built on top of
+The Oz dataflow streams are built on top of
 single-assignment variables and are deterministically ordered.
-These allow multiple consumers, but only one producer writes
+They allow multiple consumers, but only one producer
 at a time.
 Oz has its own runtime which implements blocking using
 continuations.
@@ -890,43 +890,40 @@ Scala futures \cite{TODO} and Finagle futures \cite{TODO} are
 of interest, because they define monadic operators and a
 number of high-level combinators which produce new futures.
 This provides an API which avoids blocking.
-Futures have been generalized to data-driven tasks and futures,
-which provide additional information for the
-scheduler \cite{Tasirlar11}.
+Futures have been generalized to data-driven futures,
+which can provide additional information to the scheduler
+\cite{Tasirlar11}.
+Many frameworks have constructs which start an asynchronous
+computation and yield a future holding its result.
+For example, Habanero Java \cite{Shirako11} offers an \verb=async=
+construct and Scala futures offer a \verb=future= construct.
 
 A number of other models and frameworks recognized the need to embed
 the concept of futures into other data-structures.
 Single-assignment variables have been generalized to I-Structures
 proposed by Arvind \cite{Arvind89} which are essentially
 single-assignment arrays.
-FlumeJava \cite{Chambers10} relies heavily on the concept of
-collections containing a set of futures.
-The CnC model \cite{Burke11} is a parallel programming model
+The CnC model \cite{Burke11} \cite{CnC10} is a parallel programming model
 influenced by dynamic dataflow, stream-processing and tuple spaces.
-TODO More CnC here!
+In CnC the user provides high-level operations along with the ordering
+constraints that form a computation dependency graph.
+FlumeJava \cite{Chambers10} is a distributed programming model which
+relies heavily on the concept of collections containing a set of
+futures.
+An issue that often arises with dataflow programming models are
+unbalanced loads.
+This is often solved through the use of bounded buffers which prevent
+the producer from overflowing the consumer.
+Analytical approaches to modeling pipelined applications have also
+been addressed \cite{Cascaval09}.
 
 Opposed to the correct-by-construction determinism described thus far,
 a type-systematic approach can also ensure that concurrent executions
 have deterministic results.
 Recently, work on Deterministic Parallel Java showed that a
 region-based type system can ensure determinism \cite{Bocchino09}.
-X10's constrained-based dependent-value types can similarly ensure
+X10's constrained-based dependent types can similarly ensure
 determinism and deadlock-freedom \cite{Saraswat07}.
-
-
-Things to probably cite: Oz, gpars.
-
-Things we should probably have a look at: Microsoft TPL, Dataflow
-Java
-
-
-	- Sarkar's futures (Data-driven futures) Look at callback-related references
-	- gpars (dataflow stuff)
-	- Dataflow Java?
-	- Msoft TPL?
-	- research blocking queues
-	- Nir Shavit, Data Structures in the Multicore Age
-        - need to go through the work of the program committee
 
 
 \section{Conclusion}
@@ -944,8 +941,9 @@ buffers, dataflow streams and maps, all of which have higher-level
 operations expressed in terms of the same basic primitives.
 On the implementation level, we anticipate the need of embedding the
 callbacks within the data-structure itself, as is the case with
-futures and FlowPools -- this offers a particular benefit on platforms
-which do not by default support efficient continuations.
+callback-based futures and FlowPools -- this offers a particular
+benefit on platforms which do not by default support efficient
+continuations.
 
 
 \bibliographystyle{abbrv}
