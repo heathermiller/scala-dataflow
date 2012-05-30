@@ -206,7 +206,7 @@ FlowPool.
 % \sout{The latter --} we want determinism, avoid races, same execution every
 % time.
 
-\textbf{Foreach and Fold.}
+\textbf{Foreach and Aggregate.}
 A pool containing a set of elements is of little use if the elements
 cannot be manipulated in some manner.
 One of the basic data structure operations is element traversal,
@@ -232,21 +232,21 @@ pool.
 It denotes the number of times the \verb=foreach= has been called.
 The user-specified function return value of type \verb=U= is ignored.
 
-The \verb=fold= operation aggregates the elements of the pool
-Its signature is \verb+def fold[S](zero: S)(op: (S, T) => S): Future[S]+,
-where \verb=zero= is the initial aggregation, \verb=op= is an
-associative operator, and \verb=Future[S]= is the aggregation
-of all the elements which becomes available once all the elements have
-been added.
-It is applied to every element of the FlowPool eventually.
+The \verb=aggregate= operation aggregates the elements of the pool
+together and has the following signature: \verb+def aggregate[S]+\verb+(zero: S)+
+\verb+(cb: (S, S) => S)+ \verb+(op: (S, T) => S):+ \verb+Future[S]+,
+where \verb=zero= is the initial aggregation, \verb=cb= is an operator
+which combines several aggregations, \verb=op= is an associative operator
+that adds an element to the aggregation, and \verb=Future[S]= is the final
+aggregation of all the elements which becomes available once all the elements
+have been added.
+The aggregation operator is applied to every element of the FlowPool eventually.
 
-We conclude by saying that the \verb=fold= is more general than the
-\verb=foreach=.
-While in an imperative programming model \verb=foreach= and \verb=fold= are
+While in an imperative programming model \verb=foreach= and \verb=aggregate= are
 equivalent in the sense that one can be implemented in terms of the
-other, in a single-assignment programming model \verb=fold= is more
+other, in a single-assignment programming model \verb=aggregate= is more
 expressive than \verb=foreach=.
-The \verb=foreach= can be implemented using \verb=fold=, but not vice versa,
+The \verb=foreach= can be implemented using \verb=aggregate=, but not vice versa,
 due to the absence of side-effects.
 
 \textbf{Builders.}
@@ -268,10 +268,10 @@ discarding the no longer needed objects.
 
 \textbf{Seal.}
 When the client is sure that no more elements will be added to the pool
-he can disallow further additions by calling \verb=seal=.
+he can disallow further appends by calling \verb=seal=.
 This has the advantage of discarding the registered \verb=foreach=
 operations.
-More importantly, \verb=fold= can only complete the future
+More importantly, \verb=aggregate= can only complete the future
 once it is certain that no more elements will be added.
 
 A \verb=seal= which just closes the FlowPool at the moment when it
@@ -343,7 +343,7 @@ def map[S](f: T => S)
 \begin{alltt}
 {\scriptsize
 def foreach[U](f: T => U)
-  fold(0) \{
+  aggregate(0)(_ + _) \{
     (acc, x) =>
     f(x)
     acc + 1
@@ -370,16 +370,16 @@ The \verb=Future.map= above ensures that if the \verb=this= pool is ever
 sealed, the mapped pool is sealed to the appropriate size.
 
 As argued before, the \verb=foreach= can be expressed in terms of a
-\verb=fold= by accumulating the number of elements and invoking the
+\verb=aggregate= by accumulating the number of elements and invoking the
 callback \verb=f= each time.
 We further show that some patterns cannot be expressed in terms of a mere
 \verb=foreach=.
 The \verb=filter= combinator filters out the elements for which a
 specified predicate does not hold.
-The part where it appends elements to a new pool can proceed as
+Appending the elements to a new pool can proceed as
 before, but the seal needs to know the exact number of elements added.
-The accumulator of the \verb=fold= is thus used to track how many
-elements were added.
+The \verb=aggregate= accumulator is thus used to track the number
+of added elements.
 
 \noindent
 \begin{minipage}[b]{4 cm}
@@ -389,45 +389,54 @@ def filter
   (pred: T => Boolean)
   val p = new FlowPool[T]
   val b = p.builder
-  fold(0) \{ (acc, x) =>
-    if pred(x) \{
+  aggregate(0)(_ + _) \{
+    (acc, x) => if pred(x) \{
       b << x
       1
     \} else 0
   \} map \{ sz => b.seal(sz) \}
   p
+
+
+
 }
 \end{alltt}
-\end{minipage}\begin{minipage}[b]{4.3 cm}
+\end{minipage}\begin{minipage}[b]{4 cm}
 \begin{alltt}
 {\scriptsize
 def flatMap[S]
   (f: T => FlowPool[S])
   val p = new FlowPool[S]
   val b = p.builder
-  fold(future(0)) \{ (af, x) =>
+  aggregate(future(0))(add) \{
+    (af, x) =>
     val sf = for (y <- f(x))
       b << y
-    for (a <- af; s <- sf)
-      yield a + s
+    add(af, sf)
   \} map \{ sz => b.seal(sz) \}
   p
+
+def add(f: Future[Int], g: Future[Int]) =
+  for (a <- f; b <- g) yield a + b
 }
 \end{alltt}
 \end{minipage}
 \begin{minipage}[b]{4 cm}
 \begin{alltt}
 {\scriptsize
-def either[T]
-  (q: FlowPool[T],
-   r: FlowPool[T])
+def union[T]
+  (that: FlowPool[T])
   val p = new FlowPool[T]
   val b = p.builder
-  val f = for (x <- q) b << x
-  val g = for (y <- r) b << y
+  val f = for (x <- this) b << x
+  val g = for (y <- that) b << y
   for (s1 <- f; s2 <- g)
     b.seal(s1 + s2)
   p
+
+
+
+
 
 }
 \end{alltt}
@@ -442,7 +451,7 @@ but we reduce the size on the future values of the sizes, because each
 intermediate pool may not yet be sealed.
 %Implementing this operation is sufficient to show that a FlowPool is
 %a monad.
-The \verb=either= operation produces a new pool which has elements of
+The \verb=union= operation produces a new pool which has elements of
 both pool \verb=q= and pool \verb=r=.
 
 The last two operations correspond to joining nodes in the dataflow
@@ -452,7 +461,7 @@ loops to implement the third join type \verb=zip=, we would
 yield a nondeterministic operation.
 The programming model does not allow us to do so, however.
 The \verb=zip= is more suited for data structures with deterministic ordering,
-such as Oz streams -- which would in turn have a nondeterministic \verb=either=.
+such as Oz streams -- which would in turn have a nondeterministic \verb=union=.
 
 
 
@@ -664,8 +673,8 @@ def asyncFor(f: Elem => Unit, b: Block, idx: Int)
 
 We now describe the FlowPool and its basic operations.
 In doing so, we omit the details not relevant to the
-algorithm\footnote{Specifically the builder abstraction and the \texttt{fold}
-operation. The \texttt{fold} can be implemented using \texttt{foreach}
+algorithm\footnote{Specifically the builder abstraction and the \texttt{aggregate}
+operation. The \texttt{aggregate} can be implemented using \texttt{foreach}
 in an imperative model with a side-effecting accumulator.}
 and focus on a high-level description of a non-blocking
 data structure.
@@ -2177,7 +2186,7 @@ def exists
   (pred: T => Boolean)
   val p = new FlowPool[T]
   val b = p.builder
-  fold(false) \{
+  aggregate(false)(_ \(\vee\) _) \{
     (acc, x) =>
     acc \(\vee\) pred(x)
   \}
@@ -2193,10 +2202,9 @@ def flatten[S]
   (q: FlowPool[FlowPool[S]])
   val p = new FlowPool[S]
   val b = p.builder
-  q.fold(future(0)) \{ (af, r) =>
+  q.aggregate(future(0))(add) \{ (af, r) =>
     val sf = for (x <- r) b << x
-    for (a <- af; s <- sf)
-      yield a + s
+    add(af, sf)
   \} map \{ sz => b.seal(sz) \}
   p
 }
