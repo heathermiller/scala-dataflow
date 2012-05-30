@@ -12,7 +12,7 @@ trait FPMapBench extends testing.Benchmark with Utils.Props with FPBuilder {
     val work = size / par
     val data = new Data(0)
 
-    val res = pool.mappedFold(0)(_ + _)(_.i)
+    val res = pool.mapFold(0)(_ + _)(_.i)
     
     for (ti <- 1 to par) yield task {
       var i = 0

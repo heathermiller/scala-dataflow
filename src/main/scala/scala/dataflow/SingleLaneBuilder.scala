@@ -151,7 +151,7 @@ final class SingleLaneBuilder[T](bl: Array[AnyRef]) extends Builder[T] {
   
   @tailrec
   private def applyCallbacks[T](e: CallbackList[T]): Unit = e match {
-    case el: CallbackElem[T] =>
+    case el: CallbackElem[T, _] =>
       el.awakeCallback()
       applyCallbacks(el.next)
     case _ =>

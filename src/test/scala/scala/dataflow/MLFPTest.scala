@@ -14,13 +14,13 @@ object MLFPTest extends App {
 
   val vals = MSet.empty[(Int,Int)]
 
-  val sfill = pool.doForAll { x =>
+  val sfill = pool.foreach { x =>
     vals.synchronized {
       vals += x
     }
   }
-  val rf = pool.mappedFold(0)(_ + _)(x => x._2)
-  val sf = pool.mappedFold(0)(_ + _)(x => x._1)
+  val rf = pool.mapFold(0)(_ + _)(x => x._2)
+  val sf = pool.mapFold(0)(_ + _)(x => x._1)
 
   val rc = n * (n + 1) / 2 * tasks
   val sc = tasks * (tasks + 1) / 2 * n
@@ -41,8 +41,8 @@ object MLFPTest extends App {
     }
   }
 
-  val rv = rf.blocking._2
-  val sv = sf.blocking._2
+  val rv = rf.blocking
+  val sv = sf.blocking
   val c = sfill.blocking
 
   val vals_should = ( for (i <- 1 to tasks ; j <- 1 to n) yield (i,j) ) toSet

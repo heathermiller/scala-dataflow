@@ -307,7 +307,7 @@ final class MultiLaneBuilder[T](
   
   @tailrec
   private def applyCallbacks[T](e: CallbackList[T]): Unit = e match {
-    case el: CallbackElem[T] =>
+    case el: CallbackElem[T, _] =>
       el.awakeCallback()
       applyCallbacks(el.next)
     case _ =>

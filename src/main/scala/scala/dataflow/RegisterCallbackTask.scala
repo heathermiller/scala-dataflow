@@ -3,7 +3,7 @@ package scala.dataflow
 import scala.annotation.tailrec
 import jsr166y._
 
-final class RegisterCallbackTask[T](val cb: CallbackElem[T]) extends RecursiveAction {
+final class RegisterCallbackTask[T, S](val cb: CallbackElem[T, S]) extends RecursiveAction {
   import FlowPool._
 
   private val unsafe = getUnsafe()
@@ -15,21 +15,21 @@ final class RegisterCallbackTask[T](val cb: CallbackElem[T]) extends RecursiveAc
 
   @tailrec
   def compute() {
-    val curo = /*READ*/cb.block(cb.pos)
+    val curo = /*READ*/cb.block(cb.position)
     curo match {
       // At (sealed) end of buffer
       case Seal(sz, null) => 
-        cb.endf(sz)
+        cb.finalizer(sz, cb.accumulator)
       // At end of current elements
       case cbh: CallbackHolder[T] => {
         val newel = cbh.insertedCallback(cb)
-        if (!CAS(cb.block, cb.pos, curo, newel)) compute()
+        if (!CAS(cb.block, cb.position, curo, newel)) compute()
       }
       // Some element
       case v => {
-        cb.func(v.asInstanceOf[T])
-        cb.pos = cb.pos + 1
-        if (cb.pos >= LAST_CALLBACK_POS) endOfBlock()
+        cb.accumulator = cb.folder(cb.accumulator, v.asInstanceOf[T])
+        cb.position = cb.position + 1
+        if (cb.position >= LAST_CALLBACK_POS) endOfBlock()
         else compute()
       }
     }
@@ -41,7 +41,7 @@ final class RegisterCallbackTask[T](val cb: CallbackElem[T]) extends RecursiveAc
     // Check if last callback is seal for early stopping
     curcb match {
       case Seal(sz, null) => {
-        cb.endf(sz)
+        cb.finalizer(sz, cb.accumulator)
         return
       }
       case _ => 
@@ -53,7 +53,7 @@ final class RegisterCallbackTask[T](val cb: CallbackElem[T]) extends RecursiveAc
       case Next(b) => {
         // We can safely set here as nobody knows about the CBElem yet
         cb.block = b
-        cb.pos = 0
+        cb.position = 0
       }
       case me @ MustExpand => {
         val curidx = cb.block(IDX_POS).asInstanceOf[Int]
@@ -67,14 +67,14 @@ final class RegisterCallbackTask[T](val cb: CallbackElem[T]) extends RecursiveAc
 
         // prepare callback to be added
         cb.block = nextblock
-        cb.pos = 0
+        cb.position = 0
         
         // Swap block in an end.
         if (CAS(curblock, MUST_EXPAND_POS, me, Next(nextblock))) return
 
         // We failed CASing. We have another Next now. Update and move on
         cb.block = curblock(MUST_EXPAND_POS).asInstanceOf[Next].block
-        cb.pos = 0
+        cb.position = 0
         
       }
       case _ => sys.error("SingleLaneFlowPool block in inconsistent state: " +

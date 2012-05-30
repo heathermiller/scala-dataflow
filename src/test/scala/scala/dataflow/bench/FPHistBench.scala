@@ -33,9 +33,9 @@ trait FPHistBench extends testing.Benchmark with Utils.Props with FPBuilder {
 
   private def binning(count: Int, pool: FlowPool[Data]) = {
     val init = Map[Int,Int]()
-    val fm = pool.mappedFold(init)(mergeMaps _)(x => Map(x.i * count / maxval -> 1))
+    val fm = pool.mapFold(init)(mergeMaps _)(x => Map(x.i * count / maxval -> 1))
     fm.map {
-      case (cnt,m) => for (i <- 0 to (count - 1)) yield m.getOrElse(i,0)
+      m => for (i <- 0 to (count - 1)) yield m.getOrElse(i,0)
     }
   }
 

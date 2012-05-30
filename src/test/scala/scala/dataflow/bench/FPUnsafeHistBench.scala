@@ -34,7 +34,7 @@ trait FPUnsafeHistBench extends testing.Benchmark with Utils.Props with FPBuilde
   private def binning(count: Int, pool: FlowPool[Data]) = {
     // this is fast but unsafe
     val agg = Array.fill[Int](count)(0)
-    pool.doForAll { x =>
+    pool.foreach { x =>
       val ind = x.i * count / maxval
       agg(ind) = agg(ind) + 1            
     } map { x => agg }
