@@ -12,6 +12,7 @@ trait FPReduceBench extends testing.Benchmark with Utils.Props with FPBuilder {
     val data = new Data(0)
 
     val res = pool.aggregate(0)(_ + _)(_ + _.i)
+    //val res = pool.mapFold(0)(_ + _)(_.i)
     
     for (ti <- 1 to par) yield task {
       var i = 0
@@ -27,4 +28,25 @@ trait FPReduceBench extends testing.Benchmark with Utils.Props with FPBuilder {
 
   }
   
+  def run2() {
+    val pool = newFP[Unit]
+    val builder = pool.builder
+    val work = size / par
+
+    val res = pool.aggregate(())((u, v) => ())((u, v) => ())
+    //val res = pool.mapFold(())((u, v) => ())(x => ())
+    
+    for (ti <- 1 to par) yield task {
+      var i = 0
+      while (i < work) {
+        builder << ()
+        i += 1
+      }
+    }
+
+    builder.seal(size)
+
+    res.blocking
+
+  }
 }

@@ -39,7 +39,7 @@ class MultiLaneFlowPool[T](val lanes: Int) extends FlowPool[T] {
   //   fut
   // }
 
-  // def mapFold[U, V >: U](accInit: V)(cmb: (V,V) => V)(map: T => U): Future[(Int, V)] = {
+  // override def mapFold[U, V >: U](accInit: V)(cmb: (V,V) => V)(map: T => U): Future[V] = {
 
   //   val fut = new SumFuture[Int](lanes)
 
@@ -48,13 +48,13 @@ class MultiLaneFlowPool[T](val lanes: Int) extends FlowPool[T] {
 
   //   val holders = initBlocks map { b =>
   //     val h = new AccHolder(accInit)
-  //     val cbe = new CallbackElem(accf(h) _, fut.complete _, CallbackNil, b, 0)
+  //     val cbe = new CallbackElem[T, Unit]((acc, x) => accf(h)(x), (sz, acc) => fut.complete(sz), CallbackNil, b, 0, ())
   //     task(new RegisterCallbackTask(cbe))
   //     h                            
   //   }
 
   //   fut map {
-  //     c => (c, holders.map(_.acc).reduce(cmb))
+  //     c => holders.map(_.acc).reduce(cmb)
   //   }
 
   // }

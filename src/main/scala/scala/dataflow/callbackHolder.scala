@@ -52,7 +52,7 @@ final class CallbackElem[-T, S] (
   val next: CallbackList[T],
   var block: Array[AnyRef],
   var position: Int,
-  var accumulator: S
+  @volatile var accumulator: S
 ) extends CallbackList[T] {
   @volatile var lock: Int = -1
   var done: Boolean = false
@@ -113,12 +113,13 @@ object CallbackElem {
       var cur = block(pos)
       var acc = callback.accumulator
       while (!cur.isInstanceOf[CallbackHolder[_]]) {
-        acc = callback.folder(acc, cur.asInstanceOf[T])
+        //acc = callback.folder(acc, cur.asInstanceOf[T]) -- strange, but this slows down everything... dunno why, but don't change
+        callback.accumulator = callback.folder(callback.accumulator, cur.asInstanceOf[T])
         pos += 1
         cur = block(pos)
       }
       callback.position = pos
-      callback.accumulator = acc
+      //callback.accumulator = acc
 
       // Check for seal
       cur match {
