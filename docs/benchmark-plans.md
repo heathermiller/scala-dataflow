@@ -25,8 +25,63 @@ x1, x1.5, x2, x3, x4
 - UnsafeHistBench
 - MapBench
 
-## Sizes (5)
+## Sizes (3)
 Try them out!!
 
 ## N
 15
+
+
+# Parameter ranges estimations
+
+Some parameter ranges might not be feasible - they last too long.
+
+## wolf
+
+### insert
+
+SLFPInsertBench
+par - 1,2,4,8
+size - 1000000, 10000000, 15000000
+
+MLFPInsertBench
+par - 1,2,4,8,16,32,48,64
+size - 1000000, 10000000, 15000000
+
+CLQInsertBench
+par - 1,2,4,8
+size - 1000000, 10000000, 15000000
+
+LTQInsertBench
+par - 1,2,4,8
+size - 1000000, 10000000, 15000000
+
+
+### reduce
+
+SFLPReduceBench
+par - 1,2,4,8
+size - 1000000, 5000000, 10000000
+
+MFLPReduceBench
+par - 1,2,4,8,16,32,48,64
+size - 1000000, 5000000, 10000000
+
+LTQReduceBench
+par - 1,2,4,8
+
+
+### map
+
+
+### sealed insert
+
+
+### histogram
+
+
+
+
+## maglite
+
+

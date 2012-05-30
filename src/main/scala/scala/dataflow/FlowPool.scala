@@ -4,62 +4,74 @@ import jsr166y._
 
 trait FlowPool[T] {
   
-  def builder: Builder[T]
-  def doForAll[U](f: T => U): Future[Int]
-  def mappedFold[U, V >: U](accInit: V)(cmb: (V,V) => V)(map: T => U): Future[(Int, V)]
   def newPool[S]: FlowPool[S]
-
+  def builder: Builder[T]
+  def aggregate[S](zero: S)(cmb: (S, S) => S)(folder: (S, T) => S): Future[S]
+  
   // Monadic Ops
-
-  def exists(f: T => Boolean): Future[Boolean] = {
-    val fut = new Future[Boolean]
-    doForAll { x =>
-      if (f(x)) fut.tryComplete(true)
-    } map { c =>
-      fut.tryComplete(false)
+  
+  def mapFold[U, V >: U](zero: V)(cmb: (V, V) => V)(map: T => U) =
+    aggregate(zero)(cmb)((acc, x) => cmb(acc, map(x)))
+  
+  def exists(p: T => Boolean): Future[Boolean] =
+    aggregate(false)(_ || _) {
+      (some, x) => some || p(x)
     }
-    fut
-  }
-
-  def filter(f: T => Boolean): FlowPool[T] = {
+  
+  def forall(p: T => Boolean): Future[Boolean] =
+    aggregate(true)(_ && _) {
+      (all, x) => all && p(x)
+    }
+  
+  def filter(p: T => Boolean): FlowPool[T] = {
     val fp = newPool[T]
     val b  = fp.builder
-
-    mappedFold(0)(_ + _) { x =>
-      if (f(x)) { b << x; 1 }
-      else 0
-    }  map {
-      case (c,fc) => b.seal(fc)
-    }
-
+    
+    aggregate(0)(_ + _) {
+      (acc, x) => if (p(x)) {
+        b << x
+        acc + 1
+      } else acc + 0
+    } map { b.seal(_) }
+    
     fp
   }
 
   def flatMap[S](f: T => FlowPool[S]): FlowPool[S] = {
     val fp = newPool[S]
     val b  = fp.builder
-
-    mappedFold(future(0))(futLift(_ + _)) { x =>
-      val ifp = f(x)
-      ifp.doForAll(b << _)
-    } map { 
-      case (c,cfut) => cfut.map(b.seal _)
+    def futureAdd(f1: Future[Int], f2: Future[Int]) =
+      for (a <- f1; b <- f2) yield a + b
+    
+    aggregate(future(0))(futureAdd) {
+      (sf1, x) =>
+      val sf2 = f(x).aggregate(0)(_ + _) {
+        (acc, y) =>
+        b << y
+        acc + 1
+      }
+      futureAdd(sf1, sf2)
     }
-
+    
     fp
   }
 
-  def foreach[U](f: T => U) { doForAll(f) }
-
+  def foreach[U](f: T => U): Future[Unit] =
+    aggregate(())((_, _) => ()) {
+      (acc, x) => f(x); ()
+    }
+  
   def fold[U >: T](z: U)(op: (U, U) => U): Future[U] =
-    mappedFold(z)(op)(x => x).map(_._2) 
+    aggregate[U](z)(op)(op)
 
   def map[S](f: T => S): FlowPool[S] = {
     val fp = newPool[S]
     val b  = fp.builder
 
-    doForAll { x =>
+    aggregate(0)(_ + _) {
+      (acc, x) =>
       b << f(x)
+      acc + 1
     } map { b.seal _ }
 
     fp

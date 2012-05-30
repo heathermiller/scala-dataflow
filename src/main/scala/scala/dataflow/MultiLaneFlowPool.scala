@@ -15,37 +15,41 @@ class MultiLaneFlowPool[T](val lanes: Int) extends FlowPool[T] {
 
   def builder = new MultiLaneBuilder[T](initBlocks, sealHolder)
 
-  def doForAll[U](f: T => U): Future[Int] = {
-    val fut = new SumFuture[Int](lanes)
-
-    // Note: Final sync of callback goes through SumFuture
-    for (b <- initBlocks) {
-      val cbe = new CallbackElem(f, fut.complete _, CallbackNil, b, 0)
-      task(new RegisterCallbackTask(cbe))
-    }
-
-    fut
+  def aggregate[S](zero: S)(cmb: (S, S) => S)(folder: (S, T) => S): Future[S] = {
+    null
   }
+  
+  // def doForAll[U](f: T => U): Future[Int] = {
+  //   val fut = new SumFuture[Int](lanes)
 
-  def mappedFold[U, V >: U](accInit: V)(cmb: (V,V) => V)(map: T => U): Future[(Int, V)] = {
+  //   /* Note: Final sync of callback goes through SumFuture */
+  //   for (b <- initBlocks) {
+  //     val cbe = new CallbackElem(f, fut.complete _, CallbackNil, b, 0)
+  //     task(new RegisterCallbackTask(cbe))
+  //   }
 
-    val fut = new SumFuture[Int](lanes)
+  //   fut
+  // }
 
-    def accf(h: AccHolder[V])(x: T) =
-      h.acc = cmb(map(x), h.acc)
+  // def mapFold[U, V >: U](accInit: V)(cmb: (V,V) => V)(map: T => U): Future[(Int, V)] = {
 
-    val holders = initBlocks map { b =>
-      val h = new AccHolder(accInit)
-      val cbe = new CallbackElem(accf(h) _, fut.complete _, CallbackNil, b, 0)
-      task(new RegisterCallbackTask(cbe))
-      h                            
-    }
+  //   val fut = new SumFuture[Int](lanes)
 
-    fut map {
-      c => (c, holders.map(_.acc).reduce(cmb))
-    }
+  //   def accf(h: AccHolder[V])(x: T) =
+  //     h.acc = cmb(map(x), h.acc)
 
-  }
+  //   val holders = initBlocks map { b =>
+  //     val h = new AccHolder(accInit)
+  //     val cbe = new CallbackElem(accf(h) _, fut.complete _, CallbackNil, b, 0)
+  //     task(new RegisterCallbackTask(cbe))
+  //     h                            
+  //   }
+
+  //   fut map {
+  //     c => (c, holders.map(_.acc).reduce(cmb))
+  //   }
+
+  // }
 
 }
 
