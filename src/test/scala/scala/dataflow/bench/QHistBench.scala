@@ -11,7 +11,7 @@ trait QHistBench extends testing.Benchmark with Utils.Props with BQBuilder {
 
   override def run() {
     val work = size / par
-    val bins = 5 to 20
+    val bins = 5 to 15
     val qs = bins.map(ign => newQ[Data])
     def data = new Data(ThreadLocalRandom.current.nextInt(maxval))
 
