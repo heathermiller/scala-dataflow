@@ -3,7 +3,7 @@ package scala.dataflow
 import scala.annotation.tailrec
 import jsr166y._
 
-final class RegisterCallbackTask[T, S](val cb: CallbackElem[T, S]) extends RecursiveAction {
+final class RegisterCallbackTask[T, S](cb0: CallbackElem[T, S]) extends RecursiveAction {
   import FlowPool._
 
   private val unsafe = getUnsafe()
@@ -13,8 +13,15 @@ final class RegisterCallbackTask[T, S](val cb: CallbackElem[T, S]) extends Recur
   @inline private def CAS(bl: Array[AnyRef], idx: Int, ov: AnyRef, nv: AnyRef) =
     unsafe.compareAndSwapObject(bl, RAWPOS(idx), ov, nv)
 
-  @tailrec
+  var cb: CallbackElem[T, S] = null
+  
   def compute() {
+    cb = cb0.copied
+    loop()
+  }
+  
+  @tailrec
+  def loop() {
     val curo = /*READ*/cb.block(cb.position)
     curo match {
       // At (sealed) end of buffer
@@ -23,14 +30,14 @@ final class RegisterCallbackTask[T, S](val cb: CallbackElem[T, S]) extends Recur
       // At end of current elements
       case cbh: CallbackHolder[T] => {
         val newel = cbh.insertedCallback(cb)
-        if (!CAS(cb.block, cb.position, curo, newel)) compute()
+        if (!CAS(cb.block, cb.position, curo, newel)) loop()
       }
       // Some element
       case v => {
         cb.accumulator = cb.folder(cb.accumulator, v.asInstanceOf[T])
         cb.position = cb.position + 1
         if (cb.position >= LAST_CALLBACK_POS) endOfBlock()
-        else compute()
+        else loop()
       }
     }
   }
