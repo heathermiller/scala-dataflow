@@ -113,7 +113,7 @@ object CallbackElem {
       var cur = block(pos)
       var acc = callback.accumulator
       while (!cur.isInstanceOf[CallbackHolder[_]]) {
-        //acc = callback.folder(acc, cur.asInstanceOf[T]) -- strange, but this slows down everything... dunno why, but don't change
+        //acc = callback.folder(acc, cur.asInstanceOf[T]) /* strange, but this slows down everything... dunno why, but don't change */
         callback.accumulator = callback.folder(callback.accumulator, cur.asInstanceOf[T])
         pos += 1
         cur = block(pos)
