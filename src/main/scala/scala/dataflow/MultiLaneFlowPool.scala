@@ -15,7 +15,7 @@ class MultiLaneFlowPool[T](val lanes: Int) extends FlowPool[T] {
 
   def builder = new MultiLaneBuilder[T](initBlocks, sealHolder)
 
-  def aggregate[S](zero: S)(cmb: (S, S) => S)(folder: (S, T) => S): Future[S] = {
+  def aggregate[S](zero: =>S)(cmb: (S, S) => S)(folder: (S, T) => S): Future[S] = {
     val a = FlowAggregate[S](zero)(cmb)
     a.seal(lanes)
     
