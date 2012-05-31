@@ -12,9 +12,9 @@ trait FPMapBench extends testing.Benchmark with Utils.Props with FPBuilder {
     val work = size / par
     val data = new Data(0)
 
-    val res = pool.mapFold(0)(_ + _)(_.i)
+    val res = pool.map(_.i)
     
-    for (ti <- 1 to par) yield task {
+    val writers = for (ti <- 1 to par) yield task {
       var i = 0
       while (i < work) {
         builder << data
@@ -24,7 +24,7 @@ trait FPMapBench extends testing.Benchmark with Utils.Props with FPBuilder {
 
     builder.seal(size)
 
-    res.blocking
+    writers.foreach(_.join())
 
   }
   

@@ -10,7 +10,7 @@ trait QMapBench extends testing.Benchmark with Utils.Props with BQBuilder {
     val queue = newQ[Data]
     val work = size / par
     var i = 0
-    var agg = 0
+    val output = newQ[Int]
 
     val writers = for (ti <- 1 to par) yield task {
       val data = new Data(0)
@@ -23,7 +23,8 @@ trait QMapBench extends testing.Benchmark with Utils.Props with BQBuilder {
 
     // TODO par readers
     while (i < size) {
-      agg += queue.take().i
+      val elem = queue.take().i
+      output.add(elem)
       i = i + 1
     }
 
