@@ -57,6 +57,8 @@ final class CallbackElem[-T, S] (
   @volatile var lock: Int = -1
   var done: Boolean = false
   
+  def copied = new CallbackElem(folder, finalizer, next, block, position, accumulator)
+  
   /* ATTENTION:
    * If you change the scheduling, make sure that SingleLaneFlowPool.mappedFold
    * synchronized still properly. Otherwise there will be races.
