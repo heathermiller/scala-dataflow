@@ -6,11 +6,11 @@ trait FlowPool[T] {
   
   def newPool[S]: FlowPool[S]
   def builder: Builder[T]
-  def aggregate[S](zero: S)(cmb: (S, S) => S)(folder: (S, T) => S): Future[S]
+  def aggregate[S](zero: =>S)(cmb: (S, S) => S)(folder: (S, T) => S): Future[S]
   
   // Monadic Ops
   
-  def mapFold[U, V >: U](zero: V)(cmb: (V, V) => V)(map: T => U) =
+  def mapFold[U, V >: U](zero: =>V)(cmb: (V, V) => V)(map: T => U) =
     aggregate(zero)(cmb)((acc, x) => cmb(acc, map(x)))
   
   def exists(p: T => Boolean): Future[Boolean] =

@@ -1,7 +1,11 @@
 package scala.dataflow.bench
 
+
+
 import scala.dataflow._
 import java.util.concurrent.ThreadLocalRandom
+
+
 
 trait FPHistBench extends testing.Benchmark with Utils.Props with FPBuilder {
   import Utils._
@@ -32,14 +36,20 @@ trait FPHistBench extends testing.Benchmark with Utils.Props with FPBuilder {
   }
 
   private def binning(count: Int, pool: FlowPool[Data]) = {
-    val init = Map[Int,Int]()
-    val fm = pool.mapFold(init)(mergeMaps _)(x => Map(x.i * count / maxval -> 1))
-    fm.map {
-      m => for (i <- 0 to (count - 1)) yield m.getOrElse(i,0)
+    val init = Map[Int, Int]()
+    val fm = pool.aggregate(init)(mergeMaps _) {
+      (acc, x) =>
+      val elem  = x.i * count / maxval
+      val total = acc.getOrElse(elem, 0) + 1
+      acc + (elem -> total)
+    } map {
+      m => for (i <- 0 to (count - 1)) yield m.getOrElse(i, 0)
     }
+    fm
   }
 
-  private def mergeMaps(m1: Map[Int,Int], m2: Map[Int,Int]) = 
-    m1 ++ m2.map { case (k,v) => k -> (v + m1.getOrElse(k,0)) }
+  private def mergeMaps(m1: Map[Int, Int], m2: Map[Int, Int]) = 
+    m1 ++ m2.map { case (k, v) => k -> (v + m1.getOrElse(k, 0)) }
   
 }
+
