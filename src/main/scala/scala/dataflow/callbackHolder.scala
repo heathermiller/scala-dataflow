@@ -1,6 +1,7 @@
 package scala.dataflow
 
 import scala.annotation.tailrec
+import java.util.TimerTask
 import jsr166y._
 
 sealed trait CallbackHolder[-T] {
@@ -46,18 +47,40 @@ final case class Next(val block: Array[AnyRef]) {
   @volatile var index: Int = 0
 }
 
+/* The fields occuring in the ctor of this object
+ * are written by only 1 thread at a time - the Worker
+ * thread executing the BatchTask.
+ * On the other hand, the `scheduled` field may be used
+ * by multiple threads (those trying to awake the callback).
+ */
 final class CallbackElem[-T, S] (
   val folder: (S, T) => S,
   val finalizer: (Int, S) => Any,
   val next: CallbackList[T],
   var block: Array[AnyRef],
   var position: Int,
-  @volatile var accumulator: S
+  var accumulator: S
 ) extends CallbackList[T] {
   @volatile var lock: Int = -1
   var done: Boolean = false
+  @volatile var scheduled: Boolean = false
   
   def copied = new CallbackElem(folder, finalizer, next, block, position, accumulator)
+  
+  // awakes the callback right now if the addition happened in a newer block,
+  // otherwise runs the callback after a pause
+  def pollCallback(lastaddition: Array[AnyRef]) {
+    if (lastaddition ne block) awakeCallback()
+    else if (!scheduled) {
+      scheduled = true
+      CallbackElem.timer.schedule(new TimerTask {
+        def run() {
+          scheduled = false
+          awakeCallback()
+        }
+      }, 1)
+    }
+  }
   
   /* ATTENTION:
    * If you change the scheduling, make sure that SingleLaneFlowPool.mappedFold
@@ -84,6 +107,8 @@ final class CallbackElem[-T, S] (
 
 object CallbackElem {
   
+  val timer = new java.util.Timer(true)
+  
   val unsafe = getUnsafe()
   
   val COUNTOFFSET = unsafe.objectFieldOffset(classOf[CallbackElem[_, _]].getDeclaredField("lock"))
@@ -92,12 +117,17 @@ object CallbackElem {
   
   def WRITE_COUNT(obj: CallbackElem[_, _], v: Int) = unsafe.putIntVolatile(obj, COUNTOFFSET, v)
   
+  object debug {
+    var computestarts = 0
+  }
+  
   final class BatchTask[T, S](val callback: CallbackElem[T, S]) extends RecursiveAction {
     import FlowPool._
     
     // when entering this method, we have to hold the lock!
     @tailrec
     protected def compute() {
+      debug.computestarts += 1
       if (callback.done) return
 
       if (callback.position >= LAST_CALLBACK_POS) {
@@ -115,13 +145,15 @@ object CallbackElem {
       var cur = block(pos)
       var acc = callback.accumulator
       while (!cur.isInstanceOf[CallbackHolder[_]]) {
-        //acc = callback.folder(acc, cur.asInstanceOf[T]) /* strange, but this slows down everything... dunno why, but don't change */
-        callback.accumulator = callback.folder(callback.accumulator, cur.asInstanceOf[T])
+        acc = callback.folder(acc, cur.asInstanceOf[T]) /* strange, but this slows down everything... dunno why, but don't change */
+        //if (acc == null) callback.accumulator = acc
+        //if (pos % 10 != 0) callback.accumulator = acc
+        //callback.accumulator = callback.folder(callback.accumulator, cur.asInstanceOf[T])
         pos += 1
         cur = block(pos)
       }
       callback.position = pos
-      //callback.accumulator = acc
+      callback.accumulator = acc
 
       // Check for seal
       cur match {

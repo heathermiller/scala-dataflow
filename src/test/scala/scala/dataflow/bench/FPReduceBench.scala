@@ -1,4 +1,5 @@
-package scala.dataflow.bench
+package scala.dataflow
+package bench
 
 import scala.dataflow._
 
@@ -26,6 +27,7 @@ trait FPReduceBench extends testing.Benchmark with Utils.Props with FPBuilder {
 
     res.blocking
     println(res.blocking)
+    println(CallbackElem.debug.computestarts)
   }
   
   def run2() {

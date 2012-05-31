@@ -29,7 +29,7 @@ final class SingleLaneBuilder[T](bl: Array[AnyRef]) extends Builder[T] {
       if (CAS(curblock, npos, next, curo)) {
         if (CAS(curblock, pos, curo, x.asInstanceOf[AnyRef])) {
           p.index = npos
-          applyCallbacks(curo.asInstanceOf[CallbackList[T]])
+          applyCallbacks(curo.asInstanceOf[CallbackList[T]], curblock)
           this
         } else <<(x)
       } else <<(x)
@@ -64,7 +64,7 @@ final class SingleLaneBuilder[T](bl: Array[AnyRef]) extends Builder[T] {
             else if (total == size) Seal(size, null)
             else sys.error("sealing with %d < number of elements in flow-pool %d".format(size, total))
           if (CAS(curblock, pos, cbl, nseal)) {
-            applyCallbacks(cbl)
+            applyCallbacks(cbl, curblock)
           } else seal(size, curblock, pos)
         } else seal(size, curblock, pos + 1)
       case Seal(sz, _) =>
@@ -135,7 +135,7 @@ final class SingleLaneBuilder[T](bl: Array[AnyRef]) extends Builder[T] {
                 if (CAS(curblock, pos + 1, nextelem, nseal)) {
                   if (CAS(curblock, pos, curelem, x.asInstanceOf[AnyRef])) {
                     p.index = pos + 1
-                    applyCallbacks(cbs)
+                    applyCallbacks(cbs, curblock)
                     return true
                   }
                 }
@@ -150,10 +150,10 @@ final class SingleLaneBuilder[T](bl: Array[AnyRef]) extends Builder[T] {
   }
   
   @tailrec
-  private def applyCallbacks[T](e: CallbackList[T]): Unit = e match {
+  private def applyCallbacks[T](e: CallbackList[T], b: Array[AnyRef]): Unit = e match {
     case el: CallbackElem[T, _] =>
-      el.awakeCallback()
-      applyCallbacks(el.next)
+      el.pollCallback(b)
+      applyCallbacks(el.next, b)
     case _ =>
   }
   

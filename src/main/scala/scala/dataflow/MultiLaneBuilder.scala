@@ -40,7 +40,7 @@ final class MultiLaneBuilder[T](
       if (CAS(curblock, npos, next, curo)) {
         if (CAS(curblock, pos, curo, x.asInstanceOf[AnyRef])) {
           p.index = npos
-          applyCallbacks(curo.asInstanceOf[CallbackList[T]])
+          applyCallbacks(curo.asInstanceOf[CallbackList[T]], curblock)
           this
         } else <<(x)
       } else <<(x)
@@ -225,7 +225,7 @@ final class MultiLaneBuilder[T](
                 if (CAS(curblock, pos + 1, nextelem, nseal)) {
                   if (CAS(curblock, pos, curelem, x.asInstanceOf[AnyRef])) {
                     p.index = pos + 1
-                    applyCallbacks(cbs)
+                    applyCallbacks(cbs, curblock)
                     return true
                   }
                 }
@@ -252,7 +252,7 @@ final class MultiLaneBuilder[T](
           val sz = sealSize(bli, rem)
           val ns = os.toSeal(cnt, sz)
           if (CAS(curblock, pos, os, ns)) {
-            if (sz == 0) applyCallbacks(cbs)
+            if (sz == 0) applyCallbacks(cbs, curblock)
           } else finalize(curblock, pos, bli)
         case Next(block) =>
           finalize(block, 0, bli)
@@ -298,7 +298,7 @@ final class MultiLaneBuilder[T](
         val sz = sealSize(bli, rem)
         val ns = t.toSeal(cnt, sz)
         if (CAS(curblock, pos, t, ns) && sz == 0)
-          applyCallbacks(t.callbacks)
+          applyCallbacks(t.callbacks, curblock)
       case _ =>
         // Something failed --> revert tag
         CAS(curblock, pos, t, t.callbacks)
@@ -306,10 +306,10 @@ final class MultiLaneBuilder[T](
   }
   
   @tailrec
-  private def applyCallbacks[T](e: CallbackList[T]): Unit = e match {
+  private def applyCallbacks[T](e: CallbackList[T], b: Array[AnyRef]): Unit = e match {
     case el: CallbackElem[T, _] =>
-      el.awakeCallback()
-      applyCallbacks(el.next)
+      el.pollCallback(b)
+      applyCallbacks(el.next, b)
     case _ =>
   }
 
