@@ -39,6 +39,7 @@ Some parameter ranges might not be feasible - they last too long.
 ## wolf
 
 ### insert
+15, drop first 5
 
 SLFPInsertBench
 par - 1,2,4,8
@@ -58,30 +59,120 @@ size - 1000000, 10000000, 15000000
 
 
 ### reduce
+15, drop first 5
 
 SFLPReduceBench
 par - 1,2,4,8
 size - 1000000, 5000000, 10000000
 
-MFLPReduceBench
+MLFPReduceBench
 par - 1,2,4,8,16,32,48,64
 size - 1000000, 5000000, 10000000
 
 LTQReduceBench
 par - 1,2,4,8
+size - 1000000, 5000000, 10000000
 
 
 ### map
+15, drop first 5
+
 
 
 ### histogram
+15, drop first 5
 
 
-### continuous insert
+
+### communication
+4, drop first 1
 
 
 
 
 ## maglite
 
+
+### insert
+15, drop first 5
+
+SLFPInsertBench
+par - 1,2,4,8,16
+size - 1000000, 2000000, 5000000, 10000000
+
+MLFPInsertBench
+par - 1,2,4,8,16,32,48,64
+size - 1000000, 2000000, 5000000, 10000000
+
+CLQInsertBench
+par - 1,2,4,8,16,32
+size - 1000000, 2000000, 5000000, 10000000
+
+LTQInsertBench
+par - 1,2,4,8,16,32
+size - 1000000, 2000000, 5000000, 10000000
+
+
+### reduce
+15, drop first 5
+
+SFLPReduceBench
+par - 1,2,4,8,16,32,48,64
+size - 1000000, 2000000, 5000000, 10000000
+
+MLFPReduceBench
+par - 1,2,4,8,16,32,48,64
+size - 1000000, 2000000, 5000000, 10000000
+
+LTQReduceBench
+par - 1,2,4,8,16,32,48,64
+size - 1000000, 2000000, 5000000, 10000000
+
+
+### map
+15, drop first 5
+
+SFLPMapBench
+par - 1,2,4,8,16,32,48,64
+size - 1000000, 2000000, 5000000
+
+MLFPMapBench
+par - 1,2,4,8,16,32,48,64
+size - 1000000, 2000000, 5000000
+
+LTQMapBench
+par - 1,2,4,8,16,32,48,64
+size - 1000000, 2000000, 5000000
+
+
+### histogram
+15, drop first 5
+
+SLFPHistBench
+par - 1,2,4,8,16,32
+size - 500000, 1000000
+
+MLFPHistBench
+par - 1,2,4,8,16,32
+size - 500000, 1000000
+
+LTQHistBench
+par - 1,2,4,8,16,32
+size - 500000, 1000000
+
+
+### communication
+4, drop first 1
+
+SLFPCommBench
+par - 1
+size - 200000000
+
+MLFPCommBench
+par - 1,2,4,8,16,32,64
+size - 200000000
+
+SLFPCommBench
+par - 1,2,4,8
+size - 200000000
 
