@@ -1,7 +1,9 @@
 # Benchmark Plans
 
-## Parallelism (8)
-1 to 64 insertion threads for both SLFP and MLFP i.e. (1,2,4,8,16,32,48,64)
+Parameters we can change are listed below.
+
+## * parallelism (8)
+1 To 64 insertion threads for both SLFP and MLFP i.e. (1,2,4,8,16,32,48,64)
 
 ## Platforms
 - maglite 1x Niagara2 (8 cores, 64 HT)
@@ -25,67 +27,103 @@ x1, x1.5, x2, x3, x4
 - UnsafeHistBench
 - MapBench
 
-## Sizes (3)
-Try them out!!
+## * sizes (3)
+Try Them out!!
 
 ## N
 15
 
 
-# Parameter ranges estimations
+# * parameter ranges estimations
 
 Some parameter ranges might not be feasible - they last too long.
 
 ## wolf
 
 ### insert
-15, drop first 5
+20, drop first 5
 
 SLFPInsertBench
-par - 1,2,4,8
-size - 1000000, 10000000, 15000000
+* par - 1,2,4,8
+* size - 2000000, 10000000, 15000000
 
 MLFPInsertBench
-par - 1,2,4,8,16,32,48,64
-size - 1000000, 10000000, 15000000
+* par - 1,2,4,8,16,32,64
+* size - 2000000, 10000000, 15000000
 
 CLQInsertBench
-par - 1,2,4,8
-size - 1000000, 10000000, 15000000
+* par - 1,2,4,8
+* size - 2000000, 10000000, 15000000
 
 LTQInsertBench
-par - 1,2,4,8
-size - 1000000, 10000000, 15000000
+* par - 1,2,4,8
+* size - 2000000, 10000000, 15000000
 
 
 ### reduce
-15, drop first 5
+20, drop first 5
 
 SFLPReduceBench
-par - 1,2,4,8
-size - 1000000, 5000000, 10000000
+* par - 1,2,4,8
+* size - 2000000, 5000000, 10000000
 
 MLFPReduceBench
-par - 1,2,4,8,16,32,48,64
-size - 1000000, 5000000, 10000000
+* par - 1,2,4,8,16,32,64
+* size - 2000000, 5000000, 10000000
 
 LTQReduceBench
-par - 1,2,4,8
-size - 1000000, 5000000, 10000000
+* par - 1,2,4,8
+* size - 2000000, 5000000, 10000000
 
 
 ### map
-15, drop first 5
+20, drop first 5
+
+SFLPMapBench
+* par - 1,2,4,8
+* size - 2000000, 5000000, 10000000
+
+MLFPMapBench
+* par - 1,2,4,8,16,32,64
+* size - 2000000, 5000000, 10000000
+
+LTQMapBench
+* par - 1,2,4,8
+* size - 2000000, 5000000, 10000000
 
 
 
 ### histogram
-15, drop first 5
+20, drop first 5
+
+SLFPHistBench
+* par - 1,2,4,8,16
+* size - 500000, 1000000
+
+MLFPHistBench
+* par - 1,2,4,8,16,32
+* size - 500000, 1000000
+
+LTQHistBench
+* par - 1,2,4,8,16
+* size - 500000, 1000000
 
 
 
 ### communication
-4, drop first 1
+20, drop first 5
+
+SLFPCommBench
+* par - 1
+* size - 50000000
+
+MLFPCommBench
+* par - 1,2,4,8,16,32,64
+* size - 50000000
+
+LTQCommBench
+* par - 1,2,4
+* size - 50000000
 
 
 
@@ -97,82 +135,172 @@ size - 1000000, 5000000, 10000000
 15, drop first 5
 
 SLFPInsertBench
-par - 1,2,4,8,16
-size - 1000000, 2000000, 5000000, 10000000
+* par - 1,2,4,8,16
+* size - 1000000, 2000000, 5000000, 10000000
 
 MLFPInsertBench
-par - 1,2,4,8,16,32,48,64
-size - 1000000, 2000000, 5000000, 10000000
+* par - 1,2,4,8,16,32,64
+* size - 1000000, 2000000, 5000000, 10000000
 
 CLQInsertBench
-par - 1,2,4,8,16,32
-size - 1000000, 2000000, 5000000, 10000000
+* par - 1,2,4,8,16,32
+* size - 1000000, 2000000, 5000000, 10000000
 
 LTQInsertBench
-par - 1,2,4,8,16,32
-size - 1000000, 2000000, 5000000, 10000000
+* par - 1,2,4,8,16,32
+* size - 1000000, 2000000, 5000000, 10000000
 
 
 ### reduce
 15, drop first 5
 
 SFLPReduceBench
-par - 1,2,4,8,16,32,48,64
-size - 1000000, 2000000, 5000000, 10000000
+* par - 1,2,4,8,16,32,64
+* size - 1000000, 2000000, 5000000, 10000000
 
 MLFPReduceBench
-par - 1,2,4,8,16,32,48,64
-size - 1000000, 2000000, 5000000, 10000000
+* par - 1,2,4,8,16,32,64
+* size - 1000000, 2000000, 5000000, 10000000
 
 LTQReduceBench
-par - 1,2,4,8,16,32,48,64
-size - 1000000, 2000000, 5000000, 10000000
+* par - 1,2,4,8,16,32,64
+* size - 1000000, 2000000, 5000000, 10000000
 
 
 ### map
 15, drop first 5
 
 SFLPMapBench
-par - 1,2,4,8,16,32,48,64
-size - 1000000, 2000000, 5000000
+* par - 1,2,4,8,16,32,64
+* size - 1000000, 2000000, 5000000
 
 MLFPMapBench
-par - 1,2,4,8,16,32,48,64
-size - 1000000, 2000000, 5000000
+* par - 1,2,4,8,16,32,64
+* size - 1000000, 2000000, 5000000
 
 LTQMapBench
-par - 1,2,4,8,16,32,48,64
-size - 1000000, 2000000, 5000000
+* par - 1,2,4,8,16,32,64
+* size - 1000000, 2000000, 5000000
 
 
 ### histogram
 15, drop first 5
 
 SLFPHistBench
-par - 1,2,4,8,16,32
-size - 500000, 1000000
+* par - 1,2,4,8,16,32
+* size - 500000, 1000000
 
 MLFPHistBench
-par - 1,2,4,8,16,32
-size - 500000, 1000000
+* par - 1,2,4,8,16,32
+* size - 500000, 1000000
 
 LTQHistBench
-par - 1,2,4,8,16,32
-size - 500000, 1000000
+* par - 1,2,4,8,16,32
+* size - 500000, 1000000
 
 
 ### communication
-4, drop first 1
+15, drop first 5
 
 SLFPCommBench
-par - 1
-size - 200000000
+* par - 1
+* size - 100000000
 
 MLFPCommBench
-par - 1,2,4,8,16,32,64
-size - 200000000
+* par - 1,2,4,8,16,32,64
+* size - 100000000
+
+LTQCommBench
+* par - 1,2,4
+* size - 100000000
+
+
+
+## chara/lampmac14
+
+
+### insert
+20, drop first 5
+
+SLFPInsertBench
+* par - 1,2,4,8
+* size - 2000000, 10000000, 15000000
+
+MLFPInsertBench
+* par - 1,2,4,8
+* size - 2000000, 10000000, 15000000
+
+CLQInsertBench
+* par - 1,2,4,8
+* size - 2000000, 10000000, 15000000
+
+LTQInsertBench
+* par - 1,2,4,8
+* size - 2000000, 10000000, 15000000
+
+
+### reduce
+20, drop first 5
+
+SFLPReduceBench
+* par - 1,2,4,8
+* size - 2000000, 5000000, 10000000
+
+MLFPReduceBench
+* par - 1,2,4,8
+* size - 2000000, 5000000, 10000000
+
+LTQReduceBench
+* par - 1,2,4,8
+* size - 2000000, 5000000, 10000000
+
+
+### map
+20, drop first 5
+
+SFLPMapBench
+* par - 1,2,4,8
+* size - 2000000, 5000000, 10000000
+
+MLFPMapBench
+* par - 1,2,4,8
+* size - 2000000, 5000000, 10000000
+
+LTQMapBench
+* par - 1,2,4,8
+* size - 2000000, 5000000, 10000000
+
+
+
+### histogram
+20, drop first 5
+
+SLFPHistBench
+* par - 1,2,4,8
+* size - 1500000, 4000000
+
+MLFPHistBench
+* par - 1,2,4,8
+* size - 1500000, 4000000
+
+LTQHistBench
+* par - 1,2,4,8
+* size - 1500000, 4000000
+
+
+
+### communication
+20, drop first 5
 
 SLFPCommBench
-par - 1,2,4,8
-size - 200000000
+* par - 1,2,4,8
+* size - 100000000
+
+MLFPCommBench
+* par - 1,2,4,8
+* size - 100000000
+
+LTQCommBench
+* par - 1,2,4,8
+* size - 100000000
 
