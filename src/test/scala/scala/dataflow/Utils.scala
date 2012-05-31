@@ -24,7 +24,11 @@ object Utils {
       else sys.error("size not divisible by par")
     }
       
-    lazy val lanes = sys.props("lanes").toInt
+    lazy val lanes = {
+      val sl = sys.props("lanes")
+      if (sl(0) != 'x') sl.toInt
+      else par * sl.tail.toInt
+    }
   }
 
   def task(f: => Unit) = {
