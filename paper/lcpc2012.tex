@@ -233,14 +233,17 @@ It denotes the number of times the \verb=foreach= has been called.
 The user-specified function return value of type \verb=U= is ignored.
 
 The \verb=aggregate= operation aggregates the elements of the pool
-together and has the following signature: \verb+def aggregate[S]+\verb+(zero: S)+
+together and has the following signature: \verb+def aggregate[S]+\verb+(zero: =>S)+
 \verb+(cb: (S, S) => S)+ \verb+(op: (S, T) => S):+ \verb+Future[S]+,
 where \verb=zero= is the initial aggregation, \verb=cb= is an operator
 which combines several aggregations, \verb=op= is an associative operator
 that adds an element to the aggregation, and \verb=Future[S]= is the final
 aggregation of all the elements which becomes available once all the elements
 have been added.
-The aggregation operator is applied to every element of the FlowPool eventually.
+The \verb=aggregate= divides elements into subsets and applies the
+aggregation operator \verb=op= to aggregate elements in each subset
+starting from the \verb=zero= aggregation, and then combines
+aggregations from different subsets with the \verb=cb= operator.
 
 While in an imperative programming model \verb=foreach= and \verb=aggregate= are
 equivalent in the sense that one can be implemented in terms of the
