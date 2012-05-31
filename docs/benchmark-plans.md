@@ -74,10 +74,10 @@ par - 1,2,4,8
 ### map
 
 
-### sealed insert
-
-
 ### histogram
+
+
+### continuous insert
 
 
 
