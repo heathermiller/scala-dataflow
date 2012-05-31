@@ -18,16 +18,18 @@ trait QCommBench extends testing.Benchmark with Utils.Props with BQBuilder {
       }    
     }
     
-    val reader = task {
+    val readers = for (ti <- 1 to par) yield task {
       var i = 0
-      while (i < size) {
+      while (i < work) {
         val elem = queue.take()
         i += 1
       }
     }
 
     writers.foreach(_.join())
-
+    readers.foreach(_.join())
+    
+    println("---------------")
   }
   
 }
