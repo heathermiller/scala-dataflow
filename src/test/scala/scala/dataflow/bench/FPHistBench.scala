@@ -2,6 +2,7 @@ package scala.dataflow.bench
 
 
 
+import scala.collection._
 import scala.dataflow._
 import java.util.concurrent.ThreadLocalRandom
 
@@ -16,10 +17,10 @@ trait FPHistBench extends testing.Benchmark with Utils.Props with FPBuilder {
     val pool = newFP[Data]
     val builder = pool.builder
     val work = size / par
-    val bins = 5 to 20
+    val bins = 5 to 15
     def data = new Data(ThreadLocalRandom.current.nextInt(maxval))
 
-    val res = bins.map(s => binning(s,pool))
+    val res = bins.map(s => binning(s, pool))
     
     for (ti <- 1 to par) yield task {
       var i = 0
@@ -36,20 +37,20 @@ trait FPHistBench extends testing.Benchmark with Utils.Props with FPBuilder {
   }
 
   private def binning(count: Int, pool: FlowPool[Data]) = {
-    val init = Map[Int, Int]()
-    val fm = pool.aggregate(init)(mergeMaps _) {
+    def init = new Array[Int](count)
+    val fm = pool.aggregate(init)(merge _) {
       (acc, x) =>
       val elem  = x.i * count / maxval
-      val total = acc.getOrElse(elem, 0) + 1
-      acc + (elem -> total)
-    } map {
-      m => for (i <- 0 to (count - 1)) yield m.getOrElse(i, 0)
+      acc(elem) = acc(elem) + 1
+      acc
     }
     fm
   }
 
-  private def mergeMaps(m1: Map[Int, Int], m2: Map[Int, Int]) = 
-    m1 ++ m2.map { case (k, v) => k -> (v + m1.getOrElse(k, 0)) }
+  private def merge(a1: Array[Int], a2: Array[Int]) = 
+    a1 zip a2 map {
+      case (x, y) => x + y
+    }
   
 }
 
