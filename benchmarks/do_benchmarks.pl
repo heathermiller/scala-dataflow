@@ -82,7 +82,7 @@ my $gconf = {
 chdir('..');
 
 # Get our hostname
-my $host = `hostname`; chomp $host;
+my $host = `hostname -s`; chomp $host;
 
 # Create fname
 my $dstr = strftime('%Y-%m-%dT%H.%M.%S',localtime);
