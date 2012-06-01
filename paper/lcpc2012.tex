@@ -767,7 +767,35 @@ method is responsible for scheduling that callback for subsequently added elemen
 Note that all three operations call \verb=expand= to add an additional
 block once the current block is empty, to ensure lock-freedom.
 
+\section{Multi-Lane FlowPools}
+Using a single block sequence (i.e. lane) to implement a FlowPool
+doesn't fully take advantage of the lack of ordering guarantees and --
+as elements are inserted in sequence -- may cause slowdowns due to
+collisions when multiple concurrent writers are present. Multi-Lane
+FlowPools solve this limitation by having a lane for each CPU, where
+each lane is following the same implementation as for a normal
+FlowPool.
 
+This has several implications:
+\begin{itemize}
+\item CAS failures during insertion are to a high extent avoided.
+\item Less memory contetion due to ``private'' blocks for each
+  processor.
+\item \verb=seal= needs to be globally synchronized in a non-blocking
+  fashion.
+\item Callbacks for \verb=aggregate= have to be added to each lane
+  individually and aggregated once all of them have completed.
+\end{itemize}
+
+In practice, a hash on the ID of the inserting thread has to be used
+instead of the CPU index, as such information is currently not
+available through the Java framework. Also note that the remaining
+slots resulting from a \verb=seal= have to be split up amongst the
+lanes and a writer might switch lanes if his lane is full (and hence
+CAS failures may happen).
+
+You find an evaluation of the performance of Multi-Lane FlowPools in
+section~\ref{sec:benchmark}.
 
 \section{Correctness}
 
