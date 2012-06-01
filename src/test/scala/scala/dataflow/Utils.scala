@@ -27,7 +27,7 @@ object Utils {
     lazy val lanes = {
       val sl = sys.props("lanes")
       if (sl(0) != 'x') sl.toInt
-      else par * sl.tail.toInt
+      else (par * sl.tail.toDouble).toInt
     }
   }
 

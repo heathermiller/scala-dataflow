@@ -82,7 +82,7 @@ my $gconf = {
 chdir('..');
 
 # Get our hostname
-my $host = `hostname`; chomp $host;
+my $host = `hostname -s`; chomp $host;
 
 # Create fname
 my $dstr = strftime('%Y-%m-%dT%H.%M.%S',localtime);
@@ -102,12 +102,19 @@ my $c = $gconf->{$host};
 sub exec_bench {
     my ($bench,$par,$size,$lanef) = @_;
     my $lanes = int($par*$lanef);
+    my $sbtcommand = "sbt";
+    my $arglen = @ARGV;
+    if ($arglen > 0) {
+      $sbtcommand = $ARGV[0];
+    }
     open(BENCH,
-         "sbt 'bench -Dsize=$size -Dpar=$par -Dlanes=$lanes scala.dataflow.bench.$bench $N' |");
+         $sbtcommand . " 'bench -Dsize=$size -Dpar=$par -Dlanes=$lanes scala.dataflow.bench.$bench $N' |");
     while (<BENCH>) {
         if (/^scala.dataflow.bench/) {
             print LOG "$host\t$version\t$bench\t$par\t$lanef\t$size\t";
             print LOG $_;
+            print "$host\t$version\t$bench\t$par\t$lanef\t$size\t";
+	    print $_;
         }
     }
     close(BENCH);
@@ -116,9 +123,9 @@ sub exec_bench {
 # Loop over benchmarks
 for my $bench (keys %$c) {
     my $bc = $c->{$bench};
-    for my $par (@{$bc->{par}}) {
-        for my $size (@{$bc->{size}}) {
-            for my $lanef (@{$bc->{lanes}}) {
+    for my $size (@{$bc->{size}}) {
+      for my $lanef (@{$bc->{lanes}}) {
+	for my $par (@{$bc->{par}}) {
                 &exec_bench($bench,$par,$size,$lanef);
             }
         }
