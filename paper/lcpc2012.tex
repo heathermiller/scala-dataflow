@@ -102,8 +102,98 @@ capabilities, FlowPools perform XYZ-XYZ\% better than their blocking counterpart
 
 \section{Introduction}
 
+Multicore architectures have become ubiquitous-- even most mobile devices now
+ship with multiple core processors. Yet parallel programming has yet to enter
+the daily workflow of the mainstream developer.  
 
-\textbf{Obligatory multicore motivation paragraph.} Multicore revolution is here, yadda yadda.
+% We contend that this has to do with the fact that (Yet...) deterministic
+% parallel programming still remains an elusive goal.
+
+One significant obstacle is an undesirable choice programmers must often face
+when solving a problem that could greatly benefit from leveraging available
+parallelism. Either choose a non-deterministic, but performant, data structure
+or programming model, or sacrifice performance for the sake of clarity and
+correctness.
+
+% TODO: cite i-Structures or other related work about dataflow
+
+Programming models based on \emph{dataflow} have the potential to simplify
+parallel programming, since the resulting programs are deterministic.
+Moreover, dataflow programs can be expressed more declaratively than programs
+based on mainstream concurrency constructs, such as shared-memory threads and
+locks, as programmers are only required to specify data and control
+dependencies. This allows one to reason sequentially about the intended
+behavior of their program, meanwhile enabling the underlying framework to
+automatically and effectively extract parallelism.
+
+In this paper, we present the design and implementation of FlowPools, a
+fundamental dataflow collections abstraction which can be used as a building
+block to build larger and more complex \textit{deterministic} and parallel
+dataflow programs. Our FlowPool abstraction is backed by an efficient non-
+blocking data structure, which we go on to prove is lock-free.
+
+As a result, our data structure benefits from the increased robustness
+provided by lock freedom~\cite{Herlihy90}, since its operations are unaffected
+by thread delays. Our lock freedom proof guarantees progress regardless of the
+behavior, including the failure, of concurrent threads.
+
+% the choice between performance, leading to the use of 
+% non- deterministic data structures or programming models whose semantics are
+% difficult to reason about, and clarity, leading clear and correct but non-
+% performant code. 
+
+% non-deterministic code hard to debug because you have all of these different
+% thread interleavings that have to be taken into account when designing the
+% program. whereas a deterministic program doesn't have to consider thread
+% interleavings because they don't have an effect on the outcome of a result.
+
+% 
+
+% While non-blocking techniques have been used for building high-performance
+% concurrent data structures, they . There exist non-blocking concurrent data
+% structures, but not necessarily non-blocking concurrent deterministic data
+% structures.
+
+% What can prevent composability is lock-based. 
+
+% Something that can provide composability is functional combinators. 
+
+This paper remedies the shortcomings of an imperative vs functional approach.
+On the one had, the main issue with imperative programs in concurrent
+environments is mutable state, and the race conditions that result from such
+situations. On the other hand, functional programming provides the guarantee
+that state can never be changed, resulting in concise and correct code, but
+which often performs poorly due to the overhead of only ever creating new
+objects and never reusing old ones, thereby increasing the pressure on the
+garbage collector. Our approach is to combine the benefits of each of these
+approaches. We provide a concise and easy-to-reason-about deterministic
+functional interface on top of an imperative but performant and provably
+correct implementation.
+
+In this paper, we advocate an approach that achieves high performance and composability at the same time through combining high-level functional abstractions with an efficient non-blocking implementation.
+
+In this paper, we advocate a dataflow programming model to .
+
+
+Why is a deterministic programming model preferable? Reason sequentially.
+Another advantages is that data dependencies are expressed as a way to enable
+the underlying runtime system to effectively extract parallelism.
+
+In our model, the above point is achieved through the composability afforded
+by using functional abstractions.
+
+% 1) How do we achieve determinism in the first place. Design of programming.
+% 2) How do we make dataflow/determinism more usable in practice to build larger
+% program. This is where composability comes into play. Build larger programs
+% from reusable parts.
+
+% By being able to start asynchronous computations as soon as their required
+% inputs have been computed.
+
+% The shift in recent years by processor manufacturers from single to
+% multi-core architectures, academia and industry alike have conceded that
+% \textit{Popular Parallel Programming} remains a formidable challenge. Even our
+% cellphones are now multicore.
 
 \textbf{Lock-free is better, and why.} 
 \sout{why the foreach instead of blocking?} blocking is bad in most
@@ -117,8 +207,6 @@ Data structures for the multicore age, Shavit 2011, Comm. ACM \cite{Shavit11}
 Concurrent data structures, Moir, Shavit 2008, \cite{Moir05}
 
 A Methodology for Implementing Highly Concurrent Data Structures, Herlihy, 1990 \cite{Herlihy90}
-
-
 
 \subsection{Motivation}
 
@@ -135,12 +223,23 @@ operations which cause blocking until a value becomes available)
 data-structures should themselves be non-blocking)
 - programs run indefinitely $\Rightarrow$ we need to GC parts of the
 data structure we no longer need
-- we want to reduce heap allocation and inline the datastructure as
+- we want to reduce heap allocation and inline the data structure as
 much as possible $\Rightarrow$ lower memory consumption, better cache behaviour
 and fewer GC cycles
 - composability
 
-\textbf{Paragraph(s) on contributions.} 
+We present concurrent data structure . We jointly focus on performance and
+extending the capabilities of queue-like data structures for dataflow
+computation.
+
+Our contributions are the following:
+\begin{itemize}
+\item design and implementation of deterministic non-blocking 
+\item proofs
+\item benchmarks
+\end{itemize}
+
+
 
 \section{Model of Computation}
 
@@ -2014,9 +2113,10 @@ guaranteed to be completed.
 
 By trival inspection of the pseudocode, if $CAS_{append-inn}$ successfully
 completes on some thread, then that thread is guaranteed to complete the
-corresponding invocation of \verb=append= in a finite number of steps. % we
-don't say anything about WRITE1 here because it's guaranteed to succeed, so
-it's trivial.
+corresponding invocation of \verb=append= in a finite number of steps. 
+
+% we don't say anything about WRITE1 here because it's guaranteed to succeed,
+% so it's trivial.
 
 Likewise by trivial inspection, if $CAS_{seal}$ successfully completes on some
 thread, then by Lemma \ref{lemma-finite-steps-state-change},
