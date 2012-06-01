@@ -123,9 +123,9 @@ sub exec_bench {
 # Loop over benchmarks
 for my $bench (keys %$c) {
     my $bc = $c->{$bench};
-    for my $par (@{$bc->{par}}) {
-        for my $size (@{$bc->{size}}) {
-            for my $lanef (@{$bc->{lanes}}) {
+    for my $size (@{$bc->{size}}) {
+      for my $lanef (@{$bc->{lanes}}) {
+	for my $par (@{$bc->{par}}) {
                 &exec_bench($bench,$par,$size,$lanef);
             }
         }
