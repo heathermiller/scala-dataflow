@@ -14,6 +14,7 @@ for (f in files) {
                     "version",
                     "bench",
                     "par",
+                    "lanef",
                     "size",
                     "class",
                     paste("x", 1:20, sep=".")))
@@ -29,15 +30,27 @@ dat <- reshape(draw,
                drop = "class")
 
 # Classify benchmarks
-insertCls    = c("CLQInsertBench", "FPInsertBench", "FPSealedInsertBench", "LTQInsertBench")
-histogramCls = c("FPHistBench", "FPUnsafeHistBench", "LTQHistBench")
-reduceCls    = c("FPReduceBench", "LTQReduceBench")
+insertCls = c(
+  "CLQInsertBench", "SLFPInsertBench", 
+  "LTQInsertBench", "MLFPInsertBench")
+histogramCls = c(
+  "MLFPHistBench", "SLFPHistBench", "LTQHistBench")
+reduceCls = c(
+  "SLFPReduceBench", "MLFPReduceBench", "LTQReduceBench")
+commCls = c(
+  "SLFPCommBench", "MLFPCommBench", "LTQCommBench")
+mapCls = c(
+  "SLFPMapBench", "MLFPMapBench", "LTQMapBench")
 
-dat$btype = factor(c("Insert","Histogram","Reduce"))
+dat$btype = ""
 
-dat[dat$bench %in% insertCls   ,]$btype = "Insert"
-dat[dat$bench %in% histogramCls,]$btype = "Histogram"
-dat[dat$bench %in% reduceCls   ,]$btype = "Reduce"
+dat[dat$bench %in% insertCls   ,"btype"] = "Insert"
+dat[dat$bench %in% histogramCls,"btype"] = "Histogram"
+dat[dat$bench %in% reduceCls   ,"btype"] = "Reduce"
+dat[dat$bench %in% commCls     ,"btype"] = "Comm"
+dat[dat$bench %in% mapCls      ,"btype"] = "Map"
+
+dat$btype = factor(dat$btype)
 
 attach(dat)
 mdat <- aggregate(time,
@@ -45,8 +58,11 @@ mdat <- aggregate(time,
                        machine = machine,
                        bench = bench,
                        par = par,
+                       lanef = lanef,
                        size = size,
                        btype = btype),
                   median)
 mdat$time <- mdat$x
 detach(dat)
+
+mdat$x <- NULL
