@@ -102,12 +102,19 @@ my $c = $gconf->{$host};
 sub exec_bench {
     my ($bench,$par,$size,$lanef) = @_;
     my $lanes = int($par*$lanef);
+    my $sbtcommand = "sbt";
+    my $arglen = @ARGV;
+    if ($arglen > 0) {
+      $sbtcommand = $ARGV[0];
+    }
     open(BENCH,
-         "sbt 'bench -Dsize=$size -Dpar=$par -Dlanes=$lanes scala.dataflow.bench.$bench $N' |");
+         $sbtcommand . " 'bench -Dsize=$size -Dpar=$par -Dlanes=$lanes scala.dataflow.bench.$bench $N' |");
     while (<BENCH>) {
         if (/^scala.dataflow.bench/) {
             print LOG "$host\t$version\t$bench\t$par\t$lanef\t$size\t";
             print LOG $_;
+            print "$host\t$version\t$bench\t$par\t$lanef\t$size\t";
+	    print $_;
         }
     }
     close(BENCH);
