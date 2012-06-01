@@ -243,15 +243,45 @@ Our contributions are the following:
 
 \section{Model of Computation}
 
-Producer-consumer parallelism. Description and image of queue/stream of
-values, producer, and multiple consumers. (Description of how parallelism is
-achieved)
+Pipeline-based applications are composed of a sequence
+of producer/consumer stages, each one depending on the output of its
+predecessor. More generally, the computation forms a directed
+dependency graph in which parallelism is achieved by operations in
+different nodes executing concurrently.
 
-Want to build directed dependency graph. This ensures that we have some parallelism in the model. 
-Nodes in dependency graph should be first class model.
+One design goal is to make the nodes in the dependency graph first
+class values.
+The advantage of this is that the programmer is able to use
+nodes as procedure arguments or receive them as return values.
+This allows for a better modularity and increases the
+composability of the programming model.
+It also provides a higher degree of flexibility -- the dependency
+graph does not have to be specified at compile time, but can be
+computed at runtime instead.
 
-What do we mean by determinism? Concise but rather formal description.
-Talk about ordering here. Deterministic, but no guarantee on ordering.
+What do we mean by determinism? We aspire for a definition which is
+practically useful in the sense that it makes debugging parallel programs
+easier.
+In doing so, we rely on the definition of declarative concurrency from the Oz
+programming language \cite{RoyH2004} -- a concurrent program is declaratively concurrent
+if and only if all possible executions either do not terminate or they all
+eventually reach logically equivalent results.
+Here non-termination also entails exceptions that happen at runtime.
+Logically equivalent results roughly denote that the data structures are in 
+the same state.
+This is convenient for the programmer -- if an exception occurs in some
+execution, then it is guaranteed to occur in every execution of the program.
+However, if there are no exceptions, then the program is guaranteed
+to be deterministic.
+
+In this paper we describe a deterministic pool abstraction which allows
+appending elements and then traversing the contained elements.
+Such an abstraction may seem similar to the dataflow streams seen in Oz,
+but there are some important differences.
+We argue that both of these are deterministic, but our pool abstraction
+does not define the order between contained elements, hence there is
+no predefined traversal order.
+
 
 \section{Programming Interface}
 \label{sec:programming-interface}
@@ -275,7 +305,7 @@ FlowPool.
 % \sout{The latter --} we want determinism, avoid races, same execution every
 % time.
 
-\textbf{Foreach and Fold.}
+\textbf{Foreach and Aggregate.}
 A pool containing a set of elements is of little use if the elements
 cannot be manipulated in some manner.
 One of the basic data structure operations is element traversal,
@@ -301,21 +331,24 @@ pool.
 It denotes the number of times the \verb=foreach= has been called.
 The user-specified function return value of type \verb=U= is ignored.
 
-The \verb=fold= operation aggregates the elements of the pool
-Its signature is \verb+def fold[S](zero: S)(op: (S, T) => S): Future[S]+,
-where \verb=zero= is the initial aggregation, \verb=op= is an
-associative operator, and \verb=Future[S]= is the aggregation
-of all the elements which becomes available once all the elements have
-been added.
-It is applied to every element of the FlowPool eventually.
+The \verb=aggregate= operation aggregates the elements of the pool
+together and has the following signature: \verb+def aggregate[S]+\verb+(zero: =>S)+
+\verb+(cb: (S, S) => S)+ \verb+(op: (S, T) => S):+ \verb+Future[S]+,
+where \verb=zero= is the initial aggregation, \verb=cb= is an operator
+which combines several aggregations, \verb=op= is an associative operator
+that adds an element to the aggregation, and \verb=Future[S]= is the final
+aggregation of all the elements which becomes available once all the elements
+have been added.
+The \verb=aggregate= divides elements into subsets and applies the
+aggregation operator \verb=op= to aggregate elements in each subset
+starting from the \verb=zero= aggregation, and then combines
+aggregations from different subsets with the \verb=cb= operator.
 
-We conclude by saying that the \verb=fold= is more general than the
-\verb=foreach=.
-While in an imperative programming model \verb=foreach= and \verb=fold= are
+While in an imperative programming model \verb=foreach= and \verb=aggregate= are
 equivalent in the sense that one can be implemented in terms of the
-other, in a single-assignment programming model \verb=fold= is more
+other, in a single-assignment programming model \verb=aggregate= is more
 expressive than \verb=foreach=.
-The \verb=foreach= can be implemented using \verb=fold=, but not vice versa,
+The \verb=foreach= can be implemented using \verb=aggregate=, but not vice versa,
 due to the absence of side-effects.
 
 \textbf{Builders.}
@@ -337,10 +370,10 @@ discarding the no longer needed objects.
 
 \textbf{Seal.}
 When the client is sure that no more elements will be added to the pool
-he can disallow further additions by calling \verb=seal=.
+he can disallow further appends by calling \verb=seal=.
 This has the advantage of discarding the registered \verb=foreach=
 operations.
-More importantly, \verb=fold= can only complete the future
+More importantly, \verb=aggregate= can only complete the future
 once it is certain that no more elements will be added.
 
 A \verb=seal= which just closes the FlowPool at the moment when it
@@ -360,7 +393,7 @@ is greater than the desired size.
 \textbf{Higher-level operations.}
 We now show how the basic abstractions above can be used
 to build higher-level abstractions.
-To begin with, in addition to a regular FlowPool constructor, it is
+To begin with, in addition to a default FlowPool constructor, it is
 convenient to have generators which create certain types of pools.
 In a dataflow graph FlowPools created using generators
 are source nodes.
@@ -412,7 +445,7 @@ def map[S](f: T => S)
 \begin{alltt}
 {\scriptsize
 def foreach[U](f: T => U)
-  fold(0) \{
+  aggregate(0)(_ + _) \{
     (acc, x) =>
     f(x)
     acc + 1
@@ -425,30 +458,30 @@ def foreach[U](f: T => U)
 \end{alltt}
 \end{minipage}
 
-One typical higher-level collection operations \verb=map= is used to
-map each element of a dataset to produce new one.
+A typical higher-level collection operation \verb=map= is used to
+map each element of a dataset to produce a new one.
 This corresponds to chaining the nodes in the dataflow graph.
 We implement it by traversing the elements of \verb=this= FlowPool and
 appending each mapped element to the builder.
 The \verb=for= loop is the syntactic sugar for calling the
 \verb=foreach= method on \verb=this=.
 We assume that the \verb=foreach= return value \verb=Future[Int]=
-has \verb=map= and \verb=flatMap= operations, executed
+has \verb=map= and \verb=flatMap= operations, which are executed
 once the future value becomes available.
 The \verb=Future.map= above ensures that if the \verb=this= pool is ever
 sealed, the mapped pool is sealed to the appropriate size.
 
 As argued before, the \verb=foreach= can be expressed in terms of a
-\verb=fold= by accumulating the number of elements and invoking the
+\verb=aggregate= by accumulating the number of elements and invoking the
 callback \verb=f= each time.
 We further show that some patterns cannot be expressed in terms of a mere
 \verb=foreach=.
 The \verb=filter= combinator filters out the elements for which a
 specified predicate does not hold.
-The part where it appends elements to a new pool can proceed as
+Appending the elements to a new pool can proceed as
 before, but the seal needs to know the exact number of elements added.
-The accumulator of the \verb=fold= is thus used to track how many
-elements were added.
+The \verb=aggregate= accumulator is thus used to track the number
+of added elements.
 
 \noindent
 \begin{minipage}[b]{4 cm}
@@ -458,45 +491,54 @@ def filter
   (pred: T => Boolean)
   val p = new FlowPool[T]
   val b = p.builder
-  fold(0) \{ (acc, x) =>
-    if pred(x) \{
+  aggregate(0)(_ + _) \{
+    (acc, x) => if pred(x) \{
       b << x
       1
     \} else 0
   \} map \{ sz => b.seal(sz) \}
   p
+
+
+
 }
 \end{alltt}
-\end{minipage}\begin{minipage}[b]{4.3 cm}
+\end{minipage}\begin{minipage}[b]{4 cm}
 \begin{alltt}
 {\scriptsize
 def flatMap[S]
   (f: T => FlowPool[S])
   val p = new FlowPool[S]
   val b = p.builder
-  fold(future(0)) \{ (af, x) =>
+  aggregate(future(0))(add) \{
+    (af, x) =>
     val sf = for (y <- f(x))
       b << y
-    for (a <- af; s <- sf)
-      yield a + s
+    add(af, sf)
   \} map \{ sz => b.seal(sz) \}
   p
+
+def add(f: Future[Int], g: Future[Int]) =
+  for (a <- f; b <- g) yield a + b
 }
 \end{alltt}
 \end{minipage}
 \begin{minipage}[b]{4 cm}
 \begin{alltt}
 {\scriptsize
-def either[T]
-  (q: FlowPool[T],
-   r: FlowPool[T])
+def union[T]
+  (that: FlowPool[T])
   val p = new FlowPool[T]
   val b = p.builder
-  val f = for (x <- q) b << x
-  val g = for (y <- r) b << y
+  val f = for (x <- this) b << x
+  val g = for (y <- that) b << y
   for (s1 <- f; s2 <- g)
     b.seal(s1 + s2)
   p
+
+
+
+
 
 }
 \end{alltt}
@@ -507,11 +549,11 @@ The \verb=flatMap= operation retrieves a pool for each element of
 Given two FlowPools, it can be used to generate the cartesian product
 of their elements.
 The implementation is similar to that of the \verb=filter=,
-but we reduce on the future values of the sizes, because each
-intermediate pool may not be sealed.
+but we reduce the size on the future values of the sizes, because each
+intermediate pool may not yet be sealed.
 %Implementing this operation is sufficient to show that a FlowPool is
 %a monad.
-The \verb=either= operation produces a new pool which has elements of
+The \verb=union= operation produces a new pool which has elements of
 both pool \verb=q= and pool \verb=r=.
 
 The last two operations correspond to joining nodes in the dataflow
@@ -521,7 +563,7 @@ loops to implement the third join type \verb=zip=, we would
 yield a nondeterministic operation.
 The programming model does not allow us to do so, however.
 The \verb=zip= is more suited for data structures with deterministic ordering,
-such as Oz streams -- which would in turn have a nondeterministic \verb=either=.
+such as Oz streams -- which would in turn have a nondeterministic \verb=union=.
 
 
 
@@ -733,9 +775,9 @@ def asyncFor(f: Elem => Unit, b: Block, idx: Int)
 
 We now describe the FlowPool and its basic operations.
 In doing so, we omit the details not relevant to the
-algorithm\footnote{Specifically the builder abstraction and the \texttt{fold}
-operation. The \texttt{fold} can be implemented using \texttt{foreach}
-in an imperative model using a side-effecting accumulator.}
+algorithm\footnote{Specifically the builder abstraction and the \texttt{aggregate}
+operation. The \texttt{aggregate} can be implemented using \texttt{foreach}
+with a side-effecting accumulator.}
 and focus on a high-level description of a non-blocking
 data structure.
 One straightforward way to implement a growing pool is to use a linked
@@ -910,19 +952,109 @@ FlowPool operations \verb=append= and \verb=seal= are linearizable.
 We then proceed to show that operations are lock-free, i.e. that at
 least one thread completes after a finite number of steps.
 
-
 \section{Experimental Results}
 
+
+
 \section{Related Work}
-Things to probably cite: Oz, gpars, i-Structures \cite{Arvind89}, Java CLQ \cite{Michael96}, our futures writeup, twitter futures, MultiLISP futures \cite{Halstead85}, FlumeJava \cite{Chambers10}.
 
-Things we should probably have a look at: Microsoft TPL, Dataflow
-Java, FlumeJava...
+An introduction to linearizability, lock-freedom and basic
+concurrent programming techniques is given by Herlihy and Shavit
+\cite{Herlihy08}.
+A detailed overview of concurrent data structures is given
+by Moir and Shavit \cite{Moir05}.
+To date, concurrent data structures remain an active area of
+research -- it is out of scope to list them all, so we restrict
+ourselves to those relevant to this work.
 
-Art of Multicore Programming book, cite that somewhere?: \cite{Herlihy08}
+Concurrently accessible queues have been present for a while --
+an implementation is described by \cite{Mellor87}.
+Non-blocking concurrent linked queues are described by Michael and
+Scott \cite{Michael96}. This CAS-based linked-list
+queue implementation is cited and used widely today, a variant of
+which is present in the Java standard library.
+More recently, Scherer, Lea and Scott \cite{SchererLS09} describe a
+synchronous queues which internally hold both data and requests.
+Both approaches above entail blocking (or spinning) at least on the
+consumer's part when the queue is empty.
+
+While the abstractions above fit well in the concurrent imperative
+model, they have the disadvantage that the programs written using them
+are inherently nondeterministic.
+Book by Roy and Haridi \cite{RoyH2004} describes the Oz programming language 
+a subset of which yields programs deterministic by construction.
+The Oz dataflow streams are built on top of
+single-assignment variables and are deterministically ordered.
+They allow multiple consumers, but only one producer
+at a time.
+Oz has its own runtime which implements blocking using
+continuations.
+Blocking is less efficient on the JVM, CLR and many native
+environments.
+
+The concept of single-assignment variables is also embodied in
+futures proposed by Baker and Hewitt \cite{Hewitt77}, and promises
+first mentioned by Friedman and Wise \cite{Wise76}.
+Futures were first implemented in MultiLISP \cite{Halstead85},
+and have been employed in many languages and frameworks since.
+Scala futures \cite{TODO} and Finagle futures \cite{TODO} are
+of interest, because they define monadic operators and a
+number of high-level combinators which produce new futures.
+This provides an API which avoids blocking.
+Futures have been generalized to data-driven futures,
+which can provide additional information to the scheduler
+\cite{Tasirlar11}.
+Many frameworks have constructs which start an asynchronous
+computation and yield a future holding its result.
+For example, Habanero Java \cite{Shirako11} offers an \verb=async=
+construct and Scala futures offer a \verb=future= construct.
+
+A number of other models and frameworks recognized the need to embed
+the concept of futures into other data-structures.
+Single-assignment variables have been generalized to I-Structures
+proposed by Arvind \cite{Arvind89} which are essentially
+single-assignment arrays.
+The CnC model \cite{Burke11} \cite{CnC10} is a parallel programming model
+influenced by dynamic dataflow, stream-processing and tuple spaces.
+In CnC the user provides high-level operations along with the ordering
+constraints that form a computation dependency graph.
+FlumeJava \cite{Chambers10} is a distributed programming model which
+relies heavily on the concept of collections containing a set of
+futures.
+An issue that often arises with dataflow programming models are
+unbalanced loads.
+This is often solved through the use of bounded buffers which prevent
+the producer from overflowing the consumer.
+Analytical approaches to modeling pipelined applications have also
+been addressed \cite{Cascaval09}.
+
+Opposed to the correct-by-construction determinism described thus far,
+a type-systematic approach can also ensure that concurrent executions
+have deterministic results.
+Recently, work on Deterministic Parallel Java showed that a
+region-based type system can ensure determinism \cite{Bocchino09}.
+X10's constrained-based dependent types can similarly ensure
+determinism and deadlock-freedom \cite{Saraswat07}.
+
 
 \section{Conclusion}
 
+We have shown that deterministic higher-level operations can be build
+on top of \verb=<<= and \verb=foreach=, which corresponds to
+sequential collections.
+The prerequisite is that \verb=<<= can be invoked concurrently and
+that \verb=foreach= executes asynchronously.
+
+We postulate the existence of a range of other concurrent collection
+types with deterministic semantics fitting the presented
+correct-by-construction single-assignment model, such as bounded
+buffers, dataflow streams and maps, all of which have higher-level
+operations expressed in terms of the same basic primitives.
+On the implementation level, we anticipate the need of embedding the
+callbacks within the data-structure itself, as is the case with
+callback-based futures and FlowPools -- this offers a particular
+benefit on platforms which do not by default support efficient
+continuations.
 
 
 \bibliographystyle{abbrv}
@@ -2157,7 +2289,7 @@ def exists
   (pred: T => Boolean)
   val p = new FlowPool[T]
   val b = p.builder
-  fold(false) \{
+  aggregate(false)(_ \(\vee\) _) \{
     (acc, x) =>
     acc \(\vee\) pred(x)
   \}
@@ -2173,10 +2305,9 @@ def flatten[S]
   (q: FlowPool[FlowPool[S]])
   val p = new FlowPool[S]
   val b = p.builder
-  q.fold(future(0)) \{ (af, r) =>
+  q.aggregate(future(0))(add) \{ (af, r) =>
     val sf = for (x <- r) b << x
-    for (a <- af; s <- sf)
-      yield a + s
+    add(af, sf)
   \} map \{ sz => b.seal(sz) \}
   p
 }

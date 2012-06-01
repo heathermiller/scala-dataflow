@@ -3,7 +3,12 @@
 
 Runs with SBT 0.11.x
 
-
+## TODO list
+- Prepare benchmark script (Alex)
+- Change MLFP seal procedure w/ rehashing (Tobias)
+- Write benchmarks (q/fp map bench, q reduce bench, q/fp hist bench parallelism) (Tobias)
+- Write chapter in paper about benchmarks
+- Write chapter in paper about MLFP
 
 ## DONE list
 
