@@ -786,7 +786,7 @@ method is responsible for scheduling that callback for subsequently added elemen
 Note that all three operations call \verb=expand= to add an additional
 block once the current block is empty, to ensure lock-freedom.
 
-\section{Multi-Lane FlowPools}
+\textbf{Multi-Lane FlowPools.}
 Using a single block sequence (i.e. lane) to implement a FlowPool
 doesn't fully take advantage of the lack of ordering guarantees and --
 as elements are inserted in sequence -- may cause slowdowns due to
@@ -953,8 +953,8 @@ Without additional synchronization, reading a single queue is not an
 option since elements have to be removed from the queue eventually and
 it is not clear to each reader when an element is no longer needed by
 different readers.
-With FlowPools this is not the problem because the elements that are
-no longer needed are implicitly garbage collected.
+With FlowPools this is not a problem because the no longer needed
+elements are implicitly garbage collected.
 
 Finally, to validate the last claim of garbage being implicitly
 collected, in the \textit{Comm} benchmark we create a pool in which a
