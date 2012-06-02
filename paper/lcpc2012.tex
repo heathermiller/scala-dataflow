@@ -135,7 +135,8 @@ In combining lock-freedom with a functional interface, we go on to show that
 FlowPools are \textit{composable}. That is, using prototypical higher-order
 functions such as \verb=foreach= and \verb=aggregate=, one can concisely form
 dataflow graphs, in which associated functions are executed asynchronously in
-a completely non-blocking way, as elements become available.
+a completely non-blocking way, as elements of FlowPools in the dataflow graph
+become available.
 
 % I don't like how it says "we show"
 Finally, we show that FlowPools are able to overcome practical issues, such as
@@ -280,20 +281,34 @@ It also provides a higher degree of flexibility -- the dependency
 graph does not have to be specified at compile time, but can be
 computed at runtime instead.
 
-What do we mean by determinism? We aspire for a definition which is
-practically useful in the sense that it makes debugging parallel programs
-easier.
-In doing so, we rely on the definition of declarative concurrency from the Oz
-programming language \cite{RoyH2004} -- a concurrent program is declaratively concurrent
-if and only if all possible executions either do not terminate or they all
-eventually reach logically equivalent results.
-Here non-termination also entails exceptions that happen at runtime.
-Logically equivalent results roughly denote that the data structures are in 
-the same state.
-This is convenient for the programmer -- if an exception occurs in some
-execution, then it is guaranteed to occur in every execution of the program.
-However, if there are no exceptions, then the program is guaranteed
-to be deterministic.
+\textbf{Determinism}.
+
+Throughout this paper, we follow notion of determinism introduced by the Oz
+programming language \cite{RoyH2004} as \textit{declarative concurrency}; "a
+concurrent program is declaratively concurrent if and only if all possible
+executions either do not terminate or they all eventually reach logically
+equivalent results." In this definition, non-termination also includes
+exceptions that occur at runtime. Furthermore, logically equivalent results
+mean that resulting data structures are in the same state. This is
+convenient for the programmer-- if an exception occurs in some run of a
+program, then it is guaranteed to occur in every run of the program. However,
+if there are no exceptions, then the program is guaranteed to be
+deterministic.
+
+% What do we mean by determinism?
+% We seek a definition of determinism that is practically
+% useful, first and foremost in the sense that it makes debugging parallel
+% programs easier. 
+% Thus, throughout this paper, we strive to fit the definition
+% of declarative concurrency from the Oz programming language \cite{RoyH2004},
+% "a concurrent program is declaratively concurrent if and only if all possible
+% executions either do not terminate or they all eventually reach logically
+% equivalent results." In this definition, non-termination also includes
+% exceptions that occur at runtime. Furthermore, logically equivalent results roughly denote
+% that the data structures are in the same state. This is convenient for the
+% programmer-- if an exception occurs in some run of a program, then it is
+% guaranteed to occur in every run of the program. However, if there are no
+% exceptions, then the program is guaranteed to be deterministic.
 
 In this paper we describe a deterministic pool abstraction which allows
 appending elements and then traversing the contained elements.
