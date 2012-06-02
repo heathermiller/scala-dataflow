@@ -1,0 +1,3 @@
+java version "1.7.0_03"
+Java(TM) SE Runtime Environment (build 1.7.0_03-b04)
+Java HotSpot(TM) Server VM (build 22.1-b02, mixed mode)
