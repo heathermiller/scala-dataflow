@@ -113,8 +113,8 @@ sacrifice performance for the sake of clarity and correctness.
 Programming models based on \emph{dataflow} \cite{Arvind89,CnC10} have the
 potential to simplify parallel programming, since the resulting programs are
 deterministic. Moreover, dataflow programs can be expressed more declaratively
-than programs based on mainstream concurrency constructs, such as shared-
-memory threads and locks, as programmers are only required to specify data and
+than programs based on mainstream concurrency constructs, such as shared-memory 
+threads and locks, as programmers are only required to specify data and
 control dependencies. This allows one to reason sequentially about the
 intended behavior of their program, meanwhile enabling the underlying
 framework to automatically and effectively extract parallelism.
@@ -137,46 +137,37 @@ functions such as \verb=foreach= and \verb=aggregate=, one can concisely form
 dataflow graphs, in which associated functions are executed asynchronously in
 a completely non-blocking way, as elements become available.
 
-% I don't like how it says "we go on to show"
-Finally, we show that FlowPools are able to overcome practical pitfalls which
-are not uncommon to functional programming models, such as out-of-memory
-errors, enabling programs based upon FlowPools to run indefinitely. This is
-made possible by implementing FlowPools without the use of iterators or
-streams. By using a \textit{builder} abstraction internally, we are able to
-not only avoid the non-determinism caused by iterators and streams, but we are
-additionally able to garbage collect parts of the data structure we no longer
-need, thus reducing memory consumption, and improving cache behavior due to
-fewer GC cycles.
+% I don't like how it says "we show"
+Finally, we show that FlowPools are able to overcome practical issues, such as
+out-of-memory errors, thus enabling programs based upon FlowPools to run
+indefinitely. By using a \textit{builder} abstraction, instead of something
+like iterators or streams (which either lead to non-determinism or require
+that all elements stay in memory) we are able to garbage collect parts of the
+data structure we no longer need, thus reducing memory consumption.
 
-Data structures for the multicore age, Shavit 2011, Comm. ACM \cite{Shavit11}
+% \subsection{Motivation}
 
-Concurrent data structures, Moir, Shavit 2008, \cite{Moir05}
+% \textbf{Paragraph(s) on shortcomings of typical approaches.} 
+% -\sout{Plus,} iterators or streams would not be deterministic. Even if they
+% are thread-safe, they have an inherent state which can lead to nondeterminism.
+% - \sout{But this} leads to GC problems! We have to keep every element around
+% forever. Computations can run arbitrarily long (GC point)
 
-A Methodology for Implementing Highly Concurrent Data Structures, Herlihy, 1990 \cite{Herlihy90}
+% \textbf{Paragraph(s) stating goals.} 
+% - we want a deterministic model. we do not block in the programming model (i.e. there are no
+% operations which cause blocking until a value becomes available)
+% - we want a non-blocking data-structure (i.e. the operations on the
+% data-structures should themselves be non-blocking)
+% - programs run indefinitely $\Rightarrow$ we need to GC parts of the
+% data structure we no longer need
+% - we want to reduce heap allocation and inline the data structure as
+% much as possible $\Rightarrow$ lower memory consumption, better cache behaviour
+% and fewer GC cycles
+% - composability
 
-\subsection{Motivation}
-
-\textbf{Paragraph(s) on shortcomings of typical approaches.} 
--\sout{Plus,} iterators or streams would not be deterministic. Even if they
-are thread-safe, they have an inherent state which can lead to nondeterminism.
-- \sout{But this} leads to GC problems! We have to keep every element around
-forever. Computations can run arbitrarily long (GC point)
-
-\textbf{Paragraph(s) stating goals.} 
-- we want a deterministic model. we do not block in the programming model (i.e. there are no
-operations which cause blocking until a value becomes available)
-- we want a non-blocking data-structure (i.e. the operations on the
-data-structures should themselves be non-blocking)
-- programs run indefinitely $\Rightarrow$ we need to GC parts of the
-data structure we no longer need
-- we want to reduce heap allocation and inline the data structure as
-much as possible $\Rightarrow$ lower memory consumption, better cache behaviour
-and fewer GC cycles
-- composability
-
-We present concurrent data structure . We jointly focus on performance and
-extending the capabilities of queue-like data structures for dataflow
-computation.
+% We present concurrent data structure . We jointly focus on performance and
+% extending the capabilities of queue-like data structures for dataflow
+% computation.
 
 Our contributions are the following:
 \begin{itemize}
@@ -196,17 +187,17 @@ Our contributions are the following:
 
 % vvvvvvv MAYBE KEEP THIS?? vvvvvvv
 
-This paper remedies the shortcomings of an imperative vs functional approach.
-On the one had, the main issue with imperative programs in concurrent
-environments is mutable state, and the race conditions that result from such
-situations. On the other hand, functional programming provides the guarantee
-that state can never be changed, resulting in concise and correct code, but
-which often performs poorly due to the overhead of only ever creating new
-objects and never reusing old ones, thereby increasing the pressure on the
-garbage collector. Our approach is to combine the benefits of each of these
-approaches. We provide a concise and easy-to-reason-about deterministic
-functional interface on top of an imperative but performant and provably
-correct implementation.
+% This paper remedies the shortcomings of an imperative vs functional approach.
+% On the one had, the main issue with imperative programs in concurrent
+% environments is mutable state, and the race conditions that result from such
+% situations. On the other hand, functional programming provides the guarantee
+% that state can never be changed, resulting in concise and correct code, but
+% which often performs poorly due to the overhead of only ever creating new
+% objects and never reusing old ones, thereby increasing the pressure on the
+% garbage collector. Our approach is to combine the benefits of each of these
+% approaches. We provide a concise and easy-to-reason-about deterministic
+% functional interface on top of an imperative but performant and provably
+% correct implementation.
 
 % ^^^^^ MAYBE KEEP THIS?? ^^^^^
 
@@ -261,6 +252,12 @@ correct implementation.
 %    programming models (JVM, CLR, most native platforms) \cite{Herlihy90}
 
 % Introduction and motivation for data-flow programming model.
+
+% Data structures for the multicore age, Shavit 2011, Comm. ACM \cite{Shavit11}
+
+% Concurrent data structures, Moir, Shavit 2008, \cite{Moir05}
+
+% A Methodology for Implementing Highly Concurrent Data Structures, Herlihy, 1990 \cite{Herlihy90}
 
 
 \section{Model of Computation}
