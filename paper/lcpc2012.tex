@@ -311,13 +311,28 @@ deterministic.
 % exceptions, then the program is guaranteed to be deterministic.
 
 In this paper we describe a deterministic pool abstraction which allows
-appending elements and then traversing the contained elements.
+appending elements and then traversing them.
+We call this data structure a \textit{single-assignment pool} or a FlowPool.
 Such an abstraction may seem similar to the dataflow streams seen in Oz,
 but there are some important differences.
 We argue that both of these are deterministic, but our pool abstraction
 does not define the order between contained elements, hence there is
 no predefined traversal order.
 
+The simplified model of computation is shown in Fig. \ref{TODO}.
+The pool abstraction usually defines adding elements and retrieving
+some element previously added.
+This retrieval is not very useful unless it also removes the element.
+In a concurrent setting such a remove is time-dependent and gives
+different results depending on when it was called -- an element
+present at one point might not be present later.
+Such an operation would hinder determinism.
+For this reason we do not provide a way to remove an element once it
+has been added.
+Instead, we provide a way to express what should be done with each
+element of the pool -- traversal.
+Finally, we allow the pool to be sealed to a certain size -- this
+bounds the number of elements that can be added to the pool.
 
 \section{Programming Interface}
 \label{sec:programming-interface}
@@ -370,15 +385,19 @@ The user-specified function return value of type \verb=U= is ignored.
 The \verb=aggregate= operation aggregates the elements of the pool
 together and has the following signature: \verb+def aggregate[S]+\verb+(zero: =>S)+
 \verb+(cb: (S, S) => S)+ \verb+(op: (S, T) => S):+ \verb+Future[S]+,
-where \verb=zero= is the initial aggregation, \verb=cb= is an operator
-which combines several aggregations, \verb=op= is an associative operator
-that adds an element to the aggregation, and \verb=Future[S]= is the final
-aggregation of all the elements which becomes available once all the elements
-have been added.
+where \verb=zero= is the initial aggregation, \verb=cb= is an
+associative operator which combines several aggregations, \verb=op= is
+an operator that adds an element to the aggregation, and
+\verb=Future[S]= is the final aggregation of all the elements which
+becomes available once all the elements have been added.
 The \verb=aggregate= divides elements into subsets and applies the
 aggregation operator \verb=op= to aggregate elements in each subset
 starting from the \verb=zero= aggregation, and then combines
 aggregations from different subsets with the \verb=cb= operator.
+In essence, the first part of \verb=aggregate= defines the commutative
+monoid and the functions involved must be non-side-effecting.
+In contrast, the \verb=op= is guaranteed to be called only once per
+each element and it can have side-effects.
 
 While in an imperative programming model \verb=foreach= and \verb=aggregate= are
 equivalent in the sense that one can be implemented in terms of the
@@ -902,7 +921,35 @@ method is responsible for scheduling that callback for subsequently added elemen
 Note that all three operations call \verb=expand= to add an additional
 block once the current block is empty, to ensure lock-freedom.
 
+\textbf{Multi-Lane FlowPools.}
+Using a single block sequence (i.e. lane) to implement a FlowPool
+doesn't fully take advantage of the lack of ordering guarantees and --
+as elements are inserted in sequence -- may cause slowdowns due to
+collisions when multiple concurrent writers are present. Multi-Lane
+FlowPools solve this limitation by having a lane for each CPU, where
+each lane is following the same implementation as for a normal
+FlowPool.
 
+This has several implications:
+\begin{itemize}
+\item CAS failures during insertion are to a high extent avoided.
+\item Less memory contetion due to ``private'' blocks for each
+  processor.
+\item \verb=seal= needs to be globally synchronized in a non-blocking
+  fashion.
+\item Callbacks for \verb=aggregate= have to be added to each lane
+  individually and aggregated once all of them have completed.
+\end{itemize}
+
+In practice, a hash on the ID of the inserting thread has to be used
+instead of the CPU index, as such information is currently not
+available through the Java framework. Also note that the remaining
+slots resulting from a \verb=seal= have to be split up amongst the
+lanes and a writer might switch lanes if his lane is full (and hence
+CAS failures may happen).
+
+You find an evaluation of the performance of Multi-Lane FlowPools in
+section~\ref{sec:benchmark}.
 
 \section{Correctness}
 
@@ -920,17 +967,17 @@ corresponds to a FlowPool operation-- that is, it produces a
 new abstract pool corresponding to the state of the FlowPool after
 the FlowPool operation has been completed.
 
-\begin{lemma}
-For all blocks $b$ reachable from $start$, if $b.index > 0$ at some time $t_0$, then
-$b.array(b.index - 1) \in Elem$ at time $t_0$.
-\end{lemma}
+%\begin{lemma}
+%For all blocks $b$ reachable from $start$, if $b.index > 0$ at some time $t_0$, then
+%$b.array(b.index - 1) \in Elem$ at time $t_0$.
+%\end{lemma}
 
-\begin{lemma}
-For all blocks $b$ reachable from $start$, and for all $x \in b.array$,
-function $x$ goes through and only through the prefix of transitions
-$null \rightarrow cb_1 \rightarrow \dots \rightarrow cb_n \rightarrow elem$, where
-$cb_i \in Terminal$, $i \neq j \Rightarrow cb_i \neq cb_j$ and $elem \in Elem$.
-\end{lemma}
+%\begin{lemma}
+%For all blocks $b$ reachable from $start$, and for all $x \in b.array$,
+%function $x$ goes through and only through the prefix of transitions
+%$null \rightarrow cb_1 \rightarrow \dots \rightarrow cb_n \rightarrow elem$, where
+%$cb_i \in Terminal$, $i \neq j \Rightarrow cb_i \neq cb_j$ and $elem \in Elem$.
+%\end{lemma}
 
 %\begin{lemma}
 %We define the following invariants for the FlowPool.
@@ -980,7 +1027,6 @@ FlowPool operations \verb=append=, \verb=foreach=
 and \verb=seal= are consistent with the abstract pool semantics.
 \end{theorem}
 
-
 \begin{theorem}[Linearizable operations]
 FlowPool operations \verb=append= and \verb=seal= are linearizable.
 \end{theorem}
@@ -988,9 +1034,70 @@ FlowPool operations \verb=append= and \verb=seal= are linearizable.
 We then proceed to show that operations are lock-free, i.e. that at
 least one thread completes after a finite number of steps.
 
-\section{Experimental Results}
+\section{Evaluation}
 
+We evaluate our implementation against the comparable collections in
+the JDK 1.7 on three different architectures -- a quad-core 3.4 GHz
+i7-2600, 4x octa-core 2.27 GHz Intel Xeon x7560 (both with
+hyperthreading) and an octa-core 1.2GHz UltraSPARC T2 with 64 hardware
+threads. We varied the parallelism level $P$ from $1$ to $8$ on the first
+architecture, and from $1$ to $64$ on the latter two.
 
+In the \textit{Insert} benchmark we distribute the work of inserting a
+$N$ elements into the data structure concurrently across a
+$P$ threads.
+This microbenchmark shows the performance of the pool \verb=append=
+operation.
+We compare against concurrent linked queue \cite{Michael96} and
+linked transfer queue \cite{SchererLS09} implementations found in the
+Java standard library.
+We can see that both single-lane FlowPools and concurrent queues do
+not scale well with the number of concurrent threads -- due to cache
+line collisions they slow down rapidly, particularly on the i7
+architecture.
+On the other hand, the multi-lane FlowPools scale well, as threads
+write to different lanes and hence different cache lines in
+most occasions.
+
+The \textit{Reduce} benchmark starts $P$ threads which concurrently 
+insert a total of $N$ elements. The \verb=aggregate= operation is used
+to reduce the set of values inserted into the pool.
+In the FlowPool implementation there are as many threads computing the
+aggregation as there are different lanes -- elements from different
+lanes are batched together.
+By default the number of lanes is set to the parallelism level $P$,
+but we varied the number of lanes to $1.5 P$, $2P$, $3P$ and $4P$ with
+no observable gain -- in fact, this sometimes decreased performance
+slightly.
+
+The \textit{Map} benchmark is similar to the \textit{Reduce} benchmark.
+Instead of reducing a value, each element is mapped into a new
+one and added into a different pool.
+
+In the \textit{Histogram} benchmark $P$ threads produce a total of $N$
+elements and add it to the FlowPool.
+The \verb=aggregate= operation is then used to produce 10 different
+histograms concurrently with different number of bins.
+Each separate bins is constructed by $P$ threads.
+A crucial difference between queues and FlowPools in the latter
+benchmark is that the multiple histograms are produced for FlowPools
+by invoking several \verb=aggregate= operations while with queues each
+element has to be written to several queues -- one for each
+histogram.
+Without additional synchronization, reading a single queue is not an
+option since elements have to be removed from the queue eventually and
+it is not clear to each reader when an element is no longer needed by
+different readers.
+With FlowPools this is not a problem because the no longer needed
+elements are implicitly garbage collected.
+
+Finally, to validate the last claim of garbage being implicitly
+collected, in the \textit{Comm} benchmark we create a pool in which a
+large number of elements $N$ is added concurrently by $P$
+threads. Each element is then processed by one of $P$ threads through
+the use of the \verb=aggregate= operation.
+With a linked transfer queues, $P$ threads concurrently remove
+elements from the queue and process it.
 
 \section{Related Work}
 
@@ -1081,16 +1188,27 @@ sequential collections.
 The prerequisite is that \verb=<<= can be invoked concurrently and
 that \verb=foreach= executes asynchronously.
 
-We postulate the existence of a range of other concurrent collection
-types with deterministic semantics fitting the presented
-correct-by-construction single-assignment model, such as bounded
-buffers, dataflow streams and maps, all of which have higher-level
-operations expressed in terms of the same basic primitives.
+We emphasize a property of FlowPools which goes beyond
+a dataflow model such as Oz (or some other future/promise based
+model) in which more complex data structures such as streams are built
+on top of single-assignment variables.
+With single-assignment pools multiple threads can add elements without
+agreeing on where the added element should structurally be, as is the
+case with dataflow streams.
+A consequence of this is a more flexible programming model.
+
+In conclusion, we postulate the existence of a range of other
+concurrent collection types with deterministic semantics fitting the
+presented correct-by-construction single-assignment model, such as
+bounded buffers, dataflow streams and maps, all of which have
+higher-level operations expressed in terms of the same basic
+primitives.
 On the implementation level, we anticipate the need of embedding the
 callbacks within the data-structure itself, as is the case with
 callback-based futures and FlowPools -- this offers a particular
 benefit on platforms which do not by default support efficient
 continuations.
+
 
 
 \bibliographystyle{abbrv}
@@ -2299,7 +2417,6 @@ of $CAS_{seal}$
 
 \section{More programming examples}
 
-% we can comment this one out, but keep these here for reference
 
 
 \begin{minipage}[b]{3.75 cm}
@@ -2315,22 +2432,123 @@ def iterate[T]
   \}
   future \{ recurse(s) \}
   p
+
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{4 cm}
+\begin{alltt}
+{\scriptsize
+def range
+  (from: Int, end: Int)
+  val p = new FlowPool[T]
+  val b = p.builder
+  future \{
+    for (i <- start to end)
+      b << i
+    b.seal(n)
+  \}
+  p
+
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{4 cm}
+\begin{alltt}
+{\scriptsize
+def fill[T]
+  (n: Int, elem: =>T)
+  val p = new FlowPool[T]
+  val b = p.builder
+  future \{
+    for (i <- 1 to n)
+      b << elem
+    b.seal(n)
+  \}
+  p
+
+}
+\end{alltt}
+\end{minipage}
+
+
+\noindent
+\begin{minipage}[b]{3.9 cm}
+\begin{alltt}
+{\scriptsize
+def exists
+  (pred: T => Boolean)
+  aggregate(false)(_ \(\vee\) _) \{
+    (acc, x) =>
+    acc \(\vee\) pred(x)
+  \}
+
+
 }
 \end{alltt}
 \end{minipage}
 \begin{minipage}[b]{3.9 cm}
 \begin{alltt}
 {\scriptsize
-def exists
+def forall
   (pred: T => Boolean)
-  val p = new FlowPool[T]
-  val b = p.builder
-  aggregate(false)(_ \(\vee\) _) \{
+  aggregate(true)(_ \(\wedge\) _) \{
     (acc, x) =>
-    acc \(\vee\) pred(x)
+    acc \(\wedge\) pred(x)
   \}
-  p
 
+
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{3.9 cm}
+\begin{alltt}
+{\scriptsize
+def min()
+  def min(a: Int, b: Int)
+    if a < b a else b
+  aggregate(0)(min) \{
+    min
+  \}
+
+
+}
+\end{alltt}
+\end{minipage}
+
+
+\noindent
+\begin{minipage}[b]{3.9 cm}
+\begin{alltt}
+{\scriptsize
+def sum()
+  aggregate(0)(_ + _) \{
+    _ + _
+  \}
+
+
+def product()
+  aggregate(1)(_ * _) \{
+    _ * _
+  \}
+
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{3.9 cm}
+\begin{alltt}
+{\scriptsize
+def count
+  (pred: T => Boolean)
+  aggregate(0)(_ + _) \{
+    (acc, x) =>
+    if pred(x) 1 else 0
+  \}
+
+
+def fold[U >: T]
+  (zero: U, op: (U, U) => U)
+  aggregate(zero)(op)(op)
 }
 \end{alltt}
 \end{minipage}
@@ -2341,34 +2559,20 @@ def flatten[S]
   (q: FlowPool[FlowPool[S]])
   val p = new FlowPool[S]
   val b = p.builder
-  q.aggregate(future(0))(add) \{ (af, r) =>
+  q.aggregate(future(0))(add) \{
+    (af, r) =>
     val sf = for (x <- r) b << x
     add(af, sf)
   \} map \{ sz => b.seal(sz) \}
   p
-}
-\end{alltt}
-\end{minipage}
-
-
-
-\begin{minipage}[b]{4 cm}
-\begin{alltt}
-{\scriptsize
-def fill[T]
-  (n: Int, elem: =>T)
-  val p = new FlowPool[T]
-  val b = p.builder
-  future \{
-    for (i <- 1 to n) b << elem
-    b.seal(n)
-  \}
-  p
 
 }
 \end{alltt}
 \end{minipage}
- 
+
+
+
+
 
 
 \end{document}
