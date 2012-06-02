@@ -104,27 +104,20 @@ capabilities, FlowPools perform XYZ-XYZ\% better than their blocking counterpart
 
 Multicore architectures have become ubiquitous-- even most mobile devices now
 ship with multiple core processors. Yet parallel programming has yet to enter
-the daily workflow of the mainstream developer.  
+the daily workflow of the mainstream developer. One significant obstacle is an
+undesirable choice programmers must often face when solving a problem that
+could greatly benefit from leveraging available parallelism. Either choose a
+non-deterministic, but performant, data structure or programming model, or
+sacrifice performance for the sake of clarity and correctness.
 
-% We contend that this has to do with the fact that (Yet...) deterministic
-% parallel programming still remains an elusive goal.
-
-One significant obstacle is an undesirable choice programmers must often face
-when solving a problem that could greatly benefit from leveraging available
-parallelism. Either choose a non-deterministic, but performant, data structure
-or programming model, or sacrifice performance for the sake of clarity and
-correctness.
-
-% TODO: cite i-Structures or other related work about dataflow
-
-Programming models based on \emph{dataflow} have the potential to simplify
-parallel programming, since the resulting programs are deterministic.
-Moreover, dataflow programs can be expressed more declaratively than programs
-based on mainstream concurrency constructs, such as shared-memory threads and
-locks, as programmers are only required to specify data and control
-dependencies. This allows one to reason sequentially about the intended
-behavior of their program, meanwhile enabling the underlying framework to
-automatically and effectively extract parallelism.
+Programming models based on \emph{dataflow} \cite{Arvind89,CnC10} have the
+potential to simplify parallel programming, since the resulting programs are
+deterministic. Moreover, dataflow programs can be expressed more declaratively
+than programs based on mainstream concurrency constructs, such as shared-
+memory threads and locks, as programmers are only required to specify data and
+control dependencies. This allows one to reason sequentially about the
+intended behavior of their program, meanwhile enabling the underlying
+framework to automatically and effectively extract parallelism.
 
 In this paper, we present the design and implementation of FlowPools, a
 fundamental dataflow collections abstraction which can be used as a building
@@ -137,70 +130,23 @@ provided by lock freedom~\cite{Herlihy90}, since its operations are unaffected
 by thread delays. Our lock freedom proof guarantees progress regardless of the
 behavior, including the failure, of concurrent threads.
 
-% the choice between performance, leading to the use of 
-% non- deterministic data structures or programming models whose semantics are
-% difficult to reason about, and clarity, leading clear and correct but non-
-% performant code. 
+% I don't like how it says "we go on to show"
+In combining lock-freedom with a functional interface, we go on to show that
+FlowPools are \textit{composable}. That is, using prototypical higher-order
+functions such as \verb=foreach= and \verb=aggregate=, one can concisely form
+dataflow graphs, in which associated functions are executed asynchronously in
+a completely non-blocking way, as elements become available.
 
-% non-deterministic code hard to debug because you have all of these different
-% thread interleavings that have to be taken into account when designing the
-% program. whereas a deterministic program doesn't have to consider thread
-% interleavings because they don't have an effect on the outcome of a result.
-
-% 
-
-% While non-blocking techniques have been used for building high-performance
-% concurrent data structures, they . There exist non-blocking concurrent data
-% structures, but not necessarily non-blocking concurrent deterministic data
-% structures.
-
-% What can prevent composability is lock-based. 
-
-% Something that can provide composability is functional combinators. 
-
-This paper remedies the shortcomings of an imperative vs functional approach.
-On the one had, the main issue with imperative programs in concurrent
-environments is mutable state, and the race conditions that result from such
-situations. On the other hand, functional programming provides the guarantee
-that state can never be changed, resulting in concise and correct code, but
-which often performs poorly due to the overhead of only ever creating new
-objects and never reusing old ones, thereby increasing the pressure on the
-garbage collector. Our approach is to combine the benefits of each of these
-approaches. We provide a concise and easy-to-reason-about deterministic
-functional interface on top of an imperative but performant and provably
-correct implementation.
-
-In this paper, we advocate an approach that achieves high performance and composability at the same time through combining high-level functional abstractions with an efficient non-blocking implementation.
-
-In this paper, we advocate a dataflow programming model to .
-
-
-Why is a deterministic programming model preferable? Reason sequentially.
-Another advantages is that data dependencies are expressed as a way to enable
-the underlying runtime system to effectively extract parallelism.
-
-In our model, the above point is achieved through the composability afforded
-by using functional abstractions.
-
-% 1) How do we achieve determinism in the first place. Design of programming.
-% 2) How do we make dataflow/determinism more usable in practice to build larger
-% program. This is where composability comes into play. Build larger programs
-% from reusable parts.
-
-% By being able to start asynchronous computations as soon as their required
-% inputs have been computed.
-
-% The shift in recent years by processor manufacturers from single to
-% multi-core architectures, academia and industry alike have conceded that
-% \textit{Popular Parallel Programming} remains a formidable challenge. Even our
-% cellphones are now multicore.
-
-\textbf{Lock-free is better, and why.} 
-\sout{why the foreach instead of blocking?} blocking is bad in most
-   programming models (JVM, CLR, most native platforms) \cite{Herlihy90}
-
-Introduction and motivation for data-flow programming model.
-
+% I don't like how it says "we go on to show"
+Finally, we show that FlowPools are able to overcome practical pitfalls which
+are not uncommon to functional programming models, such as out-of-memory
+errors, enabling programs based upon FlowPools to run indefinitely. This is
+made possible by implementing FlowPools without the use of iterators or
+streams. By using a \textit{builder} abstraction internally, we are able to
+not only avoid the non-determinism caused by iterators and streams, but we are
+additionally able to garbage collect parts of the data structure we no longer
+need, thus reducing memory consumption, and improving cache behavior due to
+fewer GC cycles.
 
 Data structures for the multicore age, Shavit 2011, Comm. ACM \cite{Shavit11}
 
@@ -239,6 +185,82 @@ Our contributions are the following:
 \item benchmarks
 \end{itemize}
 
+% === OTHER THINGS TO ADDRESS... ===
+% memory stuff.
+    % - programs run indefinitely $\Rightarrow$ we need to GC parts of the
+    % data structure we no longer need
+    % - we want to reduce heap allocation and inline the data structure as
+    % much as possible $\Rightarrow$ lower memory consumption, better cache behaviour
+    % and fewer GC cycles
+% === ... ===
+
+% vvvvvvv MAYBE KEEP THIS?? vvvvvvv
+
+This paper remedies the shortcomings of an imperative vs functional approach.
+On the one had, the main issue with imperative programs in concurrent
+environments is mutable state, and the race conditions that result from such
+situations. On the other hand, functional programming provides the guarantee
+that state can never be changed, resulting in concise and correct code, but
+which often performs poorly due to the overhead of only ever creating new
+objects and never reusing old ones, thereby increasing the pressure on the
+garbage collector. Our approach is to combine the benefits of each of these
+approaches. We provide a concise and easy-to-reason-about deterministic
+functional interface on top of an imperative but performant and provably
+correct implementation.
+
+% ^^^^^ MAYBE KEEP THIS?? ^^^^^
+
+% In this paper, we advocate an approach that achieves high performance and
+% composability at the same time through combining high-level functional
+% abstractions with an efficient non-blocking implementation.
+
+% In this paper, we advocate a dataflow programming model to .
+
+
+% Why is a deterministic programming model preferable? Reason sequentially.
+% Another advantages is that data dependencies are expressed as a way to enable
+% the underlying runtime system to effectively extract parallelism.
+
+% In our model, the above point is achieved through the composability afforded
+% by using functional abstractions.
+
+% 1) How do we achieve determinism in the first place. Design of programming.
+% 2) How do we make dataflow/determinism more usable in practice to build larger
+% program. This is where composability comes into play. Build larger programs
+% from reusable parts.
+
+% By being able to start asynchronous computations as soon as their required
+% inputs have been computed.
+
+% The shift in recent years by processor manufacturers from single to
+% multi-core architectures, academia and industry alike have conceded that
+% \textit{Popular Parallel Programming} remains a formidable challenge. Even our
+% cellphones are now multicore.
+
+% the choice between performance, leading to the use of 
+% non- deterministic data structures or programming models whose semantics are
+% difficult to reason about, and clarity, leading clear and correct but non-
+% performant code. 
+
+% non-deterministic code hard to debug because you have all of these different
+% thread interleavings that have to be taken into account when designing the
+% program. whereas a deterministic program doesn't have to consider thread
+% interleavings because they don't have an effect on the outcome of a result.
+
+% While non-blocking techniques have been used for building high-performance
+% concurrent data structures, they . There exist non-blocking concurrent data
+% structures, but not necessarily non-blocking concurrent deterministic data
+% structures.
+
+% What can prevent composability is lock-based. 
+
+% Something that can provide composability is functional combinators. 
+
+% \textbf{Lock-free is better, and why.} 
+% \sout{why the foreach instead of blocking?} blocking is bad in most
+%    programming models (JVM, CLR, most native platforms) \cite{Herlihy90}
+
+% Introduction and motivation for data-flow programming model.
 
 
 \section{Model of Computation}
