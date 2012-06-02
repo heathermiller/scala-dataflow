@@ -127,8 +127,8 @@ blocking data structure, which we go on to prove is lock-free.
 
 As a result, our data structure benefits from the increased robustness
 provided by lock freedom~\cite{Herlihy90}, since its operations are unaffected
-by thread delays. Our lock freedom proof guarantees progress regardless of the
-behavior, including the failure, of concurrent threads.
+by thread delays. We provide a lock freedom proof, which guarantees progress
+regardless of the behavior, including the failure, of concurrent threads.
 
 % I don't like how it says "we go on to show"
 In combining lock-freedom with a functional interface, we go on to show that
@@ -145,36 +145,14 @@ like iterators or streams (which either lead to non-determinism or require
 that all elements stay in memory) we are able to garbage collect parts of the
 data structure we no longer need, thus reducing memory consumption.
 
-% \subsection{Motivation}
-
-% \textbf{Paragraph(s) on shortcomings of typical approaches.} 
-% -\sout{Plus,} iterators or streams would not be deterministic. Even if they
-% are thread-safe, they have an inherent state which can lead to nondeterminism.
-% - \sout{But this} leads to GC problems! We have to keep every element around
-% forever. Computations can run arbitrarily long (GC point)
-
-% \textbf{Paragraph(s) stating goals.} 
-% - we want a deterministic model. we do not block in the programming model (i.e. there are no
-% operations which cause blocking until a value becomes available)
-% - we want a non-blocking data-structure (i.e. the operations on the
-% data-structures should themselves be non-blocking)
-% - programs run indefinitely $\Rightarrow$ we need to GC parts of the
-% data structure we no longer need
-% - we want to reduce heap allocation and inline the data structure as
-% much as possible $\Rightarrow$ lower memory consumption, better cache behaviour
-% and fewer GC cycles
-% - composability
-
-% We present concurrent data structure . We jointly focus on performance and
-% extending the capabilities of queue-like data structures for dataflow
-% computation.
-
 Our contributions are the following:
-\begin{itemize}
-\item design and implementation of deterministic non-blocking 
-\item proofs
-\item benchmarks
-\end{itemize}
+\begin{enumerate}
+\item The design and implementation of parallel dataflow abstraction and
+underlying data structure that is deterministic, lock-free, and composable.
+\item Proofs of lock-freedom, linearizability, and determinism.
+\item Detailed benchmarks comparing the performance our FlowPools against
+other popular concurrent data structures.
+\end{enumerate}
 
 % === OTHER THINGS TO ADDRESS... ===
 % memory stuff.
@@ -258,6 +236,30 @@ Our contributions are the following:
 % Concurrent data structures, Moir, Shavit 2008, \cite{Moir05}
 
 % A Methodology for Implementing Highly Concurrent Data Structures, Herlihy, 1990 \cite{Herlihy90}
+
+% \subsection{Motivation}
+
+% \textbf{Paragraph(s) on shortcomings of typical approaches.} 
+% -\sout{Plus,} iterators or streams would not be deterministic. Even if they
+% are thread-safe, they have an inherent state which can lead to nondeterminism.
+% - \sout{But this} leads to GC problems! We have to keep every element around
+% forever. Computations can run arbitrarily long (GC point)
+
+% \textbf{Paragraph(s) stating goals.} 
+% - we want a deterministic model. we do not block in the programming model (i.e. there are no
+% operations which cause blocking until a value becomes available)
+% - we want a non-blocking data-structure (i.e. the operations on the
+% data-structures should themselves be non-blocking)
+% - programs run indefinitely $\Rightarrow$ we need to GC parts of the
+% data structure we no longer need
+% - we want to reduce heap allocation and inline the data structure as
+% much as possible $\Rightarrow$ lower memory consumption, better cache behaviour
+% and fewer GC cycles
+% - composability
+
+% We present concurrent data structure . We jointly focus on performance and
+% extending the capabilities of queue-like data structures for dataflow
+% computation.
 
 
 \section{Model of Computation}
