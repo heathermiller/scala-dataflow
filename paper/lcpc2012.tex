@@ -2919,11 +2919,13 @@ This means we cannot create a list of futures, because
 we do not know how many future there will be.
 We can instead create a future which holds the final
 list of values.
-This is what the method \verb=toListFuture= does. 
+This is what the method \verb=toList= does. 
 Notice that the aggregate invocation does not form a
 commutative monoid, so the results will be nondeterministic,
 which is reflected in the order of elements in the
 resulting list.
+We could still maintain determinism given that we use
+a \verb=Set= datatype instead of a \verb=List=.
 
 \noindent
 \begin{minipage}[b]{3.6 cm}
@@ -2938,11 +2940,12 @@ def toFlowPool[T]
   p
 
 
-def toListFuture[T]
+def toList[T]
   (p: FlowPool[T])
   p.aggregate(\(\emptyset\))(_ ::: _) \{
     (acc, x) => x :: acc
   \}
+
 
 
 }
@@ -2951,14 +2954,15 @@ def toListFuture[T]
 \begin{minipage}[b]{3.9 cm}
 \begin{alltt}
 {\scriptsize
-def toList[T]
+def toList2[T]
   (p: FlowPool[T], n: Int)
   type LFT = List[Future[T]]
   val fs = List.fill(n)
-    (new Future())
+    (new Future[T]())
   def complete(l: LFT, x: T)
     if \(\lnot\)l.head.tryComplete(x)
       complete(l.tail, x)
+    else l
   p.builder.seal(n)
   p.aggregate(fs) \{
     (gs, hs) => gs
@@ -2989,23 +2993,21 @@ def intersect
   p
 
 
+
 }
 \end{alltt}
 \end{minipage}
 
+
 However, given that we assume the number of elements in
 the FlowPool, we can do better than that.
-We ignore commutativity and associativity
-in the aggregation, hence discarding determinism.
-We can still maintain determinism given that we use
-a \verb=Set= datatype instead of a \verb=List=.
-The method \verb=toList= starts by sealing the pool to
+The method \verb=toList2= starts by sealing the pool to
 the expected number of elements.
 If successful, the predefined futures are completed
 as the elements arrive into the FlowPool.
 We have to use the \verb=tryComplete= method on
 futures, which completes the future only given that
-it has not been already completed.
+it has not already been completed.
 This potentially yields nondeterministic computations,
 but we cannot avoid this without more expressive
 abstractions, such as pools for which we know that
