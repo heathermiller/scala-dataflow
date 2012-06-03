@@ -949,7 +949,7 @@ lanes and a writer might switch lanes if his lane is full (and hence
 CAS failures may happen).
 
 You find an evaluation of the performance of Multi-Lane FlowPools in
-section~\ref{sec:benchmark}.
+section~\ref{sec:evaluation}.
 
 \section{Correctness}
 
@@ -1035,6 +1035,7 @@ We then proceed to show that operations are lock-free, i.e. that at
 least one thread completes after a finite number of steps.
 
 \section{Evaluation}
+\label{sec:evaluation}
 
 We evaluate our implementation against the comparable collections in
 the JDK 1.7 on three different architectures -- a quad-core 3.4 GHz
@@ -1098,6 +1099,8 @@ threads. Each element is then processed by one of $P$ threads through
 the use of the \verb=aggregate= operation.
 With a linked transfer queues, $P$ threads concurrently remove
 elements from the queue and process it.
+
+
 
 \section{Related Work}
 
