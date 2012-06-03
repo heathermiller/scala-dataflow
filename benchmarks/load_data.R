@@ -56,9 +56,9 @@ dat$imptype = factor(dat$imptype)
 
 # Add architecture
 archs = list(
-  wolf = "4x Intel i7",
-  maglite = "1x Niagara2",
-  lampmac14 = "1x Intel i7"
+  wolf = "32-core Xeon",
+  maglite = "UltraSPARC T2",
+  lampmac14 = "4-core i7"
   )
 dat$arch = ""
 for (n in names(archs))
