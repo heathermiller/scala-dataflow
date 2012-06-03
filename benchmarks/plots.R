@@ -14,6 +14,8 @@ xyplot(time ~ factor(par) | btype * machine,
        scales = list(y = list(log = 10)),
        panel = panel.superpose,
        panel.groups = panel.ci,
+       xlab = "Number of CPUs",
+       ylab = "Execution Time [ms]",
        type = "l")
 
 
