@@ -22,12 +22,12 @@ for (f in files) {
   rm(tmp)
 }
 
-# Reshape to long format and drop first 4 measures
+# Reshape to long format and drop first 5 measures
 dat <- reshape(draw,
-               varying = list(paste("x", 5:20, sep=".")),
+               varying = list(paste("x", 6:20, sep=".")),
                v.names = "time",
                direction = "long",
-               drop = c("class",paste("x", 1:4)))
+               drop = c("class",paste("x", 1:5)))
 
 ## Classify benchmarks
 
@@ -54,11 +54,23 @@ for (n in names(imptypes))
   dat[grep(n, dat$bench, fixed = TRUE),"imptype"] = imptypes[[n]]
 dat$imptype = factor(dat$imptype)
 
-# Aggregate to medians
+# Add architecture
+archs = list(
+  wolf = "4x Intel i7",
+  maglite = "1x Niagara2",
+  lampmac14 = "1x Intel i7"
+  )
+dat$arch = ""
+for (n in names(archs))
+  dat[dat$machine == n,"arch"] = archs[[n]]
+dat$arch = factor(dat$arch)
+
+## Aggregate to medians
 attach(dat)
 mdat <- aggregate(time,
                   list(version = version,
                        machine = machine,
+                       arch = arch,
                        bench = bench,
                        par = par,
                        lanef = lanef,

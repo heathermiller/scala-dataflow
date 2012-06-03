@@ -1,4 +1,4 @@
-panel.ci <- function(x, y, col.line = 'black', ...)
+panel.ci <- function(x, y, ...)
 {
   x <- as.numeric(x)
   yagg <- aggregate(y,by = list(ox = x),quantile)
@@ -9,10 +9,10 @@ panel.ci <- function(x, y, col.line = 'black', ...)
 
   ox <- yagg$ox
 
-  panel.arrows(ox, yl, ox, yu, col = col.line,
+  panel.arrows(ox, yl, ox, yu, col = 'black',
                length = 0.07, unit = "native",
                lwd = 0.7,
                angle = 90, code = 3)
 
-  panel.xyplot(ox, ym, col.line = col.line, ...)
+  panel.xyplot(ox, ym, ...)
 }
