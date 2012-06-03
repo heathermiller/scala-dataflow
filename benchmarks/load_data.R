@@ -27,7 +27,7 @@ dat <- reshape(draw,
                varying = list(paste("x", 6:20, sep=".")),
                v.names = "time",
                direction = "long",
-               drop = c("class",paste("x", 1:5)))
+               drop = c("class",paste("x", 1:5, sep=".")))
 
 ## Classify benchmarks
 

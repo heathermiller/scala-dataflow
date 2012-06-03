@@ -1,92 +1,81 @@
+#! /usr/bin/R --vanilla -f
+
 source('load_data.R')
 source('panel_fcts.R')
 
 library(lattice)
-library(car)
 
-# Setup lattice
-font.settings <- list(
-                      font = 2,
-                      fontfamily = "serif")
+### Setup lattice settings
+font.settings <- list(fontfamily = "serif")
+
 my.theme <- list(
                  par.xlab.text = font.settings,
                  par.ylab.text = font.settings,
                  par.sub.text  = font.settings,
                  par.main.text = font.settings,
                  par.add.text  = font.settings,
-                 par.axis.text = font.settings)
+                 par.axis.text = font.settings,
+                 add.text      = font.settings,
+                 strip.background = list(col = c('white')),
+                 strip.text    = font.settings)
+
+## top.pf <- function(which.given, ...) {
+##   if (which.given == 1 & panel.number() >= 13)
+##     strip.default(which.given = 1, ...)
+## }
+
+## left.pf <- function(which.given, ...) {
+##   if (which.given == 2 & panel.number() %% 3 == 2)
+##     strip.default(which.given = 2, ...)
+## }
 
 ### Display CPU-scaling of Qs
+# size == max & lanef == 1
+
 
 xyplot(time ~ factor(par) | arch * btype,
        data = mdat,
        groups = imptype,
        subset = ave(size, btype, machine, FUN = max) == size & lanef == 1,
-       scales = list(
-         y = list(log = 10),
-         relation = "free"
-         ),
-       pch = c(1,2,4,5),
-       col = "black",
-       type = "o",
-       key = list(
-         text = list(lab = levels(mdat$imptype)),
-         points = list(pch = c(1,2,4,5))
-         ),
-       xlab = "Number of CPUs",
-       ylab = "Execution Time [ms]",
-       par.settings = my.theme
-)
+       scales = list(y = list(log = 10)),
+       xlab = "Number of CPUs"
+       )
+pdf("graphs/cpu-scaling.pdf", height = 10)
+update.myopts(key.labels = levels(mdat$imptype))
+dev.off()
+
 
 ### Display Size-scaling of Qs
+# par == 1 & lanef == 1
 xyplot(time ~ size | arch * btype,
        data = mdat,
        groups = imptype,
-       subset = ave(par, btype, machine, FUN = min) == par & lanef == 1 & btype != "Comm",
-       scales = list(
-         relation = "free"
-         ),
-       pch = c(1,2,4,5),
-       col = "black",
-       type = "o",
-       key = list(
-         text = list(lab = levels(mdat$imptype)),
-         points = list(pch = c(1,2,4,5))
-         ),
-       xlab = "Number of Elements Inserted",
-       ylab = "Execution Time [ms]",
-       par.settings = my.theme
+       subset = par == 1 & lanef == 1 & btype != "Comm",
+       xlab = "Size of Benchmark")
+pdf("graphs/size-scaling-par1.pdf", height = 10)
+update.myopts(key.labels = levels(mdat$imptype))
+dev.off()
+
+# par == 8 & lanef == 1
+xyplot(time ~ size | arch * btype,
+       data = mdat,
+       groups = imptype,
+       subset = par == 8 & lanef == 1 & btype != "Comm",
+       xlab = "Size of Benchmark",
 )
+pdf("graphs/size-scaling-par8.pdf", height = 10)
+update.myopts(key.labels = levels(mdat$imptype))
+dev.off()
 
-
-### Personal notepad :)
-
-# Analyze lanefactor
-lfacdat <- mdat[mdat$machine == "lampmac14" & substr(mdat$bench,1,4) == "MLFP",]
-lfacdat$bench = factor(lfacdat$bench, exclude = NULL)
-
-scatterplot(time ~ size | interaction(lanef),
-            data = lfacdat, subset = bench == "MLFPHistBench" & par == 4)
-
-# Only use lanef = 1
-
-
-
-boxplot(time ~ interaction(bench, size, lanef), subset = par == 8)
-
-
-
-attach(lfacdat)
-boxplot(time ~ interaction(size,par,bench))
-detach(lfacdat)                           
-
-scatterplot(time ~ lanef | interaction(par,machine,bench,size), data = mdat, smooth = FALSE)
-
-ionly <- mdat[mdat$btype == "Insert",]
-ionly$bench <- factor(ionly$bench, exclude = NULL)
-
-scatterplot(time ~ par | bench, data = ionly, subset = btype == "Insert" & machine == "wolf",log="x")
-
-
-
-scatterplot(time ~ par | bench, data = mdat, subset = mdat$size == 5000000 & mdat$btype == bencht)
+### Display lane-factor-scaling of Qs
+# par == 8 & size == max
+xyplot(time ~ factor(lanef) | btype,
+       data = mdat,
+       group = arch,
+       subset = par == 8 & ave(size, btype, machine, FUN = max) == size &
+                machine != "wolf" & imptype == "Multi-Lane FlowPool",
+       xlab = "Factor of Lanes"
+       )
+pdf("graphs/lanef-scaling.pdf", height = 10)
+update.myopts(key.labels = levels(mdat$arch)[1:2], left = FALSE)
+dev.off()

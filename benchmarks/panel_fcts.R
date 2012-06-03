@@ -16,3 +16,24 @@ panel.ci <- function(x, y, ...)
 
   panel.xyplot(ox, ym, ...)
 }
+
+
+update.myopts <- function(key.labels, left = TRUE) {
+  update(trellis.last.object(),
+         scales = list(
+           relation = "free"
+           ),
+         pch = c(1,2,4,5),
+         col = "black",
+         type = "o",
+         key = list(
+           text = list(lab = key.labels),
+           points = list(pch = c(1,2,4,5)[1:length(key.labels)]),
+           fontfamily = "serif"
+           ),
+         ylab = "Execution Time [ms]",
+         par.settings = my.theme,
+         strip = !left,
+         strip.left = left
+         )
+}
