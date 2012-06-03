@@ -22,36 +22,39 @@ for (f in files) {
   rm(tmp)
 }
 
-# Reshape to long format
+# Reshape to long format and drop first 4 measures
 dat <- reshape(draw,
-               varying = list(paste("x", 1:20, sep=".")),
+               varying = list(paste("x", 5:20, sep=".")),
                v.names = "time",
                direction = "long",
-               drop = "class")
+               drop = c("class",paste("x", 1:4)))
 
-# Classify benchmarks
-insertCls = c(
-  "CLQInsertBench", "SLFPInsertBench", 
-  "LTQInsertBench", "MLFPInsertBench")
-histogramCls = c(
-  "MLFPHistBench", "SLFPHistBench", "LTQHistBench")
-reduceCls = c(
-  "SLFPReduceBench", "MLFPReduceBench", "LTQReduceBench")
-commCls = c(
-  "SLFPCommBench", "MLFPCommBench", "LTQCommBench")
-mapCls = c(
-  "SLFPMapBench", "MLFPMapBench", "LTQMapBench")
+## Classify benchmarks
 
+# Benchmark Types
+btypes = list(
+  Insert = "Insert",
+  Hist = "Histogram",
+  Reduce = "Reduce",
+  Comm = "Comm",
+  Map = "Map")
 dat$btype = ""
-
-dat[dat$bench %in% insertCls   ,"btype"] = "Insert"
-dat[dat$bench %in% histogramCls,"btype"] = "Histogram"
-dat[dat$bench %in% reduceCls   ,"btype"] = "Reduce"
-dat[dat$bench %in% commCls     ,"btype"] = "Comm"
-dat[dat$bench %in% mapCls      ,"btype"] = "Map"
-
+for (n in names(btypes))
+  dat[grep(n, dat$bench, fixed = TRUE),"btype"] = btypes[[n]]
 dat$btype = factor(dat$btype)
 
+# Implementation Types
+imptypes = list(
+  CLQ = "ConcurrentLinkedQueue",
+  SLFP = "Single-Lane FlowPool",
+  MLFP = "Multi-Lane FlowPool",
+  LTQ = "LinkedTransferQueue")
+dat$imptype = ""
+for (n in names(imptypes))
+  dat[grep(n, dat$bench, fixed = TRUE),"imptype"] = imptypes[[n]]
+dat$imptype = factor(dat$imptype)
+
+# Aggregate to medians
 attach(dat)
 mdat <- aggregate(time,
                   list(version = version,
@@ -60,7 +63,8 @@ mdat <- aggregate(time,
                        par = par,
                        lanef = lanef,
                        size = size,
-                       btype = btype),
+                       btype = btype,
+                       imptype = imptype),
                   median)
 mdat$time <- mdat$x
 detach(dat)

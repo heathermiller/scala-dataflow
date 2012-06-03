@@ -1,44 +1,50 @@
-#! /usr/bin/R --vanilla -f
+source('load_data.R')
+source('panel_fcts.R')
 
 library(car)
 
-d <- read.csv('bencht.log',sep="\t",header=FALSE)
-dl <- reshape(d, varying = list(4:103), v.names="conc", direction = "long")
+### Display CPU-scaling of Qs
 
-dl$par   <- dl$V1
-dl$size  <- dl$V2
-dl$bench <- dl$V3
 
-agg <- aggregate(dl$conc, list(size = dl$size, par = dl$par, bench = dl$bench), median)
+xyplot(time ~ factor(par) | btype * machine,
+       data = dat,
+       groups = imptype,
+       subset = ave(size, btype, machine, FUN = max) == size & lanef == 1,
+       auto.key = TRUE,
+       scales = list(y = list(log = 10)),
+       panel = panel.superpose,
+       panel.groups = panel.ci,
+       type = "l")
 
-col <- palette()[1:5]
-pc  <- c(rep(1, 5),rep(2, 5))
 
-scatterplot(x ~ size | interaction(par,bench), data=agg, col = rep(col,2), pch = pc,
-            legend.title = "# Threads & Benchmark", ylab = "execution time", xlab = "size")
-#scatterplot(x ~ size | interaction(par,bench), data=agg, col = rep(col,2), pch = pc, log = "y")
+### Personal notepad :)
 
-col <- palette()[1:3]
-pc  <- c(rep(1, 3),rep(2, 3))
+# Analyze lanefactor
+lfacdat <- mdat[mdat$machine == "lampmac14" & substr(mdat$bench,1,4) == "MLFP",]
+lfacdat$bench = factor(lfacdat$bench, exclude = NULL)
 
-scatterplot(x ~ par | interaction(size,bench), data = agg, col = rep(col,2), pch = pc,
-            legend.title = "Size & Benchmark", ylab = "execution time", xlab = "size")
+scatterplot(time ~ size | interaction(lanef),
+            data = lfacdat, subset = bench == "MLFPHistBench" & par == 4)
 
-## n <- length(levels(agg$par))
-## colors <- rainbow(n)
+# Only use lanef = 1
 
-## xrange <- range(agg$size)
-## yrange <- range(agg$x)
 
-## plot(xrange, yrange, type="n", xlab="Number of insertions", ylab="Execution Time")
-## j <- 0
-## for (b in levels(agg$bench)) {
-##   j <- j + 1
-##   i <- 0
-##   for (p in levels(agg$par)) {
-##     i <- i+1
-##     sset <- agg[agg$par == p & agg$bench == b,] 
-##     lines(sset$size, sset$x, type="b", lwd=1, lty = j,
-##           col = colors[i], pch = 20 + j)
-##   }
-## }
+
+boxplot(time ~ interaction(bench, size, lanef), subset = par == 8)
+
+
+
+attach(lfacdat)
+boxplot(time ~ interaction(size,par,bench))
+detach(lfacdat)                           
+
+scatterplot(time ~ lanef | interaction(par,machine,bench,size), data = mdat, smooth = FALSE)
+
+ionly <- mdat[mdat$btype == "Insert",]
+ionly$bench <- factor(ionly$bench, exclude = NULL)
+
+scatterplot(time ~ par | bench, data = ionly, subset = btype == "Insert" & machine == "wolf",log="x")
+
+
+
+scatterplot(time ~ par | bench, data = mdat, subset = mdat$size == 5000000 & mdat$btype == bencht)
