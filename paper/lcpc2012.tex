@@ -2260,7 +2260,7 @@ A term $t$ terminates with result $P$ if its reduction ends in execution state $
 
 \begin{definition}[Interleaving]
 Consider the reduction of a term $t$: $T_1~|~P_1 \;\longrightarrow\; T_2~|~P_2 \;\longrightarrow\; \ldots \;\longrightarrow\; \set{\texttt{nop}}~|~P_n$. An \emph{interleaving} is a permutation 
-$T_{i_1}~|~P_{i_1} \;\longrightarrow\; T_{i_2}~|~P_{i_2} \;\longrightarrow\; \ldots \;\longrightarrow\; \set{\texttt{nop}}~|~P_n$ of that reduction.
+$T_{i_1}~|~P_{i_1} \;\longrightarrow\; T_{i_2}~|~P_{i_2} \;\longrightarrow\; \ldots \;\longrightarrow\; T_{i_n}~|~P_{i_n}$ of that reduction.
 \end{definition}
 
 \begin{definition}[Valid Interleaving]
@@ -2270,20 +2270,30 @@ $c$ creates pool $p$, $p$ is not used in any reduction step in $S'$.
 \end{definition}
 
 \begin{definition}[Determinism]
-The reduction of a term $t$ is \emph{deterministic} \emph{iff} either (a) $t$ does not terminate for any possible interleaving, or (b) $t$ always terminates with the same result for all possible interleavings.
+The reduction of a term $t$ is \emph{deterministic} \emph{iff} either (a) $t$ does not terminate for any valid interleaving, or (b) $t$ always terminates with the same result for all valid interleavings.
 \end{definition}
 
 \subsection{Theorems and Lemmas}
-
-\begin{theorem}[Determinism]
-The reduction of terms $t$ is deterministic.
-\end{theorem}
-
-The proof is based on commutativity of transitions in the reduction.
 
 \begin{lemma}
 Consider a reduction sequence $S$ that does not contain a transition which creates a new pool.
 If $S$ terminates with result $P$ then all permutations of $S$ terminate with the same result.
 \end{lemma}
+
+\begin{theorem}[Determinism]
+The reduction of terms $t$ is deterministic.
+\end{theorem}
+
+\begin{proof}
+The proof is based on the commutativity of transitions in the
+reduction. We construct the proof in the following steps:
+\begin{itemize}
+\item Given a reduction $S$ which terminates with result $P$, we show
+  that every valid interleaving of $S$ terminates with $P$.
+\item First, we show that $S$ is equivalent to a canonical
+  interleaving $S_c$, i.e., $S_c$ also terminates with result $P$.
+\item Second, we show that every valid interleaving is equivalent to $S_c$.
+\end{itemize}
+\end{proof}
 
 \end{document}
