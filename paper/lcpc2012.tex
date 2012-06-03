@@ -1100,7 +1100,21 @@ the use of the \verb=aggregate= operation.
 With a linked transfer queues, $P$ threads concurrently remove
 elements from the queue and process it.
 
+\begin{figure}
+\includegraphics[width=\textwidth]{../benchmarks/graphs/cpu-scaling}
+\caption{CPU scaling properties of benchmarks}
+\end{figure}
 
+\begin{figure}
+\includegraphics[width=\textwidth]{../benchmarks/graphs/size-scaling-par1}
+\includegraphics[width=\textwidth]{../benchmarks/graphs/size-scaling-par8}
+\caption{Size scaling properties of benchmarks (par = 1, 8)}
+\end{figure}
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../benchmarks/graphs/lanef-scaling}
+\caption{Lane-Factor scaling properties of Multi-Lane FlowPool}
+\end{figure}
 
 \section{Related Work}
 
