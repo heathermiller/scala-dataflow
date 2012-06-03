@@ -8,8 +8,6 @@ library(lattice)
 
 ### Display CPU-scaling of Qs
 # size == max & lanef == 1
-
-
 xyplot(time ~ factor(par) | arch * btype,
        data = mdat,
        groups = imptype,
@@ -32,7 +30,7 @@ xyplot(time ~ size | arch * btype,
        xlab = "Size of Benchmark")
 
 pdf("graphs/size-scaling-par1.pdf", height = 5)
-update.myopts(key.labels = levels(mdat$imptype),4,3)
+update.myopts(key.labels = levels(mdat$imptype),3,3)
 dev.off()
 
 # par == 8 & lanef == 1
@@ -44,7 +42,7 @@ xyplot(time ~ size | arch * btype,
 )
 
 pdf("graphs/size-scaling-par8.pdf", height = 5)
-update.myopts(key.labels = levels(mdat$imptype),4,3)
+update.myopts(key.labels = levels(mdat$imptype),3,3)
 dev.off()
 
 ### Display lane-factor-scaling of Qs
