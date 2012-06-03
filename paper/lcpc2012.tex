@@ -765,7 +765,7 @@ def seal(size: Int)
     curo = READ(b.array(idx)) {\customlabel{read_seal}{\LineNumber}}
     curo match \{
       term: Terminal =>
-        if !tryWriteSeal(term, b, idx, size)
+        if \(\lnot\)tryWriteSeal(term, b, idx, size)
           seal(size)
       elem: Elem =>
         WRITE(b.index, idx + 1) {\customlabel{write_seal}{\LineNumber}}
@@ -788,7 +788,7 @@ def tryWriteSeal(term: Terminal, b: Block,
       callbacks = term.callbacks
     \}
     return CAS(b.array(idx), term, nterm) {\customlabel{cas_seal}{\LineNumber}}
-  \} else if term.sealed != size \{
+  \} else if term.sealed \(\neq\) size \{
     error("already sealed with different size")
   \} else return true
 
@@ -806,7 +806,7 @@ def asyncFor(f: Elem => Unit, b: Block, idx: Int)
           sealed = term.sealed
           callbacks = f \(\cup\) term.callbacks
         \}
-        if !CAS(b.array(idx), term, nterm) {\customlabel{cas_foreach}{\LineNumber}}
+        if \(\lnot\)CAS(b.array(idx), term, nterm) {\customlabel{cas_foreach}{\LineNumber}}
           asyncFor(f, b, idx) {\customlabel{cas_callback}{\LineNumber}}
       elem: Elem =>
         f(elem) {\customlabel{call_callback}{\LineNumber}}
@@ -2415,9 +2415,329 @@ of $CAS_{seal}$
 \end{proof}
 
 
-\section{More programming examples}
+\section{Syntax and examples}
+
+This section the used syntax in more detail and presents a range of programming
+examples.
+The syntax is based on languages such as Groovy, Scala and Ruby.
+For conciseness and reasons of space, we omit the block braces and use indentation
+to denote block boundaries.
+
+\textbf{Methods.}
+We use the \verb=def= keyword to declare methods.
+After declaring the method name, the parameter list follows.
+Each parameter is given a name and a type behind a colon.
+Here is an example of declaring a \verb=max= method which returns the greater
+of the two integers:
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+def max(a: Int, b: Int)
+  if a > b a else b
+}
+\end{alltt}
+\end{minipage}
 
 
+Each method may either be standalone or defined within some object, in our case
+a FlowPool.
+If the method is defined within the object, it can refer to the object instance
+using the \verb=this= keyword.
+It can additionally call the methods of the \verb=this= object without prefixing
+their names with a \verb=this= and a dot.
+Otherwise, invoking methods belonging to object instances must be prefixed with
+the object instance name and a dot, as in most object-oriented languages.
+Methods can be generic in their types and this is expressed with a list of
+type parameters in square brackets behind the method name.
+The following generic method just returns its parameter.
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+def id[T](x: T)
+  x
+
+id[Int](0)
+id(0)
+id(true)
+id("Ok!")
+}
+\end{alltt}
+\end{minipage}
+
+Notice that above we did not have to put a type parameter value \verb=T= when
+invoking the method -- we assume that type parameters are infered from the
+types of regular method parameters.
+
+Methods can also nest, as in the following example of a method which computes
+the sum of first \verb=n= numbers:
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+def sum(n: Int)
+  def subsum(i: Int)
+    if i == n n
+    else i + sum(i + 1)
+  subsum(0)
+}
+\end{alltt}
+\end{minipage}
+
+Finally, methods can have multiple parameter lists, which provides a nice syntax
+for methods such as \verb=aggregate=.
+
+
+\textbf{Values.}
+Values are declared using the \verb=val= keyword.
+Once declared, the value does not change.
+The following method creates an empty FlowPool:
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+def empty[T]
+  val fp = new FlowPool[T]
+  fp.builder.seal(0)
+  fp
+}
+\end{alltt}
+\end{minipage}
+
+\textbf{First-class functions.}
+First-class functions can be simulated with anonymous classes in most object-oriented
+languages, but we provide special syntax for reasons of conciseness.
+The type of the function which takes parameters of type \verb=T1= to \verb=TN= and
+returns a value of type \verb=R= is denoted as \verb+(T1, T2, ..., TN) => R+.
+The function values are expressed by writing the name of the parameter, followed by
+a \verb+=>+ keyword and the method body.
+
+Here is an example of a generic method which takes a value of type \verb=T= and
+applies a custom function on it twice:
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+def twice[T](x: T)(f: T => T)
+  f(f(x))
+}
+\end{alltt}
+\end{minipage}
+
+Since \verb=twice= has multiple parameter lists, we can invoke with either of the
+following two notations:
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+twice(0)(x => x + 1)
+twice(0) \{
+  x => x + 1
+\}
+}
+\end{alltt}
+\end{minipage}
+
+Additionally, we can omit the \verb+x =>+ prefix when defining the function value to
+make notation even more concise:
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+twice(0) \{
+  _ + 1
+\}
+}
+\end{alltt}
+\end{minipage}
+
+We can do this only if the parameter occurs in the method body only once. Each subsequent
+occurrence of a \verb=_= keyword denotes a different parameter.
+
+
+\textbf{For-comprehensions.}
+We define syntactic sugar for element traversal, best described through a couple of
+examples.
+The following for-loop which is supposed to print numbers from 0 until 10:
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+for (i <- 0 until 10) \{
+  println(i)
+\}
+}
+\end{alltt}
+\end{minipage}
+
+is desugared into the following expression:
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+(0.until(10)).foreach \{
+  i => println(i)
+\}
+}
+\end{alltt}
+\end{minipage}
+
+Above, the expression following the \verb=<-= keyword must be an object containing
+the \verb=foreach= method.
+This method must take a single parameter function value -- in this case the block
+that prints a given number.
+We assume that the object produced by the expression \verb=0.until(10)= is
+predefined for integer values.
+
+This mechanism allows us to use the same for-loop notation both for traversing
+numbers, installing callback handlers on future value or asynchronously traversing
+FlowPool elements.
+
+In some cases, given a set of values being traversed, we want to produce a new
+set of values.
+The syntax for this involves the \verb=yield= keyword, as in the following example:
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+val fp = new FlowPool[Int]()
+fp.builder << 1
+fp.builder << 2
+fp.builder << 3
+
+for (i <- fp) yield \{
+  i * i
+\}
+}
+\end{alltt}
+\end{minipage}
+
+The for-loop above is translated into a call to the \verb=map= method on FlowPools:
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+fp.map \{
+  i => i * i
+\}
+}
+\end{alltt}
+\end{minipage}
+
+The \verb=map= method must take a single argument function.
+The \verb=map= method on FlowPools will return a new FlowPool with every
+element mapped.
+
+A similar method called \verb=flatMap= takes a single argument function
+which returns another traversable object.
+It can be used to compose traversals over several objects within one
+for-loop.
+The following for-loop which traverses two flow pools to produce a
+Cartesian product of their elements:
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+for (x <- fp1; y <- fp2) yield (x, y)
+}
+\end{alltt}
+\end{minipage}
+
+is translated into the following calls:
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+fp1.flatMap \{
+  x => fp2.map \{
+    y => (x, y)
+  \}
+\}
+}
+\end{alltt}
+\end{minipage}
+
+
+\textbf{Futures.}
+Futures are values which will become available at some point in the future.
+We distinguish between a value of type \verb=Future[T]=, where \verb=T= is
+the type of the value which becomes available (for example, an
+integer -- \verb=Int=) and an asynchronous computation which completes a
+future value.
+This asynchronous computation may be started using the \verb=future= construct:
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+val p = new FlowPool[Int]
+val f = future \{
+  p << 1
+\}
+p.seal(1)
+}
+\end{alltt}
+\end{minipage}
+
+Above, the last line may be executed before or after appending the element
+\verb=1= at runtime.
+Also, the \verb=future= construct returns a future completed with the value
+its associated block computes.
+
+Futures can be used in for-comprehensions, i.e. they define \verb=foreach=,
+\verb=map= and \verb=flatMap= methods.
+A \verb=foreach= loop on a future is an asynchronous computation which executes
+once the value of the future becomes available -- it is a for-loop which traverses
+only a single value, and only once it becomes available.
+More complex patterns can also arise.
+Given two futures \verb=f= and \verb=g=, we can produce a third future which
+whose value becomes available only after values of \verb=f= and \verb=g=
+are available:
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+val f = future \{
+  sum(10)
+\}
+val p = new FlowPool[Int]
+val g = p.aggregate(0)(_ + _)(_ + _)
+for (i <- 0 until 10) p.builder << i * i
+p.seal(10)
+
+val h: Future[Double] = for (x <- f; y <- g) yield \{
+  sqrt(y / 10 - x * x / 100)
+\}
+}
+\end{alltt}
+\end{minipage}
+
+Above, the real-valued future \verb=h= contains the standard
+deviation of the first ten integers.
+The for-comprehension on futures is desugared into:
+
+\begin{minipage}[b]{3.75 cm}
+\begin{alltt}
+{\scriptsize
+f.flatMap \{
+  x => g.map \{
+    y => sqrt(y / 10 - x * x / 100)
+  \}
+\}
+}
+\end{alltt}
+\end{minipage}
+
+
+\textbf{Examples.}
+We start off with a couple of methods that create new FlowPools.
+The \verb=iterate= method iteratively applies a function to the starting
+value and puts it into a FlowPool.
+The \verb=range= method creates a fixed size FlowPool from a range of numbers.
+The \verb=fill= method creates a fixed size FlowPool filled with exactly
+the same element.
+Given the syntax primer above, it should be straightforward to grasp
+their contents.
 
 \begin{minipage}[b]{3.75 cm}
 \begin{alltt}
@@ -2471,6 +2791,15 @@ def fill[T]
 \end{alltt}
 \end{minipage}
 
+We now show that \verb=aggregate= can be used to implement a range of
+other methods based on reducing the values.
+Notice that the \verb=fold= we define is less general than the
+\verb=aggregate=, since it places a type bound on the type parameter,
+meaning it can only operate on supertypes of the values in the
+pool\footnote{We have not precisely defined what type bounds and
+inheritance are, but it suffices to say that in a language with
+subtyping an unrestricted fold cannot be expressed in terms of
+aggregate we have defined.}.
 
 \noindent
 \begin{minipage}[b]{3.9 cm}
@@ -2516,7 +2845,6 @@ def min()
 \end{alltt}
 \end{minipage}
 
-
 \noindent
 \begin{minipage}[b]{3.9 cm}
 \begin{alltt}
@@ -2559,9 +2887,9 @@ def flatten[S]
   (q: FlowPool[FlowPool[S]])
   val p = new FlowPool[S]
   val b = p.builder
-  q.aggregate(future(0))(add) \{
+  aggregate(future(0))(add) \{
     (af, r) =>
-    val sf = for (x <- r) b << x
+    val sf = for (x <- q) b << x
     add(af, sf)
   \} map \{ sz => b.seal(sz) \}
   p
@@ -2570,9 +2898,131 @@ def flatten[S]
 \end{alltt}
 \end{minipage}
 
+The \verb=flatten= method turns a FlowPool whose elements
+are FlowPools themselves into a FlowPool containing all the
+elements of the nested FlowPools.
+It could also have been expressed in terms
+of the \verb=flatMap= method described earlier.
+
+Sometimes there is a need to convert between futures
+and FlowPools.
+Lets assume we have a list of futures and we wish to
+have a FlowPool of their values instead.
+The method \verb=toFlowPool= does this by calling a
+\verb=foreach= on every future.
+We assume the existence of a traversable \verb=List=
+datatype.
+
+The converse is not so easy, since we do not know how
+many elements will there be available in the FlowPool.
+This means we cannot create a list of futures, because
+we do not know how many future there will be.
+We can instead create a future which holds the final
+list of values.
+This is what the method \verb=toListFuture= does. 
+Notice that the aggregate invocation does not form a
+commutative monoid, so the results will be nondeterministic,
+which is reflected in the order of elements in the
+resulting list.
+
+\noindent
+\begin{minipage}[b]{3.6 cm}
+\begin{alltt}
+{\scriptsize
+def toFlowPool[T]
+  (fs: List[Future[T]])
+  val p = new FlowPool[T]
+  val b = p.builder
+  for (f <- fs; x <- f)
+    b << x
+  p
+
+
+def toListFuture[T]
+  (p: FlowPool[T])
+  p.aggregate(\(\emptyset\))(_ ::: _) \{
+    (acc, x) => x :: acc
+  \}
+
+
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{3.9 cm}
+\begin{alltt}
+{\scriptsize
+def toList[T]
+  (p: FlowPool[T], n: Int)
+  type LFT = List[Future[T]]
+  val fs = List.fill(n)
+    (new Future())
+  def complete(l: LFT, x: T)
+    if \(\lnot\)l.head.tryComplete(x)
+      complete(l.tail, x)
+  p.builder.seal(n)
+  p.aggregate(fs) \{
+    (gs, hs) => gs
+  \} \{
+    (acc, x) =>
+    complete(acc, x)
+  \}
+  fs
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{4.7 cm}
+\begin{alltt}
+{\scriptsize
+def intersect
+  (that: FlowPool[T])
+  val p = new FlowPool[T]
+  val b = p.builder
+  for (x <- this) \{
+    that.aggregate(false)(_ \(\vee\) _) \{
+      (acc, y) =>
+      if (!acc) \{
+        b << x
+        true
+      \} else false
+    \}
+  \}
+  p
+
+
+}
+\end{alltt}
+\end{minipage}
+
+However, given that we assume the number of elements in
+the FlowPool, we can do better than that.
+We ignore commutativity and associativity
+in the aggregation, hence discarding determinism.
+We can still maintain determinism given that we use
+a \verb=Set= datatype instead of a \verb=List=.
+The method \verb=toList= starts by sealing the pool to
+the expected number of elements.
+If successful, the predefined futures are completed
+as the elements arrive into the FlowPool.
+We have to use the \verb=tryComplete= method on
+futures, which completes the future only given that
+it has not been already completed.
+This potentially yields nondeterministic computations,
+but we cannot avoid this without more expressive
+abstractions, such as pools for which we know that
+all of the elements they hold are the same and some
+sort of a \verb=forany= construct which invokes a callback
+on any element of the pool, roughly speaking.
+
+The \verb=intersect= method above produces a new FlowPool with
+elements that appear both in the current FlowPool \verb=this=
+and another FlowPool \verb=that=.
+It is not very efficient, however -- a more efficient implementation
+would require a more expressive single-assignment abstraction such
+as a single-assignment map.
 
 
 
 
 
 \end{document}
+
