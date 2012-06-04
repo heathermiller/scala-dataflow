@@ -215,10 +215,9 @@ proof of correctness, showing that the implementation is linearizable, lock-
 free, and deterministic. Finally, we provide experimental results which
 compare our \emph{FlowPool} against corresponding operations on other popular
 concurrent data structures, and show that in addition to offering new
-capabilities, FlowPools may reduce execution time by $53 - 97\%$ in
-highly parallelized environments with respect to comparable
-concurrent queue data structures in the Java standard library.
-%% TODO redo figure with only Insert benchs with optimal par lvl
+capabilities, FlowPools may reduce insertion time by $49 - 54\%$ on a
+4-core i7 machine with respect to comparable concurrent queue data
+structures in the Java standard library.
 \keywords{dataflow, concurrent data-structure, deterministic parallelism}
 \end{abstract}
 
@@ -1343,12 +1342,13 @@ on the i7 architecture. They seem to slow down rapidly due to cache
 line collisions and CAS failures.
 On the other hand, multi-lane FlowPools scale well, as threads
 write to different lanes and hence different cache lines in
-most occasions, while avoiding CAS failures.
-%% TODO add execution time decreases for each architecture
+most occasions, while avoiding CAS failures. This may reduce execution
+time for insertions up to $54\%$ on 4-core i7, $63\%$ on 32-core 
+Xeon and $92\%$ on UltraSPARC T2.
 
 Usage of the inserted data is evaluated in the \emph{Reduce},
 \emph{Map} and \emph{Histogram} benchmark, where the latter --
-serving as a ``real live'' example here -- uses the former two
+serving as a ``real life'' example here -- uses the former two
 primitives, whose evaluation is discussed in the appendix.
 
 In the \textit{Histogram} benchmark, $P$ threads produce a total of
@@ -1356,7 +1356,7 @@ $N$ elements and add it to the FlowPool.
 The \verb=aggregate= operation is then used to produce 10 different
 histograms concurrently with a different number of bins.
 Each separate histogram is constructed by its own thread (or up to
-$P$, for multi-lane FlowPools). %% TODO the parenthesis is bad
+$P$, for multi-lane FlowPools).
 A crucial difference between queues and FlowPools in the latter
 benchmark is that with FlowPools, multiple histograms are produced 
 by invoking several \verb=aggregate= operations, while queues require
@@ -1378,11 +1378,11 @@ elements from the queue and process it.
 
 \begin{figure}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/cpu-scaling}
-\caption{CPU scaling properties of benchmarks.
-  $\Diamond$ SingleLaneFlowPool,
-  $\times$ MultiLaneFlowPool,
-  $\triangle$ LinkedTransferQueue,
-  $\circ$ ConcurrentLinkedQueue} \label{fig:eval-cpu-scaling}
+\caption{Execution time vs parallelization level.
+  $\Diamond$ single-lane FlowPool,
+  $\times$ multi-lane FlowPool,
+  $\triangle$ linked transfer queue,
+  $\circ$ concurrent linked queue} \label{fig:eval-cpu-scaling}
 \end{figure}
 
 
@@ -3754,16 +3754,40 @@ performance gain due to fewer collisions. Benchmarks have shown (see
 fig~\ref{fig:eval-lane-factor}) that this yields no observable gain --
 in fact, this sometimes even decreased performance slightly.
 
-%% TODO redo this section
 \textbf{Performance Gain} As stated in the abstract, FlowPools -- or
 more precisely multi-lane FlowPools -- may reduce execution time by
-$53-97\%$. These figures have been obtained by comparing medians of
-execution times for each configuration with $P = 8$ (the highest level
-of parallelism we have for all architectures), both for multi-lane
-FlowPools and the faster of linked transfer queues and concurrent
-linked queues. The higher bound results from the insert benchmark on
-32-core Xeon with $5000000$ insertions. The lower bound results from
-the histogram benchmark on UltraSPARC T2 with $500000$ elements.
+$49 - 54\%$ on 4-core i7. These figures have been obtained by
+comparing medians of execution times for insertions between multi-lane
+FlowPools and concurrent linked queues (which were always faster than 
+linked transfer queues), where each structure was evaluated on its
+optimal parallelization level. The resulting data is shown in
+table~\ref{tbl:execution-times}.
+
+%% TODO argue, why not other benchmarks?
+
+\begin{table}[t]
+\centering
+\begin{tabular}{l@{\qquad}r@{\quad}r@{\quad}r@{\quad}r@{\quad}r@{\qquad}r}
+  Architecture & Elements & FlowPool $t [ms]$ & $P$ & Queue $t [ms]$ & $P$ & decr.\\
+\hline
+    4-core i7 &  2M &  17 &  8 &   35 & 1 & 51\%\\
+    4-core i7 &  5M &  44 &  8 &   87 & 1 & 49\%\\
+    4-core i7 & 15M & 118 &  8 &  258 & 1 & 54\%\\
+\hline
+UltraSPARC T2 &  1M &  23 & 32 &  111 & 4 & 79\%\\
+UltraSPARC T2 &  2M &  34 & 64 &  224 & 4 & 84\%\\
+UltraSPARC T2 &  5M &  62 & 64 &  556 & 4 & 88\%\\
+UltraSPARC T2 & 15M & 129 & 64 & 1661 & 4 & 92\%\\
+\hline
+ 32-core Xeon &  2M &  30 &  8 &   50 & 1 & 40\%\\
+ 32-core Xeon &  5M &  46 & 64 &  120 & 1 & 61\%\\
+ 32-core Xeon & 15M & 126 & 64 &  347 & 1 & 63\%\\
+\end{tabular}
+
+\caption{Execution times for insert benchmark for multi-lane FlowPool
+  and concurrent linked queues, including execution time decrease
+  percentage.} \label{tbl:execution-times}
+\end{table}
 
 \textbf{Methodology} All the presented configurations have been
 measured $20$ times, where the $5$ first values have been discarded to
@@ -3773,23 +3797,22 @@ executed through SBT\footnote{Simple Build Tool} using the following
 flags for the JavaVM: \texttt{-Xmx2048m -Xms2048m -XX:+UseCondCardMark
   -verbose:gc -XX:+PrintGCDetails -server}.
 
-%% TODO
-% chache line transfer collision argument
-
 %% TODO captions OK? (also in 6. Evaluation)
 \begin{figure}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/size-scaling-par1}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/size-scaling-par8}
-\caption{Size scaling properties of benchmarks ($P = 1,
-  8$). $\Diamond$ SingleLaneFlowPool,
-  $\times$ MultiLaneFlowPool,
-  $\triangle$ LinkedTransferQueue,
-  $\circ$ ConcurrentLinkedQueue} \label{fig:eval-size-scaling}
+\caption{Execution time vs benchmark size ($P = 1, 8$).
+  $\Diamond$ single-lane FlowPool,
+  $\times$ multi-lane FlowPool,
+  $\triangle$ linked transfer queue,
+  $\circ$ concurrent linked queue} \label{fig:eval-size-scaling}
 \end{figure}
 
 \begin{figure}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/lanef-scaling}
-\caption{Lane-Factor scaling properties of Multi-Lane FlowPool} \label{fig:eval-lane-factor}
+\caption{Execution times vs lane-factor for multi-lane
+  FlowPools. $\times$ UltraSPARC T2, $\triangle$ 4-core i7}
+\label{fig:eval-lane-factor}
 \end{figure}
 
 \end{document}
