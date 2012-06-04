@@ -1,8 +1,14 @@
 source('load_data.R')
 
-tmp <- mdat[mdat$lanef == 1 & mdat$par == 8,]
+get.extime <- function(tmp) {
+  fastest <- min(tmp$rat, na.rm = TRUE)
+  slowest <- max(tmp$rat, na.rm = TRUE)
 
-wdat <- reshape(tmp, v.names = "time",
+  rbind(tmp[!is.na(tmp$rat) & tmp$rat == fastest,c("arch","par","size","btype","rat","dec")],
+        tmp[!is.na(tmp$rat) & tmp$rat == slowest,c("arch","par","size","btype","rat","dec")])
+}
+
+wdat <- reshape(mdat[mdat$lanef == 1,], v.names = "time",
                 idvar = c("version", "machine", "arch", "par", "size", "btype"),
                 timevar = "imptype",
                 drop = c("bench", "lanef"),
@@ -15,12 +21,19 @@ wdat$q  <- pmin(wdat[,"time.ConcurrentLinkedQueue"],
                 na.rm = TRUE)
 
 wdat$rat <- wdat$fp / wdat$q
+wdat$dec <- (1 - wdat$rat) * 100
 
-fastest <- min(wdat$rat, na.rm = TRUE)
-slowest <- max(wdat$rat, na.rm = TRUE)
+## Global execution time evaluation
+get.extime(wdat[wdat$par == 8,])
 
-100 - fastest * 100
-100 - slowest * 100
+## Insert execution time
+get.extime(wdat[wdat$btype == "Insert",])
 
-wdat[!is.na(wdat$hirat) & wdat$hirat == fastest,]
-wdat[!is.na(wdat$lorat) & wdat$lorat == slowest,]
+## Histogram execution time
+get.extime(wdat[wdat$btype == "Histogram" & wdat$par >= 8,])
+
+## Reduce execution time
+get.extime(wdat[wdat$btype == "Reduce",])
+
+## Map execution time
+get.extime(wdat[wdat$btype == "Map",])

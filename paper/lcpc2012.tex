@@ -1342,7 +1342,8 @@ on the i7 architecture. They seem to slow down rapidly due to cache
 line collisions and CAS failures.
 On the other hand, multi-lane FlowPools scale well, as threads
 write to different lanes and hence different cache lines in
-most occasions, while avoiding CAS failures.
+most occasions, while avoiding CAS failures. Execution time decrease
+up to $98\%$ for $5000000$ elements on 32-core Xeon, $P = 8$.
 
 Usage of the inserted data is evaluated in the \emph{Reduce},
 \emph{Map} and \emph{Histogram} benchmark, where the latter --
@@ -1363,7 +1364,8 @@ Without additional synchronization, reading a single queue is not an
 option since elements have to be removed from the queue eventually and
 it is not clear to each reader when an element is no longer needed.
 With FlowPools, elements are implicitly garbage collected when no
-longer needed.
+longer needed. Execution time decrease up to $95\%$ for $1000000$ on
+32-core Xeon, $P = 16$ (for $P \ge 8$).
 
 Finally, to validate the last claim of garbage being implicitly
 collected, in the \textit{Comm} benchmark we create a pool in which a
@@ -3434,11 +3436,13 @@ threads which concurrently insert a total of $N$ elements. The
 inserted into the pool. Note that in the FlowPool implementation there
 may be as many threads computing the aggregation as there are
 different lanes -- elements from different lanes are batched together
-once the pool is sealed.
+once the pool is sealed. Execution time decrease by up to $95\%$ for
+$10000000$ elements on 32-core Xeon, $P = 8$.
 
 The \textit{Map} benchmark is similar to the \textit{Reduce}
 benchmark, but instead of reducing a value, each element is mapped
-into a new one and added to a second pool.
+into a new one and added to a second pool. Execution time decrease by
+up to $96\%$ for $10000000$ elements on 32-core Xeon, $P = 8$.
 
 \textbf{Scaling in Input Size} In figure~\ref{fig:eval-size-scaling}
 we can see that the Input, Map, Reduce and Histrogram benchmark all
