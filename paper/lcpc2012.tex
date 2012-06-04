@@ -1240,11 +1240,10 @@ least one thread completes after a finite number of steps.
 \subsection{Determinism}
 
 In this section we aim to show that the FlowPool abstraction is
-\emph{deterministic} in the sense that a program will compute the same
+\emph{deterministic} in the sense that a program computes the same
 result (which can also be an error) regardless of the interleaving of
-concurrent operations. We only give an outline of the determinism
-proof here. More formal definitions, lemmas and proofs can be found in
-the appendix.
+concurrent operations. We give an outline of the determinism
+proof -- a complete formal proof can be found in the appendix.
 
 The following definitions and the determinism theorem are based on the
 language shown in Figure~\ref{fig:syntax}. The semantics of our core
@@ -1252,13 +1251,13 @@ language is defined using reduction rules which define transitions
 between \emph{execution states}. An execution state is a pair $T~|~P$
 where $T$ is a set of concurrent threads and $P$ is a set of
 FlowPools. Each thread executes a \emph{term} of the core language
-(typically a sequence of terms). For the definition of the reduction
-rules it suffices to represent the state of a thread as the (rest of)
+(typically a sequence of terms).
+State of a thread is represented as the (rest of)
 the term that it still has to execute; this means there is a
-one-to-one mapping between threads and terms. The semantics of
-\verb|append| is defined using the following reduction rule: (For
-brevity we omit most of the other reduction rules. A complete summary
-can be found in the appendix.)
+one-to-one mapping between threads and terms.
+For example, the semantics of \verb|append| is defined by the
+following reduction rule (a complete summary of all the rules can be
+found in the appendix):
 
 \infrule[\textsc{Append1}]
 { t = p << v~;~t' \quad p = (vs, -1, cbs) \quad p' = (\set{v} \cup vs, -1, cbs)
@@ -1285,9 +1284,8 @@ element $v$ in the pool. Each invocation creates a new thread in $T'$.
 
 Programs are built by first creating one or more FlowPools using
 \texttt{create}. Concurrent threads can then be started by (a)
-appending an element to a FlowPool, (b) sealing the FlowPool using
-\texttt{seal}, and (c) registering callback functions using
-\texttt{foreach}.
+appending an element to a FlowPool, (b) sealing the FlowPool
+and (c) registering callback functions (\texttt{foreach}).
 
 \begin{definition}[Termination]
 A term $t$ terminates with result $P$ if its reduction ends in execution state $\set{nop}~|~P$.
@@ -1308,11 +1306,13 @@ $c$ creates pool $p$, $p$ is not used in any reduction step in $S'$.
 \end{definition}
 
 \begin{definition}[Determinism]
-The reduction of a term $t$ is \emph{deterministic} \emph{iff} either (a) $t$ does not terminate for any valid interleaving, or (b) $t$ always terminates with the same result for all valid interleavings.
+The reduction of a term $t$ is \emph{deterministic} \emph{iff} either
+(a) $t$ does not terminate for any valid interleaving, or (b) $t$ always
+terminates with the same result for all valid interleavings.
 \end{definition}
 
-\begin{theorem}[Determinism of FlowPool]
-The reduction of terms $t$ is deterministic.
+\begin{theorem}[FlowPool Determinism]
+Reduction of terms $t$ is deterministic.
 \end{theorem}
 
 
@@ -1754,7 +1754,7 @@ Observe every write to $b.index$ -- they are all unconditional.
 However, at every such write occurring at some time $t_1$ that writes
 some value $idx$ we know that some previous value at $b.array$ entry $idx - 1$
 at some time $t_0 < t_1$ was of type $Elem$.
-Hence, from lemma \ref{lemma-end-of-life} it follows that
+Hence, from \ref{lemma-end-of-life} it follows that
 $\forall t \geq t_1, b.array(idx - 1) \in Elem$.
 \end{proof}
 
@@ -1763,7 +1763,7 @@ $\forall t \geq t_1, b.array(idx - 1) \in Elem$.
 For all blocks $b \in reachable(start)$, if for some $idx$
 $b.array(idx) \in Elem$ at time $t_0$ then $b.array(idx - 1) \in Elem$
 at time $t_0$. This follows
-directly from the lemmas \ref{lemma-end-of-life} and
+directly from the \ref{lemma-end-of-life} and
 \ref{lemma-valid-hint}, and the fact that the CAS in line
 \ref{cas_append} only writes to array entries $idx$ for which it
 previously read the value from $b.index$.
@@ -1806,7 +1806,7 @@ The more difficult part is to show that CAS instruction in line
 
 Since the CAS instructions in lines \ref{cas_seal} and
 \ref{cas_callback} are preceeded by a read of $idx = b.index$,
-from lemma \ref{lemma-valid-hint} it follows that $b.array(idx - 1)$ 
+from \ref{lemma-valid-hint} it follows that $b.array(idx - 1)$ 
 contains a value of type $Elem$.
 These are also the only CAS instructions which replace a $Terminal$
 value with another $Terminal$ value. The new value is always unique, as
@@ -1819,7 +1819,7 @@ A successful CAS in line \ref{cas_propagate} overwrites a value $cb_0$ at $idx +
 read in line \ref{read_next} at $t_0$ with a new value $cb_2$ at time $t_2$. Value $cb_2$ was
 read in line \ref{read_current} at $t_1$ from the entry $idx$. The
 string of transitions of values at $idx$ is composed of unique values
-at least since $t_1$ (by lemma \ref{lemma-end-of-life}), since there is
+at least since $t_1$ (by \ref{lemma-end-of-life}), since there is
 a value of type $Elem$ at the index $idx - 1$.
 
 The conclusion above ensures that the values read in line \ref{read_current}
@@ -1891,7 +1891,7 @@ only if the entry at $idx + 1$ is $null$ or $nexto \in
 Terminal$.
 We know that the entry at $idx + 1$ does not change $\forall t, t_0 < t < t_2$,
 where $t_0$ is the read in line \ref{read_next},
-because of lemma \ref{lemma-freshness} and the fact that CAS in line \ref{cas_propagate} is assumed to be successful.
+because of \ref{lemma-freshness} and the fact that CAS in line \ref{cas_propagate} is assumed to be successful.
 We know that during the read in line \ref{read_current} at time $t_1$,
 such that $t_0 < t_1 < t_2$, the entry at $idx$ was $curo \in
 Terminal$, by trivial analysis of the \verb=check= procedure.
@@ -1904,12 +1904,12 @@ the interval $\langle t_1, t_2 \rangle$, so its value is not $Elem$ at $t_2$.
 The above reasoning shows that the CAS in line \ref{cas_propagate}
 always overwrites a one value of type $Terminal$ (or $null$) with
 another value of type $Terminal$.
-We have shown in lemma \ref{lemma-freshness} that it never
+We have shown in \ref{lemma-freshness} that it never
 overwrites the value $cb_0$ with a value $cb_2$ that was at
 $b.array(idx)$ at an earlier time.
 
 Finally, note that the statement for CAS instructions in lines \ref{cas_seal} and
-\ref{cas_callback} also follows directly from the proof for lemma \ref{lemma-freshness}.
+\ref{cas_callback} also follows directly from the proof for \ref{lemma-freshness}.
 \end{proof}
 
 
@@ -1949,8 +1949,7 @@ $t_{cas1}$ and $t_{cas2} < t_{cas1}$, respectively.
 That would mean that the CAS by thread T1 would have to fail, since its expected
 value $cb_0$ has changed between the time it was read in line \ref{read_next} and
 the $t_{cas1}$ at least once to a different value, and it could not have been
-changed back to $cb_0$ as we know from the lemma
-\ref{lemma-freshness}.
+changed back to $cb_0$ as we know from the \ref{lemma-freshness}.
 
 Notice that we have actually prooved a stronger result above.
 We have also shown that the string of values
@@ -1972,8 +1971,7 @@ In the rest of the proof, whenever some invariant is trivially
 unaffected by a write, we omit mentioning it.
 We start by noting that we already prooved the claim
 for atomic writes in lines \ref{write_append}, \ref{write_advance} and
-\ref{write_seal} (which only affect [INV5]) in lemma
-\ref{lemma-valid-hint}.
+\ref{write_seal} (which only affect [INV5]) in \ref{lemma-valid-hint}.
 We proceed by analyzing each atomic CAS instruction.
 
 CAS in line \ref{cas_expand} at time $t_1$ maintains the invariant
@@ -1988,7 +1986,7 @@ It also maintains [INV2] because the new value $nb$ is always fresh,
 so $\forall b, b \not \in following(b)$.
 Finally, it maintains [INV3] because it is preceeded with a bounds
 check and we know from corollary \ref{cor-compactness} and the
-lemma \ref{lemma-end-of-life} that all the values in $b.array(idx),
+\ref{lemma-end-of-life} that all the values in $b.array(idx),
 idx < LASTELEMPOS$ must be of type $Elem$.
 
 CAS in line \ref{cas_block} at time $t_1$ maintains the
@@ -1997,23 +1995,23 @@ $b.next$ at $t_0 < t_1$ when the invariant was assumed to hold, and
 it is still there a $t_1$, as shown before.
 
 For CAS instructions in lines \ref{cas_append}, \ref{cas_callback} and
-\ref{cas_seal} that write to index $idx$ we know from lemma
+\ref{cas_seal} that write to index $idx$ we know from 
 \ref{lemma-valid-hint} that the value at $idx - 1$ is of type $Elem$.
 This immediately shows that CAS instructions in lines
 \ref{cas_callback} and \ref{cas_seal} maintain [INV3] and [INV4].
 
 For CAS in line \ref{cas_append} we additionally know that it must
 have been preceeded by a successful CAS in line \ref{cas_propagate}
-which previously wrote a $Terminal$ value to $idx + 1$. From lemma
+which previously wrote a $Terminal$ value to $idx + 1$. From 
 \ref{lemma-lifecycle} we know that $idx + 1$ is still $Terminal$ when
 the CAS in line \ref{cas_append} occurs, hence [INV4] is kept.
 
 Finally, CAS in line \ref{cas_propagate} succeeds only if the value at
-$idx + 1$ is of type $Terminal$, as shown before in lemma
+$idx + 1$ is of type $Terminal$, as shown before in 
 \ref{lemma-lifecycle}.
 By the same lemma, the value at $idx$ is either
 $Terminal$ or $Elem$ at that point, since $idx - 1$ is known to be
-$Elem$ by lemma \ref{lemma-valid-hint}.
+$Elem$ by \ref{lemma-valid-hint}.
 This means that [INV4] is kept.
 \end{proof}
 
@@ -2055,7 +2053,7 @@ did not change the value at $idx + 1$.
 In other words, if the value at $idx$ at time $t_2$ is of type $Elem$,
 then the write by CAS in line \ref{cas_propagate} does not change
 the value at $idx + 1$ at $t_2$.
-This was, in fact, already shown in the proof of lemma \ref{lemma-subsequence}.
+This was, in fact, already shown in the proof of \ref{lemma-subsequence}.
 
 The argument above proves directly that relations $hasCallback$
 and $sealedAt$ are not changed by the CAS in line \ref{cas_propagate}.
@@ -2099,7 +2097,7 @@ where $cb_1 = cb_2$, since there was no write to $idx$ after $cb_1$, otherwise t
 CAS in line \ref{cas_append} at $t_3$ would not have been successful
 (by lemma \ref{lemma-freshness}).
 
-Furthermore, $cb_1 = cb_2$ at $t_3$, as shown in the lemma
+Furthermore, $cb_1 = cb_2$ at $t_3$, as shown in the 
 \ref{lemma-subsequence}. Due to the same lemma, the entries of
 $b.array$ stay the same until $t_3$, otherwise the CAS in line
 \ref{cas_append} would not have been successful.
@@ -2139,18 +2137,18 @@ $\forall (f, called_1) \in callbacks_1, elems \subseteq called_1$
 \end{lemma}
 
 \begin{proof}
-From lemma \ref{lemma-freshness} and the assumption that the CAS is
+From \ref{lemma-freshness} and the assumption that the CAS is
 successful we know that the value at $b.array(idx)$ has not changed
-between the read in line \ref{read_callbacks} and the CAS in line
+between the read in line \ref{read_callback} and the CAS in line
 \ref{cas_callback}.
-From lemma \ref{lemma-valid-hint} we know that the value at $idx - 1$
+From \ref{lemma-valid-hint} we know that the value at $idx - 1$
 was of type $Elem$ since $b.index$ was read.
 This means that neither $hasElem(start, e)$ nor $sealedAt$ have changed after the CAS.
 Since after the CAS there is a $Terminal$ with an additional function $f$ at $idx$,
 the $hasCallback(start, f)$ holds after the CAS.
 Finally, the $willBeCalled(start, e, f)$ holds for all elements $e$
 for which the $hasElem(e)$ holds, since the CAS has been preceeded by
-a call $f(e)$ in line \ref{call_callback} for each element. The lemma
+a call $f(e)$ in line \ref{call_callback} for each element. The 
 \ref{lemma-end-of-life} ensures that for each element $f$ was called
 for stays in the pool indefinitely (i.e. is not removed).
 
@@ -2170,7 +2168,7 @@ $\mathbb{A}_0 = (elems, callbacks, \{ s \})$
 \end{lemma}
 
 \begin{proof}
-Similar to the proof of lemma \ref{lemma-foreach}.
+Similar to the proof of \ref{lemma-foreach}.
 \end{proof}
 
 
@@ -2185,7 +2183,7 @@ We say that thread T executes the operation $op$ \textbf{in isolation}.
 
 
 \begin{lemma}[Obstruction-free operations]\label{lemma-obstruction-free}
-The FlowPool operations are obstruction-free.
+All operations on FlowPools are obstruction-free.
 \end{lemma}
 
 \begin{proof}
@@ -2195,9 +2193,9 @@ invariants (especially [INV2]) hold in a valid state.
 
 
 \begin{proof}[Safety]
-From lemmas \ref{lemma-housekeeping}, \ref{lemma-append}, \ref{lemma-foreach} and
+From \ref{lemma-housekeeping}, \ref{lemma-append}, \ref{lemma-foreach} and
 \ref{lemma-seal} directly, along with the fact that all operations
-executing in isolation complete after a finite number of steps by lemma \ref{lemma-obstruction-free}.
+executing in isolation complete after a finite number of steps by \ref{lemma-obstruction-free}.
 \end{proof}
 
 
@@ -2213,7 +2211,7 @@ FlowPool operations \verb=append= and \verb=seal= are linearizable.
 \end{theorem}
 
 \begin{proof}[Linearizable operations]
-This follows directly from statements about CAS instructions in lemmas \ref{lemma-housekeeping},
+This follows directly from statements about CAS instructions in \ref{lemma-housekeeping},
 \ref{lemma-append} and \ref{lemma-seal}, along with the fact that a
 CAS instruction itself is linearizable.
 \end{proof}
@@ -2267,14 +2265,15 @@ FlowPool operations append, seal, and foreach are lock-free.
 We begin by first proving that there are a finite number of execution steps
 before a consistency change occurs.
 
-By Lemma \ref{lemma-append}, after invoking \verb=append=, a consistency
-change occurs after a finite number of steps. Likewise, by Lemma 
+By \ref{lemma-append}, after invoking \verb=append=, a consistency
+change occurs after a finite number of steps. Likewise, by 
 \ref{lemma-finite-steps-consistency-change}, after invoking \verb=seal=, a consistency
-change occurs after a finite number of steps. And finally, by Lemma \ref
-{lemma-foreach}, after invoking \verb=foreach=, a consistency change likewise
+change occurs after a finite number of steps. And finally, by
+\ref{lemma-foreach},
+after invoking \verb=foreach=, a consistency change likewise
 occurs after a finite number of steps.
 
-By Lemma \ref{lemma-operation-completes}, this means a concurrent operation
+By \ref{lemma-operation-completes}, this means a concurrent operation
 \verb=append=, \verb=seal=, or \verb=foreach= will successfully complete.
 Therefore, by Definition \ref{def-lock-freedom},  these operations are lock-
 free.
@@ -2371,12 +2370,13 @@ There are two conditions under which a non-consistency changing CAS
 instruction will be carried out. 
 
 \begin{itemize}  \item \textbf{Case 1:} if $b.next=null$, a new block $nb$
-will be created and $CAS_{expand-nxt}$ will be executed. From Lemma 1, we know that $CAS_{expand-nxt}$
+will be created and $CAS_{expand-nxt}$ will be executed. From
+\ref{lemma-non-consistency-cas},  we know that $CAS_{expand-nxt}$
 must complete successfully on some thread. Afterwards recursively calling
 $expand$ on the original block $b$. \item \textbf{Case 2:} if $b.next \neq
-null$, $CAS_{expand-curr}$ will be executed. Lemma \ref{lemma-non-consistency-cas}
+null$, $CAS_{expand-curr}$ will be executed. \ref{lemma-non-consistency-cas}
 guarantees that $CAS_{expand-curr}$ will update $current$ to refer to $b.next$,  which we
-will show can only be a new block. Likewise, Lemma \ref{lemma-non-consistency-cas} 
+will show can only be a new block. Likewise, \ref{lemma-non-consistency-cas} 
 has shown that  $CAS_{expand-nxt}$ is the only state changing instruction that can
 initiate a state change  at location $b.next$, therefore, since $CAS_{expand-nxt}$ takes
 place within Case 1,   Case 2 can only be reachable after Case 1 has been
@@ -2384,7 +2384,7 @@ executed successfully. Given  that Case 1 always creates a new block,
 therefore, $b.next$ in this case, must  always refer to a new block.
 \end{itemize}
 
-Therefore, since from Lemma \ref{lemma-non-consistency-cas} we know that both
+Therefore, since from \ref{lemma-non-consistency-cas} we know that both
 $CAS_{expand-nxt}$ and $CAS_{expand-curr}$ can only fail if already completed
 guaranteeing their finite completion, and since $CAS_{expand-nxt}$ and 
 $CAS_{expand-curr}$ are the only state changing operations invoked through
@@ -2419,7 +2419,7 @@ current object $currobj$ with index location $idx$ is the $Terminal$ object,
 it follows that $CAS_{append-out}$ can only ever serve to duplicate this
 $Terminal$ object at location $idx+1$, leaving at most two $Terminal$s in
 block refered to by $current$ momentarily until $CAS_{append-inn}$ can be
-executed. By Lemma 1, since $CAS_{append-out}$ is a non-consistency changing
+executed. By \ref{lemma-non-consistency-cas}, since $CAS_{append-out}$ is a non-consistency changing
 instruction, it follows that any thread holding any element $elem'$ can
 execute this instruction without changing the expected value of $currobj$ in
 $CAS_{append-inn}$, as no new object is ever created and placed in location
@@ -2463,7 +2463,7 @@ number of execution steps, as they contain no recursive calls, loops, or other
 possibility to restart.
 
 While the \verb=expand= operation contains a recursive call following a CAS
-instruction, it was shown in Lemma \ref{lemma-expand} that an invocation of
+instruction, it was shown in \ref{lemma-expand} that an invocation of
 \verb=expand= is guaranteed to execute a state changing instruction after a
 finite number of steps.
 
@@ -2486,9 +2486,9 @@ leads to a state changing instruction:
 
 \begin{itemize} 
 
-\item \textbf{Case 1:} The call to \verb=check=, a finite operation by Lemma
+\item \textbf{Case 1:} The call to \verb=check=, a finite operation by 
 \ref{lemma-finite-steps-state-change}, returns $false$,  causing a call to
-\verb=advance=, also a finite operation by Lemma 
+\verb=advance=, also a finite operation by 
 \ref{lemma-finite-steps-state-change}, followed by a recursive call to 
 \verb=append= with the same element $elem$ which in turn once again calls 
 \verb=check=.
@@ -2496,7 +2496,7 @@ leads to a state changing instruction:
 We show that after a finite number of steps, the \verb=check= will evaluate to
 $true$, or some other thread will have completed a consistency changing
 operation since the initial invocation of \verb=append=. In the case where
-\verb=check= evaluates to $true$, Lemma \ref{lemma-cas2} applies, as it
+\verb=check= evaluates to $true$, \ref{lemma-cas2} applies, as it
 guarantees that a consistency changing CAS is completed after a finite number
 of steps.
 
@@ -2507,26 +2507,30 @@ block index $idx$, then the next invocation of \verb=append= will evaluate
 moved the Terminal to a subsequent index since the initial invocation of
 append, which is only possible using a consistency changing instruction.
 
-Finally, if \verb=advance= finds that the element at $idx$ is an $Elem$, by
-Lemma 9, $b.index$ will be incremented after a finite number of steps. By
+Finally, if \verb=advance= finds that the element at $idx$ is an
+$Elem$,
+%% by Lemma 9,  TODO which lemma?
+$b.index$ will be incremented after a finite number of steps. By
 $INV1$, this can only happen a finite number of times until a $Terminal$ is
 found. In the case that \verb=expand= is meanwhile invoked through
-\verb=advance=, by Lemma \ref{lemma-expand} it's guaranteed to complete state
+\verb=advance=, by \ref{lemma-expand} it's guaranteed to complete state
 changing instructions $CAS_{expand-nxt}$ or $CAS_{expand-curr}$ in a finite
 number of steps. Otherwise, some other thread has moved the $Terminal$ to a
 subsequent index. However, this latter case is only possible by successfully
 completing $CAS_{append-inn}$, a consistency changing instruction, after the
 initial invocation of append.
 
-\item \textbf{Case 2:} $CAS_{append-out}$ fails, which we know from Lemma
+\item \textbf{Case 2:} $CAS_{append-out}$ fails, which we know from 
 \ref{lemma-non-consistency-cas}means that it must've already been completed by
 another thread, guaranteeing that $CAS_{append-inn}$ will be attempted. If
-$CAS_{append-inn}$ fails, by Lemma 3, after a finite number of steps, a
+$CAS_{append-inn}$ fails,
+%%by Lemma 3, TODO which lemma?
+after a finite number of steps, a
 consistency changing instruction will be completed. If $CAS_{append-inn}$
 succeeds, as a consistency changing instruction, consistency will have clearly
 been changed.
 
-\item \textbf{Case 3:} $CAS_{append-inn}$ fails, which, by Lemma 
+\item \textbf{Case 3:} $CAS_{append-inn}$ fails, which, by 
 \ref{lemma-cas2}, indicates that either some other thread has already completed 
 $CAS_{append-inn}$ with another element, or another consistency changing
 instruction, $CAS_{seal}$ or $CAS_{foreach}$ has successfully completed.
@@ -2550,7 +2554,7 @@ After invoking \verb=seal(size)=, if $CAS_{seal}$ fails, then some thread has
 successfully completed $CAS_{seal}$ or $CAS_{append-inn}$ after some finite number of steps.
 \end{lemma}
 
-\begin{proof} Since by Lemma \ref{lemma-cas2}, we know that $CAS_{append-out}$
+\begin{proof} Since by \ref{lemma-cas2}, we know that $CAS_{append-out}$
 only duplicates an existing $Terminal$, it can not be the cause for a failing
 $CAS_{seal}$. This leaves only two cases in which $CAS_{seal}$ can fail:
 
@@ -2613,11 +2617,11 @@ $b.index$, required to iterate through the block $b$ for the recursive call to
 \verb=seal=, will be correctly incremented after a finite number of steps. 
 
 Therefore, by both the guarantee that, in a finite number of steps, $b.index$
-will eventually be correctly incremented as we saw in Lemma  
+will eventually be correctly incremented as we saw in 
 \ref{lemma-write2-write3}, as well as by $INV1$ we know that the original invocation of
 \verb=seal= will correctly iterate through $b$ until a $Terminal$ is found.
 Thus, we know that the call to \verb=tryWriteSeal= will be invoked, and by
-both Lemma \ref{lemma-finite-steps-state-change} and Lemma \ref{lemma-append},
+both \ref{lemma-finite-steps-state-change} and \ref{lemma-append},
 we know that either \verb=tryWriteSeal=, will successfully complete in a
 finite number of steps, in turn successfully completing \verb=seal(size)=, or
 $CAS_{append-inn}$, another consistency changing operation will successfully
@@ -2631,7 +2635,7 @@ We proceed by showing that after a finite number of steps, we must end up in
 Case 1, which we have just showed itself completes in a finite number of
 steps, or that a consistency change must've already occurred. 
 
-By Lemma \ref{lemma-expand}, we know that an invocation of \verb=expand=
+By \ref{lemma-expand}, we know that an invocation of \verb=expand=
 returns after a finite number of steps, and $pool.current$ is updated to point
 to a subsequent block.
 
@@ -2673,7 +2677,7 @@ be completed after a finite number of steps.
 \end{lemma}
 
 We omit the proof for \verb=foreach= since it proceeds in the exactly the same way
-as does the proof for \verb=seal= in Lemma 
+as does the proof for \verb=seal= in 
 \ref{lemma-finite-steps-consistency-change}.
 
 %==============================
@@ -2699,7 +2703,7 @@ corresponding invocation of \verb=append= in a finite number of steps.
 % so it's trivial.
 
 Likewise by trivial inspection, if $CAS_{seal}$ successfully completes on some
-thread, then by Lemma \ref{lemma-finite-steps-state-change},
+thread, then by \ref{lemma-finite-steps-state-change},
 \verb=tryWriteSeal= is guaranteed to complete in a finite number of steps, and
 therefore, that thread is guaranteed to complete the corresponding invocation
 of \verb=seal= in a finite number of steps.
@@ -2707,6 +2711,105 @@ of \verb=seal= in a finite number of steps.
 The case for $CAS_{foreach}$ is omitted since it follows the same steps as for the case
 of $CAS_{seal}$
 \end{proof}
+
+
+\section{Determinism}
+
+\subsection{Reduction rules}
+
+\infrule[\textsc{Create}]
+{ t = \texttt{create}~p~;~t' \quad p = (\emptyset, -1, \emptyset)
+}
+{ \reduce {t, T} P {t', T} {p, P}
+}
+
+\infrule[\textsc{Append1}]
+{ t = p << v~;~t' \quad p = (vs, -1, cbs) \quad p' = (\set{v} \cup vs, -1, cbs)
+}
+{ \reduce {t, T} {p, P} {t', T} {p', P}
+}
+
+\infrule[\textsc{Append2}]
+{ t = p << v~;~t' \quad p = (vs, n, cbs) \quad |\set{v} \cup vs| \leq n \\
+  p' = (\set{v} \cup vs, n, cbs) \quad T' = \set{ f(v)~|~f \in cbs }
+}
+{ \reduce {t, T} {p, P} {t', T, T'} {p', P}
+}
+
+\infrule[\textsc{Foreach1}]
+{ t = p~\texttt{foreach}~f~;~t' \quad p = (vs, -1, cbs) \quad p' = (vs, -1, \set{f} \cup cbs)
+}
+{ \reduce {t, T} {p, P} {t', T} {p', P}
+}
+
+\infrule[\textsc{Foreach2}]
+{ t = p~\texttt{foreach}~f~;~t' \quad p = (vs, n, cbs) \\
+  T' = \set{g(v)~|~g \in \set{f} \cup cbs, v \in vs} \quad p' = (vs, n, \set{f} \cup cbs)
+}
+{ \reduce {t, T} {p, P} {t', T, T'} {p', P}
+}
+
+\infrule[\textsc{Seal1}]
+{ t = p~\texttt{seal}~n~;~t' \quad p = (vs, -1, cbs) \\
+  T' = \set{g(v)~|~g \in cbs, v \in vs} \quad p' = (vs, n, cbs)
+}
+{ \reduce {t, T} {p, P} {t', T, T'} {p', P}
+}
+
+\infrule[\textsc{Seal2}]
+{ t = p~\texttt{seal}~n~;~t' \quad p = (vs, n, cbs)
+}
+{ \reduce {t, T} {p, P} {t', T} {p, P}
+}
+
+\subsection{Definitions}
+
+\begin{definition}[Termination]
+A term $t$ terminates with result $P$ if its reduction ends in execution state $\set{nop}~|~P$.
+\end{definition}
+
+\begin{definition}[Interleaving]
+  Consider the reduction of a term $t$: $T_1~|~P_1 \;\longrightarrow\;
+  T_2~|~P_2 \;\longrightarrow\; \ldots \;\longrightarrow\;
+  \set{\texttt{nop}}~|~P_n$. An \emph{interleaving} is a reduction of $t$
+  starting in execution state $T_1~|~P_1$ in which reduction rules are
+  applied in a different order.
+\end{definition}
+
+\begin{definition}[Valid Interleaving]
+An interleaving $S', c, S''$ of a reduction sequence $S$ is \emph{valid}
+\emph{iff} for any reduction step $c$ using rule (\textsc{Create}), if
+$c$ creates pool $p$, $p$ is not used in any reduction step in $S'$.
+\end{definition}
+
+\begin{definition}[Determinism]
+The reduction of a term $t$ is \emph{deterministic} \emph{iff} either (a) $t$ does not terminate for any valid interleaving, or (b) $t$ always terminates with the same result for all valid interleavings.
+\end{definition}
+
+\subsection{Theorems and Lemmas}
+
+%\begin{lemma}
+%Consider a reduction sequence $S$ that does not contain a transition which creates a new pool.
+%If $S$ terminates with result $P$ then all permutations of $S$ terminate with the same result.
+%\end{lemma}
+
+\begin{theorem}[Determinism]
+The reduction of terms $t$ is deterministic.
+\end{theorem}
+
+\begin{proof}
+The proof is based on the commutativity of transitions in the
+reduction. We construct the proof in the following steps:
+\begin{itemize}
+\item Given a reduction $S$ which terminates with result $P$, we show
+  that every valid interleaving of $S$ terminates with $P$.
+\item First, we show that $S$ is equivalent to a canonical
+  interleaving $S_c$, i.e., $S_c$ also terminates with result $P$.
+\item Second, we show that every valid interleaving is equivalent to $S_c$.
+\end{itemize}
+\end{proof}
+
+
 
 
 \section{Syntax and examples}
@@ -3319,101 +3422,6 @@ as a single-assignment map.
 
 
 
-\section{Determinism}
-
-\subsection{Reduction rules}
-
-\infrule[\textsc{Create}]
-{ t = \texttt{create}~p~;~t' \quad p = (\emptyset, -1, \emptyset)
-}
-{ \reduce {t, T} P {t', T} {p, P}
-}
-
-\infrule[\textsc{Append1}]
-{ t = p << v~;~t' \quad p = (vs, -1, cbs) \quad p' = (\set{v} \cup vs, -1, cbs)
-}
-{ \reduce {t, T} {p, P} {t', T} {p', P}
-}
-
-\infrule[\textsc{Append2}]
-{ t = p << v~;~t' \quad p = (vs, n, cbs) \quad |\set{v} \cup vs| \leq n \\
-  p' = (\set{v} \cup vs, n, cbs) \quad T' = \set{ f(v)~|~f \in cbs }
-}
-{ \reduce {t, T} {p, P} {t', T, T'} {p', P}
-}
-
-\infrule[\textsc{Foreach1}]
-{ t = p~\texttt{foreach}~f~;~t' \quad p = (vs, -1, cbs) \quad p' = (vs, -1, \set{f} \cup cbs)
-}
-{ \reduce {t, T} {p, P} {t', T} {p', P}
-}
-
-\infrule[\textsc{Foreach2}]
-{ t = p~\texttt{foreach}~f~;~t' \quad p = (vs, n, cbs) \\
-  T' = \set{g(v)~|~g \in \set{f} \cup cbs, v \in vs} \quad p' = (vs, n, \set{f} \cup cbs)
-}
-{ \reduce {t, T} {p, P} {t', T, T'} {p', P}
-}
-
-\infrule[\textsc{Seal1}]
-{ t = p~\texttt{seal}~n~;~t' \quad p = (vs, -1, cbs) \\
-  T' = \set{g(v)~|~g \in cbs, v \in vs} \quad p' = (vs, n, cbs)
-}
-{ \reduce {t, T} {p, P} {t', T, T'} {p', P}
-}
-
-\infrule[\textsc{Seal2}]
-{ t = p~\texttt{seal}~n~;~t' \quad p = (vs, n, cbs)
-}
-{ \reduce {t, T} {p, P} {t', T} {p, P}
-}
-
-\subsection{Definitions}
-
-\begin{definition}[Termination]
-A term $t$ terminates with result $P$ if its reduction ends in execution state $\set{nop}~|~P$.
-\end{definition}
-
-\begin{definition}[Interleaving]
-  Consider the reduction of a term $t$: $T_1~|~P_1 \;\longrightarrow\;
-  T_2~|~P_2 \;\longrightarrow\; \ldots \;\longrightarrow\;
-  \set{\texttt{nop}}~|~P_n$. An \emph{interleaving} is a reduction of $t$
-  starting in execution state $T_1~|~P_1$ in which reduction rules are
-  applied in a different order.
-\end{definition}
-
-\begin{definition}[Valid Interleaving]
-An interleaving $S', c, S''$ of a reduction sequence $S$ is \emph{valid}
-\emph{iff} for any reduction step $c$ using rule (\textsc{Create}), if
-$c$ creates pool $p$, $p$ is not used in any reduction step in $S'$.
-\end{definition}
-
-\begin{definition}[Determinism]
-The reduction of a term $t$ is \emph{deterministic} \emph{iff} either (a) $t$ does not terminate for any valid interleaving, or (b) $t$ always terminates with the same result for all valid interleavings.
-\end{definition}
-
-\subsection{Theorems and Lemmas}
-
-\begin{lemma}
-Consider a reduction sequence $S$ that does not contain a transition which creates a new pool.
-If $S$ terminates with result $P$ then all permutations of $S$ terminate with the same result.
-\end{lemma}
-
-\begin{theorem}[Determinism]
-The reduction of terms $t$ is deterministic.
-\end{theorem}
-
-\begin{proof}
-The proof is based on the commutativity of transitions in the
-reduction. We construct the proof in the following steps:
-\begin{itemize}
-\item Given a reduction $S$ which terminates with result $P$, we show
-  that every valid interleaving of $S$ terminates with $P$.
-\item First, we show that $S$ is equivalent to a canonical
-  interleaving $S_c$, i.e., $S_c$ also terminates with result $P$.
-\item Second, we show that every valid interleaving is equivalent to $S_c$.
-\end{itemize}
-\end{proof}
 
 \section{Additional Evaluation}
 %% TODO
