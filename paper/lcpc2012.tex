@@ -2827,11 +2827,89 @@ two reduction steps yields the following reduction $R'$:
 
 where the prefix and suffix of the reduction $R'$ are the same as in $R$.
 
-TODO
+Any pair of rules $R_1$ and $R_2$ applies above if the reduction steps
+operate on different pools.
+If they operate on the same pool, then for any two (not necessarily
+different) threads executing these reduction steps, the following
+table of rules applies.
+
+\begin{center}
+\begin{tabular}{ | c | c | c | c | }
+  \hline
+  $R_1$ & $R_2$ & $R_1'$ & $R_2'$ \\
+  \hline
+  \hline
+  \textsc{Append1} & \textsc{Append1} & \textsc{Append1} & \textsc{Append1} \\
+  \hline
+  \textsc{Append1} & \textsc{Foreach1} & \textsc{Foreach1} & \textsc{Append1} \\
+  \hline
+  \textsc{Append1} & \textsc{Seal1} & \textsc{Seal1} & \textsc{Append2} \\
+  \hline
+  \textsc{Append2} & \textsc{Foreach2} & \textsc{Foreach2} & \textsc{Append2} \\
+  \hline
+  \textsc{Append2} & \textsc{Seal2} & \textsc{Seal2} & \textsc{Append2} \\
+  \hline
+  \textsc{Foreach1} & \textsc{Append1} & \textsc{Append1} & \textsc{Foreach1} \\
+  \hline
+  \textsc{Foreach1} & \textsc{Foreach1} & \textsc{Foreach1} & \textsc{Foreach1} \\
+  \hline
+  \textsc{Foreach1} & \textsc{Seal1} & \textsc{Seal1} & \textsc{Foreach2} \\
+  \hline
+  \textsc{Foreach2} & \textsc{Append2} & \textsc{Append2} & \textsc{Foreach2} \\
+  \hline
+  \textsc{Foreach2} & \textsc{Seal2} & \textsc{Seal2} & \textsc{Foreach2} \\
+  \hline
+  \textsc{Seal1} & \textsc{Append2} & \textsc{Append1} & \textsc{Seal2} \\
+  \hline
+  \textsc{Seal1} & \textsc{Foreach2} & \textsc{Foreach1} & \textsc{Seal1} \\
+  \hline
+  \textsc{Seal1} & \textsc{Seal2} & \textsc{Seal1} & \textsc{Seal2} \\
+  \hline
+  \textsc{Seal2} & \textsc{Append2} & \textsc{Append2} & \textsc{Seal2} \\
+  \hline
+  \textsc{Seal2} & \textsc{Foreach2} & \textsc{Foreach2} & \textsc{Seal2} \\
+  \hline
+\end{tabular}
+\end{center}
+
 \end{lemma}
 
 \begin{proof}
-By straightforward application of each pair of rules.
+By straightforward inspection of each pair of rules.
+
+As an example, we pick the third row from the table. Consider the
+following execution schedule fragment:
+
+\begin{eqnarray*}
+& &
+p << v~;~t',p~seal~n~;~t'',T_k~|~p=(vs,-1,cbs),P_k
+\\
+& &
+\;\stackrel{\textsc{Append1}}{\longrightarrow}\;
+t',p~seal~n~;~t'',T_k~|~p=(\set{v} \cup vs,-1,cbs),P_k
+\\
+& &
+\;\stackrel{\textsc{Seal1}}{\longrightarrow}\;
+\set{cbs(w) : w \in \set{v} \cup vs},t',t'',T_k~|~p=(\set{v} \cup vs,n,cbs),P_k
+\end{eqnarray*}
+
+If we reorder these two reduction steps, we get:
+
+\begin{eqnarray*}
+& &
+p << v~;~t',p~seal~n~;~t'',T_k~|~p=(vs,-1,cbs),P_k
+\\
+& &
+\;\stackrel{\textsc{Seal1}}{\longrightarrow}\;
+\set{cbs(w) : w \in vs},p << v~;~t',t'',T_k~|~p=(vs,n,cbs),P_k
+\\
+& &
+\;\stackrel{\textsc{Append2}}{\longrightarrow}\;
+cbs(v),\set{cbs(w) : w \in vs},t',t'',T_k,~|~p=(\set{v} \cup vs,n,cbs),P_k
+\end{eqnarray*}
+
+The final execution states in these two execution fragments are the
+same, hence the rest of the interleaving stays the same.
 \end{proof}
 
 \begin{definition}[Canonical interleaving]
@@ -2933,7 +3011,9 @@ Or, more formally:
 \ldots \;\stackrel{S_C(T_n)}{\longrightarrow}\;\\
 & &\;\stackrel{S_C(T_n)}{\longrightarrow}\;
 \set{\epsilon, \ldots, \epsilon, T_{1,1}, \ldots,
-  T_{1,n_1}, T_{2,1}, \ldots, T_{n-1,n_{n-1}}, T_{n,1}, \ldots, T_{n,n_n}}~|~P(T_1),P(\text{t}) \\
+  T_{1,n_1}, T_{2,1}, \ldots, T_{n-1,n_{n-1}}, T_{n,1}, \ldots,
+  T_{n,n_n}}\\
+& &~|~P(T_1),\ldots,P(T_n),P(\text{t}) \\
 & &\;\stackrel{S_C(T_{1,1})}{\longrightarrow}\; \ldots
 \;\stackrel{S_C(T_{1,n})}{\longrightarrow}\; \ldots
 \;\stackrel{S_C(T_{2,1})}{\longrightarrow}\; \ldots
@@ -2983,8 +3063,10 @@ The new interleaving is trivially valid.
 
 We then identify all the \textsc{Append} steps of the main thread.
 We know from our programming model that each of these steps can only
-refer to FlowPools from the \textsc{Create} steps we have moved to the
-beginning of the interleaving.
+refer to FlowPools from the \textsc{Create} steps we have already
+moved to the beginning of the interleaving -- we cannot append to a
+pool created by some other subsequently created thread, due to scoping
+rules.
 For this reason we can reorder the \textsc{Append} steps of the main
 thread so that they appear after the \textsc{Create} steps and
 maintain a valid interleaving.
