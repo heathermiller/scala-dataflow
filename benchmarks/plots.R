@@ -1,44 +1,60 @@
 #! /usr/bin/R --vanilla -f
 
-library(car)
+source('load_data.R')
+source('panel_fcts.R')
 
-d <- read.csv('bencht.log',sep="\t",header=FALSE)
-dl <- reshape(d, varying = list(4:103), v.names="conc", direction = "long")
+library(lattice)
 
-dl$par   <- dl$V1
-dl$size  <- dl$V2
-dl$bench <- dl$V3
 
-agg <- aggregate(dl$conc, list(size = dl$size, par = dl$par, bench = dl$bench), median)
+### Display CPU-scaling of Qs
+# size == max & lanef == 1
+xyplot(time ~ factor(par) | arch * btype,
+       data = mdat,
+       groups = imptype,
+       subset = ave(size, btype, machine, FUN = max) == size & lanef == 1,
+       scales = list(y = list(log = 10)),
+       xlab = "Number of CPUs"
+       )
 
-col <- palette()[1:5]
-pc  <- c(rep(1, 5),rep(2, 5))
+pdf("graphs/cpu-scaling.pdf", height = 10)
+update.myopts(key.labels = levels(mdat$imptype),5,3)
+dev.off()
 
-scatterplot(x ~ size | interaction(par,bench), data=agg, col = rep(col,2), pch = pc,
-            legend.title = "# Threads & Benchmark", ylab = "execution time", xlab = "size")
-#scatterplot(x ~ size | interaction(par,bench), data=agg, col = rep(col,2), pch = pc, log = "y")
 
-col <- palette()[1:3]
-pc  <- c(rep(1, 3),rep(2, 3))
+### Display Size-scaling of Qs
+# par == 1 & lanef == 1
+xyplot(time ~ size | arch * btype,
+       data = mdat,
+       groups = imptype,
+       subset = par == 1 & lanef == 1 & btype != "Comm" & btype != "Histogram",
+       xlab = "Size of Benchmark")
 
-scatterplot(x ~ par | interaction(size,bench), data = agg, col = rep(col,2), pch = pc,
-            legend.title = "Size & Benchmark", ylab = "execution time", xlab = "size")
+pdf("graphs/size-scaling-par1.pdf", height = 5)
+update.myopts(key.labels = levels(mdat$imptype),3,3)
+dev.off()
 
-## n <- length(levels(agg$par))
-## colors <- rainbow(n)
+# par == 8 & lanef == 1
+xyplot(time ~ size | arch * btype,
+       data = mdat,
+       groups = imptype,
+       subset = par == 8 & lanef == 1 & btype != "Comm" & btype != "Histogram",
+       xlab = "Size of Benchmark",
+)
 
-## xrange <- range(agg$size)
-## yrange <- range(agg$x)
+pdf("graphs/size-scaling-par8.pdf", height = 5)
+update.myopts(key.labels = levels(mdat$imptype),3,3)
+dev.off()
 
-## plot(xrange, yrange, type="n", xlab="Number of insertions", ylab="Execution Time")
-## j <- 0
-## for (b in levels(agg$bench)) {
-##   j <- j + 1
-##   i <- 0
-##   for (p in levels(agg$par)) {
-##     i <- i+1
-##     sset <- agg[agg$par == p & agg$bench == b,] 
-##     lines(sset$size, sset$x, type="b", lwd=1, lty = j,
-##           col = colors[i], pch = 20 + j)
-##   }
-## }
+### Display lane-factor-scaling of Qs
+# par == 8 & size == max
+xyplot(time ~ factor(lanef) | btype,
+       data = mdat,
+       group = arch,
+       subset = par == 8 & ave(size, btype, machine, FUN = max) == size &
+                machine != "wolf" & imptype == "Multi-Lane FlowPool",
+       xlab = "Factor of Lanes"
+       )
+
+pdf("graphs/lanef-scaling.pdf", height = 5)
+update.myopts(key.labels = levels(mdat$arch)[1:2], matrix = FALSE)
+dev.off()

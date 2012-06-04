@@ -1,0 +1,14 @@
+\section{Determinism}
+
+In this language 
+
+\begin{theorem}[The FlowPool abstraction is deterministic]
+The reduction of terms $t$ is deterministic.
+\end{theorem}
+
+The proof is based on commutativity of transitions in the reduction.
+
+\begin{lemma}
+Consider a reduction sequence $S$ that does not contain a transition which creates a new pool.
+If $S$ terminates with result $P$ then all permutations of $S$ terminate with the same result.
+\end{lemma}
