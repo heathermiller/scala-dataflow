@@ -1319,84 +1319,69 @@ The reduction of terms $t$ is deterministic.
 \section{Evaluation}
 \label{sec:evaluation}
 
-We evaluate our implementation against the comparable collections in
-the JDK 1.7 on three different architectures -- a quad-core 3.4 GHz
-i7-2600, 4x octa-core 2.27 GHz Intel Xeon x7560 (both with
-hyperthreading) and an octa-core 1.2GHz UltraSPARC T2 with 64 hardware
-threads. We varied the parallelism level $P$ from $1$ to $8$ on the first
-architecture, and from $1$ to $64$ on the latter two.
+We evaluate our implementation (single-lane and multi-lane
+FlowPools) against the LinkedTransferQueue \cite{SchererLS09} for all
+benchmarks and the ConcurrentLinkedQueue \cite{Michael96} for the
+insert benchmark, both found in JDK 1.7, on three different
+architectures -- a quad-core 3.4 GHz i7-2600, 4x octa-core 2.27 GHz
+Intel Xeon x7560 (both with hyperthreading) and an octa-core 1.2GHz
+UltraSPARC T2 with 64 hardware threads. We varied the parallelism
+level $P$ from $1$ to $8$ on the first architecture, and from $1$ to
+$64$ on the latter two. Here, we discuss the scaling of the said
+data structures (see fig~\ref{fig:eval-cpu-scaling}). For additional
+evaluations, please refer to the appendix.
 
-In the \textit{Insert} benchmark we distribute the work of inserting a
-$N$ elements into the data structure concurrently across a
-$P$ threads.
-This microbenchmark shows the performance of the pool \verb=append=
-operation.
-We compare against concurrent linked queue \cite{Michael96} and
-linked transfer queue \cite{SchererLS09} implementations found in the
-Java standard library.
+In the \emph{Insert} benchmark, we evaluate the ability to write
+concurrently -- often the most difficult task -- by distributing the
+work of inserting a $N$ elements into the data structure concurrently
+across $P$ threads.
 We can see that both single-lane FlowPools and concurrent queues do
-not scale well with the number of concurrent threads -- due to cache
-line collisions they slow down rapidly, particularly on the i7
-architecture. % TODO can we show that cache line collisions are the reason? -- tobias
-On the other hand, the multi-lane FlowPools scale well, as threads
+not scale well with the number of concurrent threads, particularly
+on the i7 architecture. They seem to slow down rapidly due to cache
+line collisions and CAS failures.
+On the other hand, multi-lane FlowPools scale well, as threads
 write to different lanes and hence different cache lines in
-most occasions.
+most occasions, while avoiding CAS failures.
 
-The \textit{Reduce} benchmark starts $P$ threads which concurrently 
-insert a total of $N$ elements. The \verb=aggregate= operation is used
-to reduce the set of values inserted into the pool.
-% In the FlowPool implementation there are as many threads computing the
-% aggregation as there are different lanes -- elements from different
-% lanes are batched together.
-% By default the number of lanes is set to the parallelism level $P$,
-% but we varied the number of lanes to $1.5 P$, $2P$, $3P$ and $4P$ with
-% no observable gain -- in fact, this sometimes decreased performance
-% slightly.
-The \textit{Map} benchmark is similar to the \textit{Reduce} benchmark.
-Instead of reducing a value, each element is mapped into a new
-one and added into a different pool.
+Usage of the inserted data is evaluated in the \emph{Reduce},
+\emph{Map} and \emph{Histogram} benchmark, where the latter --
+serving as a ``real live'' example here -- uses the former two
+primitives, whose evaluation is discussed in the appendix.
 
-In the \textit{Histogram} benchmark $P$ threads produce a total of $N$
-elements and add it to the FlowPool.
+In the \textit{Histogram} benchmark, $P$ threads produce a total of
+$N$ elements and add it to the FlowPool.
 The \verb=aggregate= operation is then used to produce 10 different
-histograms concurrently with different number of bins.
-Each separate bins is constructed by $P$ threads.
+histograms concurrently with a different number of bins.
+Each separate histogram is constructed by a thread (or up to $P$, for
+multi-lane FlowPools).
 A crucial difference between queues and FlowPools in the latter
-benchmark is that the multiple histograms are produced for FlowPools
-by invoking several \verb=aggregate= operations while with queues each
-element has to be written to several queues -- one for each
-histogram.
-%% TODO this is important. Can we emphasize this more? -- tobias
+benchmark is that with FlowPools, multiple histograms are produced 
+by invoking several \verb=aggregate= operations, while queues require
+writing each element to several queues -- one for each histogram.
 Without additional synchronization, reading a single queue is not an
 option since elements have to be removed from the queue eventually and
-it is not clear to each reader when an element is no longer needed by
-different readers.
-With FlowPools this is not a problem because the no longer needed
-elements are implicitly garbage collected.
+it is not clear to each reader when an element is no longer needed.
+With FlowPools, elements are implicitly garbage collected, when no
+longer needed.
 
 Finally, to validate the last claim of garbage being implicitly
 collected, in the \textit{Comm} benchmark we create a pool in which a
 large number of elements $N$ is added concurrently by $P$
 threads. Each element is then processed by one of $P$ threads through
 the use of the \verb=aggregate= operation.
-With a linked transfer queues, $P$ threads concurrently remove
+With linked transfer queues, $P$ threads concurrently remove
 elements from the queue and process it.
+%% TODO conclusion? / Time is wrong measure here!!
 
 \begin{figure}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/cpu-scaling}
-\caption{CPU scaling properties of benchmarks}
+\caption{CPU scaling properties of benchmarks.
+  $\Diamond$ SingleLaneFlowPool,
+  $\times$ MultiLaneFlowPool,
+  $\triangle$ LinkedTransferQueue,
+  $\circ$ ConcurrentLinkedQueue} \label{fig:eval-cpu-scaling}
 \end{figure}
 
-\begin{figure}
-\includegraphics[width=\textwidth]{../benchmarks/graphs/size-scaling-par1}
-\includegraphics[width=\textwidth]{../benchmarks/graphs/size-scaling-par8}
-\caption{Size scaling properties of benchmarks ($P = 1, 8$)}
-\end{figure}
-
-\begin{figure}
-\includegraphics[width=\textwidth]{../benchmarks/graphs/lanef-scaling}
-\caption{Lane-Factor scaling properties of Multi-Lane FlowPool}
-\end{figure}
 
 \section{Related Work}
 
@@ -3435,6 +3420,26 @@ reduction. We construct the proof in the following steps:
 % move stuff from above
 % justify number in abstract
 % chache line transfer collision argument
+
+% About reduce
+% In the FlowPool implementation there are as many threads computing the
+% aggregation as there are different lanes -- elements from different
+% lanes are batched together.
+% By default the number of lanes is set to the parallelism level $P$,
+% but we varied the number of lanes to $1.5 P$, $2P$, $3P$ and $4P$ with
+% no observable gain -- in fact, this sometimes decreased performance
+% slightly.
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../benchmarks/graphs/size-scaling-par1}
+\includegraphics[width=\textwidth]{../benchmarks/graphs/size-scaling-par8}
+\caption{Size scaling properties of benchmarks ($P = 1, 8$)}
+\end{figure}
+
+\begin{figure}
+\includegraphics[width=\textwidth]{../benchmarks/graphs/lanef-scaling}
+\caption{Lane-Factor scaling properties of Multi-Lane FlowPool}
+\end{figure}
 
 \end{document}
 
