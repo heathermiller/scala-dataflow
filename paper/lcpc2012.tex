@@ -1245,8 +1245,11 @@ A term $t$ terminates with result $P$ if its reduction ends in execution state $
 \end{definition}
 
 \begin{definition}[Interleaving]
-Consider the reduction of a term $t$: $T_1~|~P_1 \;\longrightarrow\; T_2~|~P_2 \;\longrightarrow\; \ldots \;\longrightarrow\; \set{\texttt{nop}}~|~P_n$. An \emph{interleaving} is a permutation 
-$T_{i_1}~|~P_{i_1} \;\longrightarrow\; T_{i_2}~|~P_{i_2} \;\longrightarrow\; \ldots \;\longrightarrow\; \set{\texttt{nop}}~|~P_{i_n}$ of that reduction.
+  Consider the reduction of a term $t$: $T_1~|~P_1 \;\longrightarrow\;
+  T_2~|~P_2 \;\longrightarrow\; \ldots \;\longrightarrow\;
+  \set{\texttt{nop}}~|~P_n$. An \emph{interleaving} is a reduction of $t$
+  starting in execution state $T_1~|~P_1$ in which reduction rules are
+  applied in a different order.
 \end{definition}
 
 \begin{definition}[Determinism]
