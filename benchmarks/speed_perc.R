@@ -8,41 +8,43 @@ get.extime <- function(tmp) {
         tmp[!is.na(tmp$rat) & tmp$rat == slowest,c("arch","par","size","btype","rat","dec")])
 }
 
-wdat <- reshape(mdat[mdat$lanef == 1 & btype == "Insert",], v.names = "time",
-                idvar = c("version", "machine", "arch", "par", "size"),
+# Insert, 1 lane data only
+tmp <- mdat[mdat$lanef == 1 & mdat$btype == "Insert",]
+
+# Get min
+attach(tmp)
+tmp$min <- ave(time, version, machine, arch, bench, lanef, size, btype, imptype, FUN = min)
+detach(tmp)
+
+# Get min rows
+tmp[tmp$min == tmp$time,]
+
+# Reshape
+wdat <- reshape(tmp[tmp$min == tmp$time,], v.names = c("min","par"),
+                idvar = c("version", "machine", "arch", "size"),
                 timevar = "imptype",
-                drop = c("bench", "lanef","btype"),
+                drop = c("bench", "lanef","btype","time"),
                 direction = "wide")
 
-wdat$fp <- wdat[,"time.Multi-Lane FlowPool"]
 
-wdat$q  <- pmin(wdat[,"time.ConcurrentLinkedQueue"],
-                wdat[,"time.LinkedTransferQueue"],
-                na.rm = TRUE)
-attach(wdat)
-fpmin <- ave(fp, version, machine, arch, size, FUN = min)
-qmin  <- ave(q,  version, machine, arch, size, FUN = min)
-detach(wdat)
 
-wdat$fpmin <- fpmin
-wdat$qmin  <- qmin
+# Mins per type
+wdat$fp    <- wdat[,"min.Multi-Lane FlowPool"]
+wdat$fppar <- wdat[,"par.Multi-Lane FlowPool"]
 
-wdat$rat <- wdat$fpmin / wdat$qmin
+wdat$q     <- pmin(wdat[,"min.ConcurrentLinkedQueue"],
+                   wdat[,"min.LinkedTransferQueue"],
+                   na.rm = TRUE)
+wdat$qpar  <- apply(wdat, 1, function(x) { 
+  if(x["min.ConcurrentLinkedQueue"] == x["q"])
+    x["par.ConcurrentLinkedQueue"]
+  else x["min.LinkedTransferQueue"] }
+)
+
+# Rate
+wdat$rat <- wdat$fp / wdat$q
 wdat$dec <- (1 - wdat$rat) * 100
 
-wdat[wdat$fp == wdat$fpmin,c("version", "machine", "arch", "par", "size", "fp", "q", "rat")]
-
-## Global execution time evaluation
-get.extime(wdat[wdat$par == 8,])
-
-## Insert execution time
-get.extime(wdat[wdat$btype == "Insert",])
-
-## Histogram execution time
-get.extime(wdat[wdat$btype == "Histogram" & wdat$par >= 8,])
-
-## Reduce execution time
-get.extime(wdat[wdat$btype == "Reduce",])
-
-## Map execution time
-get.extime(wdat[wdat$btype == "Map",])
+# Order and output
+wdat[order(wdat$machine,wdat$size),
+     c("version", "machine", "arch", "size", "fp", "fppar", "q", "qpar", "rat", "dec")]
