@@ -8,10 +8,10 @@ get.extime <- function(tmp) {
         tmp[!is.na(tmp$rat) & tmp$rat == slowest,c("arch","par","size","btype","rat","dec")])
 }
 
-wdat <- reshape(mdat[mdat$lanef == 1,], v.names = "time",
-                idvar = c("version", "machine", "arch", "par", "size", "btype"),
+wdat <- reshape(mdat[mdat$lanef == 1 & btype == "Insert",], v.names = "time",
+                idvar = c("version", "machine", "arch", "par", "size"),
                 timevar = "imptype",
-                drop = c("bench", "lanef"),
+                drop = c("bench", "lanef","btype"),
                 direction = "wide")
 
 wdat$fp <- wdat[,"time.Multi-Lane FlowPool"]
@@ -19,9 +19,18 @@ wdat$fp <- wdat[,"time.Multi-Lane FlowPool"]
 wdat$q  <- pmin(wdat[,"time.ConcurrentLinkedQueue"],
                 wdat[,"time.LinkedTransferQueue"],
                 na.rm = TRUE)
+attach(wdat)
+fpmin <- ave(fp, version, machine, arch, size, FUN = min)
+qmin  <- ave(q,  version, machine, arch, size, FUN = min)
+detach(wdat)
 
-wdat$rat <- wdat$fp / wdat$q
+wdat$fpmin <- fpmin
+wdat$qmin  <- qmin
+
+wdat$rat <- wdat$fpmin / wdat$qmin
 wdat$dec <- (1 - wdat$rat) * 100
+
+wdat[wdat$fp == wdat$fpmin,c("version", "machine", "arch", "par", "size", "fp", "q", "rat")]
 
 ## Global execution time evaluation
 get.extime(wdat[wdat$par == 8,])
