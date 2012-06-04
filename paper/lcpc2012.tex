@@ -1325,11 +1325,11 @@ benchmarks and the ConcurrentLinkedQueue \cite{Michael96} for the
 insert benchmark, both found in JDK 1.7, on three different
 architectures -- a quad-core 3.4 GHz i7-2600, 4x octa-core 2.27 GHz
 Intel Xeon x7560 (both with hyperthreading) and an octa-core 1.2GHz
-UltraSPARC T2 with 64 hardware threads. We varied the parallelism
-level $P$ from $1$ to $8$ on the first architecture, and from $1$ to
-$64$ on the latter two. Here, we discuss the scaling of the said
-data structures (see fig~\ref{fig:eval-cpu-scaling}). For additional
-evaluations, please refer to the appendix.
+UltraSPARC T2 with 64 hardware threads. On the first architecture we
+have $P \in [1, 8]$, on the latter two $P \in [1,64]$. Here, we
+discuss the scaling of the said data structures (see
+fig~\ref{fig:eval-cpu-scaling}). For additional evaluations, please
+refer to section~\ref{sec:add-eval} in the appendix.
 
 In the \emph{Insert} benchmark, we evaluate the ability to write
 concurrently -- often the most difficult task -- by distributing the
@@ -1352,8 +1352,8 @@ In the \textit{Histogram} benchmark, $P$ threads produce a total of
 $N$ elements and add it to the FlowPool.
 The \verb=aggregate= operation is then used to produce 10 different
 histograms concurrently with a different number of bins.
-Each separate histogram is constructed by a thread (or up to $P$, for
-multi-lane FlowPools).
+Each separate histogram is constructed by its own thread (or up to
+$P$, for multi-lane FlowPools). %% TODO the parenthesis is bad
 A crucial difference between queues and FlowPools in the latter
 benchmark is that with FlowPools, multiple histograms are produced 
 by invoking several \verb=aggregate= operations, while queues require
@@ -3251,7 +3251,7 @@ def sum()
     _ + _
   \}
 
-
+
 def product()
   aggregate(1)(_ * _) \{
     _ * _
@@ -3424,29 +3424,61 @@ as a single-assignment map.
 
 
 \section{Additional Evaluation}
+\label{sec:add-eval}
+In this section, some additional evaluation results are presented.
+
+\textbf{Map and Reduce} The \textit{Reduce} benchmark starts $P$
+threads which concurrently insert a total of $N$ elements. The
+\verb=aggregate= operation is used to reduce the set of values
+inserted into the pool. Note that in the FlowPool implementation there
+may be as many threads computing the aggregation as there are
+different lanes -- elements from different lanes are batched together
+once the pool is sealed.
+
+The \textit{Map} benchmark is similar to the \textit{Reduce}
+benchmark, but instead of reducing a value, each element is mapped
+into a new one and added to a second pool.
+
+\textbf{Scaling in Input Size} In figure~\ref{fig:eval-size-scaling}
+we can see that the Input, Map, Reduce and Histrogram benchmark all
+scale linearly in the input size with any parallelism level. The Comm
+benchmark has not been tested for different sizes. 
+
+\textbf{Multi-Lane Scaling} By default, the number of lanes is set to
+the parallelism level $P$, corresponding to the number of used
+CPUs. However, since the implementation has to use hashing on the
+thread IDs instead of the real CPU index, we tested whether varying
+the number of lanes to $1.5 P$, $2P$, $3P$ and $4P$ results in
+performance gain due to fewer collisions. Benchmarks have shown (see
+fig~\ref{fig:eval-lane-factor}) that this yields no observable gain --
+in fact, this sometimes even decreased performance slightly.
+
+\textbf{Methodology} All the presented configurations have been
+measured $20$ times, where the $5$ first values have been discarded to
+let the JIT stabilize. Aggregated values are always medians. The
+benchmarks have been written using \verb=scala.testing.Benchmark= and
+executed through SBT\footnote{Simple Build Tool} using the following
+flags for the JavaVM: \texttt{-Xmx2048m -Xms2048m -XX:+UseCondCardMark
+  -verbose:gc -XX:+PrintGCDetails -server}.
+
 %% TODO
-% move stuff from above
 % justify number in abstract
 % chache line transfer collision argument
 
-% About reduce
-% In the FlowPool implementation there are as many threads computing the
-% aggregation as there are different lanes -- elements from different
-% lanes are batched together.
-% By default the number of lanes is set to the parallelism level $P$,
-% but we varied the number of lanes to $1.5 P$, $2P$, $3P$ and $4P$ with
-% no observable gain -- in fact, this sometimes decreased performance
-% slightly.
-
+%% TODO captions OK? (also in 6. Evaluation)
 \begin{figure}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/size-scaling-par1}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/size-scaling-par8}
-\caption{Size scaling properties of benchmarks ($P = 1, 8$)}
+\caption{Size scaling properties of benchmarks ($P = 1,
+  8$). $\Diamond$ SingleLaneFlowPool,
+  $\times$ MultiLaneFlowPool,
+  $\triangle$ LinkedTransferQueue,
+  $\circ$ ConcurrentLinkedQueue} \label{fig:eval-size-scaling}
 \end{figure}
 
 \begin{figure}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/lanef-scaling}
-\caption{Lane-Factor scaling properties of Multi-Lane FlowPool}
+\caption{Lane-Factor scaling properties of Multi-Lane FlowPool} \label{fig:eval-lane-factor}
 \end{figure}
 
 \end{document}
