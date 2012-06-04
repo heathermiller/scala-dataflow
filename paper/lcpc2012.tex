@@ -265,35 +265,67 @@ other popular concurrent data structures.
 
 \section{Model of Computation}
 
-Pipeline-based applications are composed of a sequence
-of producer/consumer stages, each one depending on the output of its
-predecessor. More generally, the computation forms a directed
-dependency graph in which parallelism is achieved by operations in
-different nodes executing concurrently.
+FlowPools can be thought of as similar to a typical collections abstraction.
+That is, operations invoked on a FlowPool are executed on its individual
+elements. However, FlowPools do not only act as a data container full of
+elements-- unlike a typical collecion, FlowPools also act as nodes and edges
+of a directed acyclic computation graph (DAG), in which the operations to be
+performed are registered with the FlowPool.
 
-One design goal is to make the nodes in the dependency graph first
-class values.
-The advantage of this is that the programmer is able to use
-nodes as procedure arguments or receive them as return values.
-This allows for a better modularity and increases the
-composability of the programming model.
-It also provides a higher degree of flexibility -- the dependency
-graph does not have to be specified at compile time, but can be
-computed at runtime instead.
+Nodes in this directed acyclic graph are data containers which are first class
+values. This makes it possible to use FlowPools as arguments or to receive
+them as return values. Edges, on the other hand, can be thought of as
+combinators or higher-order functions whose associated functions are the
+previously-mentioned operations that are registered with the FlowPool. In
+addition to providing composability, this means that the DAG does not have to
+be specified at compile time, but can be generated dynamically at runtime
+instead.
 
-\textbf{Determinism}.
+This structure allows for complete asynchrony, allowing the runtime to extract
+parallelism as a result. That is, elements can be asynchronously inserted, all
+registered operations can be asynchronously executed, and new operations can
+be asynchronously registered.
 
-Throughout this paper, we follow notion of determinism introduced by the Oz
-programming language \cite{RoyH2004} as \textit{declarative concurrency}; "a
-concurrent program is declaratively concurrent if and only if all possible
-executions either do not terminate or they all eventually reach logically
-equivalent results." In this definition, non-termination also includes
-exceptions that occur at runtime. Furthermore, logically equivalent results
-mean that resulting data structures are in the same state. This is
-convenient for the programmer-- if an exception occurs in some run of a
-program, then it is guaranteed to occur in every run of the program. However,
-if there are no exceptions, then the program is guaranteed to be
-deterministic.
+Therefore, invoking several higher-order functions in succession on a given
+FlowPool doesn't add barriers between nodes in the DAG, it only extends the
+DAG. This means that individual elements can \textit{flow} through different
+edges of the DAG independently of each other.
+
+\textbf{Properties of FlowPools}. In our model, FlowPools have a few important properties
+which work together to ensure that resulting programs are deterministic.
+
+\begin{enumerate}
+\item Data elements in FlowPools are unordered.
+\item Operations passed to FlowPools must be pure and associative.
+\item All callbacks are eventually executed on all elements.
+\end{enumerate}
+
+As previously alluded to, the main reason for these properties is to guarantee
+determinism in the following sense.
+
+\textbf{Determinism}. FlowPools are deterministic in the sense that all
+execution schedules either lead to non-termination (\textit{e.g.}, an
+exception), or no difference can be observed in the final state of the
+resulting data structures. For a more formal definition, see section
+\ref{sec:correctness}.
+
+%== PREVIOUS MODEL OF COMPUTATION TEXT ==
+%
+% Pipeline-based applications are composed of a sequence
+% of producer/consumer stages, each one depending on the output of its
+% predecessor. More generally, the computation forms a directed
+% dependency graph in which parallelism is achieved by operations in
+% different nodes executing concurrently.
+%
+% One design goal is to make the nodes in the dependency graph first
+% class values.
+% The advantage of this is that the programmer is able to use
+% nodes as procedure arguments or receive them as return values.
+% This allows for a better modularity and increases the
+% composability of the programming model.
+% It also provides a higher degree of flexibility -- the dependency
+% graph does not have to be specified at compile time, but can be
+% computed at runtime instead.
 
 % What do we mean by determinism?
 % We seek a definition of determinism that is practically
@@ -310,29 +342,42 @@ deterministic.
 % guaranteed to occur in every run of the program. However, if there are no
 % exceptions, then the program is guaranteed to be deterministic.
 
-In this paper we describe a deterministic pool abstraction which allows
-appending elements and then traversing them.
-We call this data structure a \textit{single-assignment pool} or a FlowPool.
-Such an abstraction may seem similar to the dataflow streams seen in Oz,
-but there are some important differences.
-We argue that both of these are deterministic, but our pool abstraction
-does not define the order between contained elements, hence there is
-no predefined traversal order.
+% In this paper we describe a deterministic pool abstraction which allows
+% appending elements and then traversing them.
+% We call this data structure a \textit{single-assignment pool} or a FlowPool.
+% Such an abstraction may seem similar to the dataflow streams seen in Oz,
+% but there are some important differences.
+% We argue that both of these are deterministic, but our pool abstraction
+% does not define the order between contained elements, hence there is
+% no predefined traversal order.
 
-The simplified model of computation is shown in Fig. \ref{TODO}.
-The pool abstraction usually defines adding elements and retrieving
-some element previously added.
-This retrieval is not very useful unless it also removes the element.
-In a concurrent setting such a remove is time-dependent and gives
-different results depending on when it was called -- an element
-present at one point might not be present later.
-Such an operation would hinder determinism.
-For this reason we do not provide a way to remove an element once it
-has been added.
-Instead, we provide a way to express what should be done with each
-element of the pool -- traversal.
-Finally, we allow the pool to be sealed to a certain size -- this
-bounds the number of elements that can be added to the pool.
+% The simplified model of computation is shown in Fig. \ref{TODO}.
+% The pool abstraction usually defines adding elements and retrieving
+% some element previously added.
+% This retrieval is not very useful unless it also removes the element.
+% In a concurrent setting such a remove is time-dependent and gives
+% different results depending on when it was called -- an element
+% present at one point might not be present later.
+% Such an operation would hinder determinism.
+% For this reason we do not provide a way to remove an element once it
+% has been added.
+% Instead, we provide a way to express what should be done with each
+% element of the pool -- traversal.
+% Finally, we allow the pool to be sealed to a certain size -- this
+% bounds the number of elements that can be added to the pool.
+
+% === HEATHERS OLD DETERMINISM SECTION
+% \textbf{Determinism}. Throughout this paper, we follow a notion of determinism introduced by the Oz
+% programming language \cite{RoyH2004} as \textit{declarative concurrency}; "a
+% concurrent program is declaratively concurrent if and only if all possible
+% executions either do not terminate or they all eventually reach logically
+% equivalent results." In this definition, non-termination also includes
+% exceptions that occur at runtime. Furthermore, by "logically equivalent results", we
+% mean that resulting data structures are in the same state. This is
+% convenient for the programmer-- if an exception occurs in some run of a
+% program, then it is guaranteed to occur in every run of the program. However,
+% if there are no exceptions, then the program is guaranteed to be
+% deterministic.
 
 \section{Programming Interface}
 \label{sec:programming-interface}
@@ -952,9 +997,9 @@ You find an evaluation of the performance of Multi-Lane FlowPools in
 section~\ref{sec:benchmark}.
 
 \section{Correctness}
-
+\label{sec:correctness}
 We give an outline of the correctness proof here. More formal
-definitions, complete set of lemmas and proofs can be found in the
+definitions, a complete set of lemmas and proofs can be found in the
 appendix.
 
 We define the notion of an abstract pool $\mathbb{A} = (elems,
