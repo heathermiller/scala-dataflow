@@ -1378,11 +1378,11 @@ elements from the queue and process it.
 
 \begin{figure}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/cpu-scaling}
-\caption{CPU scaling properties of benchmarks.
-  $\Diamond$ SingleLaneFlowPool,
-  $\times$ MultiLaneFlowPool,
-  $\triangle$ LinkedTransferQueue,
-  $\circ$ ConcurrentLinkedQueue} \label{fig:eval-cpu-scaling}
+\caption{Execution time vs parallelization level.
+  $\Diamond$ single-lane FlowPool,
+  $\times$ multi-lane FlowPool,
+  $\triangle$ linked transfer queue,
+  $\circ$ concurrent linked queue} \label{fig:eval-cpu-scaling}
 \end{figure}
 
 
@@ -3719,16 +3719,18 @@ flags for the JavaVM: \texttt{-Xmx2048m -Xms2048m -XX:+UseCondCardMark
 \begin{figure}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/size-scaling-par1}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/size-scaling-par8}
-\caption{Size scaling properties of benchmarks ($P = 1,
-  8$). $\Diamond$ SingleLaneFlowPool,
-  $\times$ MultiLaneFlowPool,
-  $\triangle$ LinkedTransferQueue,
-  $\circ$ ConcurrentLinkedQueue} \label{fig:eval-size-scaling}
+\caption{Execution time vs benchmark size ($P = 1, 8$).
+  $\Diamond$ single-lane FlowPool,
+  $\times$ multi-lane FlowPool,
+  $\triangle$ linked transfer queue,
+  $\circ$ concurrent linked queue} \label{fig:eval-size-scaling}
 \end{figure}
 
 \begin{figure}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/lanef-scaling}
-\caption{Lane-Factor scaling properties of Multi-Lane FlowPool} \label{fig:eval-lane-factor}
+\caption{Execution times vs lane-factor for multi-lane
+  FlowPools. $\times$ UltraSPARC T2, $\triangle$ 4-core i7}
+\label{fig:eval-lane-factor}
 \end{figure}
 
 \end{document}
