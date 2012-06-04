@@ -453,6 +453,40 @@ element of the pool -- traversal.
 Finally, we allow the pool to be sealed to a certain size -- this
 bounds the number of elements that can be added to the pool.
 
+\subsection{Syntax and operations}
+
+\smallrulenames
+
+\begin{figure}[t]
+%\figurebox{
+%{\bf Syntax}\medskip
+
+%$\ba{l@{\hspace{2mm}}|@{\hspace{2mm}}l}
+%$\ba[t]{l}
+
+$\ba[t]{l@{\hspace{2mm}}l}
+t    ::=                                                           & \mbox{terms}              \\
+\gap p << v                                                  & \mbox{append}           \\
+\gap \texttt{create}~p                                   & \mbox{pool creation}  \\
+\gap p~\texttt{foreach}~f                             & \mbox{foreach}           \\
+\gap p~\texttt{seal}~n                                  & \mbox{seal}                \\
+\gap \texttt{nop}                                          & \mbox{no op}              \\
+\gap t_1~;~t_2                                               & \mbox{sequence}        \\
+\ea$
+
+$\ba{l@{\hspace{2mm}}|@{\hspace{2mm}}l@{\hspace{2mm}}l}
+p \in \set{(vs, \sigma, cbs)~|~vs \subseteq Elem, \sigma \in \set{-1} \cup \mathbb{N}, cbs \subset Elem \Rightarrow Unit} & v \in Elem \\
+f \in Elem \Rightarrow Unit & n \in \mathbb{N}
+\ea$
+
+%\ea$
+
+%}
+\caption{Syntax}\label{fig:syntax}
+\end{figure}
+
+
+
 \section{Programming Interface}
 \label{sec:programming-interface}
 
@@ -1070,8 +1104,6 @@ CAS failures may happen).
 You find an evaluation of the performance of Multi-Lane FlowPools in
 section~\ref{sec:evaluation}.
 
-\include{determinism}
-
 \section{Correctness}
 
 We give an outline of the correctness proof here. More formal
@@ -1154,6 +1186,10 @@ FlowPool operations \verb=append= and \verb=seal= are linearizable.
 
 We then proceed to show that operations are lock-free, i.e. that at
 least one thread completes after a finite number of steps.
+
+
+\include{determinism}
+
 
 \section{Evaluation}
 \label{sec:evaluation}

@@ -1,35 +1,5 @@
 \section{Determinism}
 
-\smallrulenames
-
-\begin{figure}[t]
-%\figurebox{
-%{\bf Syntax}\medskip
-
-%$\ba{l@{\hspace{2mm}}|@{\hspace{2mm}}l}
-%$\ba[t]{l}
-
-$\ba[t]{l@{\hspace{2mm}}l}
-t    ::=                                                           & \mbox{terms}              \\
-\gap p << v                                                  & \mbox{append}           \\
-\gap \texttt{create}~p                                   & \mbox{pool creation}  \\
-\gap p~\texttt{foreach}~f                             & \mbox{foreach}           \\
-\gap p~\texttt{seal}~n                                  & \mbox{seal}                \\
-\gap \texttt{nop}                                          & \mbox{no op}              \\
-\gap t_1~;~t_2                                               & \mbox{sequence}        \\
-\ea$
-
-$\ba{l@{\hspace{2mm}}|@{\hspace{2mm}}l@{\hspace{2mm}}l}
-p \in \set{(vs, \sigma, cbs)~|~vs \subseteq Elem, \sigma \in \set{-1} \cup \mathbb{N}, cbs \subset Elem \Rightarrow Unit} & v \in Elem \\
-f \in Elem \Rightarrow Unit & n \in \mathbb{N}
-\ea$
-
-%\ea$
-
-%}
-\caption{Syntax}\label{fig:syntax}
-\end{figure}
-
 In this section we aim to show that the FlowPool abstraction is \emph{deterministic} in the sense that a program will compute the same result (which can also be an error) regardless of the interleaving of concurrent operations.
 
 First, we introduce a small core language whose syntax is shown in Figure~\ref{fig:syntax}; it is very close to the programming interface of Section~\ref{sec:programming-interface}. In this language programs are built by first creating one or more FlowPools using \texttt{create}. Concurrent threads can then be started by (a) appending an element to a FlowPool, (b) sealing the FlowPool using \texttt{seal}, and (c) registering callback functions using \texttt{foreach}.
@@ -66,7 +36,7 @@ $T_{i_1}~|~P_{i_1} \;\longrightarrow\; T_{i_2}~|~P_{i_2} \;\longrightarrow\; \ld
 The reduction of a term $t$ is \emph{deterministic} \emph{iff} either (a) $t$ does not terminate for any possible interleaving, or (b) $t$ always terminates with the same result for all possible interleavings.
 \end{definition}
 
-\begin{theorem}[Determinism]
+\begin{theorem}[The FlowPool abstraction is deterministic]
 The reduction of terms $t$ is deterministic.
 \end{theorem}
 
