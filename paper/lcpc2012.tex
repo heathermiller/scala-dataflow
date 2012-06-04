@@ -1240,11 +1240,10 @@ least one thread completes after a finite number of steps.
 \subsection{Determinism}
 
 In this section we aim to show that the FlowPool abstraction is
-\emph{deterministic} in the sense that a program will compute the same
+\emph{deterministic} in the sense that a program computes the same
 result (which can also be an error) regardless of the interleaving of
-concurrent operations. We only give an outline of the determinism
-proof here. More formal definitions, lemmas and proofs can be found in
-the appendix.
+concurrent operations. We give an outline of the determinism
+proof -- a complete formal proof can be found in the appendix.
 
 The following definitions and the determinism theorem are based on the
 language shown in Figure~\ref{fig:syntax}. The semantics of our core
@@ -1252,13 +1251,13 @@ language is defined using reduction rules which define transitions
 between \emph{execution states}. An execution state is a pair $T~|~P$
 where $T$ is a set of concurrent threads and $P$ is a set of
 FlowPools. Each thread executes a \emph{term} of the core language
-(typically a sequence of terms). For the definition of the reduction
-rules it suffices to represent the state of a thread as the (rest of)
+(typically a sequence of terms).
+State of a thread is represented as the (rest of)
 the term that it still has to execute; this means there is a
-one-to-one mapping between threads and terms. The semantics of
-\verb|append| is defined using the following reduction rule: (For
-brevity we omit most of the other reduction rules. A complete summary
-can be found in the appendix.)
+one-to-one mapping between threads and terms.
+For example, the semantics of \verb|append| is defined by the
+following reduction rule (a complete summary of all the rules can be
+found in the appendix):
 
 \infrule[\textsc{Append1}]
 { t = p << v~;~t' \quad p = (vs, -1, cbs) \quad p' = (\set{v} \cup vs, -1, cbs)
@@ -1285,9 +1284,8 @@ element $v$ in the pool. Each invocation creates a new thread in $T'$.
 
 Programs are built by first creating one or more FlowPools using
 \texttt{create}. Concurrent threads can then be started by (a)
-appending an element to a FlowPool, (b) sealing the FlowPool using
-\texttt{seal}, and (c) registering callback functions using
-\texttt{foreach}.
+appending an element to a FlowPool, (b) sealing the FlowPool
+and (c) registering callback functions (\texttt{foreach}).
 
 \begin{definition}[Termination]
 A term $t$ terminates with result $P$ if its reduction ends in execution state $\set{nop}~|~P$.
@@ -1308,11 +1306,13 @@ $c$ creates pool $p$, $p$ is not used in any reduction step in $S'$.
 \end{definition}
 
 \begin{definition}[Determinism]
-The reduction of a term $t$ is \emph{deterministic} \emph{iff} either (a) $t$ does not terminate for any valid interleaving, or (b) $t$ always terminates with the same result for all valid interleavings.
+The reduction of a term $t$ is \emph{deterministic} \emph{iff} either
+(a) $t$ does not terminate for any valid interleaving, or (b) $t$ always
+terminates with the same result for all valid interleavings.
 \end{definition}
 
-\begin{theorem}[Determinism of FlowPool]
-The reduction of terms $t$ is deterministic.
+\begin{theorem}[FlowPool Determinism]
+Reduction of terms $t$ is deterministic.
 \end{theorem}
 
 
