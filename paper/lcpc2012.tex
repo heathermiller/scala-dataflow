@@ -1325,15 +1325,16 @@ benchmarks and the ConcurrentLinkedQueue \cite{Michael96} for the
 insert benchmark, both found in JDK 1.7, on three different
 architectures -- a quad-core 3.4 GHz i7-2600, 4x octa-core 2.27 GHz
 Intel Xeon x7560 (both with hyperthreading) and an octa-core 1.2GHz
-UltraSPARC T2 with 64 hardware threads. On the first architecture we
-have $P \in [1, 8]$, on the latter two $P \in [1,64]$. Here, we
-discuss the scaling of the said data structures (see
-fig~\ref{fig:eval-cpu-scaling}). For additional evaluations, please
-refer to section~\ref{sec:add-eval} in the appendix.
+UltraSPARC T2 with 64 hardware threads. The level of parallelism $P$
+we vary as follows: On the first architecture we have $P \in [1, 8]$,
+on the latter two $P \in [1,64]$. Here, we discuss the scaling of the
+said data structures (see fig~\ref{fig:eval-cpu-scaling}). For
+additional evaluations, please refer to section~\ref{sec:add-eval} in
+the appendix.
 
 In the \emph{Insert} benchmark, we evaluate the ability to write
 concurrently -- often the most difficult task -- by distributing the
-work of inserting a $N$ elements into the data structure concurrently
+work of inserting $N$ elements into the data structure concurrently
 across $P$ threads.
 We can see that both single-lane FlowPools and concurrent queues do
 not scale well with the number of concurrent threads, particularly
@@ -1361,7 +1362,7 @@ writing each element to several queues -- one for each histogram.
 Without additional synchronization, reading a single queue is not an
 option since elements have to be removed from the queue eventually and
 it is not clear to each reader when an element is no longer needed.
-With FlowPools, elements are implicitly garbage collected, when no
+With FlowPools, elements are implicitly garbage collected when no
 longer needed.
 
 Finally, to validate the last claim of garbage being implicitly
