@@ -1,10 +1,11 @@
+## Read log files
 # Read file list
 files <- list.files(path = 'data', pattern = '*.log')
 
 # Initialize data frame
 draw <- data.frame()
 
-# Read all files
+# Read all log files
 for (f in files) {
   tmp <- read.csv(paste('data',f, sep="/"),
                   sep="\t",
@@ -28,6 +29,42 @@ dat <- reshape(draw,
                v.names = "time",
                direction = "long",
                drop = c("class",paste("x", 1:5, sep=".")))
+
+## Read log2 files
+files <- list.files(path = 'data', pattern = '*.log2')
+
+# Initialize data frame
+draw <- data.frame()
+
+# Read all log files
+for (f in files) {
+  tmp <- read.csv(paste('data',f, sep="/"),
+                  sep="\t",
+                  header=FALSE,
+                  col.names = c(
+                    "machine",
+                    "version",
+                    "bench",
+                    "par",
+                    "lanef",
+                    "size",
+                    "class",
+                    "x1","x2"))
+  draw <- rbind(draw, tmp)
+  rm(tmp)
+}
+
+# Reshape to long format
+tmp2 <- reshape(draw,
+                varying = list("x1","x2"),
+                v.names = "time",
+                direction = "long",
+                drop = c("class"))
+
+# Append to whole dataset
+rbind(dat,tmp2)
+rm(tmp2)
+
 
 ## Classify benchmarks
 
