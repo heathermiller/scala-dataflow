@@ -218,6 +218,7 @@ concurrent data structures, and show that in addition to offering new
 capabilities, FlowPools may reduce execution time by $53 - 97\%$ in
 highly parallelized environments with respect to comparable
 concurrent queue data structures in the Java standard library.
+%% TODO redo figure with only Insert benchs with optimal par lvl
 \keywords{dataflow, concurrent data-structure, deterministic parallelism}
 \end{abstract}
 
@@ -1342,8 +1343,8 @@ on the i7 architecture. They seem to slow down rapidly due to cache
 line collisions and CAS failures.
 On the other hand, multi-lane FlowPools scale well, as threads
 write to different lanes and hence different cache lines in
-most occasions, while avoiding CAS failures. Execution time decrease
-up to $98\%$ for $5000000$ elements on 32-core Xeon, $P = 8$.
+most occasions, while avoiding CAS failures.
+%% TODO add execution time decreases for each architecture
 
 Usage of the inserted data is evaluated in the \emph{Reduce},
 \emph{Map} and \emph{Histogram} benchmark, where the latter --
@@ -1364,8 +1365,7 @@ Without additional synchronization, reading a single queue is not an
 option since elements have to be removed from the queue eventually and
 it is not clear to each reader when an element is no longer needed.
 With FlowPools, elements are implicitly garbage collected when no
-longer needed. Execution time decrease up to $95\%$ for $1000000$ on
-32-core Xeon, $P = 16$ (for $P \ge 8$).
+longer needed.
 
 Finally, to validate the last claim of garbage being implicitly
 collected, in the \textit{Comm} benchmark we create a pool in which a
@@ -3589,13 +3589,11 @@ threads which concurrently insert a total of $N$ elements. The
 inserted into the pool. Note that in the FlowPool implementation there
 may be as many threads computing the aggregation as there are
 different lanes -- elements from different lanes are batched together
-once the pool is sealed. Execution time decrease by up to $95\%$ for
-$10000000$ elements on 32-core Xeon, $P = 8$.
+once the pool is sealed.
 
 The \textit{Map} benchmark is similar to the \textit{Reduce}
 benchmark, but instead of reducing a value, each element is mapped
-into a new one and added to a second pool. Execution time decrease by
-up to $96\%$ for $10000000$ elements on 32-core Xeon, $P = 8$.
+into a new one and added to a second pool.
 
 \textbf{Scaling in Input Size} In figure~\ref{fig:eval-size-scaling}
 we can see that the Input, Map, Reduce and Histrogram benchmark all
@@ -3611,6 +3609,7 @@ performance gain due to fewer collisions. Benchmarks have shown (see
 fig~\ref{fig:eval-lane-factor}) that this yields no observable gain --
 in fact, this sometimes even decreased performance slightly.
 
+%% TODO redo this section
 \textbf{Performance Gain} As stated in the abstract, FlowPools -- or
 more precisely multi-lane FlowPools -- may reduce execution time by
 $53-97\%$. These figures have been obtained by comparing medians of
