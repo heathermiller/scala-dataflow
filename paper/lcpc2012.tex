@@ -1188,7 +1188,74 @@ We then proceed to show that operations are lock-free, i.e. that at
 least one thread completes after a finite number of steps.
 
 
-\include{determinism}
+\subsection{Determinism}
+
+In this section we aim to show that the FlowPool abstraction is
+\emph{deterministic} in the sense that a program will compute the same
+result (which can also be an error) regardless of the interleaving of
+concurrent operations. We only give an outline of the determinism
+proof here. More formal definitions, lemmas and proofs can be found in
+the appendix.
+
+The following definitions and the determinism theorem are based on the
+language shown in Figure~\ref{fig:syntax}. The semantics of our core
+language is defined using reduction rules which define transitions
+between \emph{execution states}. An execution state is a pair $T~|~P$
+where $T$ is a set of concurrent threads and $P$ is a set of
+FlowPools. Each thread executes a \emph{term} of the core language
+(typically a sequence of terms). For the definition of the reduction
+rules it suffices to represent the state of a thread as the (rest of)
+the term that it still has to execute; this means there is a
+one-to-one mapping between threads and terms. The semantics of
+\verb|append| is defined using the following reduction rule: (For
+brevity we omit most of the other reduction rules. A complete summary
+can be found in the appendix.)
+
+\infrule[\textsc{Append1}]
+{ t = p << v~;~t' \quad p = (vs, -1, cbs) \quad p' = (\set{v} \cup vs, -1, cbs)
+}
+{ \reduce {t, T} {p, P} {t', T} {p', P}
+}
+\noindent
+Append simply adds the value $v$ to the pool $p$, yielding a modified
+pool $p'$. Note that this rule can only be applied if the pool $p$ is
+not sealed (the seal size is $-1$). The rule for $foreach$ modifies
+the set of callback functions in the pool:
+
+\infrule[\textsc{Foreach2}]
+{ t = p~\texttt{foreach}~f~;~t' \quad p = (vs, n, cbs) \\
+  T' = \set{g(v)~|~g \in \set{f} \cup cbs, v \in vs} \quad p' = (vs, n, \set{f} \cup cbs)
+}
+{ \reduce {t, T} {p, P} {t', T, T'} {p', P}
+}
+\noindent
+This rule only applies if $p$ is sealed at size $n$. This means that
+no more elements will be appended to the pool. Therefore, an
+invocation of the newly registered callback $f$ is scheduled for each
+element $v$ in the pool. Each invocation creates a new thread in $T'$.
+
+Programs are built by first creating one or more FlowPools using
+\texttt{create}. Concurrent threads can then be started by (a)
+appending an element to a FlowPool, (b) sealing the FlowPool using
+\texttt{seal}, and (c) registering callback functions using
+\texttt{foreach}.
+
+\begin{definition}[Termination]
+A term $t$ terminates with result $P$ if its reduction ends in execution state $\set{nop}~|~P$.
+\end{definition}
+
+\begin{definition}[Interleaving]
+Consider the reduction of a term $t$: $T_1~|~P_1 \;\longrightarrow\; T_2~|~P_2 \;\longrightarrow\; \ldots \;\longrightarrow\; \set{\texttt{nop}}~|~P_n$. An \emph{interleaving} is a permutation 
+$T_{i_1}~|~P_{i_1} \;\longrightarrow\; T_{i_2}~|~P_{i_2} \;\longrightarrow\; \ldots \;\longrightarrow\; \set{\texttt{nop}}~|~P_{i_n}$ of that reduction.
+\end{definition}
+
+\begin{definition}[Determinism]
+The reduction of a term $t$ is \emph{deterministic} \emph{iff} either (a) $t$ does not terminate for any possible interleaving, or (b) $t$ always terminates with the same result for all possible interleavings.
+\end{definition}
+
+\begin{theorem}[Determinism of FlowPool]
+The reduction of terms $t$ is deterministic.
+\end{theorem}
 
 
 \section{Evaluation}
