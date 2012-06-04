@@ -1,29 +1,31 @@
 package scala.dataflow.bench
 
 import scala.dataflow._
-import scala.util.Random
+import java.util.concurrent.ThreadLocalRandom
 
-object FPUnsafeHistBench extends testing.Benchmark with Utils.Props {
+trait FPUnsafeHistBench extends testing.Benchmark with Utils.Props with FPBuilder {
   import Utils._
 
   val maxval = 100
   
   override def run() {
-    val pool = new FlowPool[Data]()
-    val builder = new Builder[Data](pool.initBlock)
-    val work = size
+    val pool = newFP[Data]
+    val builder = pool.builder
+    val work = size / par
     val bins = 5 to 20
-    def data = new Data(Random.nextInt(maxval))
-    var i = 0
+    def data = new Data(ThreadLocalRandom.current.nextInt(maxval))
 
     val res = bins.map(s => binning(s,pool))
-    
-    while (i < work) {
-      builder << data
-      i += 1
+
+    for (ti <- 1 to par) yield task {
+      var i = 0
+      while (i < work) {
+        builder << data
+        i += 1
+      }
     }
 
-    builder.seal(work)
+    builder.seal(size)
 
     res.foreach(_.blocking)
 
@@ -32,7 +34,7 @@ object FPUnsafeHistBench extends testing.Benchmark with Utils.Props {
   private def binning(count: Int, pool: FlowPool[Data]) = {
     // this is fast but unsafe
     val agg = Array.fill[Int](count)(0)
-    pool.doForAll { x =>
+    pool.foreach { x =>
       val ind = x.i * count / maxval
       agg(ind) = agg(ind) + 1            
     } map { x => agg }

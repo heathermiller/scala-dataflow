@@ -2,7 +2,7 @@ package scala.dataflow.bench
 
 import scala.dataflow.Utils
 
-trait QInsertBench extends testing.Benchmark with Utils.Props with QBuilder {
+trait QCommBench extends testing.Benchmark with Utils.Props with BQBuilder {
   import Utils._
 
   override def run() {
@@ -17,9 +17,19 @@ trait QInsertBench extends testing.Benchmark with Utils.Props with QBuilder {
         i += 1
       }    
     }
+    
+    val readers = for (ti <- 1 to par) yield task {
+      var i = 0
+      while (i < work) {
+        val elem = queue.take()
+        i += 1
+      }
+    }
 
     writers.foreach(_.join())
-
+    readers.foreach(_.join())
+    
+    println("---------------")
   }
   
 }
