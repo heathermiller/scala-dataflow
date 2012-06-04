@@ -1592,11 +1592,11 @@ hasElem(start, e) \Leftrightarrow \exists b \in reachable(start), e
 We say that the FlowPool \textbf{has a callback} $f$ at some time
 $t_0$ if and only if the relation $hasCallback(start, f)$ holds.
 
-\begin{equation*}
-hasCallback(start, f) \Leftrightarrow \forall b = last(start), b.array
-= x^P \cdot t \cdot y^N, x \in Elem, t = Terminal(seal, callbacks), f
-\in callbacks
-\end{equation*}
+\begin{eqnarray*}
+hasCallback(start, f) &\Leftrightarrow& \forall b = last(start), b.array
+= x^P \cdot t \cdot y^N, x \in Elem, \\
+& & t = Terminal(seal, callbacks), f \in callbacks
+\end{eqnarray*}
 
 We say that a callback $f$ in a FlowPool \textbf{will be called} for
 the element $e$ at some time $t_0$ if and only if the relation
@@ -1610,10 +1610,11 @@ t_1, (f, e) \in futures
 We say that the FlowPool is \textbf{sealed} at the size $s$ at some
 $t_0$ if and only if the relation $sealedAt(start, s)$ holds.
 
-\begin{equation*}
-sealedAt(start, s) \Leftrightarrow s \neq -1 \wedge \forall b = last(start), b.array
-= x^P \cdot t \cdot y^N, x \in Elem, t = Terminal(s, callbacks)
-\end{equation*}
+\begin{eqnarray*}
+sealedAt(start, s) &\Leftrightarrow& s \neq -1 \wedge \forall b = last(start), b.array
+= x^P \cdot t \cdot y^N, \\
+& &x \in Elem, t = Terminal(s, callbacks)
+\end{eqnarray*}
 
 \textbf{FlowPool operations} are \verb=append=, \verb=foreach= and
 \verb=seal=, and are defined by pseudocodes in figures ...
@@ -1657,31 +1658,38 @@ $\mathbb{A} = (elems, callbacks, seal)$ at time $t$ if and only if $\mathbb{P}(t
 
 
 \begin{definition}[Abstract pool operations]
-We say that an \textbf{abstract pool operation} $op$ applied to an
+We say that an \textbf{abstract pool operation} $op$ that is applied to some
 abstract pool $\mathbb{P}$ in abstract state $\mathbb{A}_0 = (elems_0, callbacks_0, seal_0)$ 
-at some time $t$ \textbf{changes} the abstract state of the abstract pool to $\mathbb{A} = (elems, callbacks, seal)$ 
-if $\exists t_0, \forall \tau, t_0 < \tau < t, \mathbb{P}(\tau) = \mathbb{A}_0$
+at some time $t$ \textbf{changes} the abstract state of the abstract
+pool to $\mathbb{A} = (elems, callbacks, seal)$ if $\exists t_0,
+\forall \tau, t_0 < \tau < t, \mathbb{P}(\tau) = \mathbb{A}_0$ 
 and $\mathbb{P}(t) = \mathbb{A}$.
 We denote this as $\mathbb{A} = op(\mathbb{A}_0)$.
 
 Abstract pool operation $foreach(f)$ changes the abstract state at $t_0$ from $(elems, callbacks, seal)$ 
 to $(elems, (f, \emptyset) \cup callbacks, seal)$. Furthermore:
 
-$\exists t_1 \geq t_0, \forall t_2 > t_1, \mathbb{P}(t_2) = (elems_2,
-callbacks_2, seal_2) \wedge \forall (f, called_2) \in callbacks_2,
-elems \subseteq called_2 \subseteq elems_2$
+\begin{eqnarray*}
+\exists t_1 \geq t_0, & & \forall t_2 > t_1, \mathbb{P}(t_2) = (elems_2,
+callbacks_2, seal_2) \\
+& & \wedge \forall (f, called_2) \in callbacks_2, elems \subseteq
+called_2 \subseteq elems_2
+\end{eqnarray*}
 
 Abstract pool operation $append(e)$ changes the abstract state at $t_0$ from
 $(elems, callbacks, seal)$ to $(\{e\} \cup elems, callbacks, seal)$. Furthermore:
 
-$\exists t_1 \geq t_0, \forall t_2 > t_1, \mathbb{P}(t_2) = (elems_2,
-callbacks_2, seal_2) \wedge \forall (f, called_2) \in callbacks_2,
-(f, called) \in callbacks \Rightarrow elem \in called_2$
+\begin{eqnarray*}
+\exists t_1 \geq t_0, & & \forall t_2 > t_1, \mathbb{P}(t_2) = (elems_2,
+callbacks_2, seal_2) \\
+& & \wedge \forall (f, called_2) \in callbacks_2, (f, called) \in
+callbacks \Rightarrow e \in called_2
+\end{eqnarray*}
 
-Abstract pool operation $seal(s)$ changes the abstract state at $t_0$ from
-$(elems, callbacks, seal)$ to $(elems, callbacks, s)$, assuming
-that $seal \in \{-1\} \cup \{s\}$ and $s \in \mathbb{N}_0$, and
-$|elems| \leq s$.
+Abstract pool operation $seal(s)$ changes the abstract state of the
+FlowPool at $t_0$ from $(elems, callbacks, seal)$ to $(elems,
+callbacks, s)$, assuming that $seal \in \{-1\} \cup \{s\}$ and $s \in
+\mathbb{N}_0$, and $|elems| \leq s$.
 \end{definition}
 
 
