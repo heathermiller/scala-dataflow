@@ -519,7 +519,6 @@ t    ::=                                                           & \mbox{terms
 \gap \texttt{create}~p                                   & \mbox{pool creation}  \\
 \gap p~\texttt{foreach}~f                             & \mbox{foreach}           \\
 \gap p~\texttt{seal}~n                                  & \mbox{seal}                \\
-\gap \texttt{nop}                                          & \mbox{no op}              \\
 \gap t_1~;~t_2                                               & \mbox{sequence}        \\
 \ea$
 
@@ -1233,13 +1232,13 @@ and \verb=seal= are consistent with the abstract pool semantics.
 FlowPool operations \verb=append= and \verb=seal= are linearizable.
 \end{theorem}
 
-We then proceed to show that operations are lock-free, i.e. that at
-least one thread completes after a finite number of steps.
+\begin{theorem}[Lock-freedom]
+FlowPool operations \verb=append=, \verb=foreach= and \verb=seal= are lock-free.
+\end{theorem}
 
 
-\subsection{Determinism}
-
-In this section we aim to show that the FlowPool abstraction is
+\textbf{Determinism.}
+We claim that the FlowPool abstraction is
 \emph{deterministic} in the sense that a program computes the same
 result (which can also be an error) regardless of the interleaving of
 concurrent operations. We give an outline of the determinism
@@ -1277,9 +1276,9 @@ the set of callback functions in the pool:
 { \reduce {t, T} {p, P} {t', T, T'} {p', P}
 }
 \noindent
-This rule only applies if $p$ is sealed at size $n$. This means that
-no more elements will be appended to the pool. Therefore, an
-invocation of the newly registered callback $f$ is scheduled for each
+This rule only applies if $p$ is sealed at size $n$, meaning that
+no more elements will be appended later. Therefore, an
+invocation of the new callback $f$ is scheduled for each
 element $v$ in the pool. Each invocation creates a new thread in $T'$.
 
 Programs are built by first creating one or more FlowPools using
@@ -1288,27 +1287,28 @@ appending an element to a FlowPool, (b) sealing the FlowPool
 and (c) registering callback functions (\texttt{foreach}).
 
 \begin{definition}[Termination]
-A term $t$ terminates with result $P$ if its reduction ends in execution state $\set{nop}~|~P$.
+A term $t$ terminates with result $P$ if its reduction ends in
+execution state $\set{t : t = \set{\epsilon}}~|~P$.
 \end{definition}
 
 \begin{definition}[Interleaving]
   Consider the reduction of a term $t$: $T_1~|~P_1 \;\longrightarrow\;
   T_2~|~P_2 \;\longrightarrow\; \ldots \;\longrightarrow\;
-  \set{\texttt{nop}}~|~P_n$. An \emph{interleaving} is a reduction of $t$
-  starting in execution state $T_1~|~P_1$ in which reduction rules are
+  \set{t : t = \set{\epsilon}}~|~P_n$. An \emph{interleaving} is a reduction of $t$
+  starting in $T_1~|~P_1$ in which reduction rules are
   applied in a different order.
 \end{definition}
 
-\begin{definition}[Valid Interleaving]
-An interleaving $S', c, S''$ of a reduction sequence $S$ is \emph{valid}
-\emph{iff} for any reduction step $c$ using rule (\textsc{Create}), if
-$c$ creates pool $p$, $p$ is not used in any reduction step in $S'$.
-\end{definition}
+%\begin{definition}[Valid Interleaving]
+%An interleaving $S', c, S''$ of a reduction sequence $S$ is \emph{valid}
+%\emph{iff} for any reduction step $c$ using rule (\textsc{Create}), if
+%$c$ creates pool $p$, $p$ is not used in any reduction step in $S'$.
+%\end{definition}
 
 \begin{definition}[Determinism]
 The reduction of a term $t$ is \emph{deterministic} \emph{iff} either
-(a) $t$ does not terminate for any valid interleaving, or (b) $t$ always
-terminates with the same result for all valid interleavings.
+(a) $t$ does not terminate for any interleaving, or (b) $t$ always
+terminates with the same result for all interleavings.
 \end{definition}
 
 \begin{theorem}[FlowPool Determinism]
@@ -2716,7 +2716,7 @@ of $CAS_{seal}$
 \end{proof}
 
 
-\section{Determinism}
+\section{Proof of Determinism}
 
 \subsection{Reduction rules}
 
@@ -2768,13 +2768,13 @@ of $CAS_{seal}$
 \subsection{Definitions}
 
 \begin{definition}[Termination]
-A term $t$ terminates with result $P$ if its reduction ends in execution state $\set{nop}~|~P$.
+A term $t$ terminates with result $P$ if its reduction ends in execution state $\set{t : t = \set{\epsilon}}~|~P$.
 \end{definition}
 
 \begin{definition}[Interleaving]
   Consider the reduction of a term $t$: $T_1~|~P_1 \;\longrightarrow\;
   T_2~|~P_2 \;\longrightarrow\; \ldots \;\longrightarrow\;
-  \set{\texttt{nop}}~|~P_n$. An \emph{interleaving} is a reduction of $t$
+  \set{t : t = \set{\epsilon}}~|~P_n$. An \emph{interleaving} is a reduction of $t$
   starting in execution state $T_1~|~P_1$ in which reduction rules are
   applied in a different order.
 \end{definition}
@@ -2800,16 +2800,169 @@ The reduction of a term $t$ is \emph{deterministic} \emph{iff} either (a) $t$ do
 The reduction of terms $t$ is deterministic.
 \end{theorem}
 
-\begin{proof}
+To prove this, we show that the reduction steps of every valid
+interleaving can be reordered in a way that does not change the
+termination, nor the result.
 The proof is based on the commutativity of transitions in the
-reduction. We construct the proof in the following steps:
-\begin{itemize}
-\item Given a reduction $S$ which terminates with result $P$, we show
-  that every valid interleaving of $S$ terminates with $P$.
-\item First, we show that $S$ is equivalent to a canonical
-  interleaving $S_c$, i.e., $S_c$ also terminates with result $P$.
-\item Second, we show that every valid interleaving is equivalent to $S_c$.
-\end{itemize}
+reduction.
+
+\begin{lemma}[Commutativity]\label{lemma-commutativity}
+Consider the reduction $R$ of a term $t$ and the two subsequent reduction
+steps based on reduction rules $R_1$ and $R_2$:
+
+\begin{equation*}
+\ldots \;\longrightarrow\; T_n~|~P_n \;\stackrel{R_1}{\longrightarrow}\; T_{n+1}~|~P_{n+1}
+\;\stackrel{R_2}{\longrightarrow}\; T_{n+2}~|~P_{n+2}
+\;\longrightarrow\; \ldots
+\end{equation*}
+
+We list the reduction rules for which it is true that switching these
+two reduction steps yields the following reduction $R'$:
+
+\begin{equation*}
+\ldots \;\longrightarrow\; T_n~|~P_n \;\stackrel{R_2'}{\longrightarrow}\; T_{n+1}'~|~P_{n+1}'
+\;\stackrel{R_1'}{\longrightarrow}\; T_{n+2}~|~P_{n+2}
+\;\longrightarrow\; \ldots
+\end{equation*}
+
+where the prefix and suffix of the reduction $R'$ are the same as in $R$.
+
+TODO
+\end{lemma}
+
+\begin{proof}
+TODO
+\end{proof}
+
+\begin{definition}[Canonical interleaving]
+Assume, without the loss of generality, that each \textsc{Create}
+rule assigns a unique identifier to each created pool.
+Assume any ordering on this set of identifiers.
+
+We define the following ordering \textbf{comes-before} between threads as follows.
+There exists one \textbf{main thread} defined by the term $t$ being
+reduced.
+The main thread comes before any other thread.
+For all other threads $T_p$ and $T_q$ let $p$ and $q$ be the terms
+with which the threads first appear in some execution state.
+Thread $T_p$ comes before $T_q$ \emph{iff} $p$ comes before $q$ in the
+lexicographic ordering.
+
+Note that in any interleaving we can identify the first reduction step
+in which an arbitrary thread $T_p$ appears.
+We can recursively find the rest of its reduction steps.
+This means that we can assign the index $p$ to every thread in the set
+of threads in every execution state later\footnote{We claim that in
+our programming model this choice is unique, but even if this was
+not the case, we could pick either thread in the case of an ambiguity
+and do so without the loss of generality.}, and thus uniquely identify
+every thread in any execution state.
+
+We define the \textbf{canonical order of the reduction steps of a
+thread} as follows:
+\begin{enumerate}
+\item First apply all the \textsc{Create} steps in the order of the pool
+identifiers.
+\item Then apply all the \textsc{Append} steps in the order of the pool
+identifiers and some ordering of the elements being
+appended\footnote{Any countable set has some total ordering.}.
+\item Then apply all the \textsc{Foreach} steps in the order of the pool
+identifiers and the lexicographic ordering on the callback term.
+\item Finally, apply all the \textsc{Seal} steps in the order of the
+pool identifiers and the sizes of the seal.
+\end{enumerate}
+
+We define the \textbf{canonical order of the reduction steps}
+as follows:
+\begin{enumerate}
+\item First apply all the reduction steps of the main thread $t$ in
+  the canonical order.
+\item Identify all the threads created in the previous step. Take each
+  of these threads in the above defined comes-before ordering and
+  apply all their reduction steps in the canonical order.
+\item Repeat the last step until there are no more applicable
+  reduction steps.
+\end{enumerate}
+
+A \textbf{canonical interleaving} $S_c$ is an interleaving of the
+reduction of a term $t$, such that reduction steps are applied in the
+canonical order.
+\end{definition}
+
+\begin{proposition}
+Every canonical interleaving $S_c$ is a valid interleaving.
+\end{proposition}
+
+\begin{lemma}[Canonicity]\label{lemma-canonical-interleaving}
+Every valid interleaving of the reduction of a term $t$ can have its
+execution steps reordered to the canonical interleaving $S_c$ so that
+neither the termination nor the result is changed.
+\end{lemma}
+
+\begin{proof}
+Consider an arbitrary valid interleaving $S$.
+We know that the starting execution state is $\set{t}~|~\emptyset$, where
+$t$ is the term being reduced.
+Here, $t$ is the main thread.
+As argued before, we can recursively identify all the reduction steps
+in the interleaving $S$ in which the main thread executes.
+
+We start by identifying all the \textsc{Create} steps of the main
+thread.
+Relying on the results from \ref{lemma-commutativity} we create a new
+interleaving in which the \textsc{Create} steps appear at the
+beginning in the canonical order.
+We know that the state after the last \textsc{Create} step in the
+original interleaving does not change by reordering the steps.
+Therefore, neither the termination nor the result are changed in the
+new interleaving.
+The new interleaving is trivially valid.
+
+We then identify all the \textsc{Append} steps of the main thread.
+We know from our programming model that each of these steps can only
+refer to FlowPools from the \textsc{Create} steps we have moved to the
+beginning of the interleaving.
+For this reason we can reorder the \textsc{Append} steps of the main
+thread so that they appear after the \textsc{Create} steps and
+maintain a valid interleaving.
+Again, from \ref{lemma-commutativity} the new interleaving has the
+same termination and the result.
+We repeat the same for the \textsc{Foreach} and \textsc{Seal} steps.
+
+At this point the new interleaving is the prefix of a canonical
+interleaving.
+From the commutativity rules we know that the main thread still
+created the same set of threads as in the original interleaving.
+We order the newly created threads according to the comes-before
+ordering introduced earlier and identify each of these threads in the
+original interleaving.
+We recursively apply the same reordering of steps for the newly
+created threads, traversing them in the comes-before ordering.
+
+We claim that every reduction in our programming model has a finite
+number of steps, so this procedure will be completed eventually,
+yielding a canonical interleaving.
+
+More generally, if our programming model supported recursion, we
+could have infinite reductions.
+In that case, every time we produce a new interleaving in the process
+above, we extend the prefix of the interleaving which is the same as
+in the canonical interleaving.
+Furthermore, every time we produce a new interleaving in the process
+above, there is an execution state after the last reordered reduction
+step which is the same in both the new and the old interleaving,
+meaning that all the subsequent execution states are the same in both
+interleavings (by \ref{lemma-commutativity}).
+This means that for any reduction of a term $t$ we can produce a new
+interleaving with a prefix of an arbitrary length which corresponds to
+the prefix of the canonical interleaving, in the same time not
+changing the non-termination.
+Hence, every reduction of a term $t$ does not terminate.
+\end{proof}
+
+\begin{proof}[Determinism]
+Directly from the definition of determinism and
+\ref{lemma-canonical-interleaving}.
 \end{proof}
 
 
