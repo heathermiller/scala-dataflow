@@ -171,6 +171,7 @@
 % their surnames. This ensures that the names appear correctly in
 % the running heads and the author index.
 %
+%% TODO add authors
 \author{Authors}
 %
 % \author{Alfred Hofmann%
@@ -214,7 +215,9 @@ proof of correctness, showing that the implementation is linearizable, lock-
 free, and deterministic. Finally, we provide experimental results which
 compare our \emph{FlowPool} against corresponding operations on other popular
 concurrent data structures, and show that in addition to offering new
-capabilities, FlowPools perform XYZ-XYZ\% better than their blocking counterparts.
+capabilities, FlowPools perform XYZ-XYZ\% better than comparable
+concurrent queue data structures in the Java standard library.
+%% TODO add values
 \keywords{dataflow, concurrent data-structure, deterministic parallelism}
 \end{abstract}
 
@@ -1334,7 +1337,7 @@ Java standard library.
 We can see that both single-lane FlowPools and concurrent queues do
 not scale well with the number of concurrent threads -- due to cache
 line collisions they slow down rapidly, particularly on the i7
-architecture.
+architecture. % TODO can we show that cache line collisions are the reason? -- tobias
 On the other hand, the multi-lane FlowPools scale well, as threads
 write to different lanes and hence different cache lines in
 most occasions.
@@ -1363,6 +1366,7 @@ benchmark is that the multiple histograms are produced for FlowPools
 by invoking several \verb=aggregate= operations while with queues each
 element has to be written to several queues -- one for each
 histogram.
+%% TODO this is important. Can we emphasize this more? -- tobias
 Without additional synchronization, reading a single queue is not an
 option since elements have to be removed from the queue eventually and
 it is not clear to each reader when an element is no longer needed by
@@ -1510,6 +1514,8 @@ continuations.
 \bibliography{bib}
 
 \appendix
+\let\oldsec\section
+\renewcommand{\section}[1]{\clearpage \oldsec{#1}}
 \section{Proof of Correctness}
 
 
@@ -3430,6 +3436,13 @@ as a single-assignment map.
 
 
 
+
+
+\section{Additional Evaluation}
+%% TODO
+% move stuff from above
+% justify number in abstract
+% chache line transfer collision argument
 
 \end{document}
 
