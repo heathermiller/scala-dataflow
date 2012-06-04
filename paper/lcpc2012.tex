@@ -215,9 +215,9 @@ proof of correctness, showing that the implementation is linearizable, lock-
 free, and deterministic. Finally, we provide experimental results which
 compare our \emph{FlowPool} against corresponding operations on other popular
 concurrent data structures, and show that in addition to offering new
-capabilities, FlowPools perform XYZ-XYZ\% better than comparable
+capabilities, FlowPools may reduce execution time by $53 - 97\%$ in
+highly parallelized environments with respect to comparable
 concurrent queue data structures in the Java standard library.
-%% TODO add values
 \keywords{dataflow, concurrent data-structure, deterministic parallelism}
 \end{abstract}
 
@@ -3453,6 +3453,16 @@ performance gain due to fewer collisions. Benchmarks have shown (see
 fig~\ref{fig:eval-lane-factor}) that this yields no observable gain --
 in fact, this sometimes even decreased performance slightly.
 
+\textbf{Performance Gain} As stated in the abstract, FlowPools -- or
+more precisely multi-lane FlowPools -- may reduce execution time by
+$53-97\%$. These figures have been obtained by comparing medians of
+execution times for each configuration with $P = 8$ (the highest level
+of parallelism we have for all architectures), both for multi-lane
+FlowPools and the faster of linked transfer queues and concurrent
+linked queues. The higher bound results from the insert benchmark on
+32-core Xeon with $5000000$ insertions. The lower bound results from
+the histogram benchmark on UltraSPARC T2 with $500000$ elements.
+
 \textbf{Methodology} All the presented configurations have been
 measured $20$ times, where the $5$ first values have been discarded to
 let the JIT stabilize. Aggregated values are always medians. The
@@ -3462,7 +3472,6 @@ flags for the JavaVM: \texttt{-Xmx2048m -Xms2048m -XX:+UseCondCardMark
   -verbose:gc -XX:+PrintGCDetails -server}.
 
 %% TODO
-% justify number in abstract
 % chache line transfer collision argument
 
 %% TODO captions OK? (also in 6. Evaluation)
