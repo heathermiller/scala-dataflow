@@ -5,6 +5,38 @@ source('panel_fcts.R')
 
 library(lattice)
 
+### Display hist only diag
+## Not yet finished. TODO: legend (& input size normalization?)
+xyplot(time ~ factor(par), groups = interaction(arch,imptype),
+       subset = ave(size, btype, machine, FUN = max) == size & lanef == 1 & btype == "Histogram",
+       data = mdat,
+       pch = rep(c(1,2,4,5), 3),
+       lty = rep(c(1,2,3), c(3,3,3)),
+       type = "o",
+       col = "black",
+       scale = list(y = list(log = 10)),
+       legend = list(
+         top = list(
+           fun = draw.key,
+           x = -10,
+           y = 0,
+           args = list(key = list(
+                         points = list(col = 1:2),
+                         text = list("foo","bar"))
+             )
+           ),
+         bottom = list(
+           fun = draw.key,
+           x = -10,
+           y = 0,
+           args = list(key = list(
+                         points = list(col = 1:2),
+                         text = list("foo","bar"))
+             )
+           )
+         )
+       )
+
 
 ### Display CPU-scaling of Qs
 # size == max & lanef == 1
