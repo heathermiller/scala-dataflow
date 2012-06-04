@@ -1342,14 +1342,13 @@ most occasions.
 The \textit{Reduce} benchmark starts $P$ threads which concurrently 
 insert a total of $N$ elements. The \verb=aggregate= operation is used
 to reduce the set of values inserted into the pool.
-In the FlowPool implementation there are as many threads computing the
-aggregation as there are different lanes -- elements from different
-lanes are batched together.
-By default the number of lanes is set to the parallelism level $P$,
-but we varied the number of lanes to $1.5 P$, $2P$, $3P$ and $4P$ with
-no observable gain -- in fact, this sometimes decreased performance
-slightly.
-
+% In the FlowPool implementation there are as many threads computing the
+% aggregation as there are different lanes -- elements from different
+% lanes are batched together.
+% By default the number of lanes is set to the parallelism level $P$,
+% but we varied the number of lanes to $1.5 P$, $2P$, $3P$ and $4P$ with
+% no observable gain -- in fact, this sometimes decreased performance
+% slightly.
 The \textit{Map} benchmark is similar to the \textit{Reduce} benchmark.
 Instead of reducing a value, each element is mapped into a new
 one and added into a different pool.
