@@ -1252,8 +1252,14 @@ A term $t$ terminates with result $P$ if its reduction ends in execution state $
   applied in a different order.
 \end{definition}
 
+\begin{definition}[Valid Interleaving]
+An interleaving $S', c, S''$ of a reduction sequence $S$ is \emph{valid}
+\emph{iff} for any reduction step $c$ using rule (\textsc{Create}), if
+$c$ creates pool $p$, $p$ is not used in any reduction step in $S'$.
+\end{definition}
+
 \begin{definition}[Determinism]
-The reduction of a term $t$ is \emph{deterministic} \emph{iff} either (a) $t$ does not terminate for any possible interleaving, or (b) $t$ always terminates with the same result for all possible interleavings.
+The reduction of a term $t$ is \emph{deterministic} \emph{iff} either (a) $t$ does not terminate for any valid interleaving, or (b) $t$ always terminates with the same result for all valid interleavings.
 \end{definition}
 
 \begin{theorem}[Determinism of FlowPool]
@@ -3325,8 +3331,11 @@ A term $t$ terminates with result $P$ if its reduction ends in execution state $
 \end{definition}
 
 \begin{definition}[Interleaving]
-Consider the reduction of a term $t$: $T_1~|~P_1 \;\longrightarrow\; T_2~|~P_2 \;\longrightarrow\; \ldots \;\longrightarrow\; \set{\texttt{nop}}~|~P_n$. An \emph{interleaving} is a permutation 
-$T_{i_1}~|~P_{i_1} \;\longrightarrow\; T_{i_2}~|~P_{i_2} \;\longrightarrow\; \ldots \;\longrightarrow\; T_{i_n}~|~P_{i_n}$ of that reduction.
+  Consider the reduction of a term $t$: $T_1~|~P_1 \;\longrightarrow\;
+  T_2~|~P_2 \;\longrightarrow\; \ldots \;\longrightarrow\;
+  \set{\texttt{nop}}~|~P_n$. An \emph{interleaving} is a reduction of $t$
+  starting in execution state $T_1~|~P_1$ in which reduction rules are
+  applied in a different order.
 \end{definition}
 
 \begin{definition}[Valid Interleaving]
