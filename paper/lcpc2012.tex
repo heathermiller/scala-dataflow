@@ -206,16 +206,16 @@
 \begin{abstract}
 Implementing correct and deterministic parallel programs is challenging. Even
 though concurrency constructs exist in popular programming languages to
-facilitate the task of deterministic parallel programming, they're often too
+facilitate the task of deterministic parallel programming, they are often too
 low level, or do not compose well due to underlying blocking mechanisms. In
 this paper, we present the design and implementation of a fundamental data
 structure for composable deterministic parallel dataflow computation through
 the use of functional programming abstractions. Additionally, we provide a
-proof of correctness, showing that the implementation is linearizable,
-lock-free, and deterministic. Finally, we provide experimental results which
-compare our \emph{FlowPool} against corresponding operations on other popular
+correctness proof, showing that the implementation is linearizable,
+lock-free, and deterministic. Finally, we show experimental results which
+compare our \emph{FlowPool} against corresponding operations on other 
 concurrent data structures, and show that in addition to offering new
-capabilities, FlowPools may reduce insertion time by $49 - 54\%$ on a
+capabilities, FlowPools reduce insertion time by $49 - 54\%$ on a
 4-core i7 machine with respect to comparable concurrent queue data
 structures in the Java standard library.
 \keywords{dataflow, concurrent data-structure, deterministic parallelism}
@@ -239,7 +239,7 @@ than programs based on mainstream concurrency constructs, such as shared-memory
 threads and locks, as programmers are only required to specify data and
 control dependencies. This allows one to reason sequentially about the
 intended behavior of their program, meanwhile enabling the underlying
-framework to automatically and effectively extract parallelism.
+framework to effectively extract parallelism.
 
 In this paper, we present the design and implementation of FlowPools, a
 fundamental dataflow collections abstraction which can be used as a building
@@ -248,8 +248,8 @@ dataflow programs. Our FlowPool abstraction is backed by an efficient
 non-blocking data structure, which we go on to prove is lock-free.
 
 As a result, our data structure benefits from the increased robustness
-provided by lock freedom~\cite{Herlihy90}, since its operations are unaffected
-by thread delays. We provide a lock freedom proof, which guarantees progress
+provided by lock-freedom~\cite{Herlihy90}, since its operations are unaffected
+by thread delays. We provide a lock-freedom proof, which guarantees progress
 regardless of the behavior, including the failure, of concurrent threads.
 
 % I don't like how it says "we go on to show"
@@ -264,14 +264,14 @@ become available.
 Finally, we show that FlowPools are able to overcome practical issues, such as
 out-of-memory errors, thus enabling programs based upon FlowPools to run
 indefinitely. By using a \textit{builder} abstraction, instead of something
-like iterators or streams (which either lead to non-determinism or require
-that all elements stay in memory) we are able to garbage collect parts of the
+like iterators or streams (which can lead to non-determinism)
+we are able to garbage collect parts of the
 data structure we no longer need, thus reducing memory consumption.
 
 Our contributions are the following:
 \begin{enumerate}
-\item The design and implementation\footnote{http://ASSEMBLA-REPO-URL-HERE} 
-in Scala of a parallel dataflow abstraction and underlying data structure that 
+\item The design and Scala implementation\footnote{http://ASSEMBLA-REPO-URL-HERE} 
+of a parallel dataflow abstraction and underlying data structure that 
 is deterministic, lock-free, \& composable.
 \item Proofs of lock-freedom, linearizability, and determinism.
 \item Detailed benchmarks comparing the performance of our FlowPools against
@@ -503,6 +503,35 @@ resulting data structures. For a more formal definition and proof, see section
 % program, then it is guaranteed to occur in every run of the program. However,
 % if there are no exceptions, then the program is guaranteed to be
 % deterministic.
+
+\smallrulenames
+
+\begin{figure}[t]
+%\figurebox{
+%{\bf Syntax}\medskip
+
+%$\ba{l@{\hspace{2mm}}|@{\hspace{2mm}}l}
+%$\ba[t]{l}
+
+$\ba[t]{l@{\hspace{2mm}}l}
+t    ::=                                                           & \mbox{terms}              \\
+\gap p << v                                                  & \mbox{append}           \\
+\gap \texttt{create}~p                                   & \mbox{pool creation}  \\
+\gap p~\texttt{foreach}~f                             & \mbox{foreach}           \\
+\gap p~\texttt{seal}~n                                  & \mbox{seal}                \\
+\gap t_1~;~t_2                                               & \mbox{sequence}        \\
+\ea$
+
+$\ba{l@{\hspace{2mm}}|@{\hspace{2mm}}l@{\hspace{2mm}}l}
+p \in \set{(vs, \sigma, cbs)~|~vs \subseteq Elem, \sigma \in \set{-1} \cup \mathbb{N}, cbs \subset Elem \Rightarrow Unit} & v \in Elem \\
+f \in Elem \Rightarrow Unit & n \in \mathbb{N}
+\ea$
+
+%\ea$
+
+%}
+\caption{Syntax}\label{fig:syntax}
+\end{figure}
 
 
 
@@ -2308,7 +2337,7 @@ By \ref{lemma-append}, after invoking \verb=append=, a consistency
 change occurs after a finite number of steps. Likewise, by 
 \ref{lemma-finite-steps-consistency-change}, after invoking \verb=seal=, a consistency
 change occurs after a finite number of steps. And finally, by
-\ref{lemma-foreach},
+\ref{lemma-foreach-cons},
 after invoking \verb=foreach=, a consistency change likewise
 occurs after a finite number of steps.
 
@@ -2706,10 +2735,10 @@ showed will successfully complete in a finite number of steps.
 \end{proof}
 
 %==============================
-% Lemma \ref{lemma-foreach} (FOREACH: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
+% Lemma \ref{lemma-foreach-cons} (FOREACH: FINITE # STEPS BEFORE CONSISTENCY CHANGE)
 %==============================
 
-\begin{lemma}[Foreach]\label{lemma-foreach}
+\begin{lemma}[Foreach]\label{lemma-foreach-cons}
 After invoking \verb=foreach(fun)=, a consistency changing instruction will
 be completed after a finite number of steps.
 \end{lemma}
@@ -2894,7 +2923,7 @@ table of rules applies.
   \hline
   \textsc{Foreach2} & \textsc{Seal2} & \textsc{Seal2} & \textsc{Foreach2} \\
   \hline
-  \textsc{Seal1} & \textsc{Append2} & \textsc{Append1} & \textsc{Seal2} \\
+  \textsc{Seal1} & \textsc{Append2} & \textsc{Append1} & \textsc{Seal1} \\
   \hline
   \textsc{Seal1} & \textsc{Foreach2} & \textsc{Foreach1} & \textsc{Seal1} \\
   \hline
@@ -3586,7 +3615,6 @@ def sum()
   aggregate(0)(_ + _) \{
     _ + _
   \}
-
 
 
 def product()
