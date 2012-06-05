@@ -420,6 +420,8 @@ which work together to ensure that resulting programs are deterministic.
 \begin{enumerate}
 \item Data elements in FlowPools are unordered.
 \item Operations passed to FlowPools must be pure and associative.
+%% TODO, what does this mean? operations to foreach may have side
+%% effects (n.b. writing into another flowpool) -- tobias
 \item All callbacks are eventually executed on all elements.
 \end{enumerate}
 
