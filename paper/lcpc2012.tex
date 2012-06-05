@@ -211,8 +211,8 @@ low level, or do not compose well due to underlying blocking mechanisms. In
 this paper, we present the design and implementation of a fundamental data
 structure for composable deterministic parallel dataflow computation through
 the use of functional programming abstractions. Additionally, we provide a
-proof of correctness, showing that the implementation is linearizable, lock-
-free, and deterministic. Finally, we provide experimental results which
+proof of correctness, showing that the implementation is linearizable,
+lock-free, and deterministic. Finally, we provide experimental results which
 compare our \emph{FlowPool} against corresponding operations on other popular
 concurrent data structures, and show that in addition to offering new
 capabilities, FlowPools may reduce insertion time by $49 - 54\%$ on a
@@ -243,9 +243,9 @@ framework to automatically and effectively extract parallelism.
 
 In this paper, we present the design and implementation of FlowPools, a
 fundamental dataflow collections abstraction which can be used as a building
-block to build larger and more complex \textit{deterministic} and parallel
-dataflow programs. Our FlowPool abstraction is backed by an efficient non-
-blocking data structure, which we go on to prove is lock-free.
+block for larger and more complex \textit{deterministic} and parallel
+dataflow programs. Our FlowPool abstraction is backed by an efficient
+non-blocking data structure, which we go on to prove is lock-free.
 
 As a result, our data structure benefits from the increased robustness
 provided by lock freedom~\cite{Herlihy90}, since its operations are unaffected
@@ -271,10 +271,10 @@ data structure we no longer need, thus reducing memory consumption.
 Our contributions are the following:
 \begin{enumerate}
 \item The design and implementation\footnote{http://ASSEMBLA-REPO-URL-HERE} 
-in Scala of A parallel dataflow abstraction and underlying data structure that 
+in Scala of a parallel dataflow abstraction and underlying data structure that 
 is deterministic, lock-free, \& composable.
 \item Proofs of lock-freedom, linearizability, and determinism.
-\item Detailed benchmarks comparing the performance our FlowPools against
+\item Detailed benchmarks comparing the performance of our FlowPools against
 other popular concurrent data structures.
 \end{enumerate}
 
@@ -396,12 +396,12 @@ of a directed acyclic computation graph (DAG), in which the operations to be
 performed are registered with the FlowPool.
 
 Nodes in this directed acyclic graph are data containers which are first class
-values. This makes it possible to use FlowPools as arguments or to receive
+values. This makes it possible to use FlowPools as function arguments or to receive
 them as return values. Edges, on the other hand, can be thought of as
 combinators or higher-order functions whose associated functions are the
 previously-mentioned operations that are registered with the FlowPool. In
 addition to providing composability, this means that the DAG does not have to
-be specified at compile time, but can be generated dynamically at runtime
+be specified at compile time, but can be generated dynamically at run time
 instead.
 
 This structure allows for complete asynchrony, allowing the runtime to extract
@@ -423,13 +423,13 @@ which work together to ensure that resulting programs are deterministic.
 \item All callbacks are eventually executed on all elements.
 \end{enumerate}
 
-As previously alluded to, the main reason for these properties is to guarantee
-determinism in the following sense.
+%As previously alluded to, the main reason for these properties is to guarantee
+%determinism in the following sense.
 
 \textbf{Determinism}. FlowPools are deterministic in the sense that all
 execution schedules either lead to non-termination (\textit{e.g.}, an
 exception), or no difference can be observed in the final state of the
-resulting data structures. For a more formal definition, see section
+resulting data structures. For a more formal definition and proof, see section
 \ref{sec:correctness}.
 
 %== PREVIOUS MODEL OF COMPUTATION TEXT ==
@@ -502,37 +502,6 @@ resulting data structures. For a more formal definition, see section
 % if there are no exceptions, then the program is guaranteed to be
 % deterministic.
 
-\subsection{Syntax and operations}
-
-\smallrulenames
-
-\begin{figure}[t]
-%\figurebox{
-%{\bf Syntax}\medskip
-
-%$\ba{l@{\hspace{2mm}}|@{\hspace{2mm}}l}
-%$\ba[t]{l}
-
-$\ba[t]{l@{\hspace{2mm}}l}
-t    ::=                                                           & \mbox{terms}              \\
-\gap p << v                                                  & \mbox{append}           \\
-\gap \texttt{create}~p                                   & \mbox{pool creation}  \\
-\gap p~\texttt{foreach}~f                             & \mbox{foreach}           \\
-\gap p~\texttt{seal}~n                                  & \mbox{seal}                \\
-\gap t_1~;~t_2                                               & \mbox{sequence}        \\
-\ea$
-
-$\ba{l@{\hspace{2mm}}|@{\hspace{2mm}}l@{\hspace{2mm}}l}
-p \in \set{(vs, \sigma, cbs)~|~vs \subseteq Elem, \sigma \in \set{-1} \cup \mathbb{N}, cbs \subset Elem \Rightarrow Unit} & v \in Elem \\
-f \in Elem \Rightarrow Unit & n \in \mathbb{N}
-\ea$
-
-%\ea$
-
-%}
-\caption{Syntax}\label{fig:syntax}
-\end{figure}
-
 
 
 \section{Programming Interface}
@@ -544,7 +513,7 @@ handful of functional combinators and other basic operations defined on
 FlowPools.
 
 \textbf{Append (\texttt{<<})}. The most fundamental of all
-operations of on FlowPools is the append operation. As its name suggests, it
+operations on FlowPools is the append operation. As its name suggests, it
 simply takes an argument of type \texttt{Elem} and appends it to a given
 FlowPool. 
 
@@ -567,7 +536,8 @@ Since they can be manipulated by several threads, they allow
 nondeterministic execution.
 
 Another way to traverse the elements is to provide a higher-level
-\verb=foreach= operations which takes a user-specified function and
+\verb=foreach= operation which takes a user-specified function as an
+argument and
 applies it to every element.
 To ensure determinism, it is called for every element that is
 eventually in the FlowPool, rather than only those present
@@ -1263,6 +1233,35 @@ operation is guaranteed to be completed.
 FlowPool operations \verb=append=, \verb=foreach= and \verb=seal= are lock-free.
 \end{theorem}
 
+
+\smallrulenames
+
+\begin{figure}[t]
+%\figurebox{
+%{\bf Syntax}\medskip
+
+%$\ba{l@{\hspace{2mm}}|@{\hspace{2mm}}l}
+%$\ba[t]{l}
+
+$\ba[t]{l@{\hspace{2mm}}l}
+t    ::=                                                           & \mbox{terms}              \\
+\gap p << v                                                  & \mbox{append}           \\
+\gap \texttt{create}~p                                   & \mbox{pool creation}  \\
+\gap p~\texttt{foreach}~f                             & \mbox{foreach}           \\
+\gap p~\texttt{seal}~n                                  & \mbox{seal}                \\
+\gap t_1~;~t_2                                               & \mbox{sequence}        \\
+\ea$
+
+$\ba{l@{\hspace{2mm}}|@{\hspace{2mm}}l@{\hspace{2mm}}l}
+p \in \set{(vs, \sigma, cbs)~|~vs \subseteq Elem, \sigma \in \set{-1} \cup \mathbb{N}, cbs \subset Elem \Rightarrow Unit} & v \in Elem \\
+f \in Elem \Rightarrow Unit & n \in \mathbb{N}
+\ea$
+
+%\ea$
+
+%}
+\caption{Syntax}\label{fig:syntax}
+\end{figure}
 
 \textbf{Determinism.}
 We claim that the FlowPool abstraction is
