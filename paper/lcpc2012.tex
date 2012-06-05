@@ -626,17 +626,10 @@ To begin with, in addition to a default FlowPool constructor, it is
 convenient to have generators which create certain types of pools.
 In a dataflow graph FlowPools created using generators
 are source nodes.
-As a simple example, \verb=tabulate= creates a sequence of elements
+As a simple example, \verb=tabulate= (see below) creates a sequence of elements
 by applying a user-specified function \verb=f= to each natural number.
 One can imagine more complicated generators, adding elements from a
 network socket or a file.
-
-Generator \verb=tabulate= starts by creating a FlowPool of an
-arbitrary type \verb=T= and creating its builder instance.
-It then starts an asynchronous computation using the \verb=future=
-construct, which recursively applies \verb=f= to each number and
-appends it to the builder.
-Finally, the reference to the pool is returned.
 
 \noindent
 \begin{minipage}[b]{4.2 cm}
@@ -687,20 +680,28 @@ def foreach[U](f: T => U)
 \end{alltt}
 \end{minipage}
 
-A typical higher-level collection operation \verb=map= is used to
+The \verb=tabulate= generator starts by creating a FlowPool of an
+arbitrary type \verb=T= and creating its builder instance.
+It then starts an asynchronous computation using the \verb=future=
+construct, which recursively applies \verb=f= to each number and
+appends it to the builder.
+Finally, the reference to the pool is returned.
+
+ A typical higher-level collection operation \verb=map= is used to
 map each element of a dataset to produce a new one.
-This corresponds to chaining the nodes in the dataflow graph.
-We implement it by traversing the elements of \verb=this= FlowPool and
+This corresponds to chaining the nodes in a dataflow graph.
+We implement it by traversing the elements of the receiver FlowPool (\verb=this=)
+and
 appending each mapped element to the builder.
-The \verb=for= loop is the syntactic sugar for calling the
+The \verb=for= loop is syntactic sugar for calling the
 \verb=foreach= method on \verb=this=.
-We assume that the \verb=foreach= return value \verb=Future[Int]=
+We assume that the \verb=foreach= return type \verb=Future[Int]=
 has \verb=map= and \verb=flatMap= operations, which are executed
 once the future value becomes available.
-The \verb=Future.map= above ensures that if the \verb=this= pool is ever
+The \verb=Future.map= above ensures that if the current pool (\verb=this=) is ever
 sealed, the mapped pool is sealed to the appropriate size.
 
-As argued before, the \verb=foreach= can be expressed in terms of a
+As argued before, \verb=foreach= can be expressed in terms of
 \verb=aggregate= by accumulating the number of elements and invoking the
 callback \verb=f= each time.
 We further show that some patterns cannot be expressed in terms of a mere
@@ -777,21 +778,21 @@ The \verb=flatMap= operation retrieves a pool for each element of
 \verb=this= pool and adds its elements to the resulting pool.
 Given two FlowPools, it can be used to generate the cartesian product
 of their elements.
-The implementation is similar to that of the \verb=filter=,
+The implementation is similar to that of \verb=filter=,
 but we reduce the size on the future values of the sizes, because each
 intermediate pool may not yet be sealed.
 %Implementing this operation is sufficient to show that a FlowPool is
 %a monad.
-The \verb=union= operation produces a new pool which has elements of
+The operation \verb=q union r= produces a new pool which has elements of
 both pool \verb=q= and pool \verb=r=.
 
 The last two operations correspond to joining nodes in the dataflow
 graph.
 Note that if we could somehow merge the two different \verb=foreach=
 loops to implement the third join type \verb=zip=, we would
-yield a nondeterministic operation.
+obtain a nondeterministic operation.
 The programming model does not allow us to do so, however.
-The \verb=zip= is more suited for data structures with deterministic ordering,
+The \verb=zip= function is more suited for data structures with deterministic ordering,
 such as Oz streams -- which would in turn have a nondeterministic \verb=union=.
 
 
