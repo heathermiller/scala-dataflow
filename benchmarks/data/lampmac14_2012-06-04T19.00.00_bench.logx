@@ -1,0 +1,18 @@
+lampmac14	v4	MLFPCommBench	1	1	2000000	scala.dataflow.bench.MLFPCommBench$	138	149	66	86	97	97	95	96	95	96
+lampmac14	v4	MLFPCommBench	1	1	4000000	scala.dataflow.bench.MLFPCommBench$	252	189	180	188	179	178	181	181	180	175
+lampmac14	v4	MLFPCommBench	1	1	12000000	scala.dataflow.bench.MLFPCommBench$	644	531	527	527	518	516	529	520	524	516
+lampmac14	v4	MLFPCommBench	1	1	25000000	scala.dataflow.bench.MLFPCommBench$	1216	1118	1087	1096	1077	1076	1153	1105	1124	1124
+lampmac14	v4	MLFPCommBench	1	1	50000000	scala.dataflow.bench.MLFPCommBench$	2394	2291	2192	2154	2171	2158	2306	2395	2337	2336
+lampmac14	v4	MLFPCommBench	1	1	100000000	scala.dataflow.bench.MLFPCommBench$	4808	4533	4329	4302	4386	4406	5630	4375	4412	4404
+lampmac14	v4	MLFPCommBench	1	1	200000000	scala.dataflow.bench.MLFPCommBench$	12354	12148	12417	12422	12086	12176	12149	12144	12101	12108
+lampmac14	v4	MLFPCommBench	1	1	400000000	scala.dataflow.bench.MLFPCommBench$	17656	17639	17487	16961	17044	17007	17022	16967	17507	17482
+lampmac14	v4	MLFPCommBench	1	1	800000000	scala.dataflow.bench.MLFPCommBench$	35890	35052	34280	36067	33642	34449	34767	34510	33597	34588
+lampmac14	v4	LTQCommBench	1	1	800000000	scala.dataflow.bench.LTQCommBench$	87639	87369	88190	88454	93694	89953	87586	88155	88576	89009
+lampmac14	v4	LTQCommBench	1	1	400000000	scala.dataflow.bench.LTQCommBench$	45123	46093	47650
+lampmac14	v4	LTQCommBench	1	1	200000000	scala.dataflow.bench.LTQCommBench$	22487	20929	23059
+lampmac14	v4	LTQCommBench	1	1	100000000	scala.dataflow.bench.LTQCommBench$	10534	10645	10665
+lampmac14	v4	LTQCommBench	1	1	50000000	scala.dataflow.bench.LTQCommBench$	5262	5610	5345
+lampmac14	v4	LTQCommBench	1	1	25000000	scala.dataflow.bench.LTQCommBench$	2608	2681	2703
+lampmac14	v4	LTQCommBench	1	1	12000000	scala.dataflow.bench.LTQCommBench$	1330	1424	1329
+lampmac14	v4	LTQCommBench	1	1	4000000	scala.dataflow.bench.LTQCommBench$	436	461	411
+lampmac14	v4	LTQCommBench	1	1	2000000	scala.dataflow.bench.LTQCommBench$	245	211	200

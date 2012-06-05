@@ -7,7 +7,6 @@ use File::Basename;
 
 my $vers = "v4";
 my $fn = $ARGV[0];
-my $cnt = $ARGV[1];
 my $bm;
 my $par;
 my $size;
@@ -26,7 +25,7 @@ while(<F>) {
         $bm = $+{'bench'};
     }
     if (/^(?<cls>scala.dataflow.bench.\w+\$)(?<x>
-             (?:\s+\d+){$cnt}
+             (?:\s+\d+)+
            )$/x) {
         my $x = $+{'x'};
         my $cls = $+{'cls'};

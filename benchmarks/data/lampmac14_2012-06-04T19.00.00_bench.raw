@@ -1,0 +1,2555 @@
+aleksandar@lampmac14:~/workspaces/scala/dataflow [master]‡ xsbt
+[info] Loading project definition from 
+/Users/aleksandar/workspaces/scala/dataflow/project
+[info] Set current project to scala-dataflow (in build 
+file:/Users/aleksandar/workspaces/scala/dataflow/)
+ > bench -Dpar=1 -Dsize=2000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 10
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=2000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 10
+[GC [PSYoungGen: 94532K->7098K(611648K)] 94532K->7106K(2009792K), 
+0.0087480 secs] [Times: user=0.05 sys=0.01, real=0.01 secs]
+[Full GC (System) [PSYoungGen: 7098K->0K(611648K)] [ParOldGen: 
+8K->6717K(1398144K)] 7106K->6717K(2009792K) [PSPermGen: 
+7332K->7309K(21248K)], 0.0226950 secs] [Times: user=0.09 sys=0.00, 
+real=0.02 secs]
+[GC [PSYoungGen: 115443K->416K(611648K)] 122161K->7141K(2009792K), 
+0.0005190 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 416K->0K(611648K)] [ParOldGen: 
+6725K->930K(1398144K)] 7141K->930K(2009792K) [PSPermGen: 
+7359K->7359K(21248K)], 0.0085720 secs] [Times: user=0.02 sys=0.01, 
+real=0.01 secs]
+[GC [PSYoungGen: 87637K->3840K(611648K)] 88567K->4770K(2009792K), 
+0.0043670 secs] [Times: user=0.03 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 3840K->0K(611648K)] [ParOldGen: 
+930K->4572K(1398144K)] 4770K->4572K(2009792K) [PSPermGen: 
+7359K->7359K(21248K)], 0.0169260 secs] [Times: user=0.09 sys=0.00, 
+real=0.02 secs]
+[GC [PSYoungGen: 82582K->160K(611648K)] 87155K->4732K(2009792K), 
+0.0005000 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+4572K->955K(1398144K)] 4732K->955K(2009792K) [PSPermGen: 
+7359K->7359K(21248K)], 0.0075250 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 59136K->192K(611648K)] 60091K->1147K(2009792K), 
+0.0004490 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(611648K)] [ParOldGen: 
+955K->987K(1398144K)] 1147K->987K(2009792K) [PSPermGen: 
+7360K->7360K(21248K)], 0.0072590 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 58989K->192K(611648K)] 59977K->1187K(2009792K), 
+0.0002680 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(611648K)] [ParOldGen: 
+995K->1020K(1398144K)] 1187K->1020K(2009792K) [PSPermGen: 
+7363K->7363K(21248K)], 0.0073800 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 58989K->128K(611648K)] 60009K->1148K(2009792K), 
+0.0004320 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(611648K)] [ParOldGen: 
+1020K->1052K(1398144K)] 1148K->1052K(2009792K) [PSPermGen: 
+7363K->7363K(21248K)], 0.0076430 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 58800K->224K(611648K)] 59852K->1276K(2009792K), 
+0.0003640 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 224K->0K(611648K)] [ParOldGen: 
+1052K->1084K(1398144K)] 1276K->1084K(2009792K) [PSPermGen: 
+7363K->7363K(21248K)], 0.0074790 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 58801K->128K(611648K)] 59885K->1212K(2009792K), 
+0.0005110 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(611648K)] [ParOldGen: 
+1084K->1084K(1398144K)] 1212K->1084K(2009792K) [PSPermGen: 
+7363K->7363K(21248K)], 0.0075030 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 58801K->128K(611648K)] 59885K->1212K(2009792K), 
+0.0004180 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(611648K)] [ParOldGen: 
+1084K->1084K(1398144K)] 1212K->1084K(2009792K) [PSPermGen: 
+7363K->7363K(21248K)], 0.0072850 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+scala.dataflow.bench.MLFPCommBench$    138    149    66    86    97    97    95    96    95    96
+Heap
+  PSYoungGen      total 611648K, used 14605K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 524288K, 2% used 
+[0x00000007d5560000,0x00000007d63a3550,0x00000007f5560000)
+   from space 87360K, 0% used 
+[0x00000007faab0000,0x00000007faab0000,0x0000000800000000)
+   to   space 87360K, 0% used 
+[0x00000007f5560000,0x00000007f5560000,0x00000007faab0000)
+  ParOldGen       total 1398144K, used 1084K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x000000078010f1e0,0x00000007d5560000)
+  PSPermGen       total 21248K, used 7771K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 36% used 
+[0x000000077ae00000,0x000000077b596f08,0x000000077c2c0000)
+[success] Total time: 2 s, completed Jun 5, 2012 10:45:18 AM
+ > bench -Dpar=1 -Dsize=4000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 10
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=4000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 10
+[GC [PSYoungGen: 147057K->3492K(611648K)] 147057K->3500K(2009792K), 
+0.0044480 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 3492K->0K(611648K)] [ParOldGen: 
+8K->3165K(1398144K)] 3500K->3165K(2009792K) [PSPermGen: 
+7374K->7351K(21248K)], 0.0143590 secs] [Times: user=0.03 sys=0.01, 
+real=0.02 secs]
+[GC [PSYoungGen: 122342K->192K(611648K)] 125508K->3357K(2009792K), 
+0.0003910 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(611648K)] [ParOldGen: 
+3165K->958K(1398144K)] 3357K->958K(2009792K) [PSPermGen: 
+7358K->7358K(21248K)], 0.0084730 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 122844K->192K(611648K)] 123803K->1158K(2009792K), 
+0.0006440 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(611648K)] [ParOldGen: 
+966K->987K(1398144K)] 1158K->987K(2009792K) [PSPermGen: 
+7359K->7359K(21248K)], 0.0089130 secs] [Times: user=0.03 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 90452K->128K(611648K)] 91439K->1115K(2009792K), 
+0.0004520 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(611648K)] [ParOldGen: 
+987K->1019K(1398144K)] 1115K->1019K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0074580 secs] [Times: user=0.02 sys=0.01, 
+real=0.00 secs]
+[GC [PSYoungGen: 90453K->160K(611648K)] 91472K->1179K(2009792K), 
+0.0004770 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+1019K->1051K(1398144K)] 1179K->1051K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0073040 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 90452K->160K(611648K)] 91503K->1211K(2009792K), 
+0.0004680 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+1051K->1083K(1398144K)] 1211K->1083K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0074470 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 101873K->96K(611648K)] 102957K->1179K(2009792K), 
+0.0003110 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(611648K)] [ParOldGen: 
+1083K->1084K(1398144K)] 1179K->1084K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0074150 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 90452K->160K(611648K)] 91536K->1244K(2009792K), 
+0.0002570 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+1084K->1084K(1398144K)] 1244K->1084K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0071550 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 80902K->128K(611648K)] 81986K->1212K(2009792K), 
+0.0005390 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(611648K)] [ParOldGen: 
+1084K->1084K(1398144K)] 1212K->1084K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0077420 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 91387K->96K(611648K)] 92471K->1180K(2009792K), 
+0.0003240 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(611648K)] [ParOldGen: 
+1084K->1084K(1398144K)] 1180K->1084K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0077050 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+scala.dataflow.bench.MLFPCommBench$    252    189    180    188    179    178    181    181    180    175
+Heap
+  PSYoungGen      total 611648K, used 32955K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 524288K, 6% used 
+[0x00000007d5560000,0x00000007d758edb0,0x00000007f5560000)
+   from space 87360K, 0% used 
+[0x00000007faab0000,0x00000007faab0000,0x0000000800000000)
+   to   space 87360K, 0% used 
+[0x00000007f5560000,0x00000007f5560000,0x00000007faab0000)
+  ParOldGen       total 1398144K, used 1084K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x000000078010f0d8,0x00000007d5560000)
+  PSPermGen       total 21248K, used 7770K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 36% used 
+[0x000000077ae00000,0x000000077b596838,0x000000077c2c0000)
+[success] Total time: 2 s, completed Jun 5, 2012 10:45:25 AM
+ > bench -Dpar=1 -Dsize=12000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 10
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=12000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 10
+[GC [PSYoungGen: 157482K->3423K(611648K)] 157482K->3431K(2009792K), 
+0.0042590 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 3423K->0K(611648K)] [ParOldGen: 
+8K->3069K(1398144K)] 3431K->3069K(2009792K) [PSPermGen: 
+7378K->7355K(21248K)], 0.0143050 secs] [Times: user=0.03 sys=0.01, 
+real=0.02 secs]
+[GC [PSYoungGen: 167793K->224K(611648K)] 170863K->3293K(2009792K), 
+0.0005310 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 224K->0K(611648K)] [ParOldGen: 
+3069K->894K(1398144K)] 3293K->894K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0092750 secs] [Times: user=0.03 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 145336K->192K(611648K)] 146230K->1086K(2009792K), 
+0.0004270 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(611648K)] [ParOldGen: 
+894K->922K(1398144K)] 1086K->922K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0093140 secs] [Times: user=0.04 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 124555K->192K(611648K)] 125477K->1114K(2009792K), 
+0.0004590 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(611648K)] [ParOldGen: 
+922K->954K(1398144K)] 1114K->954K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0075390 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 124363K->128K(611648K)] 125318K->1082K(2009792K), 
+0.0004630 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(611648K)] [ParOldGen: 
+954K->986K(1398144K)] 1082K->986K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0077940 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 134848K->96K(611648K)] 135835K->1082K(2009792K), 
+0.0004470 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(611648K)] [ParOldGen: 
+986K->1017K(1398144K)] 1082K->1017K(2009792K) [PSPermGen: 
+7363K->7363K(21248K)], 0.0073700 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 136385K->160K(611648K)] 137403K->1177K(2009792K), 
+0.0004670 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+1017K->1051K(1398144K)] 1177K->1051K(2009792K) [PSPermGen: 
+7363K->7363K(21248K)], 0.0073920 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 136347K->128K(611648K)] 137399K->1179K(2009792K), 
+0.0003250 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(611648K)] [ParOldGen: 
+1051K->1051K(1398144K)] 1179K->1051K(2009792K) [PSPermGen: 
+7363K->7363K(21248K)], 0.0075950 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 115381K->64K(611648K)] 116432K->1115K(2009792K), 
+0.0003380 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(611648K)] [ParOldGen: 
+1051K->1051K(1398144K)] 1115K->1051K(2009792K) [PSPermGen: 
+7363K->7363K(21248K)], 0.0074770 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 136349K->160K(611648K)] 137401K->1211K(2009792K), 
+0.0004380 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+1051K->1051K(1398144K)] 1211K->1051K(2009792K) [PSPermGen: 
+7363K->7363K(21248K)], 0.0074500 secs] [Times: user=0.01 sys=0.00, 
+real=0.01 secs]
+scala.dataflow.bench.MLFPCommBench$    644    531    527    527    518    516    529    520    524    516
+Heap
+  PSYoungGen      total 611648K, used 22282K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 524288K, 4% used 
+[0x00000007d5560000,0x00000007d6b229b0,0x00000007f5560000)
+   from space 87360K, 0% used 
+[0x00000007faab0000,0x00000007faab0000,0x0000000800000000)
+   to   space 87360K, 0% used 
+[0x00000007f5560000,0x00000007f5560000,0x00000007faab0000)
+  ParOldGen       total 1398144K, used 1051K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x0000000780106e48,0x00000007d5560000)
+  PSPermGen       total 21248K, used 7771K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 36% used 
+[0x000000077ae00000,0x000000077b596eb8,0x000000077c2c0000)
+[success] Total time: 6 s, completed Jun 5, 2012 10:45:37 AM
+ > bench -Dpar=1 -Dsize=25000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 10
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=25000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 10
+[GC [PSYoungGen: 241439K->3529K(611648K)] 241439K->3537K(2009792K), 
+0.0041640 secs] [Times: user=0.02 sys=0.00, real=0.01 secs]
+[Full GC (System) [PSYoungGen: 3529K->0K(611648K)] [ParOldGen: 
+8K->3134K(1398144K)] 3537K->3134K(2009792K) [PSPermGen: 
+7379K->7355K(21248K)], 0.0143560 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 222006K->192K(611648K)] 225141K->3326K(2009792K), 
+0.0002790 secs] [Times: user=0.00 sys=0.01, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(611648K)] [ParOldGen: 
+3134K->958K(1398144K)] 3326K->958K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0097820 secs] [Times: user=0.03 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 200615K->96K(611648K)] 201574K->1054K(2009792K), 
+0.0004790 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(611648K)] [ParOldGen: 
+958K->985K(1398144K)] 1054K->985K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0089980 secs] [Times: user=0.03 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 190130K->160K(611648K)] 191116K->1145K(2009792K), 
+0.0003680 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+985K->1019K(1398144K)] 1145K->1019K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0076350 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 200618K->192K(611648K)] 201638K->1211K(2009792K), 
+0.0004940 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(611648K)] [ParOldGen: 
+1019K->1051K(1398144K)] 1211K->1051K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0075390 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 200616K->192K(611648K)] 201668K->1243K(2009792K), 
+0.0004890 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(611648K)] [ParOldGen: 
+1051K->1083K(1398144K)] 1243K->1083K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0075610 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 210968K->160K(611648K)] 212052K->1243K(2009792K), 
+0.0002740 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+1083K->1083K(1398144K)] 1243K->1083K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0073380 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 189993K->32K(611648K)] 191077K->1115K(2009792K), 
+0.0003030 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(611648K)] [ParOldGen: 
+1083K->1084K(1398144K)] 1115K->1084K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0072750 secs] [Times: user=0.01 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 210965K->96K(611648K)] 212049K->1180K(2009792K), 
+0.0003170 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(611648K)] [ParOldGen: 
+1084K->1084K(1398144K)] 1180K->1084K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0071870 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 189996K->160K(611648K)] 191080K->1244K(2009792K), 
+0.0003510 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+1084K->1084K(1398144K)] 1244K->1084K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0072420 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+scala.dataflow.bench.MLFPCommBench$    1216    1118    1087    1096    1077    1076    1153    1105    1124    1124
+Heap
+  PSYoungGen      total 611648K, used 22136K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 524288K, 4% used 
+[0x00000007d5560000,0x00000007d6afe320,0x00000007f5560000)
+   from space 87360K, 0% used 
+[0x00000007faab0000,0x00000007faab0000,0x0000000800000000)
+   to   space 87360K, 0% used 
+[0x00000007f5560000,0x00000007f5560000,0x00000007faab0000)
+  ParOldGen       total 1398144K, used 1084K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x000000078010f080,0x00000007d5560000)
+  PSPermGen       total 21248K, used 7771K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 36% used 
+[0x000000077ae00000,0x000000077b596c00,0x000000077c2c0000)
+[success] Total time: 12 s, completed Jun 5, 2012 10:45:53 AM
+ > bench -Dpar=1 -Dsize=50000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 10
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=50000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 10
+[GC [PSYoungGen: 346306K->3391K(611648K)] 346306K->3399K(2009792K), 
+0.0075970 secs] [Times: user=0.04 sys=0.00, real=0.01 secs]
+[Full GC (System) [PSYoungGen: 3391K->0K(611648K)] [ParOldGen: 
+8K->3134K(1398144K)] 3399K->3134K(2009792K) [PSPermGen: 
+7378K->7355K(21248K)], 0.0151510 secs] [Times: user=0.03 sys=0.01, 
+real=0.01 secs]
+[GC [PSYoungGen: 286726K->128K(611648K)] 289861K->3262K(2009792K), 
+0.0004000 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(611648K)] [ParOldGen: 
+3134K->958K(1398144K)] 3262K->958K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0082890 secs] [Times: user=0.03 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 250257K->192K(611648K)] 251216K->1150K(2009792K), 
+0.0004320 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(611648K)] [ParOldGen: 
+958K->987K(1398144K)] 1150K->987K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0100360 secs] [Times: user=0.03 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 244547K->160K(611648K)] 245534K->1147K(2009792K), 
+0.0004290 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+987K->1019K(1398144K)] 1147K->1019K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0075730 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 240963K->128K(611648K)] 241982K->1147K(2009792K), 
+0.0004420 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(611648K)] [ParOldGen: 
+1019K->1051K(1398144K)] 1147K->1051K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0074440 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 244547K->160K(611648K)] 245599K->1211K(2009792K), 
+0.0004270 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+1051K->1084K(1398144K)] 1211K->1084K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0075970 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 244543K->96K(611648K)] 245627K->1180K(2009792K), 
+0.0004350 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(611648K)] [ParOldGen: 
+1084K->1084K(1398144K)] 1180K->1084K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0074160 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 244548K->128K(611648K)] 245632K->1212K(2009792K), 
+0.0004560 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(611648K)] [ParOldGen: 
+1084K->1084K(1398144K)] 1212K->1084K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0073810 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 240967K->128K(611648K)] 242051K->1212K(2009792K), 
+0.0002970 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(611648K)] [ParOldGen: 
+1084K->1084K(1398144K)] 1212K->1084K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0071970 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 240971K->192K(611648K)] 242055K->1276K(2009792K), 
+0.0002860 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(611648K)] [ParOldGen: 
+1084K->1084K(1398144K)] 1276K->1084K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0072810 secs] [Times: user=0.01 sys=0.00, 
+real=0.01 secs]
+scala.dataflow.bench.MLFPCommBench$    2394    2291    2192    2154    2171    2158    2306    2395    2337    2336
+Heap
+  PSYoungGen      total 611648K, used 8576K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 524288K, 1% used 
+[0x00000007d5560000,0x00000007d5dc0220,0x00000007f5560000)
+   from space 87360K, 0% used 
+[0x00000007faab0000,0x00000007faab0000,0x0000000800000000)
+   to   space 87360K, 0% used 
+[0x00000007f5560000,0x00000007f5560000,0x00000007faab0000)
+  ParOldGen       total 1398144K, used 1084K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x000000078010f0e8,0x00000007d5560000)
+  PSPermGen       total 21248K, used 7770K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 36% used 
+[0x000000077ae00000,0x000000077b596890,0x000000077c2c0000)
+[success] Total time: 23 s, completed Jun 5, 2012 10:46:21 AM
+ > bench -Dpar=1 -Dsize=100000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 10
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=100000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 10
+[GC [PSYoungGen: 524288K->3279K(611648K)] 524288K->3287K(2009792K), 
+0.0046880 secs] [Times: user=0.02 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 71123K->992K(611648K)] 71131K->1008K(2009792K), 
+0.0018020 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 992K->0K(611648K)] [ParOldGen: 
+16K->860K(1398144K)] 1008K->860K(2009792K) [PSPermGen: 
+7383K->7360K(21248K)], 0.0157450 secs] [Times: user=0.04 sys=0.00, 
+real=0.02 secs]
+[GC [PSYoungGen: 480628K->256K(611648K)] 481488K->1116K(2009792K), 
+0.0004710 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 256K->0K(611648K)] [ParOldGen: 
+860K->953K(1398144K)] 1116K->953K(2009792K) [PSPermGen: 
+7360K->7360K(21248K)], 0.0086210 secs] [Times: user=0.03 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 453409K->160K(611648K)] 454362K->1113K(2009792K), 
+0.0004520 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+953K->985K(1398144K)] 1113K->985K(2009792K) [PSPermGen: 
+7360K->7360K(21248K)], 0.0075420 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 444533K->160K(611648K)] 445519K->1145K(2009792K), 
+0.0004500 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+985K->1017K(1398144K)] 1145K->1017K(2009792K) [PSPermGen: 
+7360K->7360K(21248K)], 0.0089600 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 440422K->160K(611648K)] 441440K->1177K(2009792K), 
+0.0004740 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+1017K->1050K(1398144K)] 1177K->1050K(2009792K) [PSPermGen: 
+7360K->7360K(21248K)], 0.0077220 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 435774K->128K(611648K)] 436824K->1178K(2009792K), 
+0.0004240 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(611648K)] [ParOldGen: 
+1050K->1082K(1398144K)] 1178K->1082K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0074630 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 438454K->96K(611648K)] 439536K->1178K(2009792K), 
+0.0005120 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(611648K)] [ParOldGen: 
+1082K->1082K(1398144K)] 1178K->1082K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0075770 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 433989K->160K(611648K)] 435071K->1242K(2009792K), 
+0.0002700 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+1082K->1082K(1398144K)] 1242K->1082K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0075520 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 432666K->160K(611648K)] 433748K->1242K(2009792K), 
+0.0004760 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+1082K->1082K(1398144K)] 1242K->1082K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0074990 secs] [Times: user=0.01 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 432224K->160K(611648K)] 433307K->1242K(2009792K), 
+0.0005000 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(611648K)] [ParOldGen: 
+1082K->1082K(1398144K)] 1242K->1082K(2009792K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0073940 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+scala.dataflow.bench.MLFPCommBench$    4808    4533    4329    4302    4386    4406    5630    4375    4412    4404
+Heap
+  PSYoungGen      total 611648K, used 1986K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 524288K, 0% used 
+[0x00000007d5560000,0x00000007d5750810,0x00000007f5560000)
+   from space 87360K, 0% used 
+[0x00000007f5560000,0x00000007f5560000,0x00000007faab0000)
+   to   space 87360K, 0% used 
+[0x00000007faab0000,0x00000007faab0000,0x0000000800000000)
+  ParOldGen       total 1398144K, used 1082K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x000000078010ea38,0x00000007d5560000)
+  PSPermGen       total 21248K, used 7769K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 36% used 
+[0x000000077ae00000,0x000000077b596680,0x000000077c2c0000)
+[success] Total time: 46 s, completed Jun 5, 2012 10:47:12 AM
+ > bench -Dpar=1 -Dsize=200000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 10
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=200000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 10
+[GC [PSYoungGen: 524288K->3381K(611648K)] 524288K->3389K(2009792K), 
+0.0042510 secs] [Times: user=0.02 sys=0.01, real=0.01 secs]
+[GC [PSYoungGen: 522262K->1056K(611648K)] 522270K->1072K(2009792K), 
+0.0018670 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 1056K->0K(611648K)] [ParOldGen: 
+16K->926K(1398144K)] 1072K->926K(2009792K) [PSPermGen: 
+7385K->7362K(21248K)], 0.0136580 secs] [Times: user=0.02 sys=0.01, 
+real=0.01 secs]
+[GC [PSYoungGen: 524288K->256K(611648K)] 525214K->1182K(2009792K), 
+0.0003080 secs] [Times: user=0.00 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 389401K->128K(611648K)] 390328K->1054K(2009792K), 
+0.0004870 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(611648K)] [ParOldGen: 
+926K->955K(1398144K)] 1054K->955K(2009792K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0087760 secs] [Times: user=0.03 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 524288K->224K(611648K)] 525243K->1179K(2009792K), 
+0.0003730 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 367608K->96K(611648K)] 368563K->1051K(2009792K), 
+0.0003690 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(611648K)] [ParOldGen: 
+955K->987K(1398144K)] 1051K->987K(2009792K) [PSPermGen: 
+7363K->7363K(21248K)], 0.0077800 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 524288K->192K(611648K)] 525275K->1179K(2009792K), 
+0.0005150 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 355399K->192K(611648K)] 356387K->1179K(2009792K), 
+0.0005340 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(611648K)] [ParOldGen: 
+987K->1019K(1398144K)] 1179K->1019K(2009792K) [PSPermGen: 
+7364K->7364K(21248K)], 0.0074040 secs] [Times: user=0.01 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 524288K->192K(611648K)] 525307K->1211K(2009792K), 
+0.0004940 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 354677K->192K(696256K)] 355696K->1211K(2094400K), 
+0.0003910 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(696256K)] [ParOldGen: 
+1019K->1051K(1398144K)] 1211K->1051K(2094400K) [PSPermGen: 
+7364K->7364K(21248K)], 0.0076200 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 693376K->192K(696128K)] 694427K->1243K(2094272K), 
+0.0004750 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 187987K->192K(696512K)] 189039K->1243K(2094656K), 
+0.0003080 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(696512K)] [ParOldGen: 
+1051K->1083K(1398144K)] 1243K->1083K(2094656K) [PSPermGen: 
+7364K->7364K(21248K)], 0.0075540 secs] [Times: user=0.02 sys=0.01, 
+real=0.01 secs]
+[GC [PSYoungGen: 693888K->224K(696384K)] 694971K->1307K(2094528K), 
+0.0004780 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 180304K->64K(696768K)] 181388K->1147K(2094912K), 
+0.0004420 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(696768K)] [ParOldGen: 
+1083K->1082K(1398144K)] 1147K->1082K(2094912K) [PSPermGen: 
+7364K->7364K(21248K)], 0.0073130 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 694464K->224K(696704K)] 695546K->1306K(2094848K), 
+0.0004090 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 183658K->64K(697024K)] 184741K->1186K(2095168K), 
+0.0004500 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(697024K)] [ParOldGen: 
+1122K->1083K(1398144K)] 1186K->1083K(2095168K) [PSPermGen: 
+7364K->7364K(21248K)], 0.0073400 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 694912K->96K(696896K)] 695995K->1179K(2095040K), 
+0.0002940 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 180440K->32K(697216K)] 181524K->1139K(2095360K), 
+0.0004780 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(697216K)] [ParOldGen: 
+1107K->1084K(1398144K)] 1139K->1084K(2095360K) [PSPermGen: 
+7364K->7364K(21248K)], 0.0073800 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 695360K->224K(697152K)] 696444K->1308K(2095296K), 
+0.0004730 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 180937K->64K(697408K)] 182021K->1172K(2095552K), 
+0.0003040 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(697408K)] [ParOldGen: 
+1108K->1084K(1398144K)] 1172K->1084K(2095552K) [PSPermGen: 
+7364K->7364K(21248K)], 0.0074260 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+scala.dataflow.bench.MLFPCommBench$    12354    12148    12417    12422    12086    12176    12149    12144    12101    12108
+Heap
+  PSYoungGen      total 697408K, used 2563K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 695744K, 0% used 
+[0x00000007d5560000,0x00000007d57e0e28,0x00000007ffcd0000)
+   from space 1664K, 0% used 
+[0x00000007ffe60000,0x00000007ffe60000,0x0000000800000000)
+   to   space 1600K, 0% used 
+[0x00000007ffcd0000,0x00000007ffcd0000,0x00000007ffe60000)
+  ParOldGen       total 1398144K, used 1084K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x000000078010f050,0x00000007d5560000)
+  PSPermGen       total 21248K, used 7772K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 36% used 
+[0x000000077ae00000,0x000000077b597148,0x000000077c2c0000)
+[success] Total time: 123 s, completed Jun 5, 2012 10:49:19 AM
+ > bench -Dpar=1 -Dsize=400000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 10
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=400000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 10
+[GC [PSYoungGen: 524288K->3387K(611648K)] 524288K->3395K(2009792K), 
+0.0045200 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 527675K->1120K(611648K)] 527683K->1136K(2009792K), 
+0.0018110 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 525408K->1056K(611648K)] 525424K->1072K(2009792K), 
+0.0017110 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 377497K->1040K(611648K)] 377513K->1064K(2009792K), 
+0.0017250 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]
+[Full GC (System) [PSYoungGen: 1040K->0K(611648K)] [ParOldGen: 
+24K->921K(1398144K)] 1064K->921K(2009792K) [PSPermGen: 
+7383K->7360K(21248K)], 0.0133860 secs] [Times: user=0.03 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 524288K->192K(611648K)] 525209K->1113K(2009792K), 
+0.0004920 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524480K->224K(695488K)] 525401K->1145K(2093632K), 
+0.0004940 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 608352K->224K(611648K)] 609273K->1145K(2009792K), 
+0.0004510 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 90370K->192K(695680K)] 91291K->1113K(2093824K), 
+0.0004390 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(695680K)] [ParOldGen: 
+921K->954K(1398144K)] 1113K->954K(2093824K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0075480 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 692224K->224K(695552K)] 693178K->1179K(2093696K), 
+0.0004640 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 692448K->192K(695936K)] 693403K->1147K(2094080K), 
+0.0004610 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 357792K->0K(695808K)] 358747K->1003K(2093952K), 
+0.0004970 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]
+[Full GC (System) [PSYoungGen: 0K->0K(695808K)] [ParOldGen: 
+1003K->985K(1398144K)] 1003K->985K(2093952K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0077720 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 692736K->224K(696192K)] 693721K->1209K(2094336K), 
+0.0003130 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 693408K->96K(696000K)] 694393K->1153K(2094144K), 
+0.0004940 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 345925K->160K(696384K)] 346982K->1217K(2094528K), 
+0.0004550 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(696384K)] [ParOldGen: 
+1057K->1019K(1398144K)] 1217K->1019K(2094528K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0076230 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 693632K->192K(696256K)] 694651K->1211K(2094400K), 
+0.0002950 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 693824K->160K(696704K)] 694843K->1251K(2094848K), 
+0.0003770 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 345790K->128K(696576K)] 346882K->1219K(2094720K), 
+0.0005000 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(696576K)] [ParOldGen: 
+1091K->1051K(1398144K)] 1219K->1051K(2094720K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0076470 secs] [Times: user=0.01 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 694272K->192K(696896K)] 695323K->1243K(2095040K), 
+0.0002960 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694848K->96K(696768K)] 695899K->1227K(2094912K), 
+0.0004120 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 346659K->128K(697152K)] 347791K->1259K(2095296K), 
+0.0005830 secs] [Times: user=0.00 sys=0.01, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(697152K)] [ParOldGen: 
+1131K->1083K(1398144K)] 1259K->1083K(2095296K) [PSPermGen: 
+7361K->7361K(21248K)], 0.0079670 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 695168K->128K(697024K)] 696251K->1211K(2095168K), 
+0.0005170 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695296K->128K(697344K)] 696379K->1251K(2095488K), 
+0.0004010 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 347237K->128K(697216K)] 348361K->1251K(2095360K), 
+0.0003080 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(697216K)] [ParOldGen: 
+1123K->1083K(1398144K)] 1251K->1083K(2095360K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0075070 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 695552K->224K(697536K)] 696635K->1307K(2095680K), 
+0.0003100 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696224K->160K(697472K)] 697307K->1283K(2095616K), 
+0.0002980 secs] [Times: user=0.00 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 347399K->160K(697728K)] 348523K->1283K(2095872K), 
+0.0003040 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(697728K)] [ParOldGen: 
+1123K->1083K(1398144K)] 1283K->1083K(2095872K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0076370 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 696384K->224K(697664K)] 697467K->1307K(2095808K), 
+0.0004640 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696608K->192K(697920K)] 697691K->1315K(2096064K), 
+0.0006160 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 347685K->96K(697792K)] 348809K->1219K(2095936K), 
+0.0002750 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(697792K)] [ParOldGen: 
+1123K->1083K(1398144K)] 1219K->1083K(2095936K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0075040 secs] [Times: user=0.01 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 696704K->192K(698048K)] 697787K->1275K(2096192K), 
+0.0003070 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697152K->96K(697920K)] 698235K->1227K(2096064K), 
+0.0002790 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 338317K->96K(698112K)] 339449K->1227K(2096256K), 
+0.0002870 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(698112K)] [ParOldGen: 
+1131K->1084K(1398144K)] 1227K->1084K(2096256K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0075140 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+scala.dataflow.bench.MLFPCommBench$    17656    17639    17487    16961    17044    17007    17022    16967    17507    17482
+Heap
+  PSYoungGen      total 698112K, used 2356K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 697152K, 0% used 
+[0x00000007d5560000,0x00000007d57ad050,0x00000007ffe30000)
+   from space 960K, 0% used 
+[0x00000007fff10000,0x00000007fff10000,0x0000000800000000)
+   to   space 896K, 0% used 
+[0x00000007ffe30000,0x00000007ffe30000,0x00000007fff10000)
+  ParOldGen       total 1398144K, used 1084K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x000000078010f010,0x00000007d5560000)
+  PSPermGen       total 21248K, used 7770K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 36% used 
+[0x000000077ae00000,0x000000077b596aa0,0x000000077c2c0000)
+[success] Total time: 173 s, completed Jun 5, 2012 10:52:19 AM
+ > bench -Dpar=1 -Dsize=800000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 10
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=800000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 10
+[GC [PSYoungGen: 524288K->3374K(611648K)] 524288K->3382K(2009792K), 
+0.0043370 secs] [Times: user=0.02 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 527662K->1088K(611648K)] 527670K->1104K(2009792K), 
+0.0018090 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 525376K->1056K(611648K)] 525392K->1072K(2009792K), 
+0.0018090 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 525344K->1024K(611648K)] 525360K->1048K(2009792K), 
+0.0017830 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 525312K->1056K(611648K)] 525336K->1088K(2009792K), 
+0.0017100 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 525344K->1056K(695808K)] 525376K->1088K(2093952K), 
+0.0017750 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 518490K->32K(695680K)] 518522K->1016K(2093824K), 
+0.0018670 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(695680K)] [ParOldGen: 
+984K->921K(1398144K)] 1016K->921K(2093824K) [PSPermGen: 
+7385K->7362K(21248K)], 0.0139830 secs] [Times: user=0.02 sys=0.00, 
+real=0.02 secs]
+[GC [PSYoungGen: 692480K->192K(695808K)] 693401K->1113K(2093952K), 
+0.0005040 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 692736K->224K(695744K)] 693657K->1145K(2093888K), 
+0.0004560 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 692768K->96K(695872K)] 693689K->1097K(2094016K), 
+0.0003140 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 692832K->128K(695872K)] 693833K->1129K(2094016K), 
+0.0003920 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 692864K->160K(696064K)] 693865K->1161K(2094208K), 
+0.0003500 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 16270K->128K(696000K)] 17272K->1129K(2094144K), 
+0.0003660 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(696000K)] [ParOldGen: 
+1001K->954K(1398144K)] 1129K->954K(2094144K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0085990 secs] [Times: user=0.03 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 693056K->288K(696320K)] 694010K->1242K(2094464K), 
+0.0005140 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 693792K->128K(696192K)] 694746K->1154K(2094336K), 
+0.0005100 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 693632K->128K(696512K)] 694658K->1154K(2094656K), 
+0.0003700 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694016K->128K(696384K)] 695042K->1154K(2094528K), 
+0.0002900 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 688864K->96K(696768K)] 689890K->1122K(2094912K), 
+0.0004740 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(696768K)] [ParOldGen: 
+1026K->986K(1398144K)] 1122K->986K(2094912K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0076950 secs] [Times: user=0.02 sys=0.01, 
+real=0.01 secs]
+[GC [PSYoungGen: 694400K->192K(696640K)] 695386K->1178K(2094784K), 
+0.0004930 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694592K->96K(696960K)] 695578K->1162K(2095104K), 
+0.0004910 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694944K->160K(696896K)] 696010K->1226K(2095040K), 
+0.0004840 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695008K->128K(697216K)] 696074K->1194K(2095360K), 
+0.0002630 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 691290K->96K(697088K)] 692356K->1162K(2095232K), 
+0.0004830 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(697088K)] [ParOldGen: 
+1066K->1018K(1398144K)] 1162K->1018K(2095232K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0072490 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 695296K->224K(697408K)] 696314K->1242K(2095552K), 
+0.0003000 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695904K->160K(697280K)] 696922K->1250K(2095424K), 
+0.0004710 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695840K->160K(697600K)] 696930K->1250K(2095744K), 
+0.0002820 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696224K->96K(697472K)] 697314K->1186K(2095616K), 
+0.0004720 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 677497K->64K(697728K)] 678588K->1154K(2095872K), 
+0.0002780 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(697728K)] [ParOldGen: 
+1090K->1050K(1398144K)] 1154K->1050K(2095872K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0072590 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 696384K->224K(697664K)] 697434K->1274K(2095808K), 
+0.0004920 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696608K->128K(697920K)] 697658K->1250K(2096064K), 
+0.0004790 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696896K->128K(697856K)] 698018K->1250K(2096000K), 
+0.0003810 secs] [Times: user=0.00 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 696896K->160K(698048K)] 698018K->1282K(2096192K), 
+0.0003100 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 667160K->64K(697984K)] 668283K->1186K(2096128K), 
+0.0004590 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(697984K)] [ParOldGen: 
+1122K->1082K(1398144K)] 1186K->1082K(2096128K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0075520 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 697024K->192K(698112K)] 698106K->1274K(2096256K), 
+0.0003110 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697344K->160K(698048K)] 698426K->1266K(2096192K), 
+0.0003430 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697312K->128K(698240K)] 698418K->1234K(2096384K), 
+0.0003300 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697536K->160K(698176K)] 698642K->1266K(2096320K), 
+0.0004730 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 679142K->128K(698304K)] 680249K->1234K(2096448K), 
+0.0004540 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(698304K)] [ParOldGen: 
+1106K->1083K(1398144K)] 1234K->1083K(2096448K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0073220 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 697600K->192K(698304K)] 698683K->1275K(2096448K), 
+0.0003290 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697792K->160K(698432K)] 698875K->1291K(2096576K), 
+0.0004810 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697952K->160K(698368K)] 699083K->1291K(2096512K), 
+0.0004800 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697952K->96K(698496K)] 699083K->1227K(2096640K), 
+0.0004390 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 668098K->96K(698432K)] 669229K->1227K(2096576K), 
+0.0004850 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(698432K)] [ParOldGen: 
+1131K->1083K(1398144K)] 1227K->1083K(2096576K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0073040 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 697920K->160K(698496K)] 699003K->1243K(2096640K), 
+0.0004930 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698144K->160K(698496K)] 699227K->1291K(2096640K), 
+0.0004950 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698144K->192K(698560K)] 699275K->1323K(2096704K), 
+0.0004480 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698304K->160K(698560K)] 699435K->1291K(2096704K), 
+0.0003950 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 677769K->96K(698624K)] 678900K->1227K(2096768K), 
+0.0005010 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(698624K)] [ParOldGen: 
+1131K->1083K(1398144K)] 1227K->1083K(2096768K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0075280 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 698176K->160K(698560K)] 699259K->1243K(2096704K), 
+0.0003330 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698336K->160K(698624K)] 699419K->1283K(2096768K), 
+0.0005590 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698400K->96K(698624K)] 699523K->1219K(2096768K), 
+0.0004550 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698336K->128K(698688K)] 699459K->1251K(2096832K), 
+0.0004060 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 678087K->96K(698624K)] 679211K->1219K(2096768K), 
+0.0003690 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(698624K)] [ParOldGen: 
+1123K->1083K(1398144K)] 1219K->1083K(2096768K) [PSPermGen: 
+7362K->7362K(21248K)], 0.0074850 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+scala.dataflow.bench.MLFPCommBench$    35890    35052    34280    36067    33642    34449    34767    34510    33597    34588
+Heap
+  PSYoungGen      total 698624K, used 2359K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 698304K, 0% used 
+[0x00000007d5560000,0x00000007d57adf08,0x00000007fff50000)
+   from space 320K, 0% used 
+[0x00000007fff50000,0x00000007fff50000,0x00000007fffa0000)
+   to   space 320K, 0% used 
+[0x00000007fffb0000,0x00000007fffb0000,0x0000000800000000)
+  ParOldGen       total 1398144K, used 1083K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x000000078010ecb8,0x00000007d5560000)
+  PSPermGen       total 21248K, used 7770K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 36% used 
+[0x000000077ae00000,0x000000077b596918,0x000000077c2c0000)
+[success] Total time: 347 s, completed Jun 5, 2012 11:02:09 AM
+ > bench -Dpar=1 -Dsize=800000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 10
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=800000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 10
+[GC [PSYoungGen: 524288K->2553K(611648K)] 524288K->2561K(2009792K), 
+0.0035010 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 526841K->736K(611648K)] 526849K->752K(2009792K), 
+0.0014100 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 525024K->656K(611648K)] 525040K->680K(2009792K), 
+0.0013920 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524944K->608K(611648K)] 524968K->640K(2009792K), 
+0.0013450 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524896K->640K(611648K)] 524928K->680K(2009792K), 
+0.0014500 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524928K->656K(696576K)] 524968K->696K(2094720K), 
+0.0014550 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694672K->96K(696448K)] 694712K->668K(2094592K), 
+0.0013920 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 694112K->32K(696576K)] 694684K->604K(2094720K), 
+0.0005240 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694176K->32K(696576K)] 694748K->604K(2094720K), 
+0.0003260 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694176K->32K(696704K)] 694748K->604K(2094848K), 
+0.0003670 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694368K->128K(696640K)] 694940K->700K(2094784K), 
+0.0005100 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694464K->192K(696896K)] 695036K->764K(2095040K), 
+0.0006960 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694848K->128K(696768K)] 695420K->700K(2094912K), 
+0.0009720 secs] [Times: user=0.00 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 694784K->96K(697088K)] 695356K->668K(2095232K), 
+0.0004420 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695136K->96K(696960K)] 695708K->668K(2095104K), 
+0.0006430 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695136K->32K(697216K)] 695708K->604K(2095360K), 
+0.0002990 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695392K->32K(697152K)] 695964K->604K(2095296K), 
+0.0004560 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695392K->32K(697408K)] 695964K->604K(2095552K), 
+0.0003010 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695712K->32K(697280K)] 696284K->604K(2095424K), 
+0.0004790 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695712K->32K(697536K)] 696284K->604K(2095680K), 
+0.0003850 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696032K->96K(697472K)] 696604K->668K(2095616K), 
+0.0003220 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696096K->32K(697728K)] 696668K->604K(2095872K), 
+0.0003340 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696416K->32K(697664K)] 696988K->604K(2095808K), 
+0.0002850 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696416K->32K(697856K)] 696988K->604K(2096000K), 
+0.0003950 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696672K->32K(697792K)] 697244K->604K(2095936K), 
+0.0004370 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696672K->64K(697984K)] 697244K->636K(2096128K), 
+0.0004690 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696960K->32K(697920K)] 697532K->604K(2096064K), 
+0.0003970 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696928K->32K(698112K)] 697500K->604K(2096256K), 
+0.0003400 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697184K->128K(698048K)] 697756K->700K(2096192K), 
+0.0004730 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697280K->32K(698240K)] 697852K->604K(2096384K), 
+0.0003040 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697440K->96K(698176K)] 698012K->668K(2096320K), 
+0.0005170 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 697504K->32K(698304K)] 698076K->604K(2096448K), 
+0.0003690 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697632K->32K(698304K)] 698204K->604K(2096448K), 
+0.0004120 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697632K->128K(698432K)] 698204K->700K(2096576K), 
+0.0005220 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697920K->96K(698368K)] 698492K->668K(2096512K), 
+0.0005140 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697888K->32K(698496K)] 698460K->604K(2096640K), 
+0.0003140 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697952K->32K(698432K)] 698524K->604K(2096576K), 
+0.0003120 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697952K->160K(698496K)] 698524K->732K(2096640K), 
+0.0007320 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698144K->64K(698496K)] 698716K->636K(2096640K), 
+0.0004950 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698048K->32K(698560K)] 698620K->604K(2096704K), 
+0.0003200 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698144K->192K(698560K)] 698716K->764K(2096704K), 
+0.0008280 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698304K->32K(698560K)] 698876K->604K(2096704K), 
+0.0002740 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698144K->96K(698560K)] 698716K->668K(2096704K), 
+0.0004950 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 656114K->192K(698624K)] 656686K->764K(2096768K), 
+0.0004430 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(698624K)] [ParOldGen: 
+572K->549K(1398144K)] 764K->549K(2096768K) [PSPermGen: 
+6561K->6540K(21248K)], 0.0119530 secs] [Times: user=0.03 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 698240K->96K(698624K)] 698789K->645K(2096768K), 
+0.0004560 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698336K->256K(698624K)] 698885K->845K(2096768K), 
+0.0007080 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698496K->32K(698624K)] 699085K->621K(2096768K), 
+0.0003180 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698272K->32K(698624K)] 698861K->621K(2096768K), 
+0.0003170 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698272K->32K(698624K)] 698861K->621K(2096768K), 
+0.0003720 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698272K->64K(698688K)] 698861K->653K(2096832K), 
+0.0006930 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698368K->96K(698624K)] 698957K->685K(2096768K), 
+0.0005320 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698400K->32K(698688K)] 698989K->621K(2096832K), 
+0.0004560 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698400K->128K(698688K)] 698989K->717K(2096832K), 
+0.0004580 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 698496K->128K(698688K)] 699085K->717K(2096832K), 
+0.0052270 secs] [Times: user=0.03 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698496K->32K(698688K)] 699085K->621K(2096832K), 
+0.0002530 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698400K->32K(698688K)] 698989K->621K(2096832K), 
+0.0003190 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698400K->32K(698688K)] 698989K->621K(2096832K), 
+0.0004020 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698400K->224K(698624K)] 698989K->813K(2096768K), 
+0.0006840 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->96K(698688K)] 699181K->685K(2096832K), 
+0.0005150 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698464K->128K(698688K)] 699053K->717K(2096832K), 
+0.0005420 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698496K->160K(698688K)] 699085K->749K(2096832K), 
+0.0005000 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698688K)] 699117K->685K(2096832K), 
+0.0004900 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698464K->128K(698688K)] 699053K->717K(2096832K), 
+0.0004340 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698496K->160K(698624K)] 699085K->749K(2096768K), 
+0.0005890 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698688K)] 699117K->717K(2096832K), 
+0.0004390 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698496K->32K(698752K)] 699085K->621K(2096896K), 
+0.0003140 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699117K->621K(2096896K), 
+0.0005220 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699117K->685K(2096896K), 
+0.0005000 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699181K->621K(2096896K), 
+0.0003320 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699117K->621K(2096896K), 
+0.0004000 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699117K->717K(2096896K), 
+0.0004930 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->64K(698752K)] 699213K->653K(2096896K), 
+0.0004380 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698560K->128K(698752K)] 699149K->717K(2096896K), 
+0.0004530 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699213K->621K(2096896K), 
+0.0003720 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699117K->621K(2096896K), 
+0.0003350 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699117K->685K(2096896K), 
+0.0004860 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->128K(698752K)] 699181K->717K(2096896K), 
+0.0004950 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699213K->621K(2096896K), 
+0.0005390 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699117K->621K(2096896K), 
+0.0002690 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699117K->717K(2096896K), 
+0.0006070 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->64K(698752K)] 699213K->653K(2096896K), 
+0.0004980 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698560K->96K(698752K)] 699149K->685K(2096896K), 
+0.0004260 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699181K->621K(2096896K), 
+0.0003420 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 698528K->32K(698816K)] 699117K->621K(2096960K), 
+0.0003540 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->160K(698816K)] 699245K->749K(2096960K), 
+0.0004740 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 658657K->64K(698688K)] 659247K->653K(2096832K), 
+0.0003030 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(698688K)] [ParOldGen: 
+589K->531K(1398144K)] 653K->531K(2096832K) [PSPermGen: 
+6540K->6540K(21248K)], 0.0064020 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 698496K->160K(698752K)] 699027K->691K(2096896K), 
+0.0003680 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698752K)] 699187K->603K(2096896K), 
+0.0004450 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699099K->667K(2096896K), 
+0.0004320 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699163K->603K(2096896K), 
+0.0002640 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699099K->603K(2096896K), 
+0.0004460 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699099K->699K(2096896K), 
+0.0004620 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->160K(698752K)] 699195K->731K(2096896K), 
+0.0006150 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698752K)] 699227K->603K(2096896K), 
+0.0004320 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->160K(698752K)] 699099K->731K(2096896K), 
+0.0007160 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->128K(698752K)] 699227K->699K(2096896K), 
+0.0005340 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->96K(698752K)] 699195K->667K(2096896K), 
+0.0005110 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699163K->603K(2096896K), 
+0.0004400 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699099K->699K(2096896K), 
+0.0005500 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->128K(698752K)] 699195K->699K(2096896K), 
+0.0005770 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->128K(698752K)] 699195K->699K(2096896K), 
+0.0005740 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->64K(698752K)] 699195K->635K(2096896K), 
+0.0005130 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698560K->96K(698752K)] 699131K->667K(2096896K), 
+0.0004910 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->128K(698752K)] 699163K->699K(2096896K), 
+0.0005510 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->192K(698752K)] 699195K->763K(2096896K), 
+0.0005600 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698688K->32K(698752K)] 699259K->603K(2096896K), 
+0.0004260 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699099K->603K(2096896K), 
+0.0003140 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699099K->603K(2096896K), 
+0.0003660 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699099K->699K(2096896K), 
+0.0004760 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699195K->603K(2096896K), 
+0.0003630 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699099K->603K(2096896K), 
+0.0003090 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699099K->667K(2096896K), 
+0.0004460 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699163K->603K(2096896K), 
+0.0004860 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699099K->667K(2096896K), 
+0.0004540 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699163K->603K(2096896K), 
+0.0004740 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698816K)] 699099K->667K(2096960K), 
+0.0004270 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->64K(698752K)] 699227K->635K(2096896K), 
+0.0004170 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->128K(698816K)] 699195K->699K(2096960K), 
+0.0004940 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698752K->128K(698752K)] 699323K->699K(2096896K), 
+0.0004710 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698752K->32K(698752K)] 699323K->603K(2096896K), 
+0.0005190 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699099K->603K(2096896K), 
+0.0004430 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698688K)] 699099K->699K(2096832K), 
+0.0005000 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699195K->603K(2096896K), 
+0.0004270 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698816K)] 699099K->603K(2096960K), 
+0.0004100 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->128K(698752K)] 699163K->699K(2096896K), 
+0.0004940 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698688K->160K(698752K)] 699259K->731K(2096896K), 
+0.0005030 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->64K(698752K)] 699227K->635K(2096896K), 
+0.0004140 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698560K->32K(698752K)] 699131K->603K(2096896K), 
+0.0004390 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699099K->603K(2096896K), 
+0.0007610 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->64K(698816K)] 699099K->635K(2096960K), 
+0.0004170 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699195K->603K(2096896K), 
+0.0004090 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 84268K->64K(698816K)] 84840K->635K(2096960K), 0.0003170 
+secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(698816K)] [ParOldGen: 
+571K->531K(1398144K)] 635K->531K(2096960K) [PSPermGen: 
+6540K->6540K(21248K)], 0.0063080 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 698624K->160K(698816K)] 699155K->691K(2096960K), 
+0.0003510 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698784K->32K(698688K)] 699315K->587K(2096832K), 
+0.0003240 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699083K->587K(2096896K), 
+0.0004270 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698816K)] 699083K->587K(2096960K), 
+0.0004240 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698816K)] 699211K->587K(2096960K), 
+0.0003130 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->128K(698816K)] 699211K->683K(2096960K), 
+0.0004710 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698752K->128K(698752K)] 699307K->683K(2096896K), 
+0.0004840 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698752K->32K(698752K)] 699307K->587K(2096896K), 
+0.0005510 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699083K->651K(2096896K), 
+0.0004780 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->128K(698688K)] 699147K->683K(2096832K), 
+0.0004930 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->96K(698752K)] 699179K->651K(2096896K), 
+0.0004790 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->96K(698816K)] 699147K->651K(2096960K), 
+0.0005370 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698752K)] 699211K->587K(2096896K), 
+0.0004060 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->96K(698816K)] 699147K->651K(2096960K), 
+0.0004380 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698720K->32K(698816K)] 699275K->587K(2096960K), 
+0.0003460 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->128K(698816K)] 699211K->683K(2096960K), 
+0.0005460 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698752K->32K(698816K)] 699307K->587K(2096960K), 
+0.0004140 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698816K)] 699211K->587K(2096960K), 
+0.0002740 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->128K(698752K)] 699211K->683K(2096896K), 
+0.0004930 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698752K->128K(698752K)] 699307K->683K(2096896K), 
+0.0006590 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 698624K->160K(698752K)] 699179K->715K(2096896K), 
+0.0005180 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->96K(698752K)] 699211K->651K(2096896K), 
+0.0004050 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699147K->587K(2096896K), 
+0.0003790 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->160K(698752K)] 699083K->715K(2096896K), 
+0.0005270 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698752K)] 699211K->587K(2096896K), 
+0.0004170 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699083K->587K(2096896K), 
+0.0002620 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699083K->587K(2096896K), 
+0.0004170 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699083K->587K(2096896K), 
+0.0005560 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699083K->651K(2096896K), 
+0.0004400 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699147K->587K(2096896K), 
+0.0003500 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699083K->683K(2096896K), 
+0.0005040 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->128K(698752K)] 699179K->683K(2096896K), 
+0.0004350 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699179K->587K(2096896K), 
+0.0002680 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699083K->587K(2096896K), 
+0.0004160 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699083K->587K(2096896K), 
+0.0003670 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698816K)] 699083K->587K(2096960K), 
+0.0003020 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699147K->587K(2096896K), 
+0.0002620 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->160K(698688K)] 699147K->715K(2096832K), 
+0.0005340 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->64K(698752K)] 699211K->619K(2096896K), 
+0.0004690 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698560K->160K(698752K)] 699115K->715K(2096896K), 
+0.0005020 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698752K)] 699211K->587K(2096896K), 
+0.0005180 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699083K->587K(2096896K), 
+0.0004910 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699083K->587K(2096896K), 
+0.0003150 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699083K->651K(2096896K), 
+0.0004570 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699147K->587K(2096896K), 
+0.0003320 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 70539K->32K(698816K)] 71095K->587K(2096960K), 0.0003070 
+secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(698816K)] [ParOldGen: 
+555K->532K(1398144K)] 587K->532K(2096960K) [PSPermGen: 
+6540K->6540K(21248K)], 0.0068830 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 698624K->160K(698816K)] 699156K->692K(2096960K), 
+0.0004000 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698784K->32K(698688K)] 699316K->596K(2096832K), 
+0.0003700 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0003790 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698816K)] 699092K->596K(2096960K), 
+0.0004990 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698816K)] 699220K->596K(2096960K), 
+0.0002630 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 698656K->32K(698816K)] 699220K->596K(2096960K), 
+0.0005440 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->160K(698816K)] 699220K->724K(2096960K), 
+0.0004580 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698784K->32K(698816K)] 699348K->596K(2096960K), 
+0.0003910 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->128K(698752K)] 699220K->692K(2096896K), 
+0.0005030 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698752K->192K(698752K)] 699316K->756K(2096896K), 
+0.0006440 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698688K->128K(698752K)] 699252K->692K(2096896K), 
+0.0004490 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->192K(698624K)] 699188K->756K(2096768K), 
+0.0005690 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698560K->32K(698688K)] 699124K->596K(2096832K), 
+0.0003300 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698400K->32K(698752K)] 698964K->596K(2096896K), 
+0.0004680 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0003120 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->160K(698752K)] 699092K->724K(2096896K), 
+0.0006620 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 698656K->192K(698688K)] 699220K->756K(2096832K), 
+0.0006560 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698688K->192K(698688K)] 699252K->756K(2096832K), 
+0.0005670 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698560K->128K(698688K)] 699124K->692K(2096832K), 
+0.0005230 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698496K->96K(698688K)] 699060K->660K(2096832K), 
+0.0005180 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698464K->32K(698688K)] 699028K->596K(2096832K), 
+0.0004660 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698400K->128K(698688K)] 698964K->692K(2096832K), 
+0.0006710 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698496K->32K(698688K)] 699060K->596K(2096832K), 
+0.0003080 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698400K->96K(698752K)] 698964K->660K(2096896K), 
+0.0004560 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->64K(698752K)] 699156K->628K(2096896K), 
+0.0004320 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698560K->128K(698752K)] 699124K->692K(2096896K), 
+0.0006780 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699188K->596K(2096896K), 
+0.0002800 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0002800 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0004840 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0003350 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699092K->660K(2096896K), 
+0.0006120 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699156K->596K(2096896K), 
+0.0004610 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0004750 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699092K->692K(2096896K), 
+0.0004630 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->128K(698752K)] 699188K->692K(2096896K), 
+0.0005980 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699188K->596K(2096896K), 
+0.0004680 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699092K->660K(2096896K), 
+0.0004660 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699156K->596K(2096896K), 
+0.0003360 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0003510 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698816K)] 699092K->596K(2096960K), 
+0.0003210 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->160K(698816K)] 699220K->724K(2096960K), 
+0.0005120 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698784K->32K(698688K)] 699348K->596K(2096832K), 
+0.0005940 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699092K->692K(2096896K), 
+0.0004840 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->128K(698752K)] 699188K->692K(2096896K), 
+0.0006060 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 70381K->64K(698752K)] 70945K->628K(2096896K), 0.0003060 
+secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(698752K)] [ParOldGen: 
+564K->532K(1398144K)] 628K->532K(2096896K) [PSPermGen: 
+6540K->6540K(21248K)], 0.0063970 secs] [Times: user=0.01 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 698496K->128K(698752K)] 699028K->660K(2096896K), 
+0.0006480 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->96K(698752K)] 699156K->660K(2096896K), 
+0.0004560 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->128K(698752K)] 699156K->692K(2096896K), 
+0.0005690 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699188K->596K(2096896K), 
+0.0002600 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->64K(698752K)] 699092K->628K(2096896K), 
+0.0005370 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698560K->32K(698752K)] 699124K->596K(2096896K), 
+0.0003260 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698816K)] 699092K->596K(2096960K), 
+0.0003620 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->128K(698752K)] 699156K->692K(2096896K), 
+0.0004340 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698688K->32K(698752K)] 699252K->596K(2096896K), 
+0.0003370 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0003140 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->64K(698816K)] 699092K->628K(2096960K), 
+0.0004570 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698688K->128K(698816K)] 699252K->692K(2096960K), 
+0.0004820 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698752K->32K(698816K)] 699316K->596K(2096960K), 
+0.0003280 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698816K)] 699220K->596K(2096960K), 
+0.0003150 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 698656K->32K(698816K)] 699220K->596K(2096960K), 
+0.0004500 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 698656K->128K(698816K)] 699220K->692K(2096960K), 
+0.0004320 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698752K->32K(698816K)] 699316K->596K(2096960K), 
+0.0004120 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->96K(698816K)] 699220K->660K(2096960K), 
+0.0005480 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698720K->160K(698688K)] 699284K->724K(2096832K), 
+0.0004430 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->64K(698752K)] 699220K->628K(2096896K), 
+0.0003960 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698560K->96K(698816K)] 699124K->660K(2096960K), 
+0.0005300 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->160K(698752K)] 699220K->724K(2096896K), 
+0.0004770 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698720K->128K(698752K)] 699284K->692K(2096896K), 
+0.0005140 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->64K(698752K)] 699188K->628K(2096896K), 
+0.0004380 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698560K->32K(698752K)] 699124K->596K(2096896K), 
+0.0002850 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699092K->660K(2096896K), 
+0.0004600 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699156K->596K(2096896K), 
+0.0002610 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0003240 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698688K)] 699092K->692K(2096832K), 
+0.0005560 secs] [Times: user=0.00 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699188K->596K(2096896K), 
+0.0002820 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698816K)] 699092K->596K(2096960K), 
+0.0004380 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699156K->596K(2096896K), 
+0.0003940 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->128K(698688K)] 699156K->692K(2096832K), 
+0.0004080 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699188K->596K(2096896K), 
+0.0002670 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698816K)] 699092K->596K(2096960K), 
+0.0003350 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->160K(698816K)] 699220K->724K(2096960K), 
+0.0005610 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698784K->32K(698688K)] 699348K->596K(2096832K), 
+0.0003950 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699092K->692K(2096896K), 
+0.0004360 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699188K->596K(2096896K), 
+0.0003220 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0002770 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698816K)] 699092K->596K(2096960K), 
+0.0003290 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->96K(698752K)] 699156K->660K(2096896K), 
+0.0004530 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->160K(698688K)] 699220K->724K(2096832K), 
+0.0004180 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->64K(698752K)] 699220K->628K(2096896K), 
+0.0004540 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 247472K->64K(698816K)] 248036K->628K(2096960K), 
+0.0003920 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(698816K)] [ParOldGen: 
+564K->532K(1398144K)] 628K->532K(2096960K) [PSPermGen: 
+6540K->6540K(21248K)], 0.0062860 secs] [Times: user=0.01 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 698560K->160K(698752K)] 699092K->692K(2096896K), 
+0.0003550 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698720K->32K(698752K)] 699252K->596K(2096896K), 
+0.0003230 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0003260 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0005440 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->160K(698752K)] 699092K->724K(2096896K), 
+0.0006640 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698752K)] 699220K->596K(2096896K), 
+0.0004480 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699092K->692K(2096896K), 
+0.0004350 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699188K->596K(2096896K), 
+0.0003880 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->192K(698752K)] 699092K->756K(2096896K), 
+0.0006150 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698688K->32K(698752K)] 699252K->596K(2096896K), 
+0.0003610 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0002880 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0003590 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699092K->692K(2096896K), 
+0.0005110 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699188K->596K(2096896K), 
+0.0003310 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0004380 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0003600 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699092K->692K(2096896K), 
+0.0006890 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->128K(698752K)] 699188K->692K(2096896K), 
+0.0005210 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699188K->596K(2096896K), 
+0.0003860 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0002680 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0003230 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699092K->660K(2096896K), 
+0.0004510 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->128K(698752K)] 699156K->692K(2096896K), 
+0.0004840 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 698624K->128K(698752K)] 699188K->692K(2096896K), 
+0.0003980 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->128K(698752K)] 699188K->692K(2096896K), 
+0.0006340 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699188K->596K(2096896K), 
+0.0002790 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699092K->692K(2096896K), 
+0.0005670 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699188K->596K(2096896K), 
+0.0026820 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699092K->660K(2096896K), 
+0.0005180 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->128K(698752K)] 699156K->692K(2096896K), 
+0.0004500 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->96K(698752K)] 699188K->660K(2096896K), 
+0.0004740 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699156K->596K(2096896K), 
+0.0004240 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 698528K->192K(698752K)] 699092K->756K(2096896K), 
+0.0006140 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698688K->32K(698752K)] 699252K->596K(2096896K), 
+0.0004460 secs] [Times: user=0.00 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699092K->660K(2096896K), 
+0.0005620 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699156K->596K(2096896K), 
+0.0003020 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0003900 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0004380 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0003240 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698816K)] 699092K->596K(2096960K), 
+0.0005570 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->128K(698752K)] 699156K->692K(2096896K), 
+0.0004760 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698688K->96K(698752K)] 699252K->660K(2096896K), 
+0.0004600 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699156K->596K(2096896K), 
+0.0004370 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698816K)] 699092K->596K(2096960K), 
+0.0003600 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+---------------
+[GC [PSYoungGen: 316441K->32K(698816K)] 317005K->596K(2096960K), 
+0.0002690 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(698816K)] [ParOldGen: 
+564K->532K(1398144K)] 596K->532K(2096960K) [PSPermGen: 
+6540K->6540K(21248K)], 0.0063250 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 698624K->96K(698816K)] 699156K->628K(2096960K), 
+0.0003520 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698720K->32K(698816K)] 699252K->588K(2096960K), 
+0.0003940 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698816K)] 699212K->588K(2096960K), 
+0.0004050 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698816K)] 699212K->588K(2096960K), 
+0.0003850 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698816K)] 699212K->588K(2096960K), 
+0.0002360 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->128K(698816K)] 699212K->684K(2096960K), 
+0.0005930 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 698752K->160K(698688K)] 699308K->716K(2096832K), 
+0.0005720 secs] [Times: user=0.00 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698752K)] 699212K->588K(2096896K), 
+0.0003960 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698816K)] 699084K->588K(2096960K), 
+0.0003580 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->96K(698816K)] 699212K->652K(2096960K), 
+0.0004390 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698720K->160K(698688K)] 699276K->716K(2096832K), 
+0.0005040 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->128K(698752K)] 699212K->684K(2096896K), 
+0.0007390 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699180K->588K(2096896K), 
+0.0002700 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699084K->588K(2096896K), 
+0.0003970 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699084K->588K(2096896K), 
+0.0003570 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->192K(698752K)] 699084K->748K(2096896K), 
+0.0006260 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698688K->32K(698752K)] 699244K->588K(2096896K), 
+0.0003030 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->160K(698752K)] 699084K->716K(2096896K), 
+0.0004710 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->96K(698752K)] 699212K->652K(2096896K), 
+0.0005030 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->96K(698752K)] 699148K->652K(2096896K), 
+0.0004470 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699148K->588K(2096896K), 
+0.0005490 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699084K->588K(2096896K), 
+0.0004370 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699084K->652K(2096896K), 
+0.0004470 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->96K(698752K)] 699148K->652K(2096896K), 
+0.0005530 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->192K(698752K)] 699148K->748K(2096896K), 
+0.0005560 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698688K->32K(698752K)] 699244K->588K(2096896K), 
+0.0005230 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699084K->652K(2096896K), 
+0.0005040 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699148K->588K(2096896K), 
+0.0003450 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699084K->588K(2096896K), 
+0.0003780 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->160K(698752K)] 699084K->716K(2096896K), 
+0.0006360 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->64K(698752K)] 699212K->620K(2096896K), 
+0.0004920 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698560K->160K(698752K)] 699116K->716K(2096896K), 
+0.0004560 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698752K)] 699212K->588K(2096896K), 
+0.0002610 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699084K->652K(2096896K), 
+0.0004880 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->224K(698752K)] 699148K->780K(2096896K), 
+0.0005540 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698720K->96K(698752K)] 699276K->652K(2096896K), 
+0.0005140 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->96K(698752K)] 699148K->652K(2096896K), 
+0.0004190 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->96K(698752K)] 699148K->652K(2096896K), 
+0.0004330 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699148K->588K(2096896K), 
+0.0004720 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->64K(698752K)] 699084K->620K(2096896K), 
+0.0007020 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 698560K->128K(698752K)] 699116K->684K(2096896K), 
+0.0004380 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699180K->588K(2096896K), 
+0.0003880 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699084K->684K(2096896K), 
+0.0005740 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699180K->588K(2096896K), 
+0.0004520 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699084K->588K(2096896K), 
+0.0004170 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 123927K->64K(698752K)] 124483K->620K(2096896K), 
+0.0002760 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(698752K)] [ParOldGen: 
+556K->532K(1398144K)] 620K->532K(2096896K) [PSPermGen: 
+6540K->6540K(21248K)], 0.0062980 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 698496K->160K(698752K)] 699028K->692K(2096896K), 
+0.0004760 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698752K)] 699188K->604K(2096896K), 
+0.0004850 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699100K->604K(2096896K), 
+0.0003060 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699100K->604K(2096896K), 
+0.0003270 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699100K->604K(2096896K), 
+0.0003910 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699100K->604K(2096896K), 
+0.0002670 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698816K)] 699100K->604K(2096960K), 
+0.0004960 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698816K)] 699228K->604K(2096960K), 
+0.0003240 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 698656K->96K(698816K)] 699228K->668K(2096960K), 
+0.0004670 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698720K->64K(698816K)] 699292K->636K(2096960K), 
+0.0003360 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698688K->96K(698816K)] 699260K->668K(2096960K), 
+0.0005290 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698720K->32K(698816K)] 699292K->604K(2096960K), 
+0.0004660 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698816K)] 699228K->604K(2096960K), 
+0.0004090 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698816K)] 699228K->604K(2096960K), 
+0.0005210 secs] [Times: user=0.00 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698816K)] 699228K->604K(2096960K), 
+0.0005330 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698816K)] 699228K->604K(2096960K), 
+0.0002960 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->96K(698816K)] 699228K->668K(2096960K), 
+0.0004800 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698720K->160K(698816K)] 699292K->732K(2096960K), 
+0.0006180 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698784K->96K(698816K)] 699356K->668K(2096960K), 
+0.0004070 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698720K->96K(698816K)] 699292K->668K(2096960K), 
+0.0005130 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698720K->160K(698688K)] 699292K->732K(2096832K), 
+0.0005990 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698752K)] 699228K->604K(2096896K), 
+0.0004060 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698816K)] 699100K->668K(2096960K), 
+0.0004960 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698752K)] 699228K->604K(2096896K), 
+0.0003720 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698816K)] 699164K->604K(2096960K), 
+0.0003190 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698816K)] 699228K->604K(2096960K), 
+0.0004790 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->96K(698816K)] 699228K->668K(2096960K), 
+0.0004700 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698720K->32K(698816K)] 699292K->604K(2096960K), 
+0.0003710 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698816K)] 699228K->604K(2096960K), 
+0.0003130 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->128K(698816K)] 699228K->700K(2096960K), 
+0.0005080 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698752K->32K(698816K)] 699324K->604K(2096960K), 
+0.0002650 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->96K(698816K)] 699228K->668K(2096960K), 
+0.0004970 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698720K->160K(698688K)] 699292K->732K(2096832K), 
+0.0004760 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->160K(698752K)] 699228K->732K(2096896K), 
+0.0004640 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->128K(698752K)] 699228K->700K(2096896K), 
+0.0005020 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699196K->604K(2096896K), 
+0.0005560 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699100K->604K(2096896K), 
+0.0004310 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699100K->604K(2096896K), 
+0.0003450 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699100K->700K(2096896K), 
+0.0004680 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->96K(698752K)] 699196K->668K(2096896K), 
+0.0004960 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699164K->604K(2096896K), 
+0.0021630 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699100K->700K(2096896K), 
+0.0004860 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->128K(698752K)] 699196K->700K(2096896K), 
+0.0005700 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->192K(698752K)] 699196K->764K(2096896K), 
+0.0005940 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698688K->64K(698752K)] 699260K->636K(2096896K), 
+0.0005120 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 204192K->32K(698752K)] 204764K->604K(2096896K), 
+0.0003110 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(698752K)] [ParOldGen: 
+572K->532K(1398144K)] 604K->532K(2096896K) [PSPermGen: 
+6540K->6540K(21248K)], 0.0063540 secs] [Times: user=0.01 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 698496K->128K(698752K)] 699028K->660K(2096896K), 
+0.0004530 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699156K->596K(2096896K), 
+0.0003480 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699092K->692K(2096896K), 
+0.0004590 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->160K(698752K)] 699188K->724K(2096896K), 
+0.0005710 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->96K(698752K)] 699220K->660K(2096896K), 
+0.0004650 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->128K(698752K)] 699156K->692K(2096896K), 
+0.0004480 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->160K(698752K)] 699188K->724K(2096896K), 
+0.0005170 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698752K)] 699220K->596K(2096896K), 
+0.0002590 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0004690 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->160K(698752K)] 699092K->724K(2096896K), 
+0.0006450 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->64K(698752K)] 699220K->628K(2096896K), 
+0.0005520 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698560K->32K(698752K)] 699124K->596K(2096896K), 
+0.0005400 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0003500 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699092K->660K(2096896K), 
+0.0006160 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699156K->596K(2096896K), 
+0.0004950 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0002630 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699092K->692K(2096896K), 
+0.0005500 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699188K->596K(2096896K), 
+0.0004430 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699092K->660K(2096896K), 
+0.0005150 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->128K(698752K)] 699156K->692K(2096896K), 
+0.0005920 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->96K(698752K)] 699188K->660K(2096896K), 
+0.0004200 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699156K->596K(2096896K), 
+0.0002680 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0004260 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->160K(698752K)] 699092K->724K(2096896K), 
+0.0008500 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->160K(698752K)] 699220K->724K(2096896K), 
+0.0004780 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->192K(698752K)] 699220K->756K(2096896K), 
+0.0006250 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698688K->64K(698752K)] 699252K->628K(2096896K), 
+0.0004270 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698560K->32K(698752K)] 699124K->596K(2096896K), 
+0.0006700 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0002550 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699092K->692K(2096896K), 
+0.0004850 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->128K(698752K)] 699188K->692K(2096896K), 
+0.0004400 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->96K(698752K)] 699188K->660K(2096896K), 
+0.0004870 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699156K->596K(2096896K), 
+0.0005440 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699092K->692K(2096896K), 
+0.0005230 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699188K->596K(2096896K), 
+0.0005320 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->128K(698752K)] 699092K->692K(2096896K), 
+0.0005240 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699188K->596K(2096896K), 
+0.0003190 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0003720 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0004540 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->96K(698752K)] 699092K->660K(2096896K), 
+0.0004520 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->128K(698752K)] 699156K->692K(2096896K), 
+0.0005610 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->96K(698752K)] 699188K->660K(2096896K), 
+0.0004910 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->32K(698752K)] 699156K->596K(2096896K), 
+0.0004180 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699092K->596K(2096896K), 
+0.0003480 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 494697K->32K(698816K)] 495261K->596K(2096960K), 
+0.0003190 secs] [Times: user=0.00 sys=0.01, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(698816K)] [ParOldGen: 
+564K->532K(1398144K)] 596K->532K(2096960K) [PSPermGen: 
+6540K->6540K(21248K)], 0.0065050 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+scala.dataflow.bench.LTQCommBench$    87639    87369    88190    88454    93694    89953    87586    88155    88576    89009
+Heap
+  PSYoungGen      total 698816K, used 7813K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 698560K, 1% used 
+[0x00000007d5560000,0x00000007d5d01730,0x00000007fff90000)
+   from space 256K, 0% used 
+[0x00000007fffc0000,0x00000007fffc0000,0x0000000800000000)
+   to   space 192K, 0% used 
+[0x00000007fff90000,0x00000007fff90000,0x00000007fffc0000)
+  ParOldGen       total 1398144K, used 532K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x0000000780085130,0x00000007d5560000)
+  PSPermGen       total 21248K, used 6981K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 32% used 
+[0x000000077ae00000,0x000000077b4d1628,0x000000077c2c0000)
+[success] Total time: 889 s, completed Jun 5, 2012 11:24:14 AM
+ > bench -Dpar=1 -Dsize=400000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 10
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=400000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 10
+[GC [PSYoungGen: 524288K->2586K(611648K)] 524288K->2594K(2009792K), 
+0.0034920 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 526874K->672K(611648K)] 526882K->688K(2009792K), 
+0.0014960 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524960K->624K(611648K)] 524976K->648K(2009792K), 
+0.0013640 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524912K->640K(611648K)] 524936K->664K(2009792K), 
+0.0013520 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524928K->656K(611648K)] 524952K->680K(2009792K), 
+0.0013260 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+^CHeap
+  PSYoungGen      total 611648K, used 66661K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 524288K, 12% used 
+[0x00000007d5560000,0x00000007d95d5530,0x00000007f5560000)
+   from space 87360K, 0% used 
+[0x00000007f5560000,0x00000007f5604010,0x00000007faab0000)
+   to   space 2560K, 0% used 
+[0x00000007ffd80000,0x00000007ffd80000,0x0000000800000000)
+  ParOldGen       total 1398144K, used 24K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x0000000780006000,0x00000007d5560000)
+  PSPermGen       total 21248K, used 6535K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 30% used 
+[0x000000077ae00000,0x000000077b461f90,0x000000077c2c0000)
+aleksandar@lampmac14:~/workspaces/scala/dataflow [master●]‡ xsbt
+[info] Loading project definition from 
+/Users/aleksandar/workspaces/scala/dataflow/project
+[info] Set current project to scala-dataflow (in build 
+file:/Users/aleksandar/workspaces/scala/dataflow/)
+ > bench -Dpar=1 -Dsize=400000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 3
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=400000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 3
+[GC [PSYoungGen: 524288K->2622K(611648K)] 524288K->2630K(2009792K), 
+0.0036180 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 526910K->768K(611648K)] 526918K->784K(2009792K), 
+0.0015490 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 525056K->640K(611648K)] 525072K->656K(2009792K), 
+0.0014590 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524928K->672K(611648K)] 524944K->688K(2009792K), 
+0.0014210 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524960K->672K(611648K)] 524976K->688K(2009792K), 
+0.0014270 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524960K->592K(696512K)] 524976K->616K(2094656K), 
+0.0015180 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694480K->32K(696384K)] 694504K->584K(2094528K), 
+0.0013990 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 693920K->128K(696512K)] 694472K->680K(2094656K), 
+0.0004560 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694144K->32K(696512K)] 694696K->584K(2094656K), 
+0.0003300 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694048K->192K(696640K)] 694600K->744K(2094784K), 
+0.0006440 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694400K->32K(696576K)] 694952K->584K(2094720K), 
+0.0002600 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694240K->96K(696832K)] 694792K->648K(2094976K), 
+0.0005580 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694624K->32K(696704K)] 695176K->584K(2094848K), 
+0.0003530 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694560K->96K(696960K)] 695112K->648K(2095104K), 
+0.0005660 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694944K->32K(696896K)] 695496K->584K(2095040K), 
+0.0002580 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694880K->128K(697152K)] 695432K->680K(2095296K), 
+0.0005190 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695360K->32K(697088K)] 695912K->584K(2095232K), 
+0.0005150 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695264K->160K(697344K)] 695816K->712K(2095488K), 
+0.0006960 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695776K->128K(697280K)] 696328K->680K(2095424K), 
+0.0005120 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695744K->224K(697600K)] 696296K->776K(2095744K), 
+0.0007950 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696288K->32K(697472K)] 696840K->584K(2095616K), 
+0.0004960 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 696096K->64K(697728K)] 696648K->616K(2095872K), 
+0.0004490 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 509078K->96K(697664K)] 509630K->648K(2095808K), 
+0.0004560 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(697664K)] [ParOldGen: 
+552K->549K(1398144K)] 648K->549K(2095808K) [PSPermGen: 
+6560K->6539K(21248K)], 0.0130220 secs] [Times: user=0.03 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 696384K->128K(697856K)] 696933K->677K(2096000K), 
+0.0003000 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696768K->32K(697792K)] 697317K->605K(2095936K), 
+0.0002650 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696672K->32K(697984K)] 697245K->605K(2096128K), 
+0.0003620 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696928K->32K(697920K)] 697501K->605K(2096064K), 
+0.0006110 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696928K->32K(698112K)] 697501K->605K(2096256K), 
+0.0004910 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697184K->32K(698048K)] 697757K->605K(2096192K), 
+0.0004300 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697184K->32K(698176K)] 697757K->605K(2096320K), 
+0.0005170 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697312K->96K(698112K)] 697885K->669K(2096256K), 
+0.0004260 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697376K->96K(698304K)] 697949K->669K(2096448K), 
+0.0005230 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697632K->32K(698240K)] 698205K->605K(2096384K), 
+0.0004930 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697568K->32K(698368K)] 698141K->605K(2096512K), 
+0.0005160 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697760K->32K(698368K)] 698333K->605K(2096512K), 
+0.0004510 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697760K->192K(698432K)] 698333K->765K(2096576K), 
+0.0007430 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698048K->32K(698432K)] 698621K->605K(2096576K), 
+0.0003250 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697888K->96K(698496K)] 698461K->669K(2096640K), 
+0.0004900 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698016K->96K(698432K)] 698589K->669K(2096576K), 
+0.0004670 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698016K->32K(698560K)] 698589K->605K(2096704K), 
+0.0005490 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698144K->160K(698560K)] 698717K->733K(2096704K), 
+0.0006060 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698272K->128K(698560K)] 698845K->701K(2096704K), 
+0.0005040 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698240K->160K(698560K)] 698813K->733K(2096704K), 
+0.0006780 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698272K->32K(698624K)] 698845K->605K(2096768K), 
+0.0003790 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698272K->32K(698624K)] 698845K->605K(2096768K), 
+0.0003600 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 92766K->32K(698624K)] 93340K->605K(2096768K), 0.0003560 
+secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(698624K)] [ParOldGen: 
+573K->531K(1398144K)] 605K->531K(2096768K) [PSPermGen: 
+6539K->6539K(21248K)], 0.0065350 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 698240K->160K(698624K)] 698771K->691K(2096768K), 
+0.0005430 secs] [Times: user=0.00 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 698400K->32K(698624K)] 698931K->595K(2096768K), 
+0.0003800 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698272K->32K(698624K)] 698835K->595K(2096768K), 
+0.0005450 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698272K->32K(698688K)] 698835K->595K(2096832K), 
+0.0003180 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698400K->32K(698688K)] 698963K->595K(2096832K), 
+0.0003290 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698400K->128K(698688K)] 698963K->691K(2096832K), 
+0.0005290 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698496K->32K(698688K)] 699059K->595K(2096832K), 
+0.0002930 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698400K->160K(698688K)] 698963K->723K(2096832K), 
+0.0005710 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698688K)] 699091K->595K(2096832K), 
+0.0002720 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698400K->32K(698688K)] 698963K->595K(2096832K), 
+0.0004660 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 698400K->192K(698688K)] 698963K->755K(2096832K), 
+0.0006030 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698560K->32K(698688K)] 699123K->595K(2096832K), 
+0.0003150 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698400K->32K(698688K)] 698963K->595K(2096832K), 
+0.0004920 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698400K->96K(698752K)] 698963K->659K(2096896K), 
+0.0005560 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698688K)] 699091K->595K(2096832K), 
+0.0002860 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698464K->128K(698752K)] 699027K->691K(2096896K), 
+0.0005330 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->160K(698688K)] 699187K->723K(2096832K), 
+0.0007930 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->32K(698752K)] 699219K->595K(2096896K), 
+0.0002850 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698464K->128K(698688K)] 699027K->691K(2096832K), 
+0.0006170 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698560K->128K(698752K)] 699123K->691K(2096896K), 
+0.0005460 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698624K->32K(698752K)] 699187K->595K(2096896K), 
+0.0004560 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698528K->32K(698752K)] 699091K->595K(2096896K), 
+0.0004660 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 32K->0K(698752K)] 596K->579K(2096896K), 0.0003470 secs] 
+[Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 0K->0K(698752K)] [ParOldGen: 
+579K->531K(1398144K)] 579K->531K(2096896K) [PSPermGen: 
+6539K->6539K(21248K)], 0.0068510 secs] [Times: user=0.01 sys=0.00, 
+real=0.01 secs]
+scala.dataflow.bench.LTQCommBench$    45123    46093    47650
+Heap
+  PSYoungGen      total 698752K, used 9053K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 698496K, 1% used 
+[0x00000007d5560000,0x00000007d5e37558,0x00000007fff80000)
+   from space 256K, 0% used 
+[0x00000007fff80000,0x00000007fff80000,0x00000007fffc0000)
+   to   space 256K, 0% used 
+[0x00000007fffc0000,0x00000007fffc0000,0x0000000800000000)
+  ParOldGen       total 1398144K, used 531K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x0000000780084fb8,0x00000007d5560000)
+  PSPermGen       total 21248K, used 6980K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 32% used 
+[0x000000077ae00000,0x000000077b4d12e0,0x000000077c2c0000)
+[success] Total time: 140 s, completed Jun 5, 2012 11:28:37 AM
+ > bench -Dpar=1 -Dsize=200000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 3
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=200000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 3
+[GC [PSYoungGen: 524288K->2554K(611648K)] 524288K->2562K(2009792K), 
+0.0035620 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 526842K->704K(611648K)] 526850K->720K(2009792K), 
+0.0015160 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524992K->640K(611648K)] 525008K->664K(2009792K), 
+0.0013290 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524928K->688K(611648K)] 524952K->720K(2009792K), 
+0.0013700 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524976K->640K(611648K)] 525008K->672K(2009792K), 
+0.0014400 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 524928K->624K(696576K)] 524960K->656K(2094720K), 
+0.0014400 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694640K->64K(696448K)] 694672K->620K(2094592K), 
+0.0054900 secs] [Times: user=0.03 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694080K->32K(696576K)] 694636K->588K(2094720K), 
+0.0003040 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694176K->160K(696576K)] 694732K->716K(2094720K), 
+0.0005340 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694304K->32K(696704K)] 694860K->588K(2094848K), 
+0.0004030 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694432K->32K(696704K)] 694988K->588K(2094848K), 
+0.0003860 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 694432K->160K(696896K)] 694988K->716K(2095040K), 
+0.0006280 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 150083K->160K(696768K)] 150639K->716K(2094912K), 
+0.0004190 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 160K->0K(696768K)] [ParOldGen: 
+556K->550K(1398144K)] 716K->550K(2094912K) [PSPermGen: 
+6560K->6539K(21248K)], 0.0123360 secs] [Times: user=0.02 sys=0.00, 
+real=0.02 secs]
+[GC [PSYoungGen: 694656K->64K(697088K)] 695206K->614K(2095232K), 
+0.0002720 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695104K->32K(696960K)] 695654K->614K(2095104K), 
+0.0005150 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695072K->64K(697216K)] 695654K->646K(2095360K), 
+0.0003100 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695424K->32K(697152K)] 696006K->614K(2095296K), 
+0.0003930 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695392K->96K(697408K)] 695974K->678K(2095552K), 
+0.0005020 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695776K->64K(697280K)] 696358K->646K(2095424K), 
+0.0003950 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695744K->128K(697600K)] 696326K->710K(2095744K), 
+0.0005340 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696192K->32K(697472K)] 696774K->614K(2095616K), 
+0.0004230 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696096K->32K(697728K)] 696678K->614K(2095872K), 
+0.0004610 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 696416K->96K(697664K)] 696998K->678K(2095808K), 
+0.0005090 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 241589K->64K(697856K)] 242172K->646K(2096000K), 
+0.0004280 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(697856K)] [ParOldGen: 
+582K->532K(1398144K)] 646K->532K(2096000K) [PSPermGen: 
+6539K->6539K(21248K)], 0.0065550 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 696640K->128K(697792K)] 697172K->660K(2095936K), 
+0.0004670 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696768K->32K(697984K)] 697300K->596K(2096128K), 
+0.0005040 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696928K->64K(697920K)] 697492K->628K(2096064K), 
+0.0003540 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696960K->96K(698112K)] 697524K->660K(2096256K), 
+0.0006930 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697248K->64K(698048K)] 697812K->628K(2096192K), 
+0.0005020 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697216K->32K(698240K)] 697780K->596K(2096384K), 
+0.0004270 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697440K->96K(698176K)] 698004K->660K(2096320K), 
+0.0004850 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697504K->128K(698368K)] 698068K->692K(2096512K), 
+0.0005070 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697792K->32K(698304K)] 698356K->596K(2096448K), 
+0.0003460 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697696K->32K(698432K)] 698260K->596K(2096576K), 
+0.0006110 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 581851K->32K(698368K)] 582415K->596K(2096512K), 
+0.0003440 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(698368K)] [ParOldGen: 
+564K->532K(1398144K)] 596K->532K(2096512K) [PSPermGen: 
+6539K->6539K(21248K)], 0.0063970 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+scala.dataflow.bench.LTQCommBench$    22487    20929    23059
+Heap
+  PSYoungGen      total 698368K, used 10110K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 697792K, 1% used 
+[0x00000007d5560000,0x00000007d5f3fa50,0x00000007ffed0000)
+   from space 576K, 0% used 
+[0x00000007ffed0000,0x00000007ffed0000,0x00000007fff60000)
+   to   space 576K, 0% used 
+[0x00000007fff70000,0x00000007fff70000,0x0000000800000000)
+  ParOldGen       total 1398144K, used 532K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x0000000780085240,0x00000007d5560000)
+  PSPermGen       total 21248K, used 6980K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 32% used 
+[0x000000077ae00000,0x000000077b4d12a8,0x000000077c2c0000)
+[success] Total time: 67 s, completed Jun 5, 2012 11:29:48 AM
+ > bench -Dpar=1 -Dsize=100000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 3
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=100000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 3
+[GC [PSYoungGen: 524288K->2617K(611648K)] 524288K->2625K(2009792K), 
+0.0036030 secs] [Times: user=0.02 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 526905K->704K(611648K)] 526913K->720K(2009792K), 
+0.0014040 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524992K->608K(611648K)] 525008K->632K(2009792K), 
+0.0013550 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524896K->640K(611648K)] 524920K->672K(2009792K), 
+0.0014130 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524928K->608K(611648K)] 524960K->648K(2009792K), 
+0.0013340 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524896K->672K(696512K)] 524936K->712K(2094656K), 
+0.0014180 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 651619K->288K(696384K)] 651659K->868K(2094528K), 
+0.0013860 secs] [Times: user=0.01 sys=0.00, real=0.01 secs]
+[Full GC (System) [PSYoungGen: 288K->0K(696384K)] [ParOldGen: 
+580K->549K(1398144K)] 868K->549K(2094528K) [PSPermGen: 
+6562K->6541K(21248K)], 0.0116510 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 693888K->128K(696640K)] 694437K->677K(2094784K), 
+0.0003070 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694336K->192K(696576K)] 694885K->741K(2094720K), 
+0.0005530 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694400K->64K(696704K)] 694949K->653K(2094848K), 
+0.0003430 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694464K->32K(696704K)] 695053K->621K(2094848K), 
+0.0005210 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694432K->32K(696832K)] 695021K->621K(2094976K), 
+0.0004340 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 308176K->64K(696768K)] 308766K->653K(2094912K), 
+0.0003490 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(696768K)] [ParOldGen: 
+589K->531K(1398144K)] 653K->531K(2094912K) [PSPermGen: 
+6541K->6541K(21248K)], 0.0065600 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 694592K->160K(697024K)] 695123K->691K(2095168K), 
+0.0003190 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 695072K->64K(696896K)] 695603K->627K(2095040K), 
+0.0003130 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694976K->32K(697216K)] 695539K->595K(2095360K), 
+0.0003380 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695328K->32K(697088K)] 695891K->595K(2095232K), 
+0.0004970 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695328K->32K(697344K)] 695891K->595K(2095488K), 
+0.0003970 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 340949K->64K(697280K)] 341513K->627K(2095424K), 
+0.0002580 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(697280K)] [ParOldGen: 
+563K->531K(1398144K)] 627K->531K(2095424K) [PSPermGen: 
+6541K->6541K(21248K)], 0.0062320 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+scala.dataflow.bench.LTQCommBench$    10534    10645    10665
+Heap
+  PSYoungGen      total 697280K, used 9009K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 695616K, 1% used 
+[0x00000007d5560000,0x00000007d5e2c5a0,0x00000007ffcb0000)
+   from space 1664K, 0% used 
+[0x00000007ffcb0000,0x00000007ffcb0000,0x00000007ffe50000)
+   to   space 1600K, 0% used 
+[0x00000007ffe70000,0x00000007ffe70000,0x0000000800000000)
+  ParOldGen       total 1398144K, used 531K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x0000000780084f98,0x00000007d5560000)
+  PSPermGen       total 21248K, used 6982K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 32% used 
+[0x000000077ae00000,0x000000077b4d19b0,0x000000077c2c0000)
+[success] Total time: 32 s, completed Jun 5, 2012 11:30:43 AM
+ > bench -Dpar=1 -Dsize=50000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 3
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=50000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 3
+[GC [PSYoungGen: 524288K->2649K(611648K)] 524288K->2657K(2009792K), 
+0.0034690 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 526937K->608K(611648K)] 526945K->624K(2009792K), 
+0.0014690 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524896K->672K(611648K)] 524912K->688K(2009792K), 
+0.0013480 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 368477K->672K(611648K)] 368493K->696K(2009792K), 
+0.0013880 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 672K->0K(611648K)] [ParOldGen: 
+24K->549K(1398144K)] 696K->549K(2009792K) [PSPermGen: 
+6560K->6539K(21248K)], 0.0110550 secs] [Times: user=0.02 sys=0.00, 
+real=0.02 secs]
+[GC [PSYoungGen: 524288K->128K(611648K)] 524837K->677K(2009792K), 
+0.0003040 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 524416K->128K(696320K)] 524965K->677K(2094464K), 
+0.0004260 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 609088K->160K(611648K)] 609637K->709K(2009792K), 
+0.0004680 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 267185K->32K(696512K)] 267735K->581K(2094656K), 
+0.0004000 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(696512K)] [ParOldGen: 
+549K->531K(1398144K)] 581K->531K(2094656K) [PSPermGen: 
+6539K->6539K(21248K)], 0.0068930 secs] [Times: user=0.02 sys=0.00, 
+real=0.00 secs]
+[GC [PSYoungGen: 693952K->128K(696448K)] 694483K->659K(2094592K), 
+0.0004570 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694080K->128K(696704K)] 694611K->659K(2094848K), 
+0.0003560 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 510499K->0K(696640K)] 511031K->539K(2094784K), 
+0.0002960 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 0K->0K(696640K)] [ParOldGen: 
+539K->531K(1398144K)] 539K->531K(2094784K) [PSPermGen: 
+6539K->6539K(21248K)], 0.0064520 secs] [Times: user=0.01 sys=0.00, 
+real=0.00 secs]
+scala.dataflow.bench.LTQCommBench$    5262    5610    5345
+Heap
+  PSYoungGen      total 696640K, used 9000K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 694336K, 1% used 
+[0x00000007d5560000,0x00000007d5e2a2b0,0x00000007ffb70000)
+   from space 2304K, 0% used 
+[0x00000007ffb70000,0x00000007ffb70000,0x00000007ffdb0000)
+   to   space 2176K, 0% used 
+[0x00000007ffde0000,0x00000007ffde0000,0x0000000800000000)
+  ParOldGen       total 1398144K, used 531K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x0000000780084ff0,0x00000007d5560000)
+  PSPermGen       total 21248K, used 6981K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 32% used 
+[0x000000077ae00000,0x000000077b4d14b8,0x000000077c2c0000)
+[success] Total time: 17 s, completed Jun 5, 2012 11:32:11 AM
+ > bench -Dpar=1 -Dsize=25000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 3
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=25000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 3
+[GC [PSYoungGen: 524288K->2585K(611648K)] 524288K->2593K(2009792K), 
+0.0033180 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 487238K->704K(611648K)] 487246K->720K(2009792K), 
+0.0014380 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 704K->0K(611648K)] [ParOldGen: 
+16K->553K(1398144K)] 720K->553K(2009792K) [PSPermGen: 
+6560K->6539K(21248K)], 0.0111680 secs] [Times: user=0.02 sys=0.01, 
+real=0.01 secs]
+[GC [PSYoungGen: 524288K->128K(611648K)] 524841K->681K(2009792K), 
+0.0003340 secs] [Times: user=0.00 sys=0.00, real=0.01 secs]
+---------------
+[GC [PSYoungGen: 435219K->64K(611648K)] 435772K->617K(2009792K), 
+0.0003670 secs] [Times: user=0.00 sys=0.01, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(611648K)] [ParOldGen: 
+553K->531K(1398144K)] 617K->531K(2009792K) [PSPermGen: 
+6539K->6539K(21248K)], 0.0070370 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+[GC [PSYoungGen: 524288K->96K(611648K)] 524819K->627K(2009792K), 
+0.0002860 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 447071K->32K(611648K)] 447602K->563K(2009792K), 
+0.0002650 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(611648K)] [ParOldGen: 
+531K->531K(1398144K)] 563K->531K(2009792K) [PSPermGen: 
+6539K->6539K(21248K)], 0.0064060 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+scala.dataflow.bench.LTQCommBench$    2608    2681    2703
+Heap
+  PSYoungGen      total 611648K, used 5043K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 524288K, 0% used 
+[0x00000007d5560000,0x00000007d5a4cc60,0x00000007f5560000)
+   from space 87360K, 0% used 
+[0x00000007faab0000,0x00000007faab0000,0x0000000800000000)
+   to   space 87360K, 0% used 
+[0x00000007f5560000,0x00000007f5560000,0x00000007faab0000)
+  ParOldGen       total 1398144K, used 531K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x0000000780084e78,0x00000007d5560000)
+  PSPermGen       total 21248K, used 6980K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 32% used 
+[0x000000077ae00000,0x000000077b4d12e8,0x000000077c2c0000)
+[success] Total time: 8 s, completed Jun 5, 2012 11:32:30 AM
+ > bench -Dpar=1 -Dsize=12000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 3
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=12000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 3
+---------------
+[GC [PSYoungGen: 461374K->2685K(611648K)] 461374K->2693K(2009792K), 
+0.0033820 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 2685K->0K(611648K)] [ParOldGen: 
+8K->2357K(1398144K)] 2693K->2357K(2009792K) [PSPermGen: 
+6554K->6533K(21248K)], 0.0118970 secs] [Times: user=0.02 sys=0.01, 
+real=0.01 secs]
+---------------
+[GC [PSYoungGen: 493191K->96K(611648K)] 495548K->2461K(2009792K), 
+0.0004930 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(611648K)] [ParOldGen: 
+2365K->535K(1398144K)] 2461K->535K(2009792K) [PSPermGen: 
+6539K->6539K(21248K)], 0.0079220 secs] [Times: user=0.03 sys=0.00, 
+real=0.01 secs]
+---------------
+[GC [PSYoungGen: 475576K->32K(611648K)] 476112K->567K(2009792K), 
+0.0003190 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(611648K)] [ParOldGen: 
+535K->532K(1398144K)] 567K->532K(2009792K) [PSPermGen: 
+6539K->6539K(21248K)], 0.0079080 secs] [Times: user=0.03 sys=0.00, 
+real=0.00 secs]
+scala.dataflow.bench.LTQCommBench$    1330    1424    1329
+Heap
+  PSYoungGen      total 611648K, used 7613K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 524288K, 1% used 
+[0x00000007d5560000,0x00000007d5ccf4b0,0x00000007f5560000)
+   from space 87360K, 0% used 
+[0x00000007f5560000,0x00000007f5560000,0x00000007faab0000)
+   to   space 87360K, 0% used 
+[0x00000007faab0000,0x00000007faab0000,0x0000000800000000)
+  ParOldGen       total 1398144K, used 532K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x0000000780085050,0x00000007d5560000)
+  PSPermGen       total 21248K, used 6980K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 32% used 
+[0x000000077ae00000,0x000000077b4d12e8,0x000000077c2c0000)
+[success] Total time: 5 s, completed Jun 5, 2012 11:32:38 AM
+ > bench -Dpar=1 -Dsize=4000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 3
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=4000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 3
+---------------
+[GC [PSYoungGen: 178258K->2725K(611648K)] 178258K->2733K(2009792K), 
+0.0035140 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 2725K->0K(611648K)] [ParOldGen: 
+8K->2357K(1398144K)] 2733K->2357K(2009792K) [PSPermGen: 
+6555K->6534K(21248K)], 0.0119480 secs] [Times: user=0.02 sys=0.00, 
+real=0.02 secs]
+---------------
+[GC [PSYoungGen: 193987K->128K(611648K)] 196345K->2493K(2009792K), 
+0.0003290 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(611648K)] [ParOldGen: 
+2365K->535K(1398144K)] 2493K->535K(2009792K) [PSPermGen: 
+6540K->6540K(21248K)], 0.0076760 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+---------------
+[GC [PSYoungGen: 178259K->64K(611648K)] 178794K->599K(2009792K), 
+0.0003140 secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(611648K)] [ParOldGen: 
+535K->532K(1398144K)] 599K->532K(2009792K) [PSPermGen: 
+6540K->6540K(21248K)], 0.0076580 secs] [Times: user=0.03 sys=0.00, 
+real=0.00 secs]
+scala.dataflow.bench.LTQCommBench$    436    461    411
+Heap
+  PSYoungGen      total 611648K, used 15728K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 524288K, 3% used 
+[0x00000007d5560000,0x00000007d64bc338,0x00000007f5560000)
+   from space 87360K, 0% used 
+[0x00000007f5560000,0x00000007f5560000,0x00000007faab0000)
+   to   space 87360K, 0% used 
+[0x00000007faab0000,0x00000007faab0000,0x0000000800000000)
+  ParOldGen       total 1398144K, used 532K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x0000000780085290,0x00000007d5560000)
+  PSPermGen       total 21248K, used 6982K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 32% used 
+[0x000000077ae00000,0x000000077b4d18f0,0x000000077c2c0000)
+[success] Total time: 2 s, completed Jun 5, 2012 11:32:43 AM
+ > bench -Dpar=1 -Dsize=2000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 3
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/Users/aleksandar/workspaces/scala/dataflow/lib/jsr166y.jar:/Users/aleksandar/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/Users/aleksandar/workspaces/scala/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=2000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 3
+---------------
+[GC [PSYoungGen: 104858K->2661K(611648K)] 104858K->2669K(2009792K), 
+0.0033840 secs] [Times: user=0.02 sys=0.00, real=0.01 secs]
+[Full GC (System) [PSYoungGen: 2661K->0K(611648K)] [ParOldGen: 
+8K->2357K(1398144K)] 2669K->2357K(2009792K) [PSPermGen: 
+6555K->6534K(21248K)], 0.0120880 secs] [Times: user=0.02 sys=0.01, 
+real=0.01 secs]
+---------------
+[GC [PSYoungGen: 120587K->128K(611648K)] 122945K->2493K(2009792K), 
+0.0016480 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(611648K)] [ParOldGen: 
+2365K->535K(1398144K)] 2493K->535K(2009792K) [PSPermGen: 
+6540K->6540K(21248K)], 0.0075410 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+---------------
+[GC [PSYoungGen: 94372K->32K(611648K)] 94908K->567K(2009792K), 0.0003300 
+secs] [Times: user=0.00 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(611648K)] [ParOldGen: 
+535K->532K(1398144K)] 567K->532K(2009792K) [PSPermGen: 
+6540K->6540K(21248K)], 0.0071950 secs] [Times: user=0.02 sys=0.00, 
+real=0.01 secs]
+scala.dataflow.bench.LTQCommBench$    245    211    200
+Heap
+  PSYoungGen      total 611648K, used 15728K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 524288K, 3% used 
+[0x00000007d5560000,0x00000007d64bc338,0x00000007f5560000)
+   from space 87360K, 0% used 
+[0x00000007f5560000,0x00000007f5560000,0x00000007faab0000)
+   to   space 87360K, 0% used 
+[0x00000007faab0000,0x00000007faab0000,0x0000000800000000)
+  ParOldGen       total 1398144K, used 532K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x0000000780085190,0x00000007d5560000)
+  PSPermGen       total 21248K, used 6982K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 32% used 
+[0x000000077ae00000,0x000000077b4d18f0,0x000000077c2c0000)
+[success] Total time: 1 s, completed Jun 5, 2012 11:32:46 AM
+ >
+
