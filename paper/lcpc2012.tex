@@ -1204,7 +1204,7 @@ seal)$, a successful CAS in line \ref{cas_append}
 changes it to the state consistent with an abstract pool
 $(\{elem\} \cup elems, cbs, seal)$.
 There exists a time $t_1 \geq t_0$ at which every callback $f \in
-cbs$ has been called with $elem$.
+cbs$ has been called on $elem$.
 \end{lemma}
 
 \begin{lemma}
@@ -1231,6 +1231,33 @@ and \verb=seal= are consistent with the abstract pool semantics.
 \begin{theorem}[Linearizable operations]
 FlowPool operations \verb=append= and \verb=seal= are linearizable.
 \end{theorem}
+
+\begin{lemma}[Non-consistency changing instructions]
+After invoking a FlowPool operation \verb=append=, \verb=seal= or
+\verb=foreach=, if a non-consistency changing CAS instruction in lines
+\ref{cas_propagate}, \ref{cas_expand}, or \ref{cas_block} fails, they must have
+already been completed by another thread since the FlowPool operation began.
+\end{lemma}
+
+\begin{lemma}[Consistency changing instructions]
+After invoking a FlowPool operation \verb=append=, \verb=seal= or
+\verb=foreach=, if a consistency-changing CAS instruction in lines
+\ref{cas_append}, \ref{cas_seal}, or \ref{cas_foreach} fails, then some thread
+has successfully completed a consistency changing CAS after some finite number
+of steps.
+\end{lemma}
+
+\begin{lemma}[Consistency changing operations]
+After invoking a FlowPool operation \verb=append=, \verb=seal= or
+\verb=foreach=, a consistency changing instruction will be completed after 
+a finite number of steps.
+\end{lemma}
+
+\begin{lemma}
+Assuming some concurrent FlowPool operation is started. If some thread
+completes a consistency changing CAS instruction, then some concurrent
+operation is guaranteed to be completed.
+\end{lemma}
 
 \begin{theorem}[Lock-freedom]
 FlowPool operations \verb=append=, \verb=foreach= and \verb=seal= are lock-free.
@@ -2278,8 +2305,7 @@ occurs after a finite number of steps.
 
 By \ref{lemma-operation-completes}, this means a concurrent operation
 \verb=append=, \verb=seal=, or \verb=foreach= will successfully complete.
-Therefore, by Definition \ref{def-lock-freedom},  these operations are lock-
-free.
+Therefore, by \ref{def-lock-freedom},  these operations are lock-free.
 
 \end{theorem}
 
@@ -2689,7 +2715,7 @@ as does the proof for \verb=seal= in
 
 \begin{lemma}\label{lemma-operation-completes}
 Assume some concurrent operation is started. If some thread completes
-consistency changing CAS instruction, then some concurrent operation is
+a consistency changing CAS instruction, then some concurrent operation is
 guaranteed to be completed.
 \end{lemma}
 
@@ -3552,7 +3578,8 @@ def sum()
     _ + _
   \}
 
-
+
+
 def product()
   aggregate(1)(_ * _) \{
     _ * _
