@@ -1,4 +1,3 @@
-
 %%%%%%%%%%%%%%%%%%%%%%% file typeinst.tex %%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % This is the LaTeX source for the instructions to authors using
@@ -270,7 +269,7 @@ data structure we no longer need, thus reducing memory consumption.
 
 Our contributions are the following:
 \begin{enumerate}
-\item The design and Scala implementation\footnote{http://ASSEMBLA-REPO-URL-HERE} 
+\item The design and Scala implementation\footnote{http://www.assembla.com/code/scala-dataflow/git/nodes} 
 of a parallel dataflow abstraction and underlying data structure that 
 is deterministic, lock-free, \& composable.
 \item Proofs of lock-freedom, linearizability, and determinism.
@@ -512,9 +511,9 @@ resulting data structures. For a more formal definition and proof, see section
 \section{Programming Interface}
 \label{sec:programming-interface}
 
-A FlowPool can be viewed as a concurrent pool data structure, and as such has
-no guarantees on ordering. In this section, we describe the semantics of a
-handful of functional combinators and other basic operations defined on
+A FlowPool can be thought of as a concurrent pool data structure, and as such
+has no guarantees on ordering. In this section, we describe the semantics of
+several functional combinators and other basic operations defined on
 FlowPools.
 
 \textbf{Append (\texttt{<<})}. The most fundamental of all
@@ -533,22 +532,21 @@ FlowPool.
 % time.
 
 \textbf{Foreach and Aggregate.}
-A pool containing a set of elements is of little use if the elements
-cannot be manipulated in some manner.
-One of the basic data structure operations is element traversal,
-often provided by iterators or streams -- stateful
-objects storing the current position in the data structure.
-Since they can be manipulated by several threads, they allow
-nondeterministic execution.
+A pool containing a set of elements is of little use if the elements cannot be
+manipulated in some manner. One of the most basic data structure operations is
+element traversal, often provided by iterators or streams-- stateful objects
+which store the current position in the data structure. However, since their
+state can be manipulated by several threads, they result in nondeterministic
+execution.
 
 Another way to traverse the elements is to provide a higher-level
 \verb=foreach= operation which takes a user-specified function as an
 argument and
 applies it to every element.
 To ensure determinism, it is called for every element that is
-eventually in the FlowPool, rather than only those present
+eventually inserted into the FlowPool, rather than only those present
 when \verb=foreach= is called.
-To ensure non-blocking behaviour, it must not wait until
+To ensure non-blocking behavior, it cannot not wait until
 additional elements are added to the FlowPool.
 For these reasons, the \verb=foreach= operation must execute
 asynchronously and is eventually applied to every element.
