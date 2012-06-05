@@ -6,6 +6,7 @@
 *.log
 lcpc2012.pdf
 scaling-operations.ai
+hist-comm.ai
 *.dvi
 
 .Rhistory
