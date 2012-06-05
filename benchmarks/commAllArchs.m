@@ -17,7 +17,7 @@ set(gca, 'Color', 'none');
 set(gca,'XGrid','on','YGrid','on');
 hold on;
 
-% title('UltraSPARC Architecture');
+% title('Communication/Gargbage Collection');
 xlabel('Number of Elements');
 ylabel('Execution Time [ms]');
 plotSize(1:length(sz),magliteltqcomm,'--sq',grays+0.3); % ltq comm
@@ -40,7 +40,7 @@ set(gca, 'Color', 'none');
 set(gca,'XGrid','on','YGrid','on');
 hold on;
 
-% title('UltraSPARC Architecture');
+% title('Communication/Gargbage Collection');
 xlabel('Number of Elements');
 plotSize(1:length(sz),lampmacltqcomm,'--sq',grays+0.3); % ltq comm
 plotSize(1:length(sz),lampmacmlfpcomm,'-d',grays); % mlfp comm
@@ -62,7 +62,7 @@ set(gca, 'Color', 'none');
 set(gca,'XGrid','on','YGrid','on');
 hold on;
 
-% title('UltraSPARC Architecture');
+% title('Communication/Gargbage Collection');
 xlabel('Number of Elements');
 plotSize(1:2,wolfltqcomm,'--sq',grays+0.3); % ltq comm
 plotSize(1:length(sz),wolfmlfpcomm,'-d',grays); % mlfp comm
