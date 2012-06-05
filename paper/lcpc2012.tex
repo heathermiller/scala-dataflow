@@ -388,12 +388,12 @@ other popular concurrent data structures.
 
 \section{Model of Computation}
 
-FlowPools can be thought of as similar to a typical collections abstraction.
-That is, operations invoked on a FlowPool are executed on its individual
-elements. However, FlowPools do not only act as a data container full of
+FlowPools are similar to a typical collections abstraction.
+Operations invoked on a FlowPool are executed on its individual
+elements. However, FlowPools do not only act as a data container of
 elements-- unlike a typical collecion, FlowPools also act as nodes and edges
-of a directed acyclic computation graph (DAG), in which the operations to be
-performed are registered with the FlowPool.
+of a directed acyclic computation graph (DAG), in which the executed operations 
+are registered with the FlowPool.
 
 Nodes in this directed acyclic graph are data containers which are first class
 values. This makes it possible to use FlowPools as function arguments or to receive
@@ -410,27 +410,31 @@ registered operations can be asynchronously executed, and new operations can
 be asynchronously registered.
 
 Therefore, invoking several higher-order functions in succession on a given
-FlowPool doesn't add barriers between nodes in the DAG, it only extends the
-DAG. This means that individual elements can \textit{flow} through different
+FlowPool does not add barriers between nodes in the DAG, it only extends it.
+This means that individual elements can \textit{flow} through different
 edges of the DAG independently of each other.
 
-\textbf{Properties of FlowPools}. In our model, FlowPools have a few important properties
-which work together to ensure that resulting programs are deterministic.
+\textbf{Properties of FlowPools}. In our model, FlowPools have certain properties
+which ensure that resulting programs are deterministic.
 
 \begin{enumerate}
-\item Data elements in FlowPools are unordered.
-\item Operations passed to FlowPools must be pure and associative.
+\item Single-assignment - an element added to the FlowPool cannot be removed.
+\item No order - data elements in FlowPools are unordered.
+\item Purity - traversals are pure, except when invoking FlowPool operations.
 %% TODO, what does this mean? operations to foreach may have side
 %% effects (n.b. writing into another flowpool) -- tobias
-\item All callbacks are eventually executed on all elements.
+%% --> right -- they can access (and mutate) other single-assignment
+%%   abstractions in any way -- alex
+\item Liveness - callbacks are eventually asynchronously executed on all elements.
 \end{enumerate}
 
 %As previously alluded to, the main reason for these properties is to guarantee
 %determinism in the following sense.
 
-\textbf{Determinism}. FlowPools are deterministic in the sense that all
-execution schedules either lead to non-termination (\textit{e.g.}, an
-exception), or no difference can be observed in the final state of the
+We strive to provide the definition of determinism that is useful in practice.
+We claim that FlowPools are deterministic in the sense that all
+execution schedules either lead to some form of non-termination (\textit{e.g.}, some
+exception), or the program terminates and no difference can be observed in the final state of the
 resulting data structures. For a more formal definition and proof, see section
 \ref{sec:correctness}.
 
@@ -504,36 +508,6 @@ resulting data structures. For a more formal definition and proof, see section
 % if there are no exceptions, then the program is guaranteed to be
 % deterministic.
 
-\smallrulenames
-
-\begin{figure}[t]
-%\figurebox{
-%{\bf Syntax}\medskip
-
-%$\ba{l@{\hspace{2mm}}|@{\hspace{2mm}}l}
-%$\ba[t]{l}
-
-$\ba[t]{l@{\hspace{2mm}}l}
-t    ::=                                                           & \mbox{terms}              \\
-\gap p << v                                                  & \mbox{append}           \\
-\gap \texttt{create}~p                                   & \mbox{pool creation}  \\
-\gap p~\texttt{foreach}~f                             & \mbox{foreach}           \\
-\gap p~\texttt{seal}~n                                  & \mbox{seal}                \\
-\gap t_1~;~t_2                                               & \mbox{sequence}        \\
-\ea$
-
-$\ba{l@{\hspace{2mm}}|@{\hspace{2mm}}l@{\hspace{2mm}}l}
-p \in \set{(vs, \sigma, cbs)~|~vs \subseteq Elem, \sigma \in \set{-1} \cup \mathbb{N}, cbs \subset Elem \Rightarrow Unit} & v \in Elem \\
-f \in Elem \Rightarrow Unit & n \in \mathbb{N}
-\ea$
-
-%\ea$
-
-%}
-\caption{Syntax}\label{fig:syntax}
-\end{figure}
-
-
 
 \section{Programming Interface}
 \label{sec:programming-interface}
@@ -544,7 +518,8 @@ handful of functional combinators and other basic operations defined on
 FlowPools.
 
 \textbf{Append (\texttt{<<})}. The most fundamental of all
-operations on FlowPools is the append operation. As its name suggests, it
+operations on FlowPools is the concurrent thread-safe append operation.
+As its name suggests, it
 simply takes an argument of type \texttt{Elem} and appends it to a given
 FlowPool. 
 
@@ -596,18 +571,18 @@ becomes available once all the elements have been added.
 The \verb=aggregate= operator divides elements into subsets and applies the
 aggregation operator \verb=op= to aggregate elements in each subset
 starting from the \verb=zero= aggregation, and then combines
-aggregations from different subsets with the \verb=cb= operator.
+different subset aggregations with the \verb=cb= operator.
 In essence, the first part of \verb=aggregate= defines the commutative
 monoid and the functions involved must be non-side-effecting.
-In contrast, the operator \verb=op= is guaranteed to be called only once for
-each element and it can have side effects.
+In contrast, the operator \verb=op= is guaranteed to be called only once per
+element and it can have side-effects.
 
 While in an imperative programming model \verb=foreach= and \verb=aggregate= are
 equivalent in the sense that one can be implemented in terms of the
 other, in a single-assignment programming model \verb=aggregate= is more
 expressive than \verb=foreach=.
 The \verb=foreach= operation can be implemented using \verb=aggregate=, but not vice versa,
-due to the absence of side effects.
+due to the absence of mutable variables.
 
 \textbf{Builders.}
 The FlowPool described so far must maintain a reference 
@@ -615,7 +590,6 @@ to all the elements at all times to implement the \verb=foreach=
 operation correctly.
 Since elements are never removed, the pool may grow indefinitely
 and run out of memory.
-
 At the same time, appending new elements does not require a reference
 to any of the existing elements.
 We use this observation to factor out the \verb=<<= operation into
@@ -631,7 +605,7 @@ When clients are sure that no more elements will be added to the pool
 they can disallow further appends by calling \verb=seal=.
 This has the advantage of discarding the registered \verb=foreach=
 operations.
-More importantly, \verb=aggregate= can only complete its resulting future
+More importantly, \verb=aggregate= can only complete its future
 once it is certain that no more elements will be added.
 
 A \verb=seal= which just closes the FlowPool at the moment when it
@@ -641,7 +615,7 @@ with a thread that appends an element.
 In one execution, the append preceeds the seal, and in the other
 the append follows the seal causing an error.
 To avoid nondeterminism, there has to be an agreement on the
-state of the pool when it is sealed.
+current state of the pool.
 A convenient and sufficient way to make \verb=seal= deterministic
 is to provide the expected pool size as an argument.
 The semantics of \verb=seal= is then such that it fails if the pool
@@ -649,15 +623,15 @@ is already sealed with a different size or the number of elements
 is greater than the desired size.
 
 \textbf{Higher-level operations.}
-We now show how the basic abstractions above can be used
+We now show how these basic abstractions can be used
 to build higher-level abstractions.
-To begin with, in addition to a default FlowPool constructor, it is
-convenient to have generators which create certain types of pools.
-In a dataflow graph FlowPools created using generators
+To begin with, in addition to the default FlowPool constructor, it is
+convenient to have generators that create certain pool types.
+In a dataflow graph FlowPools created by generators
 are source nodes.
-As a simple example, \verb=tabulate= (see below) creates a sequence of elements
-by applying a user-specified function \verb=f= to each natural number.
-One can imagine more complicated generators, adding elements from a
+As an example, \verb=tabulate= (see below) creates a sequence of elements
+by applying a user-specified function \verb=f= to natural numbers.
+One can imagine more complex generators, which add elements from a
 network socket or a file.
 
 \noindent
@@ -712,20 +686,20 @@ def foreach[U](f: T => U)
 The \verb=tabulate= generator starts by creating a FlowPool of an
 arbitrary type \verb=T= and creating its builder instance.
 It then starts an asynchronous computation using the \verb=future=
-construct, which recursively applies \verb=f= to each number and
-appends it to the builder.
+construct (see appendix \ref{sec:syntax-examples}), which recursively applies \verb=f= to each number and
+adds it to the builder.
 Finally, the reference to the pool is returned.
 
- A typical higher-level collection operation \verb=map= is used to
+A typical higher-level collection operation \verb=map= is used to
 map each element of a dataset to produce a new one.
 This corresponds to chaining the nodes in a dataflow graph.
-We implement it by traversing the elements of the receiver FlowPool (\verb=this=)
+We implement it by traversing the elements of the \verb=this= FlowPool
 and
 appending each mapped element to the builder.
 The \verb=for= loop is syntactic sugar for calling the
 \verb=foreach= method on \verb=this=.
 We assume that the \verb=foreach= return type \verb=Future[Int]=
-has \verb=map= and \verb=flatMap= operations, which are executed
+has \verb=map= and \verb=flatMap= operations, executed
 once the future value becomes available.
 The \verb=Future.map= above ensures that if the current pool (\verb=this=) is ever
 sealed, the mapped pool is sealed to the appropriate size.
@@ -1127,33 +1101,33 @@ block once the current block is empty, to ensure lock-freedom.
 
 \textbf{Multi-Lane FlowPools.}
 Using a single block sequence (i.e. lane) to implement a FlowPool
-doesn't fully take advantage of the lack of ordering guarantees and --
-as elements are inserted in sequence -- may cause slowdowns due to
+does not take full advantage of the lack of ordering guarantees
+and may cause slowdowns due to
 collisions when multiple concurrent writers are present. Multi-Lane
-FlowPools solve this limitation by having a lane for each CPU, where
-each lane is following the same implementation as for a normal
-FlowPool.
+FlowPools overcome this limitation by having a lane for each CPU, where
+each lane has the same implementation as the normal FlowPool.
 
-This has several implications:
-\begin{itemize}
-\item CAS failures during insertion are to a high extent avoided.
-\item Less memory contetion due to ``private'' blocks for each
-  processor.
-\item \verb=seal= needs to be globally synchronized in a non-blocking
-  fashion.
-\item Callbacks for \verb=aggregate= have to be added to each lane
-  individually and aggregated once all of them have completed.
-\end{itemize}
+This has several implications. First of all, CAS failures during 
+insertion are avoided to a high extent and memory contention is
+decreased due to writes occurring in different cache-lines.
+Second, \verb=aggregate= callbacks are added to each lane
+individually and aggregated once all of them have completed.
+Finally, \verb=seal= needs to be globally synchronized in a
+non-blocking fashion.
 
-In practice, a hash on the ID of the inserting thread has to be used
-instead of the CPU index, as such information is currently not
-available through the Java framework. Also note that the remaining
-slots resulting from a \verb=seal= have to be split up amongst the
-lanes and a writer might switch lanes if his lane is full (and hence
-CAS failures may happen).
+%In practice, a hash on the ID of the inserting thread has to be used
+%instead of the CPU index, as such information is currently not
+%available through the Java framework.
+Once \verb=seal= is called the remaining free slots
+are split amongst the lanes equally.
+If a writer finds that his lane is full,
+it writes to some other lane instead.
+This raises the frequency of CAS failures, but in most
+cases happens only when the FlowPool is almost full,
+thus ensuring that the append operation scales.
 
-You find an evaluation of the performance of Multi-Lane FlowPools in
-section~\ref{sec:evaluation}.
+%You find an evaluation of the performance of Multi-Lane FlowPools in
+%section~\ref{sec:evaluation}.
 
 \section{Correctness}
 \label{sec:correctness}
@@ -1235,14 +1209,16 @@ and \verb=seal= are consistent with the abstract pool semantics.
 FlowPool operations \verb=append= and \verb=seal= are linearizable.
 \end{theorem}
 
-\begin{lemma}[Non-consistency changing instructions]
+\begin{lemma}
+%[Non-consistency changing instructions]
 After invoking a FlowPool operation \verb=append=, \verb=seal= or
 \verb=foreach=, if a non-consistency changing CAS instruction in lines
 \ref{cas_propagate}, \ref{cas_expand}, or \ref{cas_block} fails, they must have
 already been completed by another thread since the FlowPool operation began.
 \end{lemma}
 
-\begin{lemma}[Consistency changing instructions]
+\begin{lemma}
+%[Consistency changing instructions]
 After invoking a FlowPool operation \verb=append=, \verb=seal= or
 \verb=foreach=, if a consistency-changing CAS instruction in lines
 \ref{cas_append}, \ref{cas_seal}, or \ref{cas_foreach} fails, then some thread
@@ -1250,17 +1226,19 @@ has successfully completed a consistency changing CAS after some finite number
 of steps.
 \end{lemma}
 
-\begin{lemma}[Consistency changing operations]
+\begin{lemma}
+%[Consistency changing operations]
 After invoking a FlowPool operation \verb=append=, \verb=seal= or
 \verb=foreach=, a consistency changing instruction will be completed after 
 a finite number of steps.
 \end{lemma}
 
-\begin{lemma}
-Assuming some concurrent FlowPool operation is started. If some thread
-completes a consistency changing CAS instruction, then some concurrent
-operation is guaranteed to be completed.
-\end{lemma}
+%% I think this is clear -- the theorem follows from the lemma above
+%\begin{lemma}
+%Assuming some concurrent FlowPool operation is started. If some thread
+%completes a consistency changing CAS instruction, then some concurrent
+%operation is guaranteed to be completed.
+%\end{lemma}
 
 \begin{theorem}[Lock-freedom]
 FlowPool operations \verb=append=, \verb=foreach= and \verb=seal= are lock-free.
@@ -1276,19 +1254,25 @@ FlowPool operations \verb=append=, \verb=foreach= and \verb=seal= are lock-free.
 %$\ba{l@{\hspace{2mm}}|@{\hspace{2mm}}l}
 %$\ba[t]{l}
 
+\begin{minipage}[b]{5 cm}
 $\ba[t]{l@{\hspace{2mm}}l}
 t    ::=                                                           & \mbox{terms}              \\
-\gap p << v                                                  & \mbox{append}           \\
 \gap \texttt{create}~p                                   & \mbox{pool creation}  \\
+\gap p << v                                                  & \mbox{append}           \\
 \gap p~\texttt{foreach}~f                             & \mbox{foreach}           \\
 \gap p~\texttt{seal}~n                                  & \mbox{seal}                \\
 \gap t_1~;~t_2                                               & \mbox{sequence}        \\
 \ea$
-
-$\ba{l@{\hspace{2mm}}|@{\hspace{2mm}}l@{\hspace{2mm}}l}
-p \in \set{(vs, \sigma, cbs)~|~vs \subseteq Elem, \sigma \in \set{-1} \cup \mathbb{N}, cbs \subset Elem \Rightarrow Unit} & v \in Elem \\
-f \in Elem \Rightarrow Unit & n \in \mathbb{N}
+\end{minipage}
+\begin{minipage}[b]{7 cm}
+$\ba[t]{l@{\hspace{2mm}}l}
+p \in \set{(vs, \sigma, cbs)~|~vs \subseteq Elem, \sigma \in \set{-1} \cup \mathbb{N}, \\
+\text{ } cbs \subset Elem \Rightarrow Unit} \\
+v \in Elem \\
+f \in Elem \Rightarrow Unit \\
+n \in \mathbb{N}
 \ea$
+\end{minipage}
 
 %\ea$
 
@@ -1318,7 +1302,7 @@ following reduction rule (a complete summary of all the rules can be
 found in the appendix):
 
 \infrule[\textsc{Append1}]
-{ t = p << v~;~t' \quad p = (vs, -1, cbs) \quad p' = (\set{v} \cup vs, -1, cbs)
+{ t = p << v~;~t' \quad p = (vs, cbs, -1) \quad p' = (\set{v} \cup vs, cbs, -1)
 }
 { \reduce {t, T} {p, P} {t', T} {p', P}
 }
@@ -1329,8 +1313,8 @@ not sealed (the seal size is $-1$). The rule for $foreach$ modifies
 the set of callback functions in the pool:
 
 \infrule[\textsc{Foreach2}]
-{ t = p~\texttt{foreach}~f~;~t' \quad p = (vs, n, cbs) \\
-  T' = \set{g(v)~|~g \in \set{f} \cup cbs, v \in vs} \quad p' = (vs, n, \set{f} \cup cbs)
+{ t = p~\texttt{foreach}~f~;~t' \quad p = (vs, cbs, n) \\
+  T' = \set{g(v)~|~g \in \set{f} \cup cbs, v \in vs} \quad p' = (vs, \set{f} \cup cbs, n)
 }
 { \reduce {t, T} {p, P} {t', T, T'} {p', P}
 }
@@ -1424,7 +1408,7 @@ Xeon and $92\%$ on UltraSPARC T2.
 Usage of the inserted data is evaluated in the \emph{Reduce},
 \emph{Map} and \emph{Histogram} benchmark, where the latter --
 serving as a ``real life'' example here -- uses the former two
-primitives, whose evaluation is discussed in the appendix.
+operations, whose evaluation is discussed in the appendix.
 
 In the \textit{Histogram} benchmark, $P$ threads produce a total of
 $N$ elements and add it to the FlowPool.
@@ -1438,7 +1422,7 @@ by invoking several \verb=aggregate= operations, while queues require
 writing each element to several queues -- one for each histogram.
 Without additional synchronization, reading a single queue is not an
 option since elements have to be removed from the queue eventually and
-it is not clear to each reader when an element is no longer needed.
+it is not clear to each reader when to do this.
 With FlowPools, elements are implicitly garbage collected when no
 longer needed.
 
@@ -1453,19 +1437,17 @@ elements from the queue and process it.
 
 \section{Related Work}
 
-An introduction to linearizability, lock-freedom and basic
-concurrent programming techniques is given by Herlihy and Shavit
-\cite{Herlihy08}.
+An introduction to linearizability and lock-freedom 
+is given by Herlihy and Shavit \cite{Herlihy08}.
 A detailed overview of concurrent data structures is given
 by Moir and Shavit \cite{Moir05}.
 To date, concurrent data structures remain an active area of
-research -- it is out of scope to list them all, so we restrict
-ourselves to those relevant to this work.
+research -- we restrict this summary to those relevant to this work.
 
 Concurrently accessible queues have been present for a while --
 an implementation is described by \cite{Mellor87}.
 Non-blocking concurrent linked queues are described by Michael and
-Scott \cite{Michael96}. This CAS-based linked-list
+Scott \cite{Michael96}. This CAS-based
 queue implementation is cited and used widely today, a variant of
 which is present in the Java standard library.
 More recently, Scherer, Lea and Scott \cite{SchererLS09} describe a
@@ -1484,25 +1466,25 @@ They allow multiple consumers, but only one producer
 at a time.
 Oz has its own runtime which implements blocking using
 continuations.
-Blocking is less efficient on the JVM, CLR and many native
-environments.
+%Blocking is less efficient on the JVM, CLR and many native
+%environments.
 
-The concept of single-assignment variables is also embodied in
+The concept of single-assignment variables is embodied in
 futures proposed by Baker and Hewitt \cite{Hewitt77}, and promises
 first mentioned by Friedman and Wise \cite{Wise76}.
 Futures were first implemented in MultiLISP \cite{Halstead85},
 and have been employed in many languages and frameworks since.
 Scala futures \cite{TODO} and Finagle futures \cite{TODO} are
 of interest, because they define monadic operators and a
-number of high-level combinators which produce new futures.
-This provides an API which avoids blocking.
+number of high-level combinators that create new futures.
+These APIs avoid blocking.
 Futures have been generalized to data-driven futures,
-which can provide additional information to the scheduler
+which provide additional information to the scheduler
 \cite{Tasirlar11}.
-Many frameworks have constructs which start an asynchronous
+Many frameworks have constructs that start an asynchronous
 computation and yield a future holding its result.
-For example, Habanero Java \cite{Shirako11} offers an \verb=async=
-construct and Scala futures offer a \verb=future= construct.
+For example, Habanero Java \cite{Shirako11} provides an \verb=async=
+construct and Scala provides a \verb=future= construct.
 
 A number of other models and frameworks recognized the need to embed
 the concept of futures into other data-structures.
@@ -1593,32 +1575,32 @@ $term.callbacks$, a set of functions $f \in Elem \Rightarrow Unit$.
 
 We define the following functions:
 
-\begin{equation*}
+\begin{eqnarray*}
 following(b: Block) = 
 \begin{cases}
 \emptyset & \text{if b.next = null,}
 \\
 b.next \cup following(b.next) & \text{otherwise}
 \end{cases}
-\end{equation*}
+\end{eqnarray*}
 
-\begin{equation*}
+\begin{eqnarray*}
 reachable(b: Block) = \{ b \} \cup following(b)
-\end{equation*}
+\end{eqnarray*}
 
-\begin{equation*}
+\begin{eqnarray*}
 last(b: Block) = b' : b' \in reachable(b) \wedge b'.next = null
-\end{equation*}
+\end{eqnarray*}
 
-\begin{equation*}
+\begin{eqnarray*}
 size(b: Block) = | \{ x : x \in b.array \wedge x \in Elem \} |
-\end{equation*}
+\end{eqnarray*}
 
 Based on them we define the following relation:
 
-\begin{equation*}
+\begin{eqnarray*}
 reachable(b, c) \Leftrightarrow c \in reachable(b)
-\end{equation*}
+\end{eqnarray*}
 \end{definition}
 
 
@@ -1643,10 +1625,10 @@ atomic write or CAS instruction that changes the FlowPool state.
 We say that the FlowPool \textbf{has an element} $e$ at some time
 $t_0$ if and only if the relation $hasElem(start, e)$ holds.
 
-\begin{equation*}
+\begin{eqnarray*}
 hasElem(start, e) \Leftrightarrow \exists b \in reachable(start), e
 \in b.array
-\end{equation*}
+\end{eqnarray*}
 
 We say that the FlowPool \textbf{has a callback} $f$ at some time
 $t_0$ if and only if the relation $hasCallback(start, f)$ holds.
@@ -1661,10 +1643,10 @@ We say that a callback $f$ in a FlowPool \textbf{will be called} for
 the element $e$ at some time $t_0$ if and only if the relation
 $willBeCalled(start, e, f)$ holds.
 
-\begin{equation*}
+\begin{eqnarray*}
 willBeCalled(start, e, f) \Leftrightarrow \exists t_1, \forall t >
 t_1, (f, e) \in futures
-\end{equation*}
+\end{eqnarray*}
 
 We say that the FlowPool is \textbf{sealed} at the size $s$ at some
 $t_0$ if and only if the relation $sealedAt(start, s)$ holds.
@@ -1676,7 +1658,7 @@ sealedAt(start, s) &\Leftrightarrow& s \neq -1 \wedge \forall b = last(start), b
 \end{eqnarray*}
 
 \textbf{FlowPool operations} are \verb=append=, \verb=foreach= and
-\verb=seal=, and are defined by pseudocodes in figures ...
+\verb=seal=, and are defined by pseudocodes in Figure \ref{f-pseudo}.
 \end{definition}
 
 
@@ -1759,7 +1741,7 @@ is a valid state and:
 \begin{description}
 \item $\forall e \in Elem, hasElem(start, e) \Leftrightarrow e \in elems$
 \item $\forall f \in Elem => Unit, hasCallback(start, f) \Leftrightarrow f \in callbacks$
-\item $\forall f \in Elem => Unit, \forall e \in Elem, willBeCalled(start, e, f) \Leftrightarrow \exists t_1 \geq t_0, \mathbb{P}(t_1) = (elems_1, (f, called_1) \cup callbacks_1, seal_1), elems \subseteq called_1$
+\item $\forall f \in Elem => Unit, \forall e \in Elem, willBeCalled(start, e, f) \Leftrightarrow \exists t_1 \geq t_0, \forall t_2 > t_1, \mathbb{P}(t_2) = (elems_2, (f, called_2) \cup callbacks_2, seal_2), elems \subseteq called_2$
 \item $\forall s \in \mathbb{N}_0, sealedAt(start, s) \Leftrightarrow s = seal$
 \end{description}
 
@@ -1863,7 +1845,8 @@ function $x$ is monotonic.
 
 \begin{proof}
 CAS instruction in line \ref{cas_append} writes a value of type
-$Elem$. No CAS instruction has a value of type $Elem$ as the expected value.
+$Elem$. No CAS instruction has a value of type $Elem$ as the expected value,
+so this write occurs only once.
 
 Trivial analysis of CAS instructions in lines \ref{cas_seal} and
 \ref{cas_callback}, shows that their expected values are of type
@@ -2328,7 +2311,7 @@ thread.
 
 
 \begin{theorem}[Lock-freedom]\label{theorem-lock-freedom}
-FlowPool operations append, seal, and foreach are lock-free.
+FlowPool operations \verb=append=, \verb=seal=, and \verb=foreach= are lock-free.
 
 We begin by first proving that there are a finite number of execution steps
 before a consistency change occurs.
@@ -2785,46 +2768,46 @@ of $CAS_{seal}$
 \subsection{Reduction rules}
 
 \infrule[\textsc{Create}]
-{ t = \texttt{create}~p~;~t' \quad p = (\emptyset, -1, \emptyset)
+{ t = \texttt{create}~p~;~t' \quad p = (\emptyset, \emptyset, -1)
 }
 { \reduce {t, T} P {t', T} {p, P}
 }
 
 \infrule[\textsc{Append1}]
-{ t = p << v~;~t' \quad p = (vs, -1, cbs) \quad p' = (\set{v} \cup vs, -1, cbs)
+{ t = p << v~;~t' \quad p = (vs, cbs, -1) \quad p' = (\set{v} \cup vs, cbs, -1)
 }
 { \reduce {t, T} {p, P} {t', T} {p', P}
 }
 
 \infrule[\textsc{Append2}]
-{ t = p << v~;~t' \quad p = (vs, n, cbs) \quad |\set{v} \cup vs| \leq n \\
-  p' = (\set{v} \cup vs, n, cbs) \quad T' = \set{ f(v)~|~f \in cbs }
+{ t = p << v~;~t' \quad p = (vs, cbs, n) \quad |\set{v} \cup vs| \leq n \\
+  p' = (\set{v} \cup vs, cbs, n) \quad T' = \set{ f(v)~|~f \in cbs }
 }
 { \reduce {t, T} {p, P} {t', T, T'} {p', P}
 }
 
 \infrule[\textsc{Foreach1}]
-{ t = p~\texttt{foreach}~f~;~t' \quad p = (vs, -1, cbs) \quad p' = (vs, -1, \set{f} \cup cbs)
+{ t = p~\texttt{foreach}~f~;~t' \quad p = (vs, cbs, -1) \quad p' = (vs, \set{f} \cup cbs, -1)
 }
 { \reduce {t, T} {p, P} {t', T} {p', P}
 }
 
 \infrule[\textsc{Foreach2}]
-{ t = p~\texttt{foreach}~f~;~t' \quad p = (vs, n, cbs) \\
-  T' = \set{g(v)~|~g \in \set{f} \cup cbs, v \in vs} \quad p' = (vs, n, \set{f} \cup cbs)
+{ t = p~\texttt{foreach}~f~;~t' \quad p = (vs, cbs, n) \\
+  T' = \set{g(v)~|~g \in \set{f} \cup cbs, v \in vs} \quad p' = (vs, \set{f} \cup cbs, n)
 }
 { \reduce {t, T} {p, P} {t', T, T'} {p', P}
 }
 
 \infrule[\textsc{Seal1}]
-{ t = p~\texttt{seal}~n~;~t' \quad p = (vs, -1, cbs) \\
-  T' = \set{g(v)~|~g \in cbs, v \in vs} \quad p' = (vs, n, cbs)
+{ t = p~\texttt{seal}~n~;~t' \quad p = (vs, cbs, -1) \\
+  T' = \set{g(v)~|~g \in cbs, v \in vs} \quad p' = (vs, cbs, n)
 }
 { \reduce {t, T} {p, P} {t', T, T'} {p', P}
 }
 
 \infrule[\textsc{Seal2}]
-{ t = p~\texttt{seal}~n~;~t' \quad p = (vs, n, cbs)
+{ t = p~\texttt{seal}~n~;~t' \quad p = (vs, cbs, n)
 }
 { \reduce {t, T} {p, P} {t', T} {p, P}
 }
@@ -2946,34 +2929,37 @@ following execution schedule fragment:
 
 \begin{eqnarray*}
 & &
-p << v~;~t',p~seal~n~;~t'',T_k~|~p=(vs,-1,cbs),P_k
+p << v~;~t',p~seal~n~;~t'',T_k~|~p=(vs,cbs,-1),P_k
 \\
 & &
 \;\stackrel{\textsc{Append1}}{\longrightarrow}\;
-t',p~seal~n~;~t'',T_k~|~p=(\set{v} \cup vs,-1,cbs),P_k
+t',p~seal~n~;~t'',T_k~|~p=(\set{v} \cup vs,cbs,-1),P_k
 \\
 & &
 \;\stackrel{\textsc{Seal1}}{\longrightarrow}\;
-\set{cbs(w) : w \in \set{v} \cup vs},t',t'',T_k~|~p=(\set{v} \cup vs,n,cbs),P_k
+\set{cbs(w) : w \in \set{v} \cup vs},t',t'',T_k~|~p=(\set{v} \cup vs,cbs,n),P_k
 \end{eqnarray*}
 
 If we reorder these two reduction steps, we get:
 
 \begin{eqnarray*}
 & &
-p << v~;~t',p~seal~n~;~t'',T_k~|~p=(vs,-1,cbs),P_k
+p << v~;~t',p~seal~n~;~t'',T_k~|~p=(vs,cbs,-1),P_k
 \\
 & &
 \;\stackrel{\textsc{Seal1}}{\longrightarrow}\;
-\set{cbs(w) : w \in vs},p << v~;~t',t'',T_k~|~p=(vs,n,cbs),P_k
+\set{cbs(w) : w \in vs},p << v~;~t',t'',T_k~|~p=(vs,cbs,n),P_k
 \\
 & &
 \;\stackrel{\textsc{Append2}}{\longrightarrow}\;
-cbs(v),\set{cbs(w) : w \in vs},t',t'',T_k,~|~p=(\set{v} \cup vs,n,cbs),P_k
+cbs(v),\set{cbs(w) : w \in vs},t',t'',T_k,~|~p=(\set{v} \cup vs,cbs,n),P_k
 \end{eqnarray*}
 
 The final execution states in these two execution fragments are the
 same, hence the rest of the interleaving stays the same.
+
+Note that if the two execution steps above had been executed by
+the same thread, the proof would proceed in the same manner.
 \end{proof}
 
 \begin{definition}[Canonical interleaving]
@@ -3022,20 +3008,20 @@ P_0 \;\stackrel{\textsc{Create}}{\longrightarrow}\; \ldots
 \;\stackrel{\textsc{Create}}{\longrightarrow}\;  T_0~|~p_{i_n},
 p_{i_{n-1}}, \ldots, p_{i_1}, P_0 \\
 & &\;\stackrel{\textsc{Append}}{\longrightarrow}\; T_1~|~(\set{v_{j_1}}
-\cup vs_1, n_1, cbs_1)_{j_1}, P_{j_1}
+\cup vs_1, cbs_1, n_1)_{j_1}, P_{j_1}
 \;\stackrel{\textsc{Append}}{\longrightarrow}\; \ldots \\
 & &\;\stackrel{\textsc{Append}}{\longrightarrow}\;
-T_m~|~(\set{v_{j_m}} \cup vs_m, n_m, cbs_m)_{j_n}, P_{j_n} \\
+T_m~|~(\set{v_{j_m}} \cup vs_m, cbs_m, n_m)_{j_n}, P_{j_n} \\
 & & \;\stackrel{\textsc{Foreach}}{\longrightarrow}\;
-T_{m+1}~|~(vs_{m+1}, n_{m+1}, \set{t_{k_1}} \cup cbs_{m+1})_{k_1}, P_{k_1}
+T_{m+1}~|~(vs_{m+1}, \set{t_{k_1}} \cup cbs_{m+1}, n_{m+1})_{k_1}, P_{k_1}
 \;\stackrel{\textsc{Foreach}}{\longrightarrow}\; \ldots \\
 & & \;\stackrel{\textsc{Foreach}}{\longrightarrow}\;
-T_{m+f}~|~(vs_{m+f}, n_{m+f}, \set{t_{k_f}} \cup cbs_{m+f})_{k_f}, P_{k_f} \\
+T_{m+f}~|~(vs_{m+f}, \set{t_{k_f}} \cup cbs_{m+f}, n_{m+f})_{k_f}, P_{k_f} \\
 & & \;\stackrel{\textsc{Seal}}{\longrightarrow}\;
-T_{m+f+1}~|~(vs_{m+f+1}, n_{m+f+1}, cbs_{m+f+1})_{l_1}, P_{l_1}
+T_{m+f+1}~|~(vs_{m+f+1}, cbs_{m+f+1}, n_{m+f+1})_{l_1}, P_{l_1}
 \;\stackrel{\textsc{Seal}}{\longrightarrow}\; \ldots \\
 & & \;\stackrel{\textsc{Seal}}{\longrightarrow}\;
-T_{m+f+s}~|~(vs_{m+f+s}, n_{m+f+s}, cbs_{m+f+s})_{l_s}, P_{l_s}
+T_{m+f+s}~|~(vs_{m+f+s}, cbs_{m+f+s}, n_{m+f+s})_{l_s}, P_{l_s}
 \end{eqnarray*}
 
 where (with $\stackrel{a}{<}$ being the lexicographic ordering and
@@ -3178,8 +3164,9 @@ Directly from the definition of determinism and
 
 
 \section{Syntax and examples}
+\label{sec:syntax-examples}
 
-This section the used syntax in more detail and presents a range of programming
+This section describes the used syntax in more detail and presents a range of programming
 examples.
 The syntax is based on languages such as Groovy, Scala and Ruby.
 For conciseness and reasons of space, we omit the block braces and use indentation
@@ -3444,7 +3431,7 @@ p.seal(1)
 Above, the last line may be executed before or after appending the element
 \verb=1= at runtime.
 Also, the \verb=future= construct returns a future completed with the value
-its associated block computes.
+its associated block computes, which is the last expression in the block.
 
 Futures can be used in for-comprehensions, i.e. they define \verb=foreach=,
 \verb=map= and \verb=flatMap= methods.
