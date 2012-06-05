@@ -145,9 +145,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \usepackage{url}
-\urldef{\mails}\path|firstname.lastname@epfl.ch|    
+\urldef{\mails}\path|firstname.lastname@epfl.ch|
+\urldef{\mailsa}\path|firstname.lastname@typesafe.com|
 \newcommand{\keywords}[1]{\par\addvspace\baselineskip
 \noindent\keywordname\enspace\ignorespaces#1}
+
+
 
 \makeatletter
 \newcommand{\customlabel}[2]{%
@@ -159,10 +162,10 @@
 \mainmatter  % start of an individual contribution
 
 % first the title is needed
-\title{FlowPools: Lock-Free Deterministic Concurrent Dataflow Queues}
+\title{FlowPool: A Lock-Free Deterministic Concurrent Dataflow Abstraction}
 
 % a short form should be given in case it is too long for the running head
-\titlerunning{FlowPools: Lock-Free Deterministic Concurrent Dataflow Queues}
+\titlerunning{FlowPool: A Lock-Free Deterministic Concurrent Dataflow Abstraction}
 
 % the name(s) of the author(s) follow(s) next
 %
@@ -170,8 +173,7 @@
 % their surnames. This ensures that the names appear correctly in
 % the running heads and the author index.
 %
-%% TODO add authors
-\author{Authors}
+\author{Aleksandar Prokopec\inst{1} \and Heather Miller\inst{1} \and Tobias Schlatter\inst{1} \and Philipp Haller\inst{2} \and Martin Odersky\inst{1}}
 %
 % \author{Alfred Hofmann%
 % \thanks{Please note that the LNCS Editorial assumes that all authors have used
@@ -181,14 +183,16 @@
 % Anna Kramer\and Leonie Kunz\and Christine Rei\ss\and\\
 % Nicole Sator\and Erika Siebert-Cole\and Peter Stra\ss er}
 
-\authorrunning{FlowPools: Lock-Free Deterministic Concurrent Dataflow Queues}
+\authorrunning{FlowPool: A Lock-Free Deterministic Concurrent Dataflow Abstraction}
 % (feature abused for this document to repeat the title also on left hand pages)
 
 % the affiliations are given next; don't give your e-mail address
 % unless you accept that it will be published
 \institute{EPFL, Switzerland\\
 \mails\\
-\url{http://lamp.epfl.ch}}
+\and
+Typesafe, Inc.\\
+\mailsa}
 
 %
 % NB: a more complex sample for affiliations and the mapping to the
