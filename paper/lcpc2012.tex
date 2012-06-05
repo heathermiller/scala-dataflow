@@ -554,37 +554,38 @@ It denotes the number of times the \verb=foreach= has been called.
 The user-specified function return value of type \verb=U= is ignored.
 
 The \verb=aggregate= operation aggregates the elements of the pool
-together and has the following signature: \verb+def aggregate[S]+\verb+(zero: =>S)+
-\verb+(cb: (S, S) => S)+ \verb+(op: (S, T) => S):+ \verb+Future[S]+,
+and has the following signature: \verb+def aggregate[S]+\verb+(zero: =>S)+
+\verb+(cb: (S, S) => S)+\\
+\verb+(op: (S, T) => S):+ \verb+Future[S]+,
 where \verb=zero= is the initial aggregation, \verb=cb= is an
 associative operator which combines several aggregations, \verb=op= is
 an operator that adds an element to the aggregation, and
 \verb=Future[S]= is the final aggregation of all the elements which
 becomes available once all the elements have been added.
-The \verb=aggregate= divides elements into subsets and applies the
+The \verb=aggregate= operator divides elements into subsets and applies the
 aggregation operator \verb=op= to aggregate elements in each subset
 starting from the \verb=zero= aggregation, and then combines
 aggregations from different subsets with the \verb=cb= operator.
 In essence, the first part of \verb=aggregate= defines the commutative
 monoid and the functions involved must be non-side-effecting.
-In contrast, the \verb=op= is guaranteed to be called only once per
-each element and it can have side-effects.
+In contrast, the operator \verb=op= is guaranteed to be called only once for
+each element and it can have side effects.
 
 While in an imperative programming model \verb=foreach= and \verb=aggregate= are
 equivalent in the sense that one can be implemented in terms of the
 other, in a single-assignment programming model \verb=aggregate= is more
 expressive than \verb=foreach=.
-The \verb=foreach= can be implemented using \verb=aggregate=, but not vice versa,
-due to the absence of side-effects.
+The \verb=foreach= operation can be implemented using \verb=aggregate=, but not vice versa,
+due to the absence of side effects.
 
 \textbf{Builders.}
-The FlowPool described so far is that it must maintain a reference 
+The FlowPool described so far must maintain a reference 
 to all the elements at all times to implement the \verb=foreach=
-correctly.
+operation correctly.
 Since elements are never removed, the pool may grow indefinitely
 and run out of memory.
 
-In the same time appending new elements does not require a reference
+At the same time, appending new elements does not require a reference
 to any of the existing elements.
 We use this observation to factor out the \verb=<<= operation into
 a different abstraction called a \verb=builder=.
@@ -595,11 +596,11 @@ discarding the no longer needed objects.
 
 
 \textbf{Seal.}
-When the client is sure that no more elements will be added to the pool
-he can disallow further appends by calling \verb=seal=.
+When clients are sure that no more elements will be added to the pool
+they can disallow further appends by calling \verb=seal=.
 This has the advantage of discarding the registered \verb=foreach=
 operations.
-More importantly, \verb=aggregate= can only complete the future
+More importantly, \verb=aggregate= can only complete its resulting future
 once it is certain that no more elements will be added.
 
 A \verb=seal= which just closes the FlowPool at the moment when it
@@ -610,9 +611,9 @@ In one execution, the append preceeds the seal, and in the other
 the append follows the seal causing an error.
 To avoid nondeterminism, there has to be an agreement on the
 state of the pool when it is sealed.
-A convenient and sufficient way to make `seal` deterministic
-is to provide the expected size.
-The semantics of \verb=seal= are then such that it fails if the pool
+A convenient and sufficient way to make \verb=seal= deterministic
+is to provide the expected pool size as an argument.
+The semantics of \verb=seal= is then such that it fails if the pool
 is already sealed with a different size or the number of elements
 is greater than the desired size.
 
