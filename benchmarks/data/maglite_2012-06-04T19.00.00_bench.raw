@@ -1,0 +1,914 @@
+ > bench -Dpar=1 -Dsize=100000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 2
+[info] Compiling 26 Scala sources to 
+/home/prokopec/workspace/dataflow/target/scala-2.9.1/classes...
+[warn] there were 5 unchecked warnings; re-run with -unchecked for details
+[warn] one warning found
+[info] Packaging 
+/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar 
+...
+[info] Done packaging.
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=100000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 2
+[GC [PSYoungGen: 515033K->3230K(612864K)] 515033K->3230K(2013696K), 
+0.0435952 secs] [Times: user=0.43 sys=0.04, real=0.04 secs]
+[Full GC (System) [PSYoungGen: 3230K->0K(612864K)] [PSOldGen: 
+0K->2898K(1400832K)] 3230K->2898K(2013696K) [PSPermGen: 
+4736K->4736K(16384K)], 0.0949886 secs] [Times: user=0.09 sys=0.01, 
+real=0.10 secs]
+[GC [PSYoungGen: 476313K->112K(612864K)] 479212K->3010K(2013696K), 
+0.0022526 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 112K->0K(612864K)] [PSOldGen: 
+2898K->2932K(1400832K)] 3010K->2932K(2013696K) [PSPermGen: 
+4740K->4740K(16384K)], 0.0751304 secs] [Times: user=0.07 sys=0.01, 
+real=0.08 secs]
+scala.dataflow.bench.MLFPCommBench$     38014   38226
+Heap
+  PSYoungGen      total 612864K, used 14592K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 525312K, 2% used [0xd1000000,0xd1e40008,0xf1100000)
+   from space 87552K, 0% used [0xf6680000,0xf6680000,0xfbc00000)
+   to   space 87552K, 0% used [0xf1100000,0xf1100000,0xf6680000)
+  PSOldGen        total 1400832K, used 2932K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7badd2c0,0xd1000000)
+  PSPermGen       total 16384K, used 5010K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 30% used [0x77800000,0x77ce4918,0x78800000)
+[success] Total time: 180 s, completed Jun 4, 2012 6:37:16 PM
+ > bench -Dpar=1 -Dsize=200000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=200000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 2
+[GC [PSYoungGen: 525312K->3229K(612864K)] 525312K->3229K(2013696K), 
+0.0227730 secs] [Times: user=0.26 sys=0.01, real=0.02 secs]
+[GC [PSYoungGen: 457035K->1056K(612864K)] 457035K->1056K(2013696K), 
+0.0240518 secs] [Times: user=0.23 sys=0.04, real=0.02 secs]
+[Full GC (System) [PSYoungGen: 1056K->0K(612864K)] [PSOldGen: 
+0K->719K(1400832K)] 1056K->719K(2013696K) [PSPermGen: 
+4740K->4740K(16384K)], 0.0809740 secs] [Times: user=0.08 sys=0.00, 
+real=0.08 secs]
+[GC [PSYoungGen: 525312K->160K(612864K)] 526031K->879K(2013696K), 
+0.0018339 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 367407K->112K(612864K)] 368126K->831K(2013696K), 
+0.0024695 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 112K->0K(612864K)] [PSOldGen: 
+719K->753K(1400832K)] 831K->753K(2013696K) [PSPermGen: 
+4740K->4740K(16384K)], 0.0747311 secs] [Times: user=0.07 sys=0.00, 
+real=0.07 secs]
+scala.dataflow.bench.MLFPCommBench$     76130   75934
+Heap
+  PSYoungGen      total 612864K, used 6869K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 525312K, 1% used [0xd1000000,0xd16b5668,0xf1100000)
+   from space 87552K, 0% used [0xf6680000,0xf6680000,0xfbc00000)
+   to   space 87552K, 0% used [0xf1100000,0xf1100000,0xf6680000)
+  PSOldGen        total 1400832K, used 753K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7b8bc4b0,0xd1000000)
+  PSPermGen       total 16384K, used 5010K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 30% used [0x77800000,0x77ce49a8,0x78800000)
+[success] Total time: 156 s, completed Jun 4, 2012 6:41:42 PM
+ > bench -Dpar=1 -Dsize=200000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=200000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 2
+[GC [PSYoungGen: 525312K->2511K(612864K)] 525312K->2511K(2013696K), 
+0.0294459 secs] [Times: user=0.24 sys=0.04, real=0.03 secs]
+[GC [PSYoungGen: 527823K->680K(612864K)] 527823K->680K(2013696K), 
+0.0257953 secs] [Times: user=0.28 sys=0.04, real=0.03 secs]
+[GC [PSYoungGen: 525992K->624K(612864K)] 525992K->624K(2013696K), 
+0.0069333 secs] [Times: user=0.12 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 525936K->632K(612864K)] 525936K->632K(2013696K), 
+0.0062860 secs] [Times: user=0.11 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 525944K->600K(612864K)] 525944K->600K(2013696K), 
+0.0064509 secs] [Times: user=0.11 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 525912K->640K(698048K)] 525912K->640K(2098880K), 
+0.0293024 secs] [Times: user=0.35 sys=0.04, real=0.03 secs]
+[GC [PSYoungGen: 696192K->128K(697920K)] 696192K->584K(2098752K), 
+0.0267772 secs] [Times: user=0.30 sys=0.04, real=0.03 secs]
+[GC [PSYoungGen: 695680K->32K(698048K)] 696136K->500K(2098880K), 
+0.0022033 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695712K->160K(698048K)] 696180K->632K(2098880K), 
+0.0020547 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695840K->112K(698176K)] 696312K->584K(2099008K), 
+0.0017215 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 212266K->176K(698112K)] 212738K->648K(2098944K), 
+0.0024391 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 176K->0K(698112K)] [PSOldGen: 
+472K->517K(1400832K)] 648K->517K(2098944K) [PSPermGen: 
+4194K->4194K(16384K)], 0.0602676 secs] [Times: user=0.06 sys=0.00, 
+real=0.06 secs]
+[GC [PSYoungGen: 695872K->80K(698368K)] 696389K->597K(2099200K), 
+0.0021686 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696336K->16K(698304K)] 696853K->557K(2099136K), 
+0.0018058 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696272K->16K(698496K)] 696813K->557K(2099328K), 
+0.0022025 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696528K->144K(698432K)] 697069K->685K(2099264K), 
+0.0019348 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696656K->112K(698688K)] 697197K->653K(2099520K), 
+0.0016014 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 696944K->16K(698560K)] 697485K->557K(2099392K), 
+0.0020716 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 696848K->16K(698816K)] 697389K->557K(2099648K), 
+0.0019963 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697168K->96K(698752K)] 697709K->637K(2099584K), 
+0.0018179 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 378956K->32K(699008K)] 379498K->573K(2099840K), 
+0.0017251 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(699008K)] [PSOldGen: 
+541K->541K(1400832K)] 573K->541K(2099840K) [PSPermGen: 
+4194K->4194K(16384K)], 0.0603672 secs] [Times: user=0.06 sys=0.00, 
+real=0.06 secs]
+scala.dataflow.bench.LTQCommBench$      83626   83505
+Heap
+  PSYoungGen      total 699008K, used 10074K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 697536K, 1% used [0xd1000000,0xd19d6860,0xfb930000)
+   from space 1472K, 0% used [0xfba90000,0xfba90000,0xfbc00000)
+   to   space 1408K, 0% used [0xfb930000,0xfb930000,0xfba90000)
+  PSOldGen        total 1400832K, used 541K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7b8876f0,0xd1000000)
+  PSPermGen       total 16384K, used 4482K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 27% used [0x77800000,0x77c60990,0x78800000)
+[success] Total time: 171 s, completed Jun 4, 2012 6:52:30 PM
+ > bench -Dpar=1 -Dsize=100000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=100000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 2
+[GC [PSYoungGen: 525312K->2503K(612864K)] 525312K->2503K(2013696K), 
+0.0154941 secs] [Times: user=0.20 sys=0.00, real=0.02 secs]
+[GC [PSYoungGen: 527815K->680K(612864K)] 527815K->680K(2013696K), 
+0.0234745 secs] [Times: user=0.23 sys=0.04, real=0.02 secs]
+[GC [PSYoungGen: 525992K->632K(612864K)] 525992K->632K(2013696K), 
+0.0067118 secs] [Times: user=0.12 sys=0.01, real=0.01 secs]
+[GC [PSYoungGen: 525944K->624K(612864K)] 525944K->624K(2013696K), 
+0.0062669 secs] [Times: user=0.11 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 525936K->608K(612864K)] 525936K->608K(2013696K), 
+0.0070154 secs] [Times: user=0.12 sys=0.00, real=0.01 secs]
+---------------
+[GC [PSYoungGen: 437824K->744K(698048K)] 437824K->744K(2098880K), 
+0.0243009 secs] [Times: user=0.23 sys=0.04, real=0.02 secs]
+[Full GC (System) [PSYoungGen: 744K->0K(698048K)] [PSOldGen: 
+0K->450K(1400832K)] 744K->450K(2098880K) [PSPermGen: 
+4194K->4194K(16384K)], 0.0719283 secs] [Times: user=0.06 sys=0.01, 
+real=0.07 secs]
+[GC [PSYoungGen: 695552K->64K(697920K)] 696002K->514K(2098752K), 
+0.0021320 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 695616K->352K(698176K)] 696066K->802K(2099008K), 
+0.0022848 secs] [Times: user=0.02 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 696160K->80K(698048K)] 696610K->530K(2098880K), 
+0.0016744 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 695888K->256K(698240K)] 696338K->726K(2099072K), 
+0.0022922 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 257790K->16K(698176K)] 258260K->486K(2099008K), 
+0.0023773 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 16K->0K(698176K)] [PSOldGen: 
+470K->470K(1400832K)] 486K->470K(2099008K) [PSPermGen: 
+4194K->4194K(16384K)], 0.0602096 secs] [Times: user=0.06 sys=0.00, 
+real=0.06 secs]
+scala.dataflow.bench.LTQCommBench$      41859   41353
+Heap
+  PSYoungGen      total 698176K, used 10031K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 696000K, 1% used [0xd1000000,0xd19cbc40,0xfb7b0000)
+   from space 2176K, 0% used [0xfb7b0000,0xfb7b0000,0xfb9d0000)
+   to   space 2112K, 0% used [0xfb9f0000,0xfb9f0000,0xfbc00000)
+  PSOldGen        total 1400832K, used 470K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7b8758a8,0xd1000000)
+  PSPermGen       total 16384K, used 4482K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 27% used [0x77800000,0x77c60990,0x78800000)
+[success] Total time: 87 s, completed Jun 4, 2012 6:54:16 PM
+ > bench -Dpar=1 -Dsize=50000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=50000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 2
+[GC [PSYoungGen: 525312K->2506K(612864K)] 525312K->2506K(2013696K), 
+0.0159068 secs] [Times: user=0.22 sys=0.00, real=0.02 secs]
+[GC [PSYoungGen: 527818K->792K(612864K)] 527818K->792K(2013696K), 
+0.0242900 secs] [Times: user=0.23 sys=0.04, real=0.02 secs]
+---------------
+[GC [PSYoungGen: 526104K->682K(612864K)] 526104K->682K(2013696K), 
+0.0062951 secs] [Times: user=0.11 sys=0.00, real=0.01 secs]
+[Full GC (System) [PSYoungGen: 682K->0K(612864K)] [PSOldGen: 
+0K->449K(1400832K)] 682K->449K(2013696K) [PSPermGen: 
+4194K->4194K(16384K)], 0.0659765 secs] [Times: user=0.07 sys=0.01, 
+real=0.07 secs]
+[GC [PSYoungGen: 525312K->80K(612864K)] 525761K->529K(2013696K), 
+0.0023441 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 525392K->80K(612864K)] 525841K->529K(2013696K), 
+0.0024392 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 491622K->16K(612864K)] 492072K->465K(2013696K), 
+0.0020722 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 16K->0K(612864K)] [PSOldGen: 
+449K->450K(1400832K)] 465K->450K(2013696K) [PSPermGen: 
+4194K->4194K(16384K)], 0.0602239 secs] [Times: user=0.06 sys=0.00, 
+real=0.06 secs]
+scala.dataflow.bench.LTQCommBench$      22021   21093
+Heap
+  PSYoungGen      total 612864K, used 6773K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 525312K, 1% used [0xd1000000,0xd169d790,0xf1100000)
+   from space 87552K, 0% used [0xf6680000,0xf6680000,0xfbc00000)
+   to   space 87552K, 0% used [0xf1100000,0xf1100000,0xf6680000)
+  PSOldGen        total 1400832K, used 450K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7b870858,0xd1000000)
+  PSPermGen       total 16384K, used 4482K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 27% used [0x77800000,0x77c60990,0x78800000)
+[success] Total time: 47 s, completed Jun 4, 2012 6:55:26 PM
+ > bench -Dpar=1 -Dsize=25000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=25000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 2
+[GC [PSYoungGen: 525312K->2488K(612864K)] 525312K->2488K(2013696K), 
+0.0153525 secs] [Times: user=0.22 sys=0.00, real=0.02 secs]
+---------------
+[GC [PSYoungGen: 280694K->690K(612864K)] 280694K->690K(2013696K), 
+0.0245602 secs] [Times: user=0.24 sys=0.04, real=0.02 secs]
+[Full GC (System) [PSYoungGen: 690K->0K(612864K)] [PSOldGen: 
+0K->449K(1400832K)] 690K->449K(2013696K) [PSPermGen: 
+4192K->4192K(16384K)], 0.0659574 secs] [Times: user=0.07 sys=0.01, 
+real=0.07 secs]
+[GC [PSYoungGen: 525312K->80K(612864K)] 525761K->529K(2013696K), 
+0.0021002 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 245950K->16K(612864K)] 246400K->465K(2013696K), 
+0.0019600 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 16K->0K(612864K)] [PSOldGen: 
+449K->449K(1400832K)] 465K->449K(2013696K) [PSPermGen: 
+4194K->4194K(16384K)], 0.0601926 secs] [Times: user=0.06 sys=0.00, 
+real=0.06 secs]
+scala.dataflow.bench.LTQCommBench$      11433   10588
+Heap
+  PSYoungGen      total 612864K, used 7587K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 525312K, 1% used [0xd1000000,0xd1768fe8,0xf1100000)
+   from space 87552K, 0% used [0xf6680000,0xf6680000,0xfbc00000)
+   to   space 87552K, 0% used [0xf1100000,0xf1100000,0xf6680000)
+  PSOldGen        total 1400832K, used 449K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7b8706f8,0xd1000000)
+  PSPermGen       total 16384K, used 4482K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 27% used [0x77800000,0x77c60990,0x78800000)
+[success] Total time: 26 s, completed Jun 4, 2012 6:56:23 PM
+ > bench -Dpar=1 -Dsize=400000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=400000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 2
+[GC [PSYoungGen: 525312K->2491K(612864K)] 525312K->2491K(2013696K), 
+0.0159176 secs] [Times: user=0.23 sys=0.01, real=0.02 secs]
+[GC [PSYoungGen: 527803K->680K(612864K)] 527803K->680K(2013696K), 
+0.0255150 secs] [Times: user=0.26 sys=0.04, real=0.03 secs]
+[GC [PSYoungGen: 525992K->608K(612864K)] 525992K->608K(2013696K), 
+0.0067067 secs] [Times: user=0.12 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 525920K->592K(612864K)] 525920K->592K(2013696K), 
+0.0065263 secs] [Times: user=0.11 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 525904K->608K(612864K)] 525904K->608K(2013696K), 
+0.0063306 secs] [Times: user=0.12 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 525920K->688K(698048K)] 525920K->688K(2098880K), 
+0.0243936 secs] [Times: user=0.24 sys=0.04, real=0.02 secs]
+[GC [PSYoungGen: 696240K->128K(697920K)] 696240K->596K(2098752K), 
+0.0238939 secs] [Times: user=0.23 sys=0.04, real=0.02 secs]
+[GC [PSYoungGen: 695680K->64K(698112K)] 696148K->532K(2098944K), 
+0.0016323 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695872K->208K(698112K)] 696340K->676K(2098944K), 
+0.0019273 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696016K->16K(698240K)] 696484K->496K(2099072K), 
+0.0021042 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 696016K->16K(698176K)] 696496K->496K(2099008K), 
+0.0019499 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 696016K->16K(698304K)] 696496K->496K(2099136K), 
+0.0022165 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 696144K->16K(698240K)] 696624K->496K(2099072K), 
+0.0021818 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 696144K->208K(698496K)] 696624K->688K(2099328K), 
+0.0025137 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 696720K->16K(698432K)] 697200K->496K(2099264K), 
+0.0020347 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 696528K->160K(698688K)] 697008K->640K(2099520K), 
+0.0027997 secs] [Times: user=0.02 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 696992K->16K(698560K)] 697472K->496K(2099392K), 
+0.0025736 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 696848K->160K(698880K)] 697328K->640K(2099712K), 
+0.0022657 secs] [Times: user=0.02 sys=0.01, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 643049K->144K(698752K)] 643530K->624K(2099584K), 
+0.0021867 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 144K->0K(698752K)] [PSOldGen: 
+480K->525K(1400832K)] 624K->525K(2099584K) [PSPermGen: 
+4194K->4194K(16384K)], 0.0605958 secs] [Times: user=0.06 sys=0.00, 
+real=0.06 secs]
+[GC [PSYoungGen: 697216K->64K(699008K)] 697741K->589K(2099840K), 
+0.0020973 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697600K->16K(698944K)] 698125K->561K(2099776K), 
+0.0020893 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697552K->16K(699136K)] 698097K->561K(2099968K), 
+0.0021585 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697808K->16K(699072K)] 698353K->561K(2099904K), 
+0.0015568 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697808K->16K(699264K)] 698353K->561K(2100096K), 
+0.0019399 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698064K->144K(699200K)] 698609K->689K(2100032K), 
+0.0022011 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698192K->16K(699456K)] 698737K->561K(2100288K), 
+0.0025064 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698448K->16K(699392K)] 698993K->561K(2100224K), 
+0.0018483 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698448K->96K(699520K)] 698993K->641K(2100352K), 
+0.0019960 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698656K->192K(699456K)] 699201K->737K(2100288K), 
+0.0016043 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698752K->160K(699648K)] 699297K->705K(2100480K), 
+0.0023465 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698976K->160K(699584K)] 699521K->705K(2100416K), 
+0.0022941 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698976K->16K(699712K)] 699521K->561K(2100544K), 
+0.0023154 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699024K->112K(699712K)] 699569K->657K(2100544K), 
+0.0021518 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699120K->16K(699840K)] 699665K->561K(2100672K), 
+0.0019144 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699216K->16K(699776K)] 699761K->561K(2100608K), 
+0.0020504 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699216K->176K(699840K)] 699761K->721K(2100672K), 
+0.0021133 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 256505K->32K(699840K)] 257050K->577K(2100672K), 
+0.0019863 secs] [Times: user=0.02 sys=0.01, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(699840K)] [PSOldGen: 
+545K->545K(1400832K)] 577K->545K(2100672K) [PSPermGen: 
+4194K->4194K(16384K)], 0.0604020 secs] [Times: user=0.06 sys=0.00, 
+real=0.06 secs]
+scala.dataflow.bench.LTQCommBench$      165393  164792
+Heap
+  PSYoungGen      total 699840K, used 10074K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 699264K, 1% used [0xd1000000,0xd19d6910,0xfbae0000)
+   from space 576K, 0% used [0xfbae0000,0xfbae0000,0xfbb70000)
+   to   space 512K, 0% used [0xfbb80000,0xfbb80000,0xfbc00000)
+  PSOldGen        total 1400832K, used 545K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7b8886f0,0xd1000000)
+  PSPermGen       total 16384K, used 4482K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 27% used [0x77800000,0x77c60800,0x78800000)
+[success] Total time: 334 s, completed Jun 4, 2012 7:02:41 PM
+ > bench -Dpar=1 -Dsize=800000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=800000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 2
+[GC [PSYoungGen: 525312K->2466K(612864K)] 525312K->2466K(2013696K), 
+0.0161928 secs] [Times: user=0.22 sys=0.01, real=0.02 secs]
+[GC [PSYoungGen: 527778K->648K(612864K)] 527778K->648K(2013696K), 
+0.0280635 secs] [Times: user=0.33 sys=0.04, real=0.03 secs]
+[GC [PSYoungGen: 525960K->600K(612864K)] 525960K->600K(2013696K), 
+0.0069627 secs] [Times: user=0.12 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 525912K->640K(612864K)] 525912K->640K(2013696K), 
+0.0069452 secs] [Times: user=0.12 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 525952K->616K(612864K)] 525952K->616K(2013696K), 
+0.0068290 secs] [Times: user=0.12 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 525928K->712K(698112K)] 525928K->712K(2098944K), 
+0.0246026 secs] [Times: user=0.23 sys=0.04, real=0.02 secs]
+[GC [PSYoungGen: 696392K->80K(697984K)] 696392K->564K(2098816K), 
+0.0241668 secs] [Times: user=0.23 sys=0.04, real=0.02 secs]
+[GC [PSYoungGen: 695760K->160K(698176K)] 696244K->648K(2099008K), 
+0.0022773 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696032K->32K(698112K)] 696520K->520K(2098944K), 
+0.0023463 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 695904K->160K(698240K)] 696392K->652K(2099072K), 
+0.0023938 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696160K->208K(698176K)] 696652K->700K(2099008K), 
+0.0022437 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696208K->128K(698432K)] 696700K->620K(2099264K), 
+0.0024318 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696448K->128K(698304K)] 696940K->620K(2099136K), 
+0.0024271 secs] [Times: user=0.02 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 696448K->128K(698560K)] 696940K->620K(2099392K), 
+0.0022431 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696768K->16K(698496K)] 697260K->508K(2099328K), 
+0.0023795 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 696656K->160K(698688K)] 697148K->652K(2099520K), 
+0.0022922 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697056K->176K(698624K)] 697548K->668K(2099456K), 
+0.0022321 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697072K->192K(698880K)] 697564K->684K(2099712K), 
+0.0020715 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697472K->112K(698816K)] 697964K->604K(2099648K), 
+0.0024546 secs] [Times: user=0.02 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 697392K->192K(699072K)] 697884K->684K(2099904K), 
+0.0018072 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 697792K->128K(698944K)] 698284K->620K(2099776K), 
+0.0024289 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697728K->16K(699200K)] 698220K->508K(2100032K), 
+0.0025122 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 697936K->224K(699136K)] 698428K->716K(2099968K), 
+0.0024813 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698144K->240K(699328K)] 698636K->732K(2100160K), 
+0.0020410 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698416K->176K(699264K)] 698908K->668K(2100096K), 
+0.0021897 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698352K->16K(699456K)] 698844K->508K(2100288K), 
+0.0024737 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 698448K->160K(699392K)] 698940K->652K(2100224K), 
+0.0019312 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698592K->176K(699584K)] 699084K->668K(2100416K), 
+0.0022752 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698864K->160K(699520K)] 699356K->652K(2100352K), 
+0.0025846 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698848K->16K(699648K)] 699340K->508K(2100480K), 
+0.0024459 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698832K->144K(699584K)] 699324K->636K(2100416K), 
+0.0023325 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 698960K->16K(699712K)] 699452K->508K(2100544K), 
+0.0020253 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699024K->192K(699712K)] 699516K->684K(2100544K), 
+0.0023852 secs] [Times: user=0.02 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 699200K->208K(699776K)] 699692K->700K(2100608K), 
+0.0021958 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699344K->16K(699776K)] 699836K->508K(2100608K), 
+0.0018378 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699152K->16K(699840K)] 699644K->508K(2100672K), 
+0.0024483 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 147943K->144K(699776K)] 148435K->636K(2100608K), 
+0.0022043 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 144K->0K(699776K)] [PSOldGen: 
+492K->537K(1400832K)] 636K->537K(2100608K) [PSPermGen: 
+4194K->4194K(16384K)], 0.0600935 secs] [Times: user=0.06 sys=0.00, 
+real=0.06 secs]
+[GC [PSYoungGen: 699200K->80K(699904K)] 699737K->617K(2100736K), 
+0.0022584 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699408K->16K(699840K)] 699945K->573K(2100672K), 
+0.0020974 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699344K->16K(699904K)] 699901K->573K(2100736K), 
+0.0017168 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699408K->160K(699904K)] 699965K->717K(2100736K), 
+0.0023610 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699552K->16K(699968K)] 700109K->573K(2100800K), 
+0.0024887 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 699472K->128K(699904K)] 700029K->685K(2100736K), 
+0.0016033 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699584K->16K(699968K)] 700141K->573K(2100800K), 
+0.0021719 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699536K->16K(699968K)] 700093K->573K(2100800K), 
+0.0018561 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699536K->224K(699904K)] 700093K->781K(2100736K), 
+0.0023244 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699744K->112K(699968K)] 700301K->669K(2100800K), 
+0.0020243 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699632K->16K(700032K)] 700189K->573K(2100864K), 
+0.0021535 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699664K->16K(700032K)] 700221K->573K(2100864K), 
+0.0021065 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 699664K->160K(700032K)] 700221K->717K(2100864K), 
+0.0021729 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699808K->16K(700032K)] 700365K->573K(2100864K), 
+0.0018150 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699664K->16K(700032K)] 700221K->573K(2100864K), 
+0.0022483 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699664K->96K(700032K)] 700221K->653K(2100864K), 
+0.0026351 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699744K->144K(700096K)] 700301K->701K(2100928K), 
+0.0019021 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699920K->16K(700096K)] 700477K->573K(2100928K), 
+0.0023700 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699792K->16K(700096K)] 700349K->573K(2100928K), 
+0.0021651 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 699792K->176K(700096K)] 700349K->733K(2100928K), 
+0.0019331 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699952K->144K(700096K)] 700509K->701K(2100928K), 
+0.0024653 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699920K->160K(700096K)] 700477K->717K(2100928K), 
+0.0021851 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699936K->16K(700096K)] 700493K->573K(2100928K), 
+0.0023197 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699792K->144K(700096K)] 700349K->701K(2100928K), 
+0.0023391 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699920K->112K(700096K)] 700477K->669K(2100928K), 
+0.0024271 secs] [Times: user=0.02 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 699888K->16K(700096K)] 700445K->573K(2100928K), 
+0.0016259 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699792K->16K(700096K)] 700349K->573K(2100928K), 
+0.0018717 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699792K->16K(700096K)] 700349K->573K(2100928K), 
+0.0022126 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699792K->160K(700096K)] 700349K->717K(2100928K), 
+0.0023692 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699936K->16K(700096K)] 700493K->573K(2100928K), 
+0.0017666 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699792K->16K(700096K)] 700349K->573K(2100928K), 
+0.0021731 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699792K->16K(700096K)] 700349K->573K(2100928K), 
+0.0016619 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 699792K->176K(700032K)] 700349K->733K(2100864K), 
+0.0023394 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 699952K->16K(700096K)] 700509K->573K(2100928K), 
+0.0022198 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+---------------
+[GC [PSYoungGen: 555845K->32K(700160K)] 556403K->589K(2100992K), 
+0.0023585 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(700160K)] [PSOldGen: 
+557K->557K(1400832K)] 589K->557K(2100992K) [PSPermGen: 
+4194K->4194K(16384K)], 0.0603256 secs] [Times: user=0.06 sys=0.00, 
+real=0.06 secs]
+scala.dataflow.bench.LTQCommBench$      331038  330969
+Heap
+  PSYoungGen      total 700160K, used 10088K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 699840K, 1% used [0xd1000000,0xd19da128,0xfbb70000)
+   from space 320K, 0% used [0xfbbb0000,0xfbbb0000,0xfbc00000)
+   to   space 256K, 0% used [0xfbb70000,0xfbb70000,0xfbbb0000)
+  PSOldGen        total 1400832K, used 557K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7b88b6f0,0xd1000000)
+  PSPermGen       total 16384K, used 4481K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 27% used [0x77800000,0x77c606a0,0x78800000)
+[success] Total time: 666 s, completed Jun 4, 2012 7:21:27 PM
+ > bench -Dpar=1 -Dsize=800000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=800000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 2
+[GC [PSYoungGen: 525312K->3208K(612864K)] 525312K->3208K(2013696K), 
+0.0238779 secs] [Times: user=0.26 sys=0.01, real=0.02 secs]
+[GC [PSYoungGen: 528520K->992K(612864K)] 528520K->992K(2013696K), 
+0.0243225 secs] [Times: user=0.23 sys=0.04, real=0.02 secs]
+[GC [PSYoungGen: 526304K->896K(612864K)] 526304K->896K(2013696K), 
+0.0081059 secs] [Times: user=0.15 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 526208K->944K(612864K)] 526208K->944K(2013696K), 
+0.0082211 secs] [Times: user=0.15 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 526256K->896K(612864K)] 526256K->896K(2013696K), 
+0.0082266 secs] [Times: user=0.14 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 526208K->1064K(697408K)] 526208K->1064K(2098240K), 
+0.0240646 secs] [Times: user=0.23 sys=0.04, real=0.02 secs]
+[GC [PSYoungGen: 427992K->96K(697216K)] 427992K->876K(2098048K), 
+0.0246354 secs] [Times: user=0.23 sys=0.05, real=0.02 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(697216K)] [PSOldGen: 
+780K->781K(1400832K)] 876K->781K(2098048K) [PSPermGen: 
+4741K->4741K(16384K)], 0.0733369 secs] [Times: user=0.07 sys=0.00, 
+real=0.07 secs]
+[GC [PSYoungGen: 694208K->144K(697408K)] 694989K->925K(2098240K), 
+0.0025101 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694480K->160K(697344K)] 695261K->941K(2098176K), 
+0.0022234 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694496K->48K(697472K)] 695277K->889K(2098304K), 
+0.0017123 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 694576K->64K(697472K)] 695417K->905K(2098304K), 
+0.0022628 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 654304K->64K(697664K)] 655146K->905K(2098496K), 
+0.0021065 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(697664K)] [PSOldGen: 
+841K->842K(1400832K)] 905K->842K(2098496K) [PSPermGen: 
+4741K->4741K(16384K)], 0.0748830 secs] [Times: user=0.08 sys=0.00, 
+real=0.07 secs]
+scala.dataflow.bench.MLFPCommBench$     304417  305020
+Heap
+  PSYoungGen      total 697664K, used 6802K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 694784K, 0% used [0xd1000000,0xd16a4b50,0xfb680000)
+   from space 2880K, 0% used [0xfb930000,0xfb930000,0xfbc00000)
+   to   space 2752K, 0% used [0xfb680000,0xfb680000,0xfb930000)
+  PSOldGen        total 1400832K, used 842K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7b8d2b68,0xd1000000)
+  PSPermGen       total 16384K, used 5010K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 30% used [0x77800000,0x77ce4b78,0x78800000)
+[success] Total time: 613 s, completed Jun 4, 2012 7:39:36 PM
+ > bench -Dpar=1 -Dsize=400000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=400000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 2
+[GC [PSYoungGen: 525312K->3235K(612864K)] 525312K->3235K(2013696K), 
+0.0232078 secs] [Times: user=0.27 sys=0.00, real=0.02 secs]
+[GC [PSYoungGen: 528547K->1064K(612864K)] 528547K->1064K(2013696K), 
+0.0237961 secs] [Times: user=0.23 sys=0.04, real=0.02 secs]
+[GC [PSYoungGen: 526376K->920K(612864K)] 526376K->920K(2013696K), 
+0.0075435 secs] [Times: user=0.13 sys=0.01, real=0.01 secs]
+[GC [PSYoungGen: 277139K->952K(612864K)] 277139K->952K(2013696K), 
+0.0084324 secs] [Times: user=0.15 sys=0.00, real=0.01 secs]
+[Full GC (System) [PSYoungGen: 952K->0K(612864K)] [PSOldGen: 
+0K->719K(1400832K)] 952K->719K(2013696K) [PSPermGen: 
+4742K->4742K(16384K)], 0.0808319 secs] [Times: user=0.07 sys=0.01, 
+real=0.08 secs]
+[GC [PSYoungGen: 525312K->144K(612864K)] 526031K->863K(2013696K), 
+0.0018478 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 525456K->192K(697024K)] 526175K->911K(2097856K), 
+0.0025904 secs] [Times: user=0.01 sys=0.01, real=0.00 secs]
+[GC [PSYoungGen: 609664K->192K(612864K)] 610383K->911K(2013696K), 
+0.0023578 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[GC [PSYoungGen: 81703K->384K(697280K)] 82422K->1103K(2098112K), 
+0.0161120 secs] [Times: user=0.23 sys=0.02, real=0.02 secs]
+[Full GC (System) [PSYoungGen: 384K->0K(697280K)] [PSOldGen: 
+719K->785K(1400832K)] 1103K->785K(2098112K) [PSPermGen: 
+4742K->4742K(16384K)], 0.0804253 secs] [Times: user=0.07 sys=0.01, 
+real=0.08 secs]
+scala.dataflow.bench.MLFPCommBench$     151751  151996
+Heap
+  PSYoungGen      total 697280K, used 7630K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 694016K, 1% used [0xd1000000,0xd1773988,0xfb5c0000)
+   from space 3264K, 0% used [0xfb8d0000,0xfb8d0000,0xfbc00000)
+   to   space 3136K, 0% used [0xfb5c0000,0xfb5c0000,0xfb8d0000)
+  PSOldGen        total 1400832K, used 785K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7b8c46b8,0xd1000000)
+  PSPermGen       total 16384K, used 5011K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 30% used [0x77800000,0x77ce4f28,0x78800000)
+[success] Total time: 307 s, completed Jun 4, 2012 7:52:41 PM
+ > bench -Dpar=1 -Dsize=50000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=50000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 2
+[GC [PSYoungGen: 283843K->3266K(612864K)] 283843K->3266K(2013696K), 
+0.0355853 secs] [Times: user=0.26 sys=0.04, real=0.04 secs]
+[Full GC (System) [PSYoungGen: 3266K->0K(612864K)] [PSOldGen: 
+0K->2866K(1400832K)] 3266K->2866K(2013696K) [PSPermGen: 
+4736K->4736K(16384K)], 0.0941966 secs] [Times: user=0.09 sys=0.01, 
+real=0.09 secs]
+[GC [PSYoungGen: 266719K->96K(612864K)] 269585K->2962K(2013696K), 
+0.0021267 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(612864K)] [PSOldGen: 
+2866K->2900K(1400832K)] 2962K->2900K(2013696K) [PSPermGen: 
+4739K->4739K(16384K)], 0.0744066 secs] [Times: user=0.08 sys=0.00, 
+real=0.07 secs]
+scala.dataflow.bench.MLFPCommBench$     18864   19123
+Heap
+  PSYoungGen      total 612864K, used 14922K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 525312K, 2% used [0xd1000000,0xd1e92a38,0xf1100000)
+   from space 87552K, 0% used [0xf6680000,0xf6680000,0xfbc00000)
+   to   space 87552K, 0% used [0xf1100000,0xf1100000,0xf6680000)
+  PSOldGen        total 1400832K, used 2900K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7bad5168,0xd1000000)
+  PSPermGen       total 16384K, used 5009K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 30% used [0x77800000,0x77ce4430,0x78800000)
+[success] Total time: 42 s, completed Jun 4, 2012 7:54:57 PM
+ > bench -Dpar=1 -Dsize=25000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=25000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 2
+[GC [PSYoungGen: 178771K->3190K(612864K)] 178771K->3190K(2013696K), 
+0.0423925 secs] [Times: user=0.41 sys=0.05, real=0.04 secs]
+[Full GC (System) [PSYoungGen: 3190K->0K(612864K)] [PSOldGen: 
+0K->2866K(1400832K)] 3190K->2866K(2013696K) [PSPermGen: 
+4735K->4735K(16384K)], 0.0941873 secs] [Times: user=0.09 sys=0.01, 
+real=0.09 secs]
+[GC [PSYoungGen: 191777K->96K(612864K)] 194644K->2962K(2013696K), 
+0.0023448 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(612864K)] [PSOldGen: 
+2866K->2899K(1400832K)] 2962K->2899K(2013696K) [PSPermGen: 
+4737K->4737K(16384K)], 0.0743668 secs] [Times: user=0.08 sys=0.00, 
+real=0.07 secs]
+scala.dataflow.bench.MLFPCommBench$     9371    9618
+Heap
+  PSYoungGen      total 612864K, used 23113K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 525312K, 4% used [0xd1000000,0xd2692780,0xf1100000)
+   from space 87552K, 0% used [0xf6680000,0xf6680000,0xfbc00000)
+   to   space 87552K, 0% used [0xf1100000,0xf1100000,0xf6680000)
+  PSOldGen        total 1400832K, used 2899K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7bad4c28,0xd1000000)
+  PSPermGen       total 16384K, used 5007K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 30% used [0x77800000,0x77ce3da0,0x78800000)
+[success] Total time: 23 s, completed Jun 4, 2012 7:55:27 PM
+ > bench -Dpar=1 -Dsize=12000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=12000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 2
+[GC [PSYoungGen: 126235K->3220K(612864K)] 126235K->3220K(2013696K), 
+0.0362241 secs] [Times: user=0.27 sys=0.04, real=0.04 secs]
+[Full GC (System) [PSYoungGen: 3220K->0K(612864K)] [PSOldGen: 
+0K->2866K(1400832K)] 3220K->2866K(2013696K) [PSPermGen: 
+4735K->4735K(16384K)], 0.0940744 secs] [Times: user=0.09 sys=0.01, 
+real=0.09 secs]
+[GC [PSYoungGen: 136600K->128K(612864K)] 139467K->2994K(2013696K), 
+0.0021172 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(612864K)] [PSOldGen: 
+2866K->2900K(1400832K)] 2994K->2900K(2013696K) [PSPermGen: 
+4737K->4737K(16384K)], 0.0743082 secs] [Times: user=0.08 sys=0.00, 
+real=0.07 secs]
+scala.dataflow.bench.MLFPCommBench$     4382    4700
+Heap
+  PSYoungGen      total 612864K, used 23113K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 525312K, 4% used [0xd1000000,0xd2692778,0xf1100000)
+   from space 87552K, 0% used [0xf6680000,0xf6680000,0xfbc00000)
+   to   space 87552K, 0% used [0xf1100000,0xf1100000,0xf6680000)
+  PSOldGen        total 1400832K, used 2900K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7bad5168,0xd1000000)
+  PSPermGen       total 16384K, used 5007K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 30% used [0x77800000,0x77ce3e68,0x78800000)
+[success] Total time: 13 s, completed Jun 4, 2012 7:56:28 PM
+ > bench -Dpar=1 -Dsize=12000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=12000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 2
+---------------
+[GC [PSYoungGen: 378225K->2536K(612864K)] 378225K->2536K(2013696K), 
+0.0337125 secs] [Times: user=0.34 sys=0.04, real=0.03 secs]
+[Full GC (System) [PSYoungGen: 2536K->0K(612864K)] [PSOldGen: 
+0K->2225K(1400832K)] 2536K->2225K(2013696K) [PSPermGen: 
+4190K->4190K(16384K)], 0.0792023 secs] [Times: user=0.07 sys=0.01, 
+real=0.08 secs]
+---------------
+[GC [PSYoungGen: 404637K->64K(612864K)] 406863K->2289K(2013696K), 
+0.0019576 secs] [Times: user=0.02 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(612864K)] [PSOldGen: 
+2225K->2226K(1400832K)] 2289K->2226K(2013696K) [PSPermGen: 
+4194K->4194K(16384K)], 0.0604764 secs] [Times: user=0.06 sys=0.00, 
+real=0.06 secs]
+scala.dataflow.bench.LTQCommBench$      5758    5059
+Heap
+  PSYoungGen      total 612864K, used 8811K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 525312K, 1% used [0xd1000000,0xd189aeb0,0xf1100000)
+   from space 87552K, 0% used [0xf6680000,0xf6680000,0xfbc00000)
+   to   space 87552K, 0% used [0xf1100000,0xf1100000,0xf6680000)
+  PSOldGen        total 1400832K, used 2226K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7ba2c890,0xd1000000)
+  PSPermGen       total 16384K, used 4482K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 27% used [0x77800000,0x77c60990,0x78800000)
+[success] Total time: 14 s, completed Jun 4, 2012 7:56:50 PM
+ > bench -Dpar=1 -Dsize=4000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=4000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 2
+---------------
+[GC [PSYoungGen: 136581K->2557K(612864K)] 136581K->2557K(2013696K), 
+0.0300846 secs] [Times: user=0.25 sys=0.04, real=0.03 secs]
+[Full GC (System) [PSYoungGen: 2557K->0K(612864K)] [PSOldGen: 
+0K->2225K(1400832K)] 2557K->2225K(2013696K) [PSPermGen: 
+4190K->4190K(16384K)], 0.0774537 secs] [Times: user=0.07 sys=0.00, 
+real=0.08 secs]
+---------------
+[GC [PSYoungGen: 157594K->48K(612864K)] 159819K->2273K(2013696K), 
+0.0022246 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 48K->0K(612864K)] [PSOldGen: 
+2225K->2226K(1400832K)] 2273K->2226K(2013696K) [PSPermGen: 
+4192K->4192K(16384K)], 0.0605099 secs] [Times: user=0.09 sys=0.00, 
+real=0.06 secs]
+scala.dataflow.bench.LTQCommBench$      2168    1726
+Heap
+  PSYoungGen      total 612864K, used 26265K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 525312K, 5% used [0xd1000000,0xd29a66f8,0xf1100000)
+   from space 87552K, 0% used [0xf6680000,0xf6680000,0xfbc00000)
+   to   space 87552K, 0% used [0xf1100000,0xf1100000,0xf6680000)
+  PSOldGen        total 1400832K, used 2226K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7ba2c890,0xd1000000)
+  PSPermGen       total 16384K, used 4481K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 27% used [0x77800000,0x77c60548,0x78800000)
+[success] Total time: 7 s, completed Jun 4, 2012 7:57:04 PM
+ > bench -Dpar=1 -Dsize=4000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=4000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 2
+[GC [PSYoungGen: 73668K->11551K(612864K)] 73668K->11551K(2013696K), 
+0.0867649 secs] [Times: user=1.50 sys=0.06, real=0.09 secs]
+[Full GC (System) [PSYoungGen: 11551K->0K(612864K)] [PSOldGen: 
+0K->11013K(1400832K)] 11551K->11013K(2013696K) [PSPermGen: 
+4711K->4711K(16384K)], 0.2723591 secs] [Times: user=0.26 sys=0.02, 
+real=0.27 secs]
+[GC [PSYoungGen: 299635K->2432K(612864K)] 310648K->13446K(2013696K), 
+0.0263348 secs] [Times: user=0.25 sys=0.04, real=0.03 secs]
+[Full GC (System) [PSYoungGen: 2432K->0K(612864K)] [PSOldGen: 
+11013K->13061K(1400832K)] 13446K->13061K(2013696K) [PSPermGen: 
+4738K->4738K(16384K)], 0.1177082 secs] [Times: user=0.11 sys=0.01, 
+real=0.12 secs]
+scala.dataflow.bench.MLFPCommBench$     1733    1651
+Heap
+  PSYoungGen      total 612864K, used 13107K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 525312K, 2% used [0xd1000000,0xd1cccde0,0xf1100000)
+   from space 87552K, 0% used [0xf6680000,0xf6680000,0xfbc00000)
+   to   space 87552K, 0% used [0xf1100000,0xf1100000,0xf6680000)
+  PSOldGen        total 1400832K, used 13061K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7c4c1670,0xd1000000)
+  PSPermGen       total 16384K, used 5008K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 30% used [0x77800000,0x77ce40b0,0x78800000)
+[success] Total time: 7 s, completed Jun 4, 2012 7:57:21 PM
+ > bench -Dpar=1 -Dsize=2000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=2000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 2
+[GC [PSYoungGen: 63161K->8025K(612864K)] 63161K->8025K(2013696K), 
+0.0549526 secs] [Times: user=0.71 sys=0.05, real=0.06 secs]
+[Full GC (System) [PSYoungGen: 8025K->0K(612864K)] [PSOldGen: 
+0K->7579K(1400832K)] 8025K->7579K(2013696K) [PSPermGen: 
+4711K->4711K(16384K)], 0.1966707 secs] [Times: user=0.19 sys=0.01, 
+real=0.20 secs]
+[GC [PSYoungGen: 289126K->6352K(612864K)] 296706K->13932K(2013696K), 
+0.0563022 secs] [Times: user=1.01 sys=0.05, real=0.06 secs]
+[Full GC (System) [PSYoungGen: 6352K->0K(612864K)] [PSOldGen: 
+7579K->13654K(1400832K)] 13932K->13654K(2013696K) [PSPermGen: 
+4713K->4713K(16384K)], 0.2051701 secs] [Times: user=0.19 sys=0.01, 
+real=0.21 secs]
+scala.dataflow.bench.MLFPCommBench$     1129    618
+Heap
+  PSYoungGen      total 612864K, used 24011K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 525312K, 4% used [0xd1000000,0xd2772da0,0xf1100000)
+   from space 87552K, 0% used [0xf6680000,0xf6680000,0xfbc00000)
+   to   space 87552K, 0% used [0xf1100000,0xf1100000,0xf6680000)
+  PSOldGen        total 1400832K, used 13654K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7c555bf8,0xd1000000)
+  PSPermGen       total 16384K, used 4983K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 30% used [0x77800000,0x77cddc00,0x78800000)
+[success] Total time: 6 s, completed Jun 4, 2012 7:57:36 PM
+ > bench -Dpar=1 -Dsize=2000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 2
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=2000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 2
+---------------
+[GC [PSYoungGen: 84050K->2535K(612864K)] 84050K->2535K(2013696K), 
+0.0376006 secs] [Times: user=0.41 sys=0.05, real=0.04 secs]
+[Full GC (System) [PSYoungGen: 2535K->0K(612864K)] [PSOldGen: 
+0K->2225K(1400832K)] 2535K->2225K(2013696K) [PSPermGen: 
+4190K->4190K(16384K)], 0.0774330 secs] [Times: user=0.07 sys=0.00, 
+real=0.08 secs]
+---------------
+[GC [PSYoungGen: 105062K->32K(612864K)] 107288K->2257K(2013696K), 
+0.0016473 secs] [Times: user=0.01 sys=0.00, real=0.00 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(612864K)] [PSOldGen: 
+2225K->2226K(1400832K)] 2257K->2226K(2013696K) [PSPermGen: 
+4192K->4192K(16384K)], 0.0594585 secs] [Times: user=0.06 sys=0.00, 
+real=0.06 secs]
+scala.dataflow.bench.LTQCommBench$      1264    890
+Heap
+  PSYoungGen      total 612864K, used 15759K [0xd1000000, 0xfbc00000, 
+0xfbc00000)
+   eden space 525312K, 3% used [0xd1000000,0xd1f63de8,0xf1100000)
+   from space 87552K, 0% used [0xf6680000,0xf6680000,0xfbc00000)
+   to   space 87552K, 0% used [0xf1100000,0xf1100000,0xf6680000)
+  PSOldGen        total 1400832K, used 2226K [0x7b800000, 0xd1000000, 
+0xd1000000)
+   object space 1400832K, 0% used [0x7b800000,0x7ba2c890,0xd1000000)
+  PSPermGen       total 16384K, used 4480K [0x77800000, 0x78800000, 
+0x7b800000)
+   object space 16384K, 27% used [0x77800000,0x77c602c8,0x78800000)
+[success] Total time: 6 s, completed Jun 4, 2012 7:57:51 PM

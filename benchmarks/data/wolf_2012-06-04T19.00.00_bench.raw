@@ -1,0 +1,758 @@
+[prokopec@wolf dataflow]$ xsbt
+[info] Loading project definition from 
+/home/prokopec/workspace/dataflow/project
+[info] Set current project to scala-dataflow (in build 
+file:/home/prokopec/workspace/dataflow/)
+ > bench -Dpar=1 -Dsize=100000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 3
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=100000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 3
+[GC [PSYoungGen: 524288K->10886K(611648K)] 524288K->10894K(2009792K), 
+0.0587270 secs] [Times: user=1.13 sys=0.13, real=0.06 secs]
+[GC [PSYoungGen: 535174K->22577K(611648K)] 535182K->22593K(2009792K), 
+0.2527310 secs] [Times: user=10.00 sys=0.06, real=0.25 secs]
+[GC [PSYoungGen: 256651K->52577K(611648K)] 256667K->52593K(2009792K), 
+0.6803050 secs] [Times: user=28.45 sys=0.03, real=0.68 secs]
+[Full GC (System) [PSYoungGen: 52577K->0K(611648K)] [ParOldGen: 
+16K->51353K(1398144K)] 52593K->51353K(2009792K) [PSPermGen: 
+7355K->7332K(21248K)], 0.2437280 secs] [Times: user=6.69 sys=0.32, 
+real=0.24 secs]
+[GC [PSYoungGen: 524288K->68416K(611648K)] 575641K->119777K(2009792K), 
+0.9313910 secs] [Times: user=39.23 sys=0.03, real=0.93 secs]
+[GC [PSYoungGen: 190926K->87328K(611648K)] 242288K->142345K(2009792K), 
+1.2333130 secs] [Times: user=52.13 sys=0.03, real=1.23 secs]
+[Full GC (System) [PSYoungGen: 87328K->0K(611648K)] [ParOldGen: 
+55017K->92259K(1398144K)] 142345K->92259K(2009792K) [PSPermGen: 
+7335K->7335K(21248K)], 0.3048270 secs] [Times: user=8.69 sys=0.21, 
+real=0.30 secs]
+[GC [PSYoungGen: 524288K->87328K(611648K)] 616547K->179683K(2009792K), 
+1.1768900 secs] [Times: user=49.63 sys=0.03, real=1.17 secs]
+[GC [PSYoungGen: 127926K->87328K(611648K)] 220282K->182995K(2009792K), 
+1.0295940 secs] [Times: user=43.50 sys=0.02, real=1.03 secs]
+[Full GC (System) [PSYoungGen: 87328K->0K(611648K)] [ParOldGen: 
+95667K->92008K(1398144K)] 182995K->92008K(2009792K) [PSPermGen: 
+7335K->7335K(21248K)], 0.2945450 secs] [Times: user=8.34 sys=0.04, 
+real=0.30 secs]
+scala.dataflow.bench.MLFPCommBench$    6582    6856    7669
+Heap
+  PSYoungGen      total 611648K, used 22614K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 524288K, 4% used 
+[0x00000007d5560000,0x00000007d6b759e0,0x00000007f5560000)
+   from space 87360K, 0% used 
+[0x00000007f5560000,0x00000007f5560000,0x00000007faab0000)
+   to   space 87360K, 0% used 
+[0x00000007faab0000,0x00000007faab0000,0x0000000800000000)
+  ParOldGen       total 1398144K, used 92008K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 6% used 
+[0x0000000780000000,0x00000007859da080,0x00000007d5560000)
+  PSPermGen       total 21248K, used 7747K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 36% used 
+[0x000000077ae00000,0x000000077b590ca8,0x000000077c2c0000)
+[success] Total time: 26 s, completed Jun 4, 2012 12:34:48 PM
+ > bench -Dpar=1 -Dsize=200000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 3
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=200000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 3
+[GC [PSYoungGen: 524288K->12232K(611648K)] 524288K->12240K(2009792K), 
+0.1039330 secs] [Times: user=2.99 sys=0.19, real=0.10 secs]
+[GC [PSYoungGen: 536520K->10273K(611648K)] 536528K->10289K(2009792K), 
+0.0980500 secs] [Times: user=3.68 sys=0.02, real=0.10 secs]
+[GC [PSYoungGen: 534561K->87329K(611648K)] 534577K->97521K(2009792K), 
+1.3563100 secs] [Times: user=57.35 sys=0.00, real=1.36 secs]
+[GC [PSYoungGen: 267320K->87329K(611648K)] 277512K->139049K(2009792K), 
+1.5483630 secs] [Times: user=65.43 sys=0.06, real=1.55 secs]
+[Full GC (System) [PSYoungGen: 87329K->0K(611648K)] [ParOldGen: 
+51720K->112292K(1398144K)] 139049K->112292K(2009792K) [PSPermGen: 
+7355K->7332K(21248K)], 0.4309790 secs] [Times: user=11.34 sys=0.21, 
+real=0.43 secs]
+[GC [PSYoungGen: 524288K->40256K(611648K)] 636580K->152556K(2009792K), 
+0.5378600 secs] [Times: user=22.52 sys=0.01, real=0.54 secs]
+[GC [PSYoungGen: 564544K->87328K(454976K)] 676844K->234316K(1853120K), 
+1.7042170 secs] [Times: user=71.95 sys=0.05, real=1.70 secs]
+[GC [PSYoungGen: 320274K->165664K(533312K)] 467263K->343212K(1931456K), 
+2.0804840 secs] [Times: user=88.04 sys=0.03, real=2.08 secs]
+[Full GC (System) [PSYoungGen: 165664K->0K(533312K)] [ParOldGen: 
+177548K->160413K(1398144K)] 343212K->160413K(1931456K) [PSPermGen: 
+7335K->7335K(21248K)], 0.5371350 secs] [Times: user=14.14 sys=0.07, 
+real=0.54 secs]
+[GC [PSYoungGen: 367616K->31552K(441920K)] 528029K->191965K(1840064K), 
+0.4327330 secs] [Times: user=18.03 sys=0.01, real=0.43 secs]
+[GC [PSYoungGen: 307776K->89056K(487616K)] 468189K->249469K(1885760K), 
+1.2412100 secs] [Times: user=52.38 sys=0.03, real=1.24 secs]
+[GC [PSYoungGen: 365280K->147808K(472384K)] 525693K->308221K(1870528K), 
+1.9706000 secs] [Times: user=83.43 sys=0.02, real=1.97 secs]
+[GC [PSYoungGen: 218566K->164384K(436032K)] 378980K->324845K(1834176K), 
+1.9930100 secs] [Times: user=84.28 sys=0.04, real=2.00 secs]
+[Full GC (System) [PSYoungGen: 164384K->0K(436032K)] [ParOldGen: 
+160461K->164707K(1398144K)] 324845K->164707K(1834176K) [PSPermGen: 
+7335K->7335K(21248K)], 0.8322490 secs] [Times: user=15.63 sys=0.07, 
+real=0.83 secs]
+scala.dataflow.bench.MLFPCommBench$    13859    14314    16316
+Heap
+  PSYoungGen      total 436032K, used 5949K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 271616K, 2% used 
+[0x00000007d5560000,0x00000007d5b2f6b8,0x00000007e5ea0000)
+   from space 164416K, 0% used 
+[0x00000007e5ea0000,0x00000007e5ea0000,0x00000007eff30000)
+   to   space 229568K, 0% used 
+[0x00000007f1fd0000,0x00000007f1fd0000,0x0000000800000000)
+  ParOldGen       total 1398144K, used 164707K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 11% used 
+[0x0000000780000000,0x000000078a0d8f00,0x00000007d5560000)
+  PSPermGen       total 21248K, used 7747K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 36% used 
+[0x000000077ae00000,0x000000077b590cf0,0x000000077c2c0000)
+[success] Total time: 53 s, completed Jun 4, 2012 12:35:54 PM
+ > bench -Dpar=1 -Dsize=200000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 3
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=200000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 3
+[GC [PSYoungGen: 524288K->40458K(611648K)] 524288K->40466K(2009792K), 
+0.9257760 secs] [Times: user=36.73 sys=0.16, real=0.93 secs]
+[GC [PSYoungGen: 564746K->87344K(611648K)] 564754K->257192K(2009792K), 
+6.9910270 secs] [Times: user=296.24 sys=1.06, real=6.99 secs]
+[GC [PSYoungGen: 611632K->87344K(611648K)] 781480K->547352K(2009792K), 
+10.3406150 secs] [Times: user=438.44 sys=1.57, real=10.33 secs]
+[GC [PSYoungGen: 611632K->87344K(611648K)] 1071640K->848712K(2009792K), 
+10.5542040 secs] [Times: user=447.49 sys=1.55, real=10.56 secs]
+[GC [PSYoungGen: 611632K->87344K(611648K)] 1373000K->1201344K(2009792K), 
+12.0584810 secs] [Times: user=511.30 sys=1.84, real=12.05 secs]
+[Full GC [PSYoungGen: 87344K->0K(611648K)] [ParOldGen: 
+1114000K->438328K(1398144K)] 1201344K->438328K(2009792K) [PSPermGen: 
+6508K->6487K(21248K)], 1.7279060 secs] [Times: user=68.47 sys=0.45, 
+real=1.73 secs]
+[GC [PSYoungGen: 524288K->87360K(320448K)] 962616K->964576K(1718592K), 
+12.9632960 secs] [Times: user=549.80 sys=1.91, real=12.96 secs]
+[Full GC [PSYoungGen: 87360K->0K(320448K)] [ParOldGen: 
+877216K->763937K(1398144K)] 964576K->763937K(1718592K) [PSPermGen: 
+6487K->6487K(21248K)], 2.8517740 secs] [Times: user=110.42 sys=0.46, 
+real=2.86 secs]
+[GC [PSYoungGen: 233088K->232960K(466048K)] 997025K->997617K(1864192K), 
+5.4712770 secs] [Times: user=231.72 sys=0.87, real=5.47 secs]
+[GC [PSYoungGen: 466048K->232960K(466048K)] 
+1230705K->1231529K(1864192K), 7.6024090 secs] [Times: user=322.57 
+sys=0.85, real=7.60 secs]
+[Full GC [PSYoungGen: 232960K->0K(466048K)] [ParOldGen: 
+998569K->905479K(1398144K)] 1231529K->905479K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 3.1009890 secs] [Times: user=121.62 sys=0.57, 
+real=3.11 secs]
+[GC [PSYoungGen: 233088K->232960K(466048K)] 
+1138567K->1139127K(1864192K), 5.2745760 secs] [Times: user=223.41 
+sys=0.74, real=5.27 secs]
+[Full GC [PSYoungGen: 232960K->0K(466048K)] [ParOldGen: 
+906167K->888388K(1398144K)] 1139127K->888388K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 3.8243100 secs] [Times: user=152.45 sys=0.76, 
+real=3.82 secs]
+[GC [PSYoungGen: 233088K->232960K(466048K)] 
+1121476K->1122100K(1864192K), 5.3950480 secs] [Times: user=228.54 
+sys=0.83, real=5.39 secs]
+[Full GC [PSYoungGen: 232960K->0K(466048K)] [ParOldGen: 
+889140K->1034457K(1398144K)] 1122100K->1034457K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 3.5079590 secs] [Times: user=138.30 sys=0.67, 
+real=3.51 secs]
+[GC [PSYoungGen: 233088K->232960K(466048K)] 
+1267545K->1268193K(1864192K), 5.3412930 secs] [Times: user=226.19 
+sys=0.76, real=5.35 secs]
+[Full GC [PSYoungGen: 232960K->0K(466048K)] [ParOldGen: 
+1035233K->1166381K(1398144K)] 1268193K->1166381K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.1201290 secs] [Times: user=204.80 sys=1.08, 
+real=5.11 secs]
+[Full GC [PSYoungGen: 233088K->0K(466048K)] [ParOldGen: 
+1166381K->1320429K(1398144K)] 1399469K->1320429K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 4.1505900 secs] [Times: user=164.68 sys=1.08, 
+real=4.15 secs]
+[Full GC [PSYoungGen: 233088K->0K(466048K)] [ParOldGen: 
+1320429K->1304537K(1398144K)] 1553517K->1304537K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.7112860 secs] [Times: user=228.28 sys=1.14, 
+real=5.71 secs]
+[Full GC [PSYoungGen: 233088K->33235K(466048K)] [ParOldGen: 
+1304537K->1398141K(1398144K)] 1537625K->1431377K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 4.4658830 secs] [Times: user=177.43 sys=1.03, 
+real=4.46 secs]
+[Full GC [PSYoungGen: 233088K->34651K(466048K)] [ParOldGen: 
+1398141K->1398143K(1398144K)] 1631229K->1432795K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 4.7570880 secs] [Times: user=189.21 sys=0.94, 
+real=4.76 secs]
+[Full GC [PSYoungGen: 233088K->11151K(466048K)] [ParOldGen: 
+1398143K->1398141K(1398144K)] 1631231K->1409292K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 4.6827320 secs] [Times: user=186.07 sys=0.90, 
+real=4.69 secs]
+[Full GC [PSYoungGen: 233088K->153590K(466048K)] [ParOldGen: 
+1398141K->1398141K(1398144K)] 1631229K->1551731K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 4.8844460 secs] [Times: user=194.57 sys=1.04, 
+real=4.89 secs]
+[Full GC [PSYoungGen: 233088K->160127K(466048K)] [ParOldGen: 
+1398141K->1398143K(1398144K)] 1631229K->1558271K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 4.8202670 secs] [Times: user=191.92 sys=0.87, 
+real=4.82 secs]
+[Full GC [PSYoungGen: 233088K->153335K(466048K)] [ParOldGen: 
+1398143K->1398140K(1398144K)] 1631231K->1551476K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 7.0365630 secs] [Times: user=282.86 sys=1.31, 
+real=7.04 secs]
+[Full GC [PSYoungGen: 233088K->206263K(466048K)] [ParOldGen: 
+1398140K->1398142K(1398144K)] 1631228K->1604405K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 4.9482040 secs] [Times: user=196.63 sys=0.90, 
+real=4.95 secs]
+[Full GC [PSYoungGen: 233088K->205579K(466048K)] [ParOldGen: 
+1398142K->1398143K(1398144K)] 1631230K->1603723K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 33.7883550 secs] [Times: user=1389.44 sys=7.23, 
+real=33.78 secs]
+[Full GC [PSYoungGen: 233088K->222751K(466048K)] [ParOldGen: 
+1398143K->1398140K(1398144K)] 1631231K->1620892K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 6.9764800 secs] [Times: user=280.91 sys=1.37, 
+real=6.98 secs]
+[Full GC [PSYoungGen: 233088K->229139K(466048K)] [ParOldGen: 
+1398140K->1398141K(1398144K)] 1631228K->1627280K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 34.2920450 secs] [Times: user=1410.19 sys=7.35, 
+real=34.29 secs]
+[Full GC [PSYoungGen: 233088K->228939K(466048K)] [ParOldGen: 
+1398141K->1398140K(1398144K)] 1631229K->1627080K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.0431130 secs] [Times: user=200.67 sys=0.97, 
+real=5.05 secs]
+[Full GC [PSYoungGen: 233088K->231687K(466048K)] [ParOldGen: 
+1398140K->1398141K(1398144K)] 1631228K->1629828K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 7.3813250 secs] [Times: user=297.29 sys=1.51, 
+real=7.38 secs]
+[Full GC [PSYoungGen: 233088K->232015K(466048K)] [ParOldGen: 
+1398141K->1398142K(1398144K)] 1631229K->1630158K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.0612790 secs] [Times: user=201.23 sys=0.96, 
+real=5.06 secs]
+[Full GC [PSYoungGen: 233088K->232291K(466048K)] [ParOldGen: 
+1398142K->1398140K(1398144K)] 1631230K->1630432K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.0840680 secs] [Times: user=202.22 sys=0.95, 
+real=5.08 secs]
+[Full GC [PSYoungGen: 233088K->232659K(466048K)] [ParOldGen: 
+1398140K->1398140K(1398144K)] 1631228K->1630800K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.1101640 secs] [Times: user=203.80 sys=0.99, 
+real=5.11 secs]
+[Full GC [PSYoungGen: 233088K->232427K(466048K)] [ParOldGen: 
+1398140K->1398142K(1398144K)] 1631228K->1630570K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 7.0759490 secs] [Times: user=284.63 sys=1.39, 
+real=7.08 secs]
+[Full GC [PSYoungGen: 233088K->232687K(466048K)] [ParOldGen: 
+1398142K->1398143K(1398144K)] 1631230K->1630831K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.1418640 secs] [Times: user=205.26 sys=0.97, 
+real=5.14 secs]
+[Full GC [PSYoungGen: 233088K->232399K(466048K)] [ParOldGen: 
+1398143K->1398140K(1398144K)] 1631231K->1630540K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.0822270 secs] [Times: user=201.78 sys=0.93, 
+real=5.08 secs]
+[Full GC [PSYoungGen: 233088K->231975K(466048K)] [ParOldGen: 
+1398140K->1398143K(1398144K)] 1631228K->1630118K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.1395590 secs] [Times: user=204.65 sys=0.96, 
+real=5.14 secs]
+[Full GC [PSYoungGen: 233088K->231119K(466048K)] [ParOldGen: 
+1398143K->1398140K(1398144K)] 1631231K->1629259K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.7544190 secs] [Times: user=229.92 sys=1.11, 
+real=5.76 secs]
+[Full GC [PSYoungGen: 233088K->229878K(466048K)] [ParOldGen: 
+1398140K->1398141K(1398144K)] 1631228K->1628020K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 7.0340310 secs] [Times: user=283.43 sys=1.40, 
+real=7.04 secs]
+[Full GC [PSYoungGen: 233088K->231445K(466048K)] [ParOldGen: 
+1398141K->1398140K(1398144K)] 1631229K->1629585K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.0577840 secs] [Times: user=200.96 sys=0.92, 
+real=5.05 secs]
+[Full GC [PSYoungGen: 233088K->230143K(466048K)] [ParOldGen: 
+1398140K->1398140K(1398144K)] 1631228K->1628283K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 6.3676350 secs] [Times: user=256.05 sys=1.26, 
+real=6.37 secs]
+[Full GC [PSYoungGen: 233088K->230765K(466048K)] [ParOldGen: 
+1398140K->1398142K(1398144K)] 1631228K->1628908K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.0791310 secs] [Times: user=202.04 sys=1.01, 
+real=5.08 secs]
+[Full GC [PSYoungGen: 233088K->231410K(466048K)] [ParOldGen: 
+1398142K->1398141K(1398144K)] 1631230K->1629551K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.0507410 secs] [Times: user=200.99 sys=0.92, 
+real=5.05 secs]
+[Full GC [PSYoungGen: 233088K->231638K(466048K)] [ParOldGen: 
+1398141K->1398142K(1398144K)] 1631229K->1629781K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.1373510 secs] [Times: user=204.76 sys=0.96, 
+real=5.13 secs]
+[Full GC [PSYoungGen: 233088K->230526K(466048K)] [ParOldGen: 
+1398142K->1398141K(1398144K)] 1631230K->1628668K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 7.0256220 secs] [Times: user=282.84 sys=1.43, 
+real=7.03 secs]
+[Full GC [PSYoungGen: 233088K->228546K(466048K)] [ParOldGen: 
+1398141K->1398141K(1398144K)] 1631229K->1626687K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 7.0171400 secs] [Times: user=282.57 sys=1.48, 
+real=7.01 secs]
+[Full GC [PSYoungGen: 233088K->225414K(466048K)] [ParOldGen: 
+1398141K->1398141K(1398144K)] 1631229K->1623556K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.0180460 secs] [Times: user=200.07 sys=0.94, 
+real=5.02 secs]
+[Full GC [PSYoungGen: 233088K->230046K(466048K)] [ParOldGen: 
+1398141K->1398140K(1398144K)] 1631229K->1628187K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.0534700 secs] [Times: user=201.02 sys=1.00, 
+real=5.05 secs]
+[Full GC [PSYoungGen: 233088K->228519K(466048K)] [ParOldGen: 
+1398140K->1398140K(1398144K)] 1631228K->1626660K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 6.2552270 secs] [Times: user=250.39 sys=1.19, 
+real=6.26 secs]
+[Full GC [PSYoungGen: 233088K->229815K(466048K)] [ParOldGen: 
+1398140K->1398141K(1398144K)] 1631228K->1627956K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.0510940 secs] [Times: user=201.34 sys=1.04, 
+real=5.05 secs]
+[Full GC [PSYoungGen: 233088K->230638K(466048K)] [ParOldGen: 
+1398141K->1398143K(1398144K)] 1631229K->1628781K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.4325810 secs] [Times: user=216.41 sys=1.00, 
+real=5.43 secs]
+[Full GC [PSYoungGen: 233088K->231275K(466048K)] [ParOldGen: 
+1398143K->1398140K(1398144K)] 1631231K->1629416K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.4219600 secs] [Times: user=216.61 sys=1.12, 
+real=5.42 secs]
+[Full GC [PSYoungGen: 233088K->232179K(466048K)] [ParOldGen: 
+1398140K->1398141K(1398144K)] 1631228K->1630320K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.2304000 secs] [Times: user=208.67 sys=0.99, 
+real=5.23 secs]
+[Full GC [PSYoungGen: 233088K->231303K(466048K)] [ParOldGen: 
+1398141K->1398140K(1398144K)] 1631229K->1629443K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.1410560 secs] [Times: user=204.44 sys=0.96, 
+real=5.14 secs]
+[Full GC [PSYoungGen: 233088K->230070K(466048K)] [ParOldGen: 
+1398140K->1398142K(1398144K)] 1631228K->1628213K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 7.0247820 secs] [Times: user=282.55 sys=1.30, 
+real=7.03 secs]
+[Full GC [PSYoungGen: 233088K->231446K(466048K)] [ParOldGen: 
+1398142K->1398140K(1398144K)] 1631230K->1629586K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 6.3356850 secs] [Times: user=254.44 sys=1.28, 
+real=6.34 secs]
+[Full GC [PSYoungGen: 233088K->230367K(466048K)] [ParOldGen: 
+1398140K->1398142K(1398144K)] 1631228K->1628509K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.0566260 secs] [Times: user=201.25 sys=0.99, 
+real=5.06 secs]
+[Full GC [PSYoungGen: 233088K->229181K(466048K)] [ParOldGen: 
+1398142K->1398141K(1398144K)] 1631230K->1627323K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.0513700 secs] [Times: user=200.72 sys=0.92, 
+real=5.05 secs]
+[Full GC [PSYoungGen: 233088K->228041K(466048K)] [ParOldGen: 
+1398141K->1398140K(1398144K)] 1631229K->1626182K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 34.1579680 secs] [Times: user=1403.17 sys=7.16, 
+real=34.15 secs]
+[Full GC [PSYoungGen: 233088K->224009K(466048K)] [ParOldGen: 
+1398140K->1398142K(1398144K)] 1631228K->1622152K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.3924820 secs] [Times: user=214.67 sys=0.99, 
+real=5.39 secs]
+[Full GC [PSYoungGen: 233088K->218311K(466048K)] [ParOldGen: 
+1398142K->1398142K(1398144K)] 1631230K->1616453K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 6.8080790 secs] [Times: user=273.25 sys=1.23, 
+real=6.81 secs]
+[Full GC [PSYoungGen: 233088K->227880K(466048K)] [ParOldGen: 
+1398142K->1398140K(1398144K)] 1631230K->1626021K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.1885560 secs] [Times: user=207.25 sys=0.99, 
+real=5.19 secs]
+[Full GC [PSYoungGen: 233088K->229158K(466048K)] [ParOldGen: 
+1398140K->1398141K(1398144K)] 1631228K->1627300K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 6.2404460 secs] [Times: user=250.41 sys=1.23, 
+real=6.24 secs]
+[Full GC [PSYoungGen: 233088K->230155K(466048K)] [ParOldGen: 
+1398141K->1398141K(1398144K)] 1631229K->1628296K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 7.0370760 secs] [Times: user=283.23 sys=1.41, 
+real=7.04 secs]
+[Full GC [PSYoungGen: 233088K->231579K(466048K)] [ParOldGen: 
+1398141K->1398140K(1398144K)] 1631229K->1629719K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.2712200 secs] [Times: user=210.38 sys=0.98, 
+real=5.27 secs]
+[Full GC [PSYoungGen: 233088K->230359K(466048K)] [ParOldGen: 
+1398140K->1398140K(1398144K)] 1631228K->1628499K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 7.3691980 secs] [Times: user=295.93 sys=1.40, 
+real=7.37 secs]
+[Full GC [PSYoungGen: 233088K->228258K(466048K)] [ParOldGen: 
+1398140K->1398140K(1398144K)] 1631228K->1626399K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.0411160 secs] [Times: user=200.49 sys=0.92, 
+real=5.04 secs]
+[Full GC [PSYoungGen: 233088K->226122K(466048K)] [ParOldGen: 
+1398140K->1398142K(1398144K)] 1631228K->1624264K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 7.0023040 secs] [Times: user=280.96 sys=1.33, 
+real=7.00 secs]
+[Full GC [PSYoungGen: 233088K->229665K(466048K)] [ParOldGen: 
+1398142K->1398141K(1398144K)] 1631230K->1627807K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.1527320 secs] [Times: user=205.64 sys=0.96, 
+real=5.15 secs]
+[Full GC [PSYoungGen: 233088K->231103K(466048K)] [ParOldGen: 
+1398141K->1398141K(1398144K)] 1631229K->1629245K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 7.3793320 secs] [Times: user=297.08 sys=1.42, 
+real=7.38 secs]
+[Full GC [PSYoungGen: 233088K->229607K(466048K)] [ParOldGen: 
+1398141K->1398143K(1398144K)] 1631229K->1627751K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.3849430 secs] [Times: user=215.17 sys=1.05, 
+real=5.38 secs]
+[Full GC [PSYoungGen: 233088K->227326K(466048K)] [ParOldGen: 
+1398143K->1398140K(1398144K)] 1631231K->1625467K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.1060090 secs] [Times: user=203.10 sys=0.95, 
+real=5.10 secs]
+[Full GC [PSYoungGen: 233088K->230228K(466048K)] [ParOldGen: 
+1398140K->1398143K(1398144K)] 1631228K->1628372K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 7.0350170 secs] [Times: user=282.63 sys=1.30, 
+real=7.03 secs]
+[Full GC [PSYoungGen: 233088K->231370K(466048K)] [ParOldGen: 
+1398143K->1398140K(1398144K)] 1631231K->1629511K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.0514830 secs] [Times: user=201.22 sys=0.95, 
+real=5.05 secs]
+[Full GC [PSYoungGen: 233088K->230543K(466048K)] [ParOldGen: 
+1398140K->1398140K(1398144K)] 1631228K->1628684K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.0457700 secs] [Times: user=200.83 sys=0.94, 
+real=5.04 secs]
+[Full GC [PSYoungGen: 233088K->231734K(466048K)] [ParOldGen: 
+1398140K->1398140K(1398144K)] 1631228K->1629874K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.8850270 secs] [Times: user=234.87 sys=1.10, 
+real=5.89 secs]
+[Full GC [PSYoungGen: 233088K->231091K(466048K)] [ParOldGen: 
+1398140K->1398140K(1398144K)] 1631228K->1629231K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 5.0517360 secs] [Times: user=201.36 sys=0.99, 
+real=5.05 secs]
+[Full GC [PSYoungGen: 233088K->231898K(466048K)] [ParOldGen: 
+1398140K->1398141K(1398144K)] 1631228K->1630039K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 7.0485730 secs] [Times: user=283.97 sys=1.36, 
+real=7.04 secs]
+[Full GC [PSYoungGen: 233088K->231419K(466048K)] [ParOldGen: 
+1398141K->1398141K(1398144K)] 1631229K->1629560K(1864192K) [PSPermGen: 
+6487K->6487K(21248K)], 6.0043410 secs] [Times: user=239.86 sys=1.14, 
+real=6.00 secs]
+Exception in thread "Thread-0" java.lang.OutOfMemoryError: GC overhead 
+limit exceeded
+     at 
+java.util.concurrent.LinkedTransferQueue.xfer(LinkedTransferQueue.java:639)
+     at 
+java.util.concurrent.LinkedTransferQueue.add(LinkedTransferQueue.java:1077)
+     at 
+scala.dataflow.bench.QCommBench$$anonfun$1$$anonfun$apply$1.apply$mcV$sp(QCommBench.scala:16)
+     at scala.dataflow.Utils$$anon$1.run(Utils.scala:35)
+     at java.lang.Thread.run(Thread.java:722)
+[Full GC [PSYoungGen: 233088K->0K(466048K)] [ParOldGen: 
+1398141K->441K(1398144K)] 1631229K->441K(1864192K) [PSPermGen: 
+6516K->6516K(21248K)], 0.0573630 secs] [Times: user=0.29 sys=0.01, 
+real=0.06 secs]
+^[[A^[[B^CHeap
+  PSYoungGen      total 466048K, used 9323K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 233088K, 4% used 
+[0x00000007d5560000,0x00000007d5e7af48,0x00000007e3900000)
+   from space 232960K, 0% used 
+[0x00000007e3900000,0x00000007e3900000,0x00000007f1c80000)
+   to   space 232960K, 0% used 
+[0x00000007f1c80000,0x00000007f1c80000,0x0000000800000000)
+  ParOldGen       total 1398144K, used 441K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x000000078006e460,0x00000007d5560000)
+  PSPermGen       total 21248K, used 6525K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 30% used 
+[0x000000077ae00000,0x000000077b45f6f8,0x000000077c2c0000)
+[prokopec@wolf dataflow]$ xsbt
+[info] Loading project definition from 
+/home/prokopec/workspace/dataflow/project
+[info] Set current project to scala-dataflow (in build 
+file:/home/prokopec/workspace/dataflow/)
+ > bench -Dpar=1 -Dsize=50000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 3
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=50000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 3
+[GC [PSYoungGen: 524288K->87344K(611648K)] 524288K->111762K(2009792K), 
+2.8217020 secs] [Times: user=117.18 sys=0.47, real=2.82 secs]
+[GC [PSYoungGen: 611632K->87344K(611648K)] 636050K->428650K(2009792K), 
+10.7027200 secs] [Times: user=453.94 sys=1.69, real=10.70 secs]
+[GC [PSYoungGen: 611632K->87344K(611648K)] 952938K->774746K(2009792K), 
+11.8691660 secs] [Times: user=503.43 sys=1.74, real=11.87 secs]
+---------------
+[GC [PSYoungGen: 193250K->864K(611648K)] 880653K->688266K(2009792K), 
+0.0220940 secs] [Times: user=0.65 sys=0.00, real=0.03 secs]
+[Full GC (System) [PSYoungGen: 864K->0K(611648K)] [ParOldGen: 
+687402K->503K(1398144K)] 688266K->503K(2009792K) [PSPermGen: 
+6541K->6520K(21248K)], 0.0519950 secs] [Times: user=0.14 sys=0.06, 
+real=0.05 secs]
+[GC [PSYoungGen: 524288K->87360K(611648K)] 524791K->185351K(2009792K), 
+4.9644800 secs] [Times: user=210.31 sys=0.66, real=4.96 secs]
+[GC [PSYoungGen: 611648K->87360K(320448K)] 709639K->599823K(1718592K), 
+13.5097180 secs] [Times: user=573.18 sys=1.83, real=13.51 secs]
+[GC [PSYoungGen: 320448K->232960K(466048K)] 832911K->746143K(1864192K), 
+6.1416730 secs] [Times: user=260.25 sys=0.83, real=6.14 secs]
+[GC [PSYoungGen: 466048K->232960K(466048K)] 979231K->980079K(1864192K), 
+8.8066960 secs] [Times: user=373.59 sys=0.80, real=8.80 secs]
+---------------
+[GC [PSYoungGen: 296765K->96K(466048K)] 1043885K->747231K(1864192K), 
+0.0283520 secs] [Times: user=0.78 sys=0.00, real=0.03 secs]
+[Full GC (System) [PSYoungGen: 96K->0K(466048K)] [ParOldGen: 
+747135K->485K(1398144K)] 747231K->485K(1864192K) [PSPermGen: 
+6520K->6520K(21248K)], 0.0448270 secs] [Times: user=0.17 sys=0.01, 
+real=0.04 secs]
+[GC [PSYoungGen: 233088K->117760K(466048K)] 233573K->118245K(1864192K), 
+3.0168970 secs] [Times: user=127.71 sys=0.46, real=3.02 secs]
+[GC [PSYoungGen: 350848K->216608K(466048K)] 351333K->217093K(1864192K), 
+5.7515160 secs] [Times: user=243.77 sys=0.83, real=5.75 secs]
+[GC [PSYoungGen: 449696K->232960K(466048K)] 450181K->364869K(1864192K), 
+9.5528840 secs] [Times: user=405.19 sys=1.34, real=9.55 secs]
+[GC [PSYoungGen: 466048K->232960K(466048K)] 597957K->598997K(1864192K), 
+7.5699230 secs] [Times: user=321.14 sys=0.90, real=7.56 secs]
+[GC [PSYoungGen: 466048K->232960K(466048K)] 832085K->830301K(1864192K), 
+7.4805070 secs] [Times: user=317.37 sys=0.87, real=7.48 secs]
+[GC [PSYoungGen: 466048K->232960K(466048K)] 
+1063389K->1064549K(1864192K), 7.6379910 secs] [Times: user=324.11 
+sys=0.92, real=7.64 secs]
+---------------
+[GC [PSYoungGen: 401199K->64K(466048K)] 1232788K->831765K(1864192K), 
+0.0274290 secs] [Times: user=0.69 sys=0.01, real=0.02 secs]
+[Full GC (System) [PSYoungGen: 64K->0K(466048K)] [ParOldGen: 
+831701K->485K(1398144K)] 831765K->485K(1864192K) [PSPermGen: 
+6520K->6520K(21248K)], 0.0482060 secs] [Times: user=0.13 sys=0.01, 
+real=0.05 secs]
+scala.dataflow.bench.LTQCommBench$    40789    43816    56172
+Heap
+  PSYoungGen      total 466048K, used 5688K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 233088K, 2% used 
+[0x00000007d5560000,0x00000007d5aee0b8,0x00000007e3900000)
+   from space 232960K, 0% used 
+[0x00000007f1c80000,0x00000007f1c80000,0x0000000800000000)
+   to   space 232960K, 0% used 
+[0x00000007e3900000,0x00000007e3900000,0x00000007f1c80000)
+  ParOldGen       total 1398144K, used 485K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x0000000780079750,0x00000007d5560000)
+  PSPermGen       total 21248K, used 6962K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 32% used 
+[0x000000077ae00000,0x000000077b4cc990,0x000000077c2c0000)
+[success] Total time: 142 s, completed Jun 4, 2012 12:52:19 PM
+ > bench -Dpar=1 -Dsize=25000000 -Dlanes=x1 
+scala.dataflow.bench.LTQCommBench 3
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=25000000 -Dlanes=x1 scala.dataflow.bench.LTQCommBench 3
+[GC [PSYoungGen: 524288K->37674K(611648K)] 524288K->37682K(2009792K), 
+0.8711370 secs] [Times: user=34.71 sys=0.15, real=0.87 secs]
+---------------
+[GC [PSYoungGen: 416630K->1680K(611648K)] 416638K->1696K(2009792K), 
+0.0127360 secs] [Times: user=0.12 sys=0.01, real=0.01 secs]
+[Full GC (System) [PSYoungGen: 1680K->0K(611648K)] [ParOldGen: 
+16K->503K(1398144K)] 1696K->503K(2009792K) [PSPermGen: 
+6541K->6520K(21248K)], 0.0375020 secs] [Times: user=0.17 sys=0.03, 
+real=0.04 secs]
+[GC [PSYoungGen: 524288K->87360K(611648K)] 524791K->321143K(2009792K), 
+8.6817670 secs] [Times: user=368.08 sys=1.30, real=8.68 secs]
+---------------
+[GC [PSYoungGen: 359571K->32K(611648K)] 593355K->233815K(2009792K), 
+0.0228280 secs] [Times: user=0.51 sys=0.01, real=0.02 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(611648K)] [ParOldGen: 
+233783K->485K(1398144K)] 233815K->485K(2009792K) [PSPermGen: 
+6520K->6520K(21248K)], 0.0325410 secs] [Times: user=0.12 sys=0.00, 
+real=0.03 secs]
+[GC [PSYoungGen: 524288K->22688K(611648K)] 524773K->23173K(2009792K), 
+0.5638060 secs] [Times: user=23.47 sys=0.09, real=0.56 secs]
+---------------
+[GC [PSYoungGen: 290311K->32K(611648K)] 290797K->517K(2009792K), 
+0.0147670 secs] [Times: user=0.12 sys=0.00, real=0.01 secs]
+[Full GC (System) [PSYoungGen: 32K->0K(611648K)] [ParOldGen: 
+485K->485K(1398144K)] 517K->485K(2009792K) [PSPermGen: 
+6520K->6520K(21248K)], 0.0272910 secs] [Times: user=0.13 sys=0.00, 
+real=0.03 secs]
+scala.dataflow.bench.LTQCommBench$    9218    16312    9137
+Heap
+  PSYoungGen      total 611648K, used 4144K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 524288K, 0% used 
+[0x00000007d5560000,0x00000007d596c190,0x00000007f5560000)
+   from space 87360K, 0% used 
+[0x00000007faab0000,0x00000007faab0000,0x0000000800000000)
+   to   space 87360K, 0% used 
+[0x00000007f5560000,0x00000007f5560000,0x00000007faab0000)
+  ParOldGen       total 1398144K, used 485K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x0000000780079750,0x00000007d5560000)
+  PSPermGen       total 21248K, used 6962K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 32% used 
+[0x000000077ae00000,0x000000077b4cc970,0x000000077c2c0000)
+[success] Total time: 36 s, completed Jun 4, 2012 12:53:46 PM
+ > bench -Dpar=1 -Dsize=50000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 3
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=50000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 3
+[GC [PSYoungGen: 524288K->13008K(611648K)] 524288K->13016K(2009792K), 
+0.0962050 secs] [Times: user=2.60 sys=0.16, real=0.10 secs]
+[GC [PSYoungGen: 466663K->4081K(611648K)] 466671K->4097K(2009792K), 
+0.0198430 secs] [Times: user=0.27 sys=0.02, real=0.02 secs]
+[Full GC (System) [PSYoungGen: 4081K->0K(611648K)] [ParOldGen: 
+16K->3323K(1398144K)] 4097K->3323K(2009792K) [PSPermGen: 
+7314K->7291K(21248K)], 0.0501170 secs] [Times: user=0.17 sys=0.08, 
+real=0.05 secs]
+[GC [PSYoungGen: 321282K->31680K(611648K)] 324606K->35003K(2009792K), 
+0.4022080 secs] [Times: user=16.73 sys=0.00, real=0.40 secs]
+[Full GC (System) [PSYoungGen: 31680K->0K(611648K)] [ParOldGen: 
+3323K->33174K(1398144K)] 35003K->33174K(2009792K) [PSPermGen: 
+7332K->7332K(21248K)], 0.1127190 secs] [Times: user=2.38 sys=0.10, 
+real=0.11 secs]
+[GC [PSYoungGen: 524288K->192K(611648K)] 557462K->33374K(2009792K), 
+0.0081250 secs] [Times: user=0.08 sys=0.00, real=0.01 secs]
+[GC [PSYoungGen: 70303K->128K(611648K)] 103486K->33310K(2009792K), 
+0.0095020 secs] [Times: user=0.06 sys=0.00, real=0.01 secs]
+[Full GC (System) [PSYoungGen: 128K->0K(611648K)] [ParOldGen: 
+33182K->2719K(1398144K)] 33310K->2719K(2009792K) [PSPermGen: 
+7339K->7339K(21248K)], 0.0387820 secs] [Times: user=0.14 sys=0.01, 
+real=0.04 secs]
+scala.dataflow.bench.MLFPCommBench$    3885    2968    4376
+Heap
+  PSYoungGen      total 611648K, used 2800K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 524288K, 0% used 
+[0x00000007d5560000,0x00000007d581c2c8,0x00000007f5560000)
+   from space 87360K, 0% used 
+[0x00000007f5560000,0x00000007f5560000,0x00000007faab0000)
+   to   space 87360K, 0% used 
+[0x00000007faab0000,0x00000007faab0000,0x0000000800000000)
+  ParOldGen       total 1398144K, used 2719K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x00000007802a7eb8,0x00000007d5560000)
+  PSPermGen       total 21248K, used 7750K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 36% used 
+[0x000000077ae00000,0x000000077b591be8,0x000000077c2c0000)
+[success] Total time: 13 s, completed Jun 4, 2012 12:54:47 PM
+ > bench -Dpar=1 -Dsize=25000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 3
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=25000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 3
+[GC [PSYoungGen: 524288K->13236K(611648K)] 524288K->13244K(2009792K), 
+0.1198270 secs] [Times: user=4.01 sys=0.11, real=0.12 secs]
+[GC [PSYoungGen: 429227K->17697K(611648K)] 429235K->17713K(2009792K), 
+0.2064530 secs] [Times: user=8.10 sys=0.06, real=0.21 secs]
+[Full GC (System) [PSYoungGen: 17697K->0K(611648K)] [ParOldGen: 
+16K->16881K(1398144K)] 17713K->16881K(2009792K) [PSPermGen: 
+7314K->7291K(21248K)], 0.0995530 secs] [Times: user=1.76 sys=0.14, 
+real=0.09 secs]
+[GC [PSYoungGen: 446825K->9056K(611648K)] 463707K->25937K(2009792K), 
+0.0937230 secs] [Times: user=3.39 sys=0.00, real=0.09 secs]
+[Full GC (System) [PSYoungGen: 9056K->0K(611648K)] [ParOldGen: 
+16881K->10800K(1398144K)] 25937K->10800K(2009792K) [PSPermGen: 
+7332K->7332K(21248K)], 0.0626340 secs] [Times: user=0.91 sys=0.01, 
+real=0.07 secs]
+[GC [PSYoungGen: 323191K->192K(611648K)] 333992K->11000K(2009792K), 
+0.0132540 secs] [Times: user=0.08 sys=0.00, real=0.02 secs]
+[Full GC (System) [PSYoungGen: 192K->0K(611648K)] [ParOldGen: 
+10808K->2756K(1398144K)] 11000K->2756K(2009792K) [PSPermGen: 
+7339K->7339K(21248K)], 0.0335260 secs] [Times: user=0.13 sys=0.00, 
+real=0.03 secs]
+scala.dataflow.bench.MLFPCommBench$    2198    1544    2235
+Heap
+  PSYoungGen      total 611648K, used 17416K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 524288K, 3% used 
+[0x00000007d5560000,0x00000007d6662150,0x00000007f5560000)
+   from space 87360K, 0% used 
+[0x00000007faab0000,0x00000007faab0000,0x0000000800000000)
+   to   space 87360K, 0% used 
+[0x00000007f5560000,0x00000007f5560000,0x00000007faab0000)
+  ParOldGen       total 1398144K, used 2756K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 0% used 
+[0x0000000780000000,0x00000007802b1360,0x00000007d5560000)
+  PSPermGen       total 21248K, used 7751K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 36% used 
+[0x000000077ae00000,0x000000077b591c48,0x000000077c2c0000)
+[success] Total time: 7 s, completed Jun 4, 2012 12:55:01 PM
+ > bench -Dpar=1 -Dsize=400000000 -Dlanes=x1 
+scala.dataflow.bench.MLFPCommBench 3
+Executing: java -Xmx2048m -Xms2048m -XX:+UseCondCardMark -verbose:gc 
+-XX:+PrintGCDetails -server -cp 
+/home/prokopec/workspace/dataflow/lib/jsr166y.jar:/home/prokopec/.sbt/boot/scala-2.9.1/lib/scala-library.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1.jar:/home/prokopec/workspace/dataflow/target/scala-2.9.1/scala-dataflow_2.9.1-0.1-test.jar 
+-Dpar=1 -Dsize=400000000 -Dlanes=x1 scala.dataflow.bench.MLFPCommBench 3
+[GC [PSYoungGen: 524288K->13520K(611648K)] 524288K->13528K(2009792K), 
+0.1040890 secs] [Times: user=3.25 sys=0.07, real=0.11 secs]
+[GC [PSYoungGen: 537808K->3729K(611648K)] 537816K->3745K(2009792K), 
+0.0144430 secs] [Times: user=0.13 sys=0.01, real=0.02 secs]
+[GC [PSYoungGen: 528017K->79585K(611648K)] 528033K->79609K(2009792K), 
+1.1301620 secs] [Times: user=47.64 sys=0.02, real=1.13 secs]
+[GC [PSYoungGen: 603873K->87329K(611648K)] 603897K->151953K(2009792K), 
+2.2173010 secs] [Times: user=93.82 sys=0.06, real=2.22 secs]
+[GC [PSYoungGen: 611617K->87329K(611648K)] 676241K->555009K(2009792K), 
+3.8658970 secs] [Times: user=163.78 sys=0.31, real=3.87 secs]
+[GC [PSYoungGen: 373945K->87345K(320448K)] 841625K->794553K(1718592K), 
+3.2274070 secs] [Times: user=136.83 sys=0.17, real=3.23 secs]
+[Full GC (System) [PSYoungGen: 87345K->0K(320448K)] [ParOldGen: 
+707208K->301876K(1398144K)] 794553K->301876K(1718592K) [PSPermGen: 
+7355K->7332K(21248K)], 3.3165380 secs] [Times: user=43.98 sys=0.24, 
+real=3.32 secs]
+[GC [PSYoungGen: 233087K->5920K(466048K)] 534964K->307804K(1864192K), 
+0.0738870 secs] [Times: user=2.65 sys=0.01, real=0.07 secs]
+[GC [PSYoungGen: 239008K->63136K(466048K)] 540892K->365020K(1864192K), 
+0.9446830 secs] [Times: user=39.75 sys=0.02, real=0.94 secs]
+[GC [PSYoungGen: 296224K->121088K(466048K)] 598108K->422972K(1864192K), 
+1.8177280 secs] [Times: user=76.79 sys=0.03, real=1.82 secs]
+[GC [PSYoungGen: 354176K->176128K(466048K)] 656060K->478076K(1864192K), 
+2.5464230 secs] [Times: user=107.97 sys=0.05, real=2.54 secs]
+[GC [PSYoungGen: 409216K->223040K(466048K)] 711164K->527100K(1864192K), 
+2.9661820 secs] [Times: user=125.78 sys=0.07, real=2.97 secs]
+[GC [PSYoungGen: 456128K->227200K(466048K)] 760188K->769580K(1864192K), 
+3.5866750 secs] [Times: user=152.17 sys=0.03, real=3.59 secs]
+[GC [PSYoungGen: 460288K->228576K(466048K)] 
+1002668K->1013788K(1864192K), 4.2380950 secs] [Times: user=179.72 
+sys=0.11, real=4.24 secs]
+[GC [PSYoungGen: 439574K->203904K(466048K)] 
+1224786K->1233436K(1864192K), 4.4106580 secs] [Times: user=187.13 
+sys=0.18, real=4.41 secs]
+[Full GC (System) [PSYoungGen: 203904K->0K(466048K)] [ParOldGen: 
+1029532K->354781K(1398144K)] 1233436K->354781K(1864192K) [PSPermGen: 
+7336K->7336K(21248K)], 1.4166870 secs] [Times: user=29.03 sys=0.14, 
+real=1.42 secs]
+[GC [PSYoungGen: 233088K->15680K(466048K)] 587869K->370461K(1864192K), 
+0.2063140 secs] [Times: user=8.38 sys=0.00, real=0.20 secs]
+[GC [PSYoungGen: 248768K->71040K(466048K)] 603549K->425893K(1864192K), 
+0.9840420 secs] [Times: user=41.09 sys=0.02, real=0.98 secs]
+[GC [PSYoungGen: 304128K->117440K(466048K)] 658981K->472293K(1864192K), 
+1.5510710 secs] [Times: user=65.53 sys=0.02, real=1.55 secs]
+[GC [PSYoungGen: 350528K->166112K(466048K)] 705381K->520965K(1864192K), 
+2.1907540 secs] [Times: user=92.82 sys=0.05, real=2.20 secs]
+[GC [PSYoungGen: 399200K->216000K(466048K)] 754053K->570853K(1864192K), 
+2.8612830 secs] [Times: user=121.37 sys=0.07, real=2.86 secs]
+[GC [PSYoungGen: 449088K->227552K(466048K)] 803941K->615421K(1864192K), 
+3.4258760 secs] [Times: user=145.35 sys=0.06, real=3.42 secs]
+[GC [PSYoungGen: 460640K->229760K(466048K)] 848509K->860909K(1864192K), 
+4.0650890 secs] [Times: user=172.56 sys=0.03, real=4.07 secs]
+[GC [PSYoungGen: 359616K->128416K(466048K)] 990766K->1005141K(1864192K), 
+4.1484650 secs] [Times: user=176.12 sys=0.06, real=4.15 secs]
+[Full GC (System) [PSYoungGen: 128416K->0K(466048K)] [ParOldGen: 
+876725K->328886K(1398144K)] 1005141K->328886K(1864192K) [PSPermGen: 
+7336K->7336K(21248K)], 1.6982030 secs] [Times: user=28.49 sys=0.13, 
+real=1.70 secs]
+scala.dataflow.bench.MLFPCommBench$    30660    40029    40784
+Heap
+  PSYoungGen      total 466048K, used 2072K [0x00000007d5560000, 
+0x0000000800000000, 0x0000000800000000)
+   eden space 233088K, 0% used 
+[0x00000007d5560000,0x00000007d5766190,0x00000007e3900000)
+   from space 232960K, 0% used 
+[0x00000007f1c80000,0x00000007f1c80000,0x0000000800000000)
+   to   space 232960K, 0% used 
+[0x00000007e3900000,0x00000007e3900000,0x00000007f1c80000)
+  ParOldGen       total 1398144K, used 328886K [0x0000000780000000, 
+0x00000007d5560000, 0x00000007d5560000)
+   object space 1398144K, 23% used 
+[0x0000000780000000,0x000000079412d9a8,0x00000007d5560000)
+  PSPermGen       total 21248K, used 7747K [0x000000077ae00000, 
+0x000000077c2c0000, 0x0000000780000000)
+   object space 21248K, 36% used 
+[0x000000077ae00000,0x000000077b590f18,0x000000077c2c0000)

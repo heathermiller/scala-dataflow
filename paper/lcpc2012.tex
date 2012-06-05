@@ -215,10 +215,9 @@ proof of correctness, showing that the implementation is linearizable, lock-
 free, and deterministic. Finally, we provide experimental results which
 compare our \emph{FlowPool} against corresponding operations on other popular
 concurrent data structures, and show that in addition to offering new
-capabilities, FlowPools may reduce execution time by $53 - 97\%$ in
-highly parallelized environments with respect to comparable
-concurrent queue data structures in the Java standard library.
-%% TODO redo figure with only Insert benchs with optimal par lvl
+capabilities, FlowPools may reduce insertion time by $49 - 54\%$ on a
+4-core i7 machine with respect to comparable concurrent queue data
+structures in the Java standard library.
 \keywords{dataflow, concurrent data-structure, deterministic parallelism}
 \end{abstract}
 
@@ -1343,12 +1342,13 @@ on the i7 architecture. They seem to slow down rapidly due to cache
 line collisions and CAS failures.
 On the other hand, multi-lane FlowPools scale well, as threads
 write to different lanes and hence different cache lines in
-most occasions, while avoiding CAS failures.
-%% TODO add execution time decreases for each architecture
+most occasions, while avoiding CAS failures. This may reduce execution
+time for insertions up to $54\%$ on 4-core i7, $63\%$ on 32-core 
+Xeon and $92\%$ on UltraSPARC T2.
 
 Usage of the inserted data is evaluated in the \emph{Reduce},
 \emph{Map} and \emph{Histogram} benchmark, where the latter --
-serving as a ``real live'' example here -- uses the former two
+serving as a ``real life'' example here -- uses the former two
 primitives, whose evaluation is discussed in the appendix.
 
 In the \textit{Histogram} benchmark, $P$ threads produce a total of
@@ -1356,7 +1356,7 @@ $N$ elements and add it to the FlowPool.
 The \verb=aggregate= operation is then used to produce 10 different
 histograms concurrently with a different number of bins.
 Each separate histogram is constructed by its own thread (or up to
-$P$, for multi-lane FlowPools). %% TODO the parenthesis is bad
+$P$, for multi-lane FlowPools).
 A crucial difference between queues and FlowPools in the latter
 benchmark is that with FlowPools, multiple histograms are produced 
 by invoking several \verb=aggregate= operations, while queues require
@@ -1378,11 +1378,11 @@ elements from the queue and process it.
 
 \begin{figure}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/cpu-scaling}
-\caption{CPU scaling properties of benchmarks.
-  $\Diamond$ SingleLaneFlowPool,
-  $\times$ MultiLaneFlowPool,
-  $\triangle$ LinkedTransferQueue,
-  $\circ$ ConcurrentLinkedQueue} \label{fig:eval-cpu-scaling}
+\caption{Execution time vs parallelization level.
+  $\Diamond$ single-lane FlowPool,
+  $\times$ multi-lane FlowPool,
+  $\triangle$ linked transfer queue,
+  $\circ$ concurrent linked queue} \label{fig:eval-cpu-scaling}
 \end{figure}
 
 
@@ -2827,11 +2827,89 @@ two reduction steps yields the following reduction $R'$:
 
 where the prefix and suffix of the reduction $R'$ are the same as in $R$.
 
-TODO
+Any pair of rules $R_1$ and $R_2$ applies above if the reduction steps
+operate on different pools.
+If they operate on the same pool, then for any two (not necessarily
+different) threads executing these reduction steps, the following
+table of rules applies.
+
+\begin{center}
+\begin{tabular}{ | c | c | c | c | }
+  \hline
+  $R_1$ & $R_2$ & $R_1'$ & $R_2'$ \\
+  \hline
+  \hline
+  \textsc{Append1} & \textsc{Append1} & \textsc{Append1} & \textsc{Append1} \\
+  \hline
+  \textsc{Append1} & \textsc{Foreach1} & \textsc{Foreach1} & \textsc{Append1} \\
+  \hline
+  \textsc{Append1} & \textsc{Seal1} & \textsc{Seal1} & \textsc{Append2} \\
+  \hline
+  \textsc{Append2} & \textsc{Foreach2} & \textsc{Foreach2} & \textsc{Append2} \\
+  \hline
+  \textsc{Append2} & \textsc{Seal2} & \textsc{Seal2} & \textsc{Append2} \\
+  \hline
+  \textsc{Foreach1} & \textsc{Append1} & \textsc{Append1} & \textsc{Foreach1} \\
+  \hline
+  \textsc{Foreach1} & \textsc{Foreach1} & \textsc{Foreach1} & \textsc{Foreach1} \\
+  \hline
+  \textsc{Foreach1} & \textsc{Seal1} & \textsc{Seal1} & \textsc{Foreach2} \\
+  \hline
+  \textsc{Foreach2} & \textsc{Append2} & \textsc{Append2} & \textsc{Foreach2} \\
+  \hline
+  \textsc{Foreach2} & \textsc{Seal2} & \textsc{Seal2} & \textsc{Foreach2} \\
+  \hline
+  \textsc{Seal1} & \textsc{Append2} & \textsc{Append1} & \textsc{Seal2} \\
+  \hline
+  \textsc{Seal1} & \textsc{Foreach2} & \textsc{Foreach1} & \textsc{Seal1} \\
+  \hline
+  \textsc{Seal1} & \textsc{Seal2} & \textsc{Seal1} & \textsc{Seal2} \\
+  \hline
+  \textsc{Seal2} & \textsc{Append2} & \textsc{Append2} & \textsc{Seal2} \\
+  \hline
+  \textsc{Seal2} & \textsc{Foreach2} & \textsc{Foreach2} & \textsc{Seal2} \\
+  \hline
+\end{tabular}
+\end{center}
+
 \end{lemma}
 
 \begin{proof}
-TODO
+By straightforward inspection of each pair of rules.
+
+As an example, we pick the third row from the table. Consider the
+following execution schedule fragment:
+
+\begin{eqnarray*}
+& &
+p << v~;~t',p~seal~n~;~t'',T_k~|~p=(vs,-1,cbs),P_k
+\\
+& &
+\;\stackrel{\textsc{Append1}}{\longrightarrow}\;
+t',p~seal~n~;~t'',T_k~|~p=(\set{v} \cup vs,-1,cbs),P_k
+\\
+& &
+\;\stackrel{\textsc{Seal1}}{\longrightarrow}\;
+\set{cbs(w) : w \in \set{v} \cup vs},t',t'',T_k~|~p=(\set{v} \cup vs,n,cbs),P_k
+\end{eqnarray*}
+
+If we reorder these two reduction steps, we get:
+
+\begin{eqnarray*}
+& &
+p << v~;~t',p~seal~n~;~t'',T_k~|~p=(vs,-1,cbs),P_k
+\\
+& &
+\;\stackrel{\textsc{Seal1}}{\longrightarrow}\;
+\set{cbs(w) : w \in vs},p << v~;~t',t'',T_k~|~p=(vs,n,cbs),P_k
+\\
+& &
+\;\stackrel{\textsc{Append2}}{\longrightarrow}\;
+cbs(v),\set{cbs(w) : w \in vs},t',t'',T_k,~|~p=(\set{v} \cup vs,n,cbs),P_k
+\end{eqnarray*}
+
+The final execution states in these two execution fragments are the
+same, hence the rest of the interleaving stays the same.
 \end{proof}
 
 \begin{definition}[Canonical interleaving]
@@ -2872,6 +2950,42 @@ identifiers and the lexicographic ordering on the callback term.
 pool identifiers and the sizes of the seal.
 \end{enumerate}
 
+Or, more formally:
+
+\begin{eqnarray*}
+& &T_0~|~P_0 \;\stackrel{\textsc{Create}}{\longrightarrow}\; T_0~|~p_{i_1},
+P_0 \;\stackrel{\textsc{Create}}{\longrightarrow}\; \ldots
+\;\stackrel{\textsc{Create}}{\longrightarrow}\;  T_0~|~p_{i_n},
+p_{i_{n-1}}, \ldots, p_{i_1}, P_0 \\
+& &\;\stackrel{\textsc{Append}}{\longrightarrow}\; T_1~|~(\set{v_{j_1}}
+\cup vs_1, n_1, cbs_1)_{j_1}, P_{j_1}
+\;\stackrel{\textsc{Append}}{\longrightarrow}\; \ldots \\
+& &\;\stackrel{\textsc{Append}}{\longrightarrow}\;
+T_m~|~(\set{v_{j_m}} \cup vs_m, n_m, cbs_m)_{j_n}, P_{j_n} \\
+& & \;\stackrel{\textsc{Foreach}}{\longrightarrow}\;
+T_{m+1}~|~(vs_{m+1}, n_{m+1}, \set{t_{k_1}} \cup cbs_{m+1})_{k_1}, P_{k_1}
+\;\stackrel{\textsc{Foreach}}{\longrightarrow}\; \ldots \\
+& & \;\stackrel{\textsc{Foreach}}{\longrightarrow}\;
+T_{m+f}~|~(vs_{m+f}, n_{m+f}, \set{t_{k_f}} \cup cbs_{m+f})_{k_f}, P_{k_f} \\
+& & \;\stackrel{\textsc{Seal}}{\longrightarrow}\;
+T_{m+f+1}~|~(vs_{m+f+1}, n_{m+f+1}, cbs_{m+f+1})_{l_1}, P_{l_1}
+\;\stackrel{\textsc{Seal}}{\longrightarrow}\; \ldots \\
+& & \;\stackrel{\textsc{Seal}}{\longrightarrow}\;
+T_{m+f+s}~|~(vs_{m+f+s}, n_{m+f+s}, cbs_{m+f+s})_{l_s}, P_{l_s}
+\end{eqnarray*}
+
+where (with $\stackrel{a}{<}$ being the lexicographic ordering and
+$\stackrel{\cdot}{<}$ being some ordering on the set of elements):
+
+\begin{eqnarray*}
+& &i_1 < i_2 < \ldots < i_n \\
+& &x < y \Rightarrow v_{j_x} \stackrel{\cdot}{<} v_{j_y} \vee (v_{j_x}
+= v_{j_y} \wedge j_x < j_y)\\
+& &x < y \Rightarrow t_{k_x} \stackrel{a}{<} t_{k_y} \vee (t_{k_x}
+= t_{k_y} \wedge k_x < k_y)\\
+& &x < y \Rightarrow n_x < n_y \vee (n_x = n_y \wedge l_x < l_y)\\
+\end{eqnarray*}
+
 We define the \textbf{canonical order of the reduction steps}
 as follows:
 \begin{enumerate}
@@ -2884,9 +2998,38 @@ as follows:
   reduction steps.
 \end{enumerate}
 
+Or, more formally:
+
+\begin{eqnarray*}
+& &\set{t}~|~\emptyset 
+\;\stackrel{S_C(\text{t})}{\longrightarrow}\;
+\set{\epsilon, T_1, T_2, \ldots, T_n}~|~P(\text{t}) \\
+& &\;\stackrel{S_C(T_1)}{\longrightarrow}\;
+\set{\epsilon, \epsilon, T_2, \ldots, T_n, T_{1,1}, \ldots,
+  T_{1,n_1}}~|~P(T_1),P(\text{t}) \\
+& &\;\stackrel{S_C(T_2)}{\longrightarrow}\;
+\ldots \;\stackrel{S_C(T_n)}{\longrightarrow}\;\\
+& &\;\stackrel{S_C(T_n)}{\longrightarrow}\;
+\set{\epsilon, \ldots, \epsilon, T_{1,1}, \ldots,
+  T_{1,n_1}, T_{2,1}, \ldots, T_{n-1,n_{n-1}}, T_{n,1}, \ldots,
+  T_{n,n_n}}\\
+& &~|~P(T_1),\ldots,P(T_n),P(\text{t}) \\
+& &\;\stackrel{S_C(T_{1,1})}{\longrightarrow}\; \ldots
+\;\stackrel{S_C(T_{1,n})}{\longrightarrow}\; \ldots
+\;\stackrel{S_C(T_{2,1})}{\longrightarrow}\; \ldots
+\;\stackrel{S_C(T_{n-1,n_{n-1}})}{\longrightarrow}\; \ldots
+\;\stackrel{S_C(T_{n,1})}{\longrightarrow}\; \ldots
+\end{eqnarray*}
+
+where $S_C(T)$ is the sequence of reduction steps of thread $T$ in the
+canonical order and $t$ is the term being reduced, i.e. the main
+thread. For each $T_p$ and $T_q$ if $p \stackrel{a}{<} q$, then $T_p
+\stackrel{cb}{<} T_q$, where $\stackrel{cb}{<}$ is the comes-before
+ordering.
+
 A \textbf{canonical interleaving} $S_c$ is an interleaving of the
-reduction of a term $t$, such that reduction steps are applied in the
-canonical order.
+reduction of a term $t$, such that the reduction steps are applied in
+the canonical order.
 \end{definition}
 
 \begin{proposition}
@@ -2920,8 +3063,10 @@ The new interleaving is trivially valid.
 
 We then identify all the \textsc{Append} steps of the main thread.
 We know from our programming model that each of these steps can only
-refer to FlowPools from the \textsc{Create} steps we have moved to the
-beginning of the interleaving.
+refer to FlowPools from the \textsc{Create} steps we have already
+moved to the beginning of the interleaving -- we cannot append to a
+pool created by some other subsequently created thread, due to scoping
+rules.
 For this reason we can reorder the \textsc{Append} steps of the main
 thread so that they appear after the \textsc{Create} steps and
 maintain a valid interleaving.
@@ -2932,7 +3077,7 @@ We repeat the same for the \textsc{Foreach} and \textsc{Seal} steps.
 At this point the new interleaving is the prefix of a canonical
 interleaving.
 From the commutativity rules we know that the main thread still
-created the same set of threads as in the original interleaving.
+creates the same set of threads as in the original interleaving.
 We order the newly created threads according to the comes-before
 ordering introduced earlier and identify each of these threads in the
 original interleaving.
@@ -3609,16 +3754,40 @@ performance gain due to fewer collisions. Benchmarks have shown (see
 fig~\ref{fig:eval-lane-factor}) that this yields no observable gain --
 in fact, this sometimes even decreased performance slightly.
 
-%% TODO redo this section
 \textbf{Performance Gain} As stated in the abstract, FlowPools -- or
 more precisely multi-lane FlowPools -- may reduce execution time by
-$53-97\%$. These figures have been obtained by comparing medians of
-execution times for each configuration with $P = 8$ (the highest level
-of parallelism we have for all architectures), both for multi-lane
-FlowPools and the faster of linked transfer queues and concurrent
-linked queues. The higher bound results from the insert benchmark on
-32-core Xeon with $5000000$ insertions. The lower bound results from
-the histogram benchmark on UltraSPARC T2 with $500000$ elements.
+$49 - 54\%$ on 4-core i7. These figures have been obtained by
+comparing medians of execution times for insertions between multi-lane
+FlowPools and concurrent linked queues (which were always faster than 
+linked transfer queues), where each structure was evaluated on its
+optimal parallelization level. The resulting data is shown in
+table~\ref{tbl:execution-times}.
+
+%% TODO argue, why not other benchmarks?
+
+\begin{table}[t]
+\centering
+\begin{tabular}{l@{\qquad}r@{\quad}r@{\quad}r@{\quad}r@{\quad}r@{\qquad}r}
+  Architecture & Elements & FlowPool $t [ms]$ & $P$ & Queue $t [ms]$ & $P$ & decr.\\
+\hline
+    4-core i7 &  2M &  17 &  8 &   35 & 1 & 51\%\\
+    4-core i7 &  5M &  44 &  8 &   87 & 1 & 49\%\\
+    4-core i7 & 15M & 118 &  8 &  258 & 1 & 54\%\\
+\hline
+UltraSPARC T2 &  1M &  23 & 32 &  111 & 4 & 79\%\\
+UltraSPARC T2 &  2M &  34 & 64 &  224 & 4 & 84\%\\
+UltraSPARC T2 &  5M &  62 & 64 &  556 & 4 & 88\%\\
+UltraSPARC T2 & 15M & 129 & 64 & 1661 & 4 & 92\%\\
+\hline
+ 32-core Xeon &  2M &  30 &  8 &   50 & 1 & 40\%\\
+ 32-core Xeon &  5M &  46 & 64 &  120 & 1 & 61\%\\
+ 32-core Xeon & 15M & 126 & 64 &  347 & 1 & 63\%\\
+\end{tabular}
+
+\caption{Execution times for insert benchmark for multi-lane FlowPool
+  and concurrent linked queues, including execution time decrease
+  percentage.} \label{tbl:execution-times}
+\end{table}
 
 \textbf{Methodology} All the presented configurations have been
 measured $20$ times, where the $5$ first values have been discarded to
@@ -3628,23 +3797,22 @@ executed through SBT\footnote{Simple Build Tool} using the following
 flags for the JavaVM: \texttt{-Xmx2048m -Xms2048m -XX:+UseCondCardMark
   -verbose:gc -XX:+PrintGCDetails -server}.
 
-%% TODO
-% chache line transfer collision argument
-
 %% TODO captions OK? (also in 6. Evaluation)
 \begin{figure}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/size-scaling-par1}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/size-scaling-par8}
-\caption{Size scaling properties of benchmarks ($P = 1,
-  8$). $\Diamond$ SingleLaneFlowPool,
-  $\times$ MultiLaneFlowPool,
-  $\triangle$ LinkedTransferQueue,
-  $\circ$ ConcurrentLinkedQueue} \label{fig:eval-size-scaling}
+\caption{Execution time vs benchmark size ($P = 1, 8$).
+  $\Diamond$ single-lane FlowPool,
+  $\times$ multi-lane FlowPool,
+  $\triangle$ linked transfer queue,
+  $\circ$ concurrent linked queue} \label{fig:eval-size-scaling}
 \end{figure}
 
 \begin{figure}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/lanef-scaling}
-\caption{Lane-Factor scaling properties of Multi-Lane FlowPool} \label{fig:eval-lane-factor}
+\caption{Execution times vs lane-factor for multi-lane
+  FlowPools. $\times$ UltraSPARC T2, $\triangle$ 4-core i7}
+\label{fig:eval-lane-factor}
 \end{figure}
 
 \end{document}

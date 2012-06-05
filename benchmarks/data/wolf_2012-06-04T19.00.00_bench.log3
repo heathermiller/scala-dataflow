@@ -1,0 +1,7 @@
+wolf	v4	MLFPCommBench	1	1	100000000	scala.dataflow.bench.MLFPCommBench$	6582	6856	7669
+wolf	v4	MLFPCommBench	1	1	200000000	scala.dataflow.bench.MLFPCommBench$	13859	14314	16316
+wolf	v4	LTQCommBench	1	1	50000000	scala.dataflow.bench.LTQCommBench$	40789	43816	56172
+wolf	v4	LTQCommBench	1	1	25000000	scala.dataflow.bench.LTQCommBench$	9218	16312	9137
+wolf	v4	MLFPCommBench	1	1	50000000	scala.dataflow.bench.MLFPCommBench$	3885	2968	4376
+wolf	v4	MLFPCommBench	1	1	25000000	scala.dataflow.bench.MLFPCommBench$	2198	1544	2235
+wolf	v4	MLFPCommBench	1	1	400000000	scala.dataflow.bench.MLFPCommBench$	30660	40029	40784
