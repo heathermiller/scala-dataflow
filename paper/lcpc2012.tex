@@ -1127,8 +1127,8 @@ thus ensuring that the \verb=append= operation scales.
 \section{Correctness}
 \label{sec:correctness}
 We give an outline of the correctness proof here. More formal
-definitions, a complete set of lemmas and proofs can be found in the
-appendix.
+definitions, and a complete set of lemmas and proofs can be found 
+in appendix \ref{appendix-correctness}.
 
 We define the notion of an abstract pool $\mathbb{A} = (elems,
 callbacks, seal)$ of elements in the pool, callbacks and the seal
@@ -1279,8 +1279,9 @@ n \in \mathbb{N}
 We claim that the FlowPool abstraction is
 \emph{deterministic} in the sense that a program computes the same
 result (which can also be an error) regardless of the interleaving of
-concurrent operations. We give an outline of the determinism
-proof -- a complete formal proof can be found in the appendix.
+concurrent operations. Here, we give an outline of the determinism
+proof. A complete formal proof can be found in appendix 
+\ref{appendix-determinism}.
 
 The following definitions and the determinism theorem are based on the
 language shown in Figure~\ref{fig:syntax}. The semantics of our core
@@ -1357,18 +1358,15 @@ Reduction of terms $t$ is deterministic.
 \section{Evaluation}
 \label{sec:evaluation}
 
-We evaluate our implementation (single-lane and multi-lane
-FlowPools) against the LinkedTransferQueue \cite{SchererLS09} for all
-benchmarks and the ConcurrentLinkedQueue \cite{Michael96} for the
-insert benchmark, both found in JDK 1.7, on three different
-architectures -- a quad-core 3.4 GHz i7-2600, 4x octa-core 2.27 GHz
-Intel Xeon x7560 (both with hyperthreading) and an octa-core 1.2GHz
-UltraSPARC T2 with 64 hardware threads. The level of parallelism $P$
-we vary as follows: On the first architecture we have $P \in [1, 8]$,
-on the latter two $P \in [1,64]$. Here, we discuss the scaling of the
-said data structures (see fig~\ref{fig:eval-cpu-scaling}). For
-additional evaluations, please refer to section~\ref{sec:add-eval} in
-the appendix.
+We evaluate our implementation (single-lane and multi-lane FlowPools) against
+the LinkedTransferQueue \cite{SchererLS09} for all benchmarks and the
+ConcurrentLinkedQueue \cite{Michael96} for the insert benchmark, both found in
+JDK 1.7, on three different architectures; a quad-core 3.4 GHz i7-2600, 4x
+octa-core 2.27 GHz Intel Xeon x7560 (both with hyperthreading) and an octa-core 
+1.2GHz UltraSPARC T2 with 64 hardware threads. In this section, we focus
+on the scaling properties of the above-mentioned data structures, Figures
+\ref{fig:eval-cpu-scaling} \& \ref{fig:eval-hist-comm}. Further evaluation can
+be found in appendix~\ref{sec:add-eval}.
 
 \begin{figure}[ht!]
 \centering
@@ -1386,56 +1384,62 @@ reduce.}
 %   $\circ$ concurrent linked queue} \label{fig:eval-cpu-scaling}
 \end{figure}
 
-In the \emph{Insert} benchmark, we evaluate the ability to write
-concurrently -- often the most difficult task -- by distributing the
+In the \emph{Insert} benchmark, Figure \ref{fig:eval-cpu-scaling}, we evaluate the ability to write
+concurrently, by distributing the
 work of inserting $N$ elements into the data structure concurrently
 across $P$ threads.
-We can see that both single-lane FlowPools and concurrent queues do
+In Figure \ref{fig:eval-cpu-scaling}, it's evident that both single-lane FlowPools and concurrent queues do
 not scale well with the number of concurrent threads, particularly
-on the i7 architecture. They seem to slow down rapidly due to cache
+on the i7 architecture. They seem to slow down rapidly, likely due to cache
 line collisions and CAS failures.
 On the other hand, multi-lane FlowPools scale well, as threads
-write to different lanes and hence different cache lines in
-most occasions, while avoiding CAS failures. This may reduce execution
-time for insertions up to $54\%$ on 4-core i7, $63\%$ on 32-core 
-Xeon and $92\%$ on UltraSPARC T2.
+write to different lanes, and hence different cache lines on
+most occasions, meanwhile also avoiding CAS failures. This may reduce execution
+time for insertions up to $54\%$ on the i7, $63\%$ on the
+Xeon and $92\%$ on the UltraSPARC T2.
 
-Usage of the inserted data is evaluated in the \emph{Reduce},
-\emph{Map} and \emph{Histogram} benchmark, where the latter --
-serving as a ``real life'' example here -- uses the former two
-operations, whose evaluation is discussed in the appendix.
+Usage of the inserted data is evaluated in the \emph{Reduce}, \emph{Map} (both
+in Figure \ref{fig:eval-cpu-scaling}) and \emph{Histogram} benchmarks (Figure
+\ref{fig:eval-hist-comm}). It's important to note that the \emph{Histogram} benchmark
+serves as a ``real life'' example, which uses both the \verb=map= and \verb=reduce=
+operations that are benchmarked in Figure \ref{fig:eval-cpu-scaling}.
 
-In the \textit{Histogram} benchmark, $P$ threads produce a total of
-$N$ elements and add it to the FlowPool.
+In the \textit{Histogram} benchmark, Figure \ref{fig:eval-hist-comm}, $P$ threads produce a total of
+$N$ elements, adding them to the FlowPool.
 The \verb=aggregate= operation is then used to produce 10 different
 histograms concurrently with a different number of bins.
 Each separate histogram is constructed by its own thread (or up to
 $P$, for multi-lane FlowPools).
-A crucial difference between queues and FlowPools in the latter
-benchmark is that with FlowPools, multiple histograms are produced 
+A crucial difference between queues and FlowPools here, is that with 
+FlowPools, multiple histograms are produced 
 by invoking several \verb=aggregate= operations, while queues require
-writing each element to several queues -- one for each histogram.
+writing each element to several queues-- one for each histogram.
 Without additional synchronization, reading a single queue is not an
-option since elements have to be removed from the queue eventually and
+option, since elements have to be removed from the queue eventually, and
 it is not clear to each reader when to do this.
-With FlowPools, elements are implicitly garbage collected when no
+With FlowPools, elements are automatically garbage collected when no
 longer needed.
 
-Finally, to validate the last claim of garbage being implicitly
-collected, in the \textit{Comm} benchmark we create a pool in which a
-large number of elements $N$ is added concurrently by $P$
+Finally, to validate the last claim of garbage being automatically
+collected, in the \textit{Communication/Garbage Collection} benchmark, 
+Figure \ref{fig:eval-hist-comm}, we create a pool in which a
+large number of elements $N$ are added concurrently by $P$
 threads. Each element is then processed by one of $P$ threads through
 the use of the \verb=aggregate= operation.
-With linked transfer queues, $P$ threads concurrently remove
+We benchmark against linked transfer queues, where $P$ threads concurrently remove
 elements from the queue and process it.
-%% TODO conclusion? / Time is wrong measure here!!
+For each run, we vary the size of the $N$ and examine its impact on the execution time.
+Especially in the cases of the Intel architectures, the multi-lane 
+FlowPools perform considerably better than the linked transfer queues. 
+As a matter of fact, the linked transfer queue on the Xeon benchmark ran out of 
+memory, and was unable to complete, while the multi-lane FlowPool scaled effortlessly 
+to 400 million elements, indicating that unneeded elements are being properly garbage collected.
 
-
-\begin{figure}[ht!]
+\begin{figure}[t!]
 \centering
 \includegraphics[width=\textwidth]{../benchmarks/graphs/hist-comm}
 \setlength{\abovecaptionskip}{-10pt}
-\setlength{\belowcaptionskip}{-20pt}
+\setlength{\belowcaptionskip}{-15pt}
 \caption{Execution time vs parallelization on a real histogram application
 (top), \& communication benchmark (bottom) showing memory efficiency, 
 across all architectures.}
@@ -1561,6 +1565,7 @@ continuations.
 \let\oldsec\section
 \renewcommand{\section}[1]{\clearpage \oldsec{#1}}
 \section{Proof of Correctness}
+\label{appendix-correctness}
 
 
 \setcounter{lemma}{0}
@@ -2773,6 +2778,7 @@ of $CAS_{seal}$
 
 
 \section{Proof of Determinism}
+\label{appendix-determinism}
 
 \subsection{Reduction rules}
 
