@@ -146,7 +146,7 @@
 
 \usepackage{url}
 \urldef{\mails}\path|firstname.lastname@epfl.ch|
-\urldef{\mailsa}\path|firstname.lastname@typesafe.com|
+\urldef{\mailsa}\path|firstname.lastname@{epfl.ch, typesafe.com}|
 \newcommand{\keywords}[1]{\par\addvspace\baselineskip
 \noindent\keywordname\enspace\ignorespaces#1}
 
@@ -189,7 +189,6 @@
 % the affiliations are given next; don't give your e-mail address
 % unless you accept that it will be published
 \institute{EPFL, Switzerland\\
-\mails\\
 \and
 Typesafe, Inc.\\
 \mailsa}
@@ -554,8 +553,9 @@ asynchronously, and be eventually applied to every element. Its signature is
 \verb+def foreach[U](f: T => U): Future[Int]+, and its  return type
 \verb=Future[Int]= is an integer value which becomes available once
 \verb=foreach= traverses all the elements added to the pool. This integer
-denotes the number of times the \verb=foreach= has been called. The user-
-specified function return value of type \verb=U= is ignored.
+denotes the number of times the \verb=foreach= has been called.
+
+%The user-specified function return value of type \verb=U= is ignored.
 
 The \verb=aggregate= operation aggregates the elements of the pool
 and has the following signature: \verb+def aggregate[S]+\verb+(zero: =>S)+
