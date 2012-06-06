@@ -1565,17 +1565,27 @@ structures present in the Java standard library.
 % benefit on platforms which do not by default support efficient
 % continuations.
 
-
-
 \bibliographystyle{abbrv}
 \bibliography{bib}
 
 \appendix
+
 \let\oldsec\section
 \renewcommand{\section}[1]{\clearpage \oldsec{#1}}
+
 \section{Proof of Correctness}
 \label{appendix-correctness}
 
+\begin{figure}[t!]
+
+\textbf{Note to the reviewers.} For reference, we provide an
+appendix which contains (a) proofs of the presented lemmas and
+theorems, (b) a summary and examples of the syntax used in pseudocode,
+and (c) additional evaluation results. The appendix is not part of the
+paper, but is provided for convenience. It is planned to form part of
+a forthcoming technical report.
+
+\end{figure}
 
 \setcounter{lemma}{0}
 \setcounter{theorem}{0}
