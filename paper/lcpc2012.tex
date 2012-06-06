@@ -1030,7 +1030,7 @@ The FlowPool maintains a reference to the first block called
 \verb=start=.
 It also maintains a hint to the last block in the chain of blocks,
 called \verb=current=.
-This reference may not always be up to date, but it always points
+This reference may not always be up-to-date, but it always points
 to some block in the chain.
 
 Each FlowPool is associated with a list of callbacks which have
@@ -1079,7 +1079,7 @@ the callbacks (present when the element was added) with
 the \verb=future= construct.
 In the implementation we do not schedule an asynchronous
 computation for each element.
-Instead, the callback invocations are batched to avoid the schedulling overhead
+Instead, the callback invocations are batched to avoid the scheduling overhead
 -- the array is scanned for new elements
 until there are no more left.
 
@@ -1120,13 +1120,13 @@ non-blocking fashion.
 %In practice, a hash on the ID of the inserting thread has to be used
 %instead of the CPU index, as such information is currently not
 %available through the Java framework.
-Once \verb=seal= is called the remaining free slots
+Once \verb=seal= is called, the remaining free slots
 are split amongst the lanes equally.
-If a writer finds that his lane is full,
+If a writer finds that its lane is full,
 it writes to some other lane instead.
 This raises the frequency of CAS failures, but in most
 cases happens only when the FlowPool is almost full,
-thus ensuring that the append operation scales.
+thus ensuring that the \verb=append= operation scales.
 
 %You find an evaluation of the performance of Multi-Lane FlowPools in
 %section~\ref{sec:evaluation}.
