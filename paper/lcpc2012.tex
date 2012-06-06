@@ -1486,28 +1486,27 @@ futures proposed by Baker and Hewitt \cite{Hewitt77}, and promises
 first mentioned by Friedman and Wise \cite{Wise76}.
 Futures were first implemented in MultiLISP \cite{Halstead85},
 and have been employed in many languages and frameworks since.
-Scala futures \cite{TODO} and Finagle futures \cite{TODO} are
+Scala futures~\cite{SIP14} and Twitter futures~\cite{TwitterFutures} are
 of interest, because they define monadic operators and a
 number of high-level combinators that create new futures.
 These APIs avoid blocking.
 Futures have been generalized to data-driven futures,
-which provide additional information to the scheduler
-\cite{Tasirlar11}.
+which provide additional information to the scheduler~\cite{Tasirlar11}.
 Many frameworks have constructs that start an asynchronous
 computation and yield a future holding its result.
-For example, Habanero Java \cite{Shirako11} provides an \verb=async=
+For example, Habanero Java~\cite{Shirako11} provides an \verb=async=
 construct and Scala provides a \verb=future= construct.
 
 A number of other models and frameworks recognized the need to embed
 the concept of futures into other data-structures.
 Single-assignment variables have been generalized to I-Structures
-proposed by Arvind \cite{Arvind89} which are essentially
+proposed by Arvind~\cite{Arvind89} which are essentially
 single-assignment arrays.
-The CnC model \cite{Burke11} \cite{CnC10} is a parallel programming model
+CnC~\cite{Burke11,CnC10} is a parallel programming model
 influenced by dynamic dataflow, stream-processing and tuple spaces.
 In CnC the user provides high-level operations along with the ordering
 constraints that form a computation dependency graph.
-FlumeJava \cite{Chambers10} is a distributed programming model which
+FlumeJava~\cite{Chambers10} is a distributed programming model which
 relies heavily on the concept of collections containing a set of
 futures.
 An issue that often arises with dataflow programming models are
@@ -1515,15 +1514,15 @@ unbalanced loads.
 This is often solved through the use of bounded buffers which prevent
 the producer from overflowing the consumer.
 Analytical approaches to modeling pipelined applications have also
-been addressed \cite{Cascaval09}.
+been addressed~\cite{Cascaval09}.
 
 Opposed to the correct-by-construction determinism described thus far,
 a type-systematic approach can also ensure that concurrent executions
 have deterministic results.
 Recently, work on Deterministic Parallel Java showed that a
-region-based type system can ensure determinism \cite{Bocchino09}.
+region-based type system can ensure determinism~\cite{Bocchino09}.
 X10's constrained-based dependent types can similarly ensure
-determinism and deadlock-freedom \cite{Saraswat07}.
+determinism and deadlock-freedom~\cite{Saraswat07}.
 
 
 \section{Conclusion}
