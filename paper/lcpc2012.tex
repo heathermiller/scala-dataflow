@@ -515,17 +515,17 @@ resulting data structures. For a more formal definition and proof, see section
 \section{Programming Interface}
 \label{sec:programming-interface}
 
-A FlowPool can be thought of as a concurrent pool data structure, and as such
-has no guarantees on ordering. In this section, we describe the semantics of
-several functional combinators and other basic operations defined on
-FlowPools.
+A FlowPool can be thought of as a concurrent pool data structure,
+\textit{i.e.}, it can be used similarly to a collections abstraction. In this
+section, we describe the semantics of several functional combinators and other
+basic operations defined on FlowPools.
 
 \textbf{Append (\texttt{<<})}. The most fundamental of all
 operations on FlowPools is the concurrent thread-safe append operation.
 As its name suggests, it
 simply takes an argument of type \texttt{Elem} and appends it to a given
-FlowPool. 
-
+FlowPool.
+ 
 % notice -- we could have a stream returned from the pool instead and
 % poll the stream until the value arrives -- but this leads to blocking.
 
@@ -543,23 +543,19 @@ which store the current position in the data structure. However, since their
 state can be manipulated by several threads, they result in nondeterministic
 execution.
 
-Another way to traverse the elements is to provide a higher-level
-\verb=foreach= operation which takes a user-specified function as an
-argument and
-applies it to every element.
-To ensure determinism, it is called for every element that is
-eventually inserted into the FlowPool, rather than only those present
-when \verb=foreach= is called.
-To ensure non-blocking behavior, it cannot not wait until
-additional elements are added to the FlowPool.
-For these reasons, the \verb=foreach= operation must execute
-asynchronously and is eventually applied to every element.
-Its signature is \verb+def foreach[U](f: T => U): Future[Int]+.
-The return type \verb=Future[Int]= is an integer value which becomes
-available once \verb=foreach= traverses all the elements added to the
-pool.
-It denotes the number of times the \verb=foreach= has been called.
-The user-specified function return value of type \verb=U= is ignored.
+Another way to traverse the elements is to provide a higher-order
+\verb=foreach= operator which takes a user-specified function as an argument
+and applies it to every element. For it to be deterministic, it must be called
+for every element that is eventually inserted into the FlowPool, rather than
+only on those present when \verb=foreach= is called. For it to be non-
+blocking, it cannot not wait until additional elements are added to the
+FlowPool. Given these design goals, the \verb=foreach= operation must execute
+asynchronously, and be eventually applied to every element. Its signature is
+\verb+def foreach[U](f: T => U): Future[Int]+, and its  return type
+\verb=Future[Int]= is an integer value which becomes available once
+\verb=foreach= traverses all the elements added to the pool. This integer
+denotes the number of times the \verb=foreach= has been called. The user-
+specified function return value of type \verb=U= is ignored.
 
 The \verb=aggregate= operation aggregates the elements of the pool
 and has the following signature: \verb+def aggregate[S]+\verb+(zero: =>S)+
@@ -587,54 +583,52 @@ The \verb=foreach= operation can be implemented using \verb=aggregate=, but not 
 due to the absence of mutable variables.
 
 \textbf{Builders.}
-The FlowPool described so far must maintain a reference 
-to all the elements at all times to implement the \verb=foreach=
-operation correctly.
-Since elements are never removed, the pool may grow indefinitely
-and run out of memory.
-At the same time, appending new elements does not require a reference
-to any of the existing elements.
-We use this observation to factor out the \verb=<<= operation into
-a different abstraction called a \verb=builder=.
-A typical application starts by registering all the \verb=foreach=
-operations and then releases the references to FlowPools.
-In a managed environment the GC then implicitly takes care of
-discarding the no longer needed objects.
+The FlowPool described so far must maintain a reference  to all the elements
+at all times to implement the \verb=foreach= operation correctly. Since
+elements are never removed, the pool may grow indefinitely and run out of
+memory. However, it's important to note that appending new elements does not
+necessarily require a reference to any of the existing elements. This
+observation allows us to move the \verb=<<= operation out of the FlowPool and
+into a different abstraction called a \verb=builder=. Thus, a typical
+application starts by registering all the \verb=foreach= operations, and then
+it releases the references to FlowPools, leaving only references to builders.
+In a managed environment, the GC then can automatically discard the no longer
+needed objects.
 
 
 \textbf{Seal.}
-When clients are sure that no more elements will be added to the pool
-they can disallow further appends by calling \verb=seal=.
+When it is known that no more elements will be added to the pool,
+it is possible to disallow further appends by calling \verb=seal=.
 This has the advantage of discarding the registered \verb=foreach=
 operations.
-More importantly, \verb=aggregate= can only complete its future
+Though, most importantly, \verb=aggregate= can complete its future, which is only possible
 once it is certain that no more elements will be added.
 
-A \verb=seal= which just closes the FlowPool at the moment when it
+A \verb=seal= which simply prevents appends the FlowPool at the moment it
 is called, however, yields a nondeterministic programming model.
 Imagine a thread that attempts to seal the pool executing concurrently
 with a thread that appends an element.
-In one execution, the append preceeds the seal, and in the other
-the append follows the seal causing an error.
+In one execution, the append can precede the seal, and in the other
+the append can follow the seal, causing an error.
 To avoid nondeterminism, there has to be an agreement on the
 current state of the pool.
 A convenient and sufficient way to make \verb=seal= deterministic
 is to provide the expected pool size as an argument.
-The semantics of \verb=seal= is then such that it fails if the pool
+The semantics of \verb=seal= is then that it fails if the pool
 is already sealed with a different size or the number of elements
 is greater than the desired size.
 
-\textbf{Higher-level operations.}
+\textbf{Higher-order operators.}
 We now show how these basic abstractions can be used
-to build higher-level abstractions.
+to build higher-order abstractions.
 To begin with, in addition to the default FlowPool constructor, it is
 convenient to have generators that create certain pool types.
-In a dataflow graph FlowPools created by generators
+In a dataflow graph, FlowPools created by generators
 are source nodes.
-As an example, \verb=tabulate= (see below) creates a sequence of elements
+As an example, \verb=tabulate= (below) creates a sequence of elements
 by applying a user-specified function \verb=f= to natural numbers.
 One can imagine more complex generators, which add elements from a
-network socket or a file.
+network socket or a file, for example.
 
 \noindent
 \begin{minipage}[b]{4.2 cm}
@@ -692,8 +686,8 @@ construct (see appendix \ref{sec:syntax-examples}), which recursively applies \v
 adds it to the builder.
 Finally, the reference to the pool is returned.
 
-A typical higher-level collection operation \verb=map= is used to
-map each element of a dataset to produce a new one.
+A typical higher-order collection operator \verb=map= is used to
+map each element of a dataset to produce a new dataset.
 This corresponds to chaining the nodes in a dataflow graph.
 We implement it by traversing the elements of the \verb=this= FlowPool
 and
@@ -781,7 +775,7 @@ def union[T]
 
 The \verb=flatMap= operation retrieves a pool for each element of
 \verb=this= pool and adds its elements to the resulting pool.
-Given two FlowPools, it can be used to generate the cartesian product
+Given two FlowPools, it can be used to generate the Cartesian product
 of their elements.
 The implementation is similar to that of \verb=filter=,
 but we reduce the size on the future values of the sizes, because each
@@ -797,9 +791,8 @@ Note that if we could somehow merge the two different \verb=foreach=
 loops to implement the third join type \verb=zip=, we would
 obtain a nondeterministic operation.
 The programming model does not allow us to do so, however.
-The \verb=zip= function is more suited for data structures with deterministic ordering,
-such as Oz streams -- which would in turn have a nondeterministic \verb=union=.
-
+The \verb=zip= function is better suited for data structures with deterministic ordering,
+such as Oz streams, which would in turn have a nondeterministic \verb=union=.
 
 
 \begin{figure}[t]
@@ -1535,7 +1528,7 @@ determinism and deadlock-freedom \cite{Saraswat07}.
 
 \section{Conclusion}
 
-We have shown that deterministic higher-level operations can be build
+We have shown that deterministic higher-order operators can be build
 on top of \verb=<<= and \verb=foreach=, which corresponds to
 sequential collections.
 The prerequisite is that \verb=<<= can be invoked concurrently and
@@ -1554,7 +1547,7 @@ In conclusion, we postulate the existence of a range of other
 concurrent collection types with deterministic semantics fitting the
 presented correct-by-construction single-assignment model, such as
 bounded buffers, dataflow streams and maps, all of which have
-higher-level operations expressed in terms of the same basic
+higher-order operators expressed in terms of the same basic
 primitives.
 On the implementation level, we anticipate the need of embedding the
 callbacks within the data-structure itself, as is the case with
