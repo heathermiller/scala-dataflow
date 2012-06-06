@@ -2773,6 +2773,7 @@ corresponding invocation of \verb=append= in a finite number of steps.
 
 % we don't say anything about WRITE1 here because it's guaranteed to succeed,
 % so it's trivial.
+\enlargethispage{\baselineskip}
 
 Likewise by trivial inspection, if $CAS_{seal}$ successfully completes on some
 thread, then by \ref{lemma-finite-steps-state-change},
@@ -3863,16 +3864,15 @@ UltraSPARC T2 & 15M & 129 & 64 & 1661 & 4 & 92\%\\
   percentage.} \label{tbl:execution-times}
 \end{table}
 
-\textbf{Methodology} All the presented configurations have been
-measured $20$ times, where the $5$ first values have been discarded to
-let the JIT stabilize. Aggregated values are always medians. The
-benchmarks have been written using \verb=scala.testing.Benchmark= and
-executed through SBT\footnote{Simple Build Tool} using the following
-flags for the JavaVM: \texttt{-Xmx2048m -Xms2048m -XX:+UseCondCardMark
-  -verbose:gc -XX:+PrintGCDetails -server}.
+\begin{figure}[ht!]
+\includegraphics[width=\textwidth]{../benchmarks/graphs/lanef-scaling}
+\caption{Execution times vs lane-factor for multi-lane
+  FlowPools. $\times$ UltraSPARC T2, $\triangle$ 4-core i7}
+\label{fig:eval-lane-factor}
+\end{figure}
 
 %% TODO captions OK? (also in 6. Evaluation)
-\begin{figure}
+\begin{figure}[ht!]
 \includegraphics[width=\textwidth]{../benchmarks/graphs/size-scaling-par1}
 \includegraphics[width=\textwidth]{../benchmarks/graphs/size-scaling-par8}
 \caption{Execution time vs benchmark size ($P = 1, 8$).
@@ -3882,12 +3882,13 @@ flags for the JavaVM: \texttt{-Xmx2048m -Xms2048m -XX:+UseCondCardMark
   $\circ$ concurrent linked queue} \label{fig:eval-size-scaling}
 \end{figure}
 
-\begin{figure}
-\includegraphics[width=\textwidth]{../benchmarks/graphs/lanef-scaling}
-\caption{Execution times vs lane-factor for multi-lane
-  FlowPools. $\times$ UltraSPARC T2, $\triangle$ 4-core i7}
-\label{fig:eval-lane-factor}
-\end{figure}
+\textbf{Methodology} All the presented configurations have been
+measured $20$ times, where the $5$ first values have been discarded to
+let the JIT stabilize. Aggregated values are always medians. The
+benchmarks have been written using \verb=scala.testing.Benchmark= and
+executed through SBT\footnote{Simple Build Tool} using the following
+flags for the JavaVM: \texttt{-Xmx2048m -Xms2048m -XX:+UseCondCardMark
+  -verbose:gc -XX:+PrintGCDetails -server}.
 
 \end{document}
 
