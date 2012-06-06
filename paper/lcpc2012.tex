@@ -1470,9 +1470,9 @@ consumer's part when the queue is empty.
 While the abstractions above fit well in the concurrent imperative
 model, they have the disadvantage that the programs written using them
 are inherently nondeterministic.
-Book by Roy and Haridi \cite{RoyH2004} describes the Oz programming language 
+Roy and Haridi~\cite{RoyH2004} describe the Oz programming language,
 a subset of which yields programs deterministic by construction.
-The Oz dataflow streams are built on top of
+Oz dataflow streams are built on top of
 single-assignment variables and are deterministically ordered.
 They allow multiple consumers, but only one producer
 at a time.
@@ -1486,21 +1486,19 @@ futures proposed by Baker and Hewitt \cite{Hewitt77}, and promises
 first mentioned by Friedman and Wise \cite{Wise76}.
 Futures were first implemented in MultiLISP \cite{Halstead85},
 and have been employed in many languages and frameworks since.
-Scala futures~\cite{SIP14} and Twitter futures~\cite{TwitterFutures} are
+Scala 2.10 futures~\cite{SIP14} and Twitter futures~\cite{TwitterFutures} are
 of interest, because they define monadic operators and a
 number of high-level combinators that create new futures.
 These APIs avoid blocking.
 Futures have been generalized to data-driven futures,
 which provide additional information to the scheduler~\cite{Tasirlar11}.
 Many frameworks have constructs that start an asynchronous
-computation and yield a future holding its result.
-For example, Habanero Java~\cite{Shirako11} provides an \verb=async=
-construct and Scala provides a \verb=future= construct.
+computation and yield a future holding its result, for example, Habanero Java~\cite{Shirako11} (\verb=async=)
+and Scala (\verb=future=).
 
 A number of other models and frameworks recognized the need to embed
 the concept of futures into other data-structures.
-Single-assignment variables have been generalized to I-Structures
-proposed by Arvind~\cite{Arvind89} which are essentially
+Single-assignment variables have been generalized to I-Structures~\cite{Arvind89} which are essentially
 single-assignment arrays.
 CnC~\cite{Burke11,CnC10} is a parallel programming model
 influenced by dynamic dataflow, stream-processing and tuple spaces.
