@@ -102,9 +102,3 @@ Runs with SBT 0.11.x
 	- Determinism Proof
 - Appendix C
 	- Extra plots (if they exist)
-
-## Heather Philipp last-minute TODOs
-
-- Heather needs to fix point in the expand lemma of the lock-freedom proof
-- Make a note somewhere saying that it's not required to read the appendix, that it's only there to support claims made in the paper if questioned.
-

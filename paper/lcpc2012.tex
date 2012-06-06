@@ -2418,19 +2418,6 @@ steps
 \end{lemma}
 
 \begin{proof}
-% There are some issues with this one. Later on, we only actually need the
-% point about the current reference, and also the point that expand returns
-% after a finite number of steps. So we don't actually need the points about
-% numBlocks. 
-%
-% Not guaranteed to create a new block, because invoking expand from seal goes
-% straight to case 2 in if/else. Should remove that.
-%
-% So, right before calling expand, some other thread might update the next
-% pointer, and then the only thing that remains to be done is to change
-% current. Because expand checks whether next is null. If not null, then the
-% only thing that it does is update current. So the wording in the 2 cases
-% below needs to be cleaned up and some stuff needs to be removed.
 
 From inspection of the pseudocode, it is clear that the only point at which
 $expand(b)$ can be invoked is under the condition that for some block $b$,
@@ -2452,7 +2439,7 @@ guarantees that $CAS_{expand-curr}$ will update $current$ to refer to $b.next$, 
 will show can only be a new block. Likewise, \ref{lemma-non-consistency-cas} 
 has shown that  $CAS_{expand-nxt}$ is the only state changing instruction that can
 initiate a state change  at location $b.next$, therefore, since $CAS_{expand-nxt}$ takes
-place within Case 1,   Case 2 can only be reachable after Case 1 has been
+place within Case 1, Case 2 can only be reachable after Case 1 has been
 executed successfully. Given  that Case 1 always creates a new block,
 therefore, $b.next$ in this case, must  always refer to a new block.
 \end{itemize}
