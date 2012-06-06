@@ -105,15 +105,6 @@ Runs with SBT 0.11.x
 
 ## Heather Philipp last-minute TODOs
 
-- Heather needs to finish the plots
-- Philipp needs to go through determinism proof 
-- Heather needs to read through entire paper for typos
-- Philipp also needs to read through entire paper for typos
-- Heather needs to add summary of lock-freedom proof **DONE**
 - Heather needs to fix point in the expand lemma of the lock-freedom proof
-- Heather needs to summarize Comm size-scaling benchmark
-- Philipp needs to figure out how to add the determinism syntax to the model of computation
-- Add reference to Twitter and Scala Futures
-- Fix extra page in Appendix
 - Make a note somewhere saying that it's not required to read the appendix, that it's only there to support claims made in the paper if questioned.
-- Syntax section?
+
