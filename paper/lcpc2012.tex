@@ -1458,9 +1458,9 @@ is given by Herlihy and Shavit \cite{Herlihy08}.
 A detailed overview of concurrent data structures is given
 by Moir and Shavit \cite{Moir05}.
 To date, concurrent data structures remain an active area of
-research -- we restrict this summary to those relevant to this work.
+research-- we restrict this summary to those relevant to this work.
 
-Concurrently accessible queues have been present for a while --
+Concurrently accessible queues have been present for a while,
 an implementation is described by \cite{Mellor87}.
 Non-blocking concurrent linked queues are described by Michael and
 Scott \cite{Michael96}. This CAS-based
@@ -1529,32 +1529,40 @@ determinism and deadlock-freedom~\cite{Saraswat07}.
 
 \section{Conclusion}
 
-We have shown that deterministic higher-order operators can be build
-on top of \verb=<<= and \verb=foreach=, which corresponds to
-sequential collections.
-The prerequisite is that \verb=<<= can be invoked concurrently and
-that \verb=foreach= executes asynchronously.
+We have presented an abstraction and underlying data structure for
+deterministic concurrent dataflow programming. We achieve composability
+through the use of functional programming abstractions and non-blocking
+algorithms. We prove that our implementation is linearizable, lock-free, and
+deterministic. And finally, experimental results show that in most practical
+cases, FlowPools considerably outperform comparable concurrent queue data
+structures present in the Java standard library.
 
-We emphasize a property of FlowPools which goes beyond
-a dataflow model such as Oz (or some other future/promise based
-model) in which more complex data structures such as streams are built
-on top of single-assignment variables.
-With single-assignment pools multiple threads can add elements without
-agreeing on where the added element should structurally be, as is the
-case with dataflow streams.
-A consequence of this is a more flexible programming model.
+% We have shown that deterministic higher-order operators can be built
+% on top of \verb=<<= and \verb=foreach=, which corresponds to
+% sequential collections.
+% The prerequisite is that \verb=<<= can be invoked concurrently and
+% that \verb=foreach= executes asynchronously.
 
-In conclusion, we postulate the existence of a range of other
-concurrent collection types with deterministic semantics fitting the
-presented correct-by-construction single-assignment model, such as
-bounded buffers, dataflow streams and maps, all of which have
-higher-order operators expressed in terms of the same basic
-primitives.
-On the implementation level, we anticipate the need of embedding the
-callbacks within the data-structure itself, as is the case with
-callback-based futures and FlowPools -- this offers a particular
-benefit on platforms which do not by default support efficient
-continuations.
+% We emphasize a property of FlowPools which goes beyond
+% a dataflow model such as Oz (or some other future/promise based
+% model) in which more complex data structures such as streams are built
+% on top of single-assignment variables.
+% With single-assignment pools multiple threads can add elements without
+% agreeing on where the added element should structurally be, as is the
+% case with dataflow streams.
+% A consequence of this is a more flexible programming model.
+
+% In conclusion, we postulate the existence of a range of other
+% concurrent collection types with deterministic semantics fitting the
+% presented correct-by-construction single-assignment model, such as
+% bounded buffers, dataflow streams and maps, all of which have
+% higher-order operators expressed in terms of the same basic
+% primitives.
+% On the implementation level, we anticipate the need of embedding the
+% callbacks within the data-structure itself, as is the case with
+% callback-based futures and FlowPools -- this offers a particular
+% benefit on platforms which do not by default support efficient
+% continuations.
 
 
 
