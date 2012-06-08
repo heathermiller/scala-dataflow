@@ -1,6 +1,7 @@
 package scala.dataflow.bench
 
 import scala.dataflow._
+import impl._
 
 trait FPBuilder { def newFP[T]: FlowPool[T] }
 trait SLFPBuilder {

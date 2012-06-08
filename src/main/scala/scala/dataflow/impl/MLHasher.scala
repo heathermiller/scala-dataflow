@@ -1,4 +1,4 @@
-package scala.dataflow
+package scala.dataflow.impl
 
 import java.util.concurrent.atomic.AtomicInteger
 

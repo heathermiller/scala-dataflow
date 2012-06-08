@@ -13,13 +13,8 @@ package object dataflow {
     f.complete(x)
     f
   }
-
-  def futLift[A,B,C](f: (A,B) => C) = {
-    (f1: Future[A], f2: Future[B]) =>
-      f1.flatMap(x => f2.map(y => f(x,y)))
-  }
   
-  def getUnsafe(): Unsafe = {
+  private[dataflow] def getUnsafe(): Unsafe = {
     // Not on bootclasspath
     if (this.getClass.getClassLoader == null) Unsafe.getUnsafe()
     try {

@@ -3,6 +3,7 @@ package scala.dataflow
 import java.lang.Thread
 import java.util.concurrent.ThreadLocalRandom
 import scala.collection.mutable.{ Set => MSet }
+import impl._
 
 object MLFPTest extends App {
   import Utils._

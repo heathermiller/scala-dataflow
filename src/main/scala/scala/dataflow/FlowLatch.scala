@@ -6,22 +6,22 @@ import annotation.tailrec
 
 
 
-final class FlowAggregate[T](initial: T)(val aggregator: (T, T) => T) {
-  import FlowAggregate._
+final class FlowLatch[T](initial: T)(val aggregator: (T, T) => T) {
+  import FlowLatch._
   
   @volatile
-  var value: Value[T] = new Unsealed(0, initial)
+  protected var value: Value[T] = new Unsealed(0, initial)
   val future = new Future[T]()
   
   @inline
   private def CAS(ov: Value[T], nv: Value[T]) = unsafe.compareAndSwapObject(this, VALUE_OFFSET, ov, nv)
   
   @tailrec
-  def aggregate(x: T) {
+  def <<(x: T) {
     val ov = /*READ*/value
     val nv = ov.add(x, aggregator)
     if (CAS(ov, nv)) checkComplete(nv)
-    else aggregate(x)
+    else <<(x)
   }
   
   @tailrec
@@ -40,12 +40,12 @@ final class FlowAggregate[T](initial: T)(val aggregator: (T, T) => T) {
 }
 
 
-object FlowAggregate {
+object FlowLatch {
   
   val unsafe = getUnsafe()
-  val VALUE_OFFSET = unsafe.objectFieldOffset(classOf[FlowAggregate[_]].getDeclaredField("value"))
+  val VALUE_OFFSET = unsafe.objectFieldOffset(classOf[FlowLatch[_]].getDeclaredField("value"))
   
-  def apply[T](initial: T)(aggr: (T, T) => T) = new FlowAggregate(initial)(aggr)
+  def apply[T](initial: T)(aggr: (T, T) => T) = new FlowLatch(initial)(aggr)
   
   trait Value[T] {
     val total: Int

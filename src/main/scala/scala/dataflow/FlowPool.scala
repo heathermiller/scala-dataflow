@@ -5,10 +5,12 @@ import jsr166y._
 trait FlowPool[T] {
   
   def newPool[S]: FlowPool[S]
+  
   def builder: Builder[T]
+  
   def aggregate[S](zero: =>S)(cmb: (S, S) => S)(folder: (S, T) => S): Future[S]
   
-  // Monadic Ops
+  /* combinators */
   
   def mapFold[U, V >: U](zero: =>V)(cmb: (V, V) => V)(map: T => U) =
     aggregate(zero)(cmb)((acc, x) => cmb(acc, map(x)))
@@ -22,6 +24,16 @@ trait FlowPool[T] {
     aggregate(true)(_ && _) {
       (all, x) => all && p(x)
     }
+  
+  def ++[S >: T](that: FlowPool[S]): FlowPool[S] = {
+    val fp = newPool[S]
+    val b  = fp.builder
+    
+    for (x <- this) b << x
+    for (y <- that) b << y
+    
+    fp
+  }
   
   def filter(p: T => Boolean): FlowPool[T] = {
     val fp = newPool[T]

@@ -1,4 +1,5 @@
 package scala.dataflow
+package impl
 
 import scala.annotation.tailrec
 import java.util.TimerTask

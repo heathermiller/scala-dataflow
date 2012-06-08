@@ -1,5 +1,7 @@
 package scala.dataflow
 
+import impl._
+
 object SLFPTest extends App {
 
   val n = 300

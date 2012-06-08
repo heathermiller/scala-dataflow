@@ -1,5 +1,7 @@
 package scala.dataflow
 
+import impl._
+
 object FlowPoolBench2 extends testing.Benchmark with Utils.Props {
   import Utils._
   
