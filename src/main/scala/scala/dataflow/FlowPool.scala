@@ -1,6 +1,10 @@
 package scala.dataflow
 
+
+
 import jsr166y._
+
+
 
 trait FlowPool[T] {
   
@@ -98,10 +102,10 @@ object FlowPool {
   def IDX_POS = BLOCKSIZE - 1
   def MAX_BLOCK_ELEMS = LAST_CALLBACK_POS
   
-  def newBlock(idx: Int, initEl: AnyRef = CallbackNil) = {
+  private[dataflow] def newBlock(idx: Int, initEl: AnyRef) = {
     val bl = new Array[AnyRef](BLOCKSIZE)
     bl(0) = initEl
-    bl(MUST_EXPAND_POS) = MustExpand
+    bl(MUST_EXPAND_POS) = impl.MustExpand
     bl(IDX_POS) = idx.asInstanceOf[AnyRef]
     bl
   }

@@ -25,11 +25,13 @@ final class FlowLatch[T](initial: T)(val aggregator: (T, T) => T) {
   }
   
   @tailrec
-  def seal(sz: Int) {
+  def seal(sz: Int): this.type = {
     val ov = /*READ*/value
     val nv = ov.seal(sz)
-    if (CAS(ov, nv)) checkComplete(nv)
-    else seal(sz)
+    if (CAS(ov, nv)) {
+      checkComplete(nv)
+      this
+    } else seal(sz)
   }
   
   private def checkComplete(nv: Value[T]) = nv match {

@@ -1,4 +1,5 @@
-package scala.dataflow.impl
+package scala.dataflow
+package impl
 
 import scala.annotation.tailrec
 import jsr166y._

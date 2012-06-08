@@ -27,7 +27,7 @@ trait FPReduceBench extends testing.Benchmark with Utils.Props with FPBuilder {
 
     res.blocking
     println(res.blocking)
-    println(CallbackElem.debug.computestarts)
+    println(impl.CallbackElem.debug.computestarts)
   }
   
   def run2() {

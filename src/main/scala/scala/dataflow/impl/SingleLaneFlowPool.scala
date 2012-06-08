@@ -12,7 +12,7 @@ class SingleLaneFlowPool[T] extends FlowPool[T] {
 
   import FlowPool._
   
-  val initBlock = newBlock(0)
+  val initBlock = newBlock(0, CallbackNil)
   
   def newPool[S] = new SingleLaneFlowPool[S]()
 

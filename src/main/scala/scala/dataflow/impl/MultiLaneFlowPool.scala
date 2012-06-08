@@ -9,7 +9,7 @@ class MultiLaneFlowPool[T](val lanes: Int) extends FlowPool[T] {
   import FlowPool._
   import MultiLaneFlowPool._
   
-  val initBlocks = Array.fill(lanes)(newBlock(0))
+  val initBlocks = Array.fill(lanes)(newBlock(0, CallbackNil))
   val sealHolder = new MLSealHolder()
   
   def newPool[S] = new MultiLaneFlowPool[S](lanes)
