@@ -3753,14 +3753,10 @@ def intersect
   val p = new FlowPool[T]
   val b = p.builder
   for (x <- this) \{
-    that.aggregate(false)(_ \(\vee\) _) \{
-      (acc, y) =>
-      if (!acc) \{
-        b << x
-        true
-      \} else false
+    for (y <- that) \{
+      if (x = y) b << x
     \}
-  \}
+ \}
   p
 
 
@@ -3768,6 +3764,14 @@ def intersect
 }
 \end{alltt}
 \end{minipage}
+
+    % that.aggregate(false)(_ \(\vee\) _) \{
+    %   (acc, y) =>
+    %   if (!acc \(\wedge\) x = y) \{
+    %     b << x
+    %     true
+    %   \} else false
+    % \}
 
 
 However, given that we assume the number of elements in
