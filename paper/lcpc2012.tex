@@ -615,7 +615,7 @@ To avoid nondeterminism, there has to be an agreement on the
 current state of the pool.
 A convenient and sufficient way to make \verb=seal= deterministic
 is to provide the expected pool size as an argument.
-The semantics of \verb=seal= is then that it fails if the pool
+The semantics of \verb=seal= is that it fails if the pool
 is already sealed with a different size or the number of elements
 is greater than the desired size.
 
@@ -980,8 +980,8 @@ def asyncFor(f: Elem => Unit, b: Block, idx: Int)
           sealed = term.sealed
           callbacks = f \(\cup\) term.callbacks
         \}
-        if \(\lnot\)CAS(b.array(idx), term, nterm) {\customlabel{cas_foreach}{\LineNumber}}
-          asyncFor(f, b, idx) {\customlabel{cas_callback}{\LineNumber}}
+        if \(\lnot\)CAS(b.array(idx), term, nterm) {\customlabel{cas_callback}{\LineNumber}}
+          asyncFor(f, b, idx)
       elem: Elem =>
         f(elem) {\customlabel{call_callback}{\LineNumber}}
         asyncFor(f, b, idx + 1)
@@ -1191,7 +1191,7 @@ every element in $elems$.
 
 \begin{lemma}
 Given a FlowPool consistent with an abstract pool $(elems, cbs, seal)$, 
-a successful CAS in line \ref{cas_callback} changes it to the state 
+a successful CAS in line \ref{cas_seal} changes it to the state 
 consistent with an abstract pool $(elems, cbs, s)$, where either $seal
 = -1 \wedge s \in \mathbb{N}_0$ or $seal \in \mathbb{N}_0 \wedge s = seal$.
 \end{lemma}
@@ -1217,7 +1217,7 @@ already been completed by another thread since the FlowPool operation began.
 %[Consistency changing instructions]
 After invoking a FlowPool operation \verb=append=, \verb=seal= or
 \verb=foreach=, if a consistency-changing CAS instruction in lines
-\ref{cas_append}, \ref{cas_seal}, or \ref{cas_foreach} fails, then some thread
+\ref{cas_append}, \ref{cas_seal}, or \ref{cas_callback} fails, then some thread
 has successfully completed a consistency changing CAS after some finite number
 of steps.
 \end{lemma}
@@ -1366,8 +1366,8 @@ JDK 1.7, on three different architectures; a quad-core 3.4 GHz i7-2600, 4x
 octa-core 2.27 GHz Intel Xeon x7560 (both with hyperthreading) and an octa-core 
 1.2GHz UltraSPARC T2 with 64 hardware threads. In this section, we focus
 on the scaling properties of the above-mentioned data structures, Figures
-\ref{fig:eval-cpu-scaling} \& \ref{fig:eval-hist-comm}. Further evaluation can
-be found in appendix~\ref{sec:add-eval}.
+\ref{fig:eval-cpu-scaling} \& \ref{fig:eval-hist-comm}. 
+See appendix~\ref{sec:add-eval} for further evaluation.
 
 \begin{figure}[ht!]
 \centering
@@ -1434,7 +1434,7 @@ Especially in the cases of the Intel architectures, the multi-lane
 FlowPools perform considerably better than the linked transfer queues. 
 As a matter of fact, the linked transfer queue on the Xeon benchmark ran out of 
 memory, and was unable to complete, while the multi-lane FlowPool scaled effortlessly 
-to 400 million elements, indicating that unneeded elements are being properly garbage collected.
+to 400 million elements, indicating that unneeded elements are properly garbage collected.
 
 \begin{figure}[t!]
 \centering
@@ -1530,13 +1530,13 @@ determinism and deadlock-freedom~\cite{Saraswat07}.
 
 \section{Conclusion}
 
-We have presented an abstraction and underlying data structure for
-deterministic concurrent dataflow programming. We achieve composability
-through the use of functional programming abstractions and non-blocking
-algorithms. We prove that our implementation is linearizable, lock-free, and
-deterministic. And finally, experimental results show that in many practical
-cases, FlowPools outperform comparable concurrent queue data structures
-present in the Java standard library.
+% We have presented an abstraction and underlying data structure for
+% deterministic concurrent dataflow programming. We achieve composability
+% through the use of functional programming abstractions and non-blocking
+% algorithms. We prove that our implementation is linearizable, lock-free, and
+% deterministic. And finally, experimental results show that in many practical
+% cases, FlowPools outperform comparable concurrent queue data structures
+% present in the Java standard library.
 
 % We have shown that deterministic higher-order operators can be built
 % on top of \verb=<<= and \verb=foreach=, which corresponds to
@@ -1553,17 +1553,20 @@ present in the Java standard library.
 % case with dataflow streams.
 % A consequence of this is a more flexible programming model.
 
-% In conclusion, we postulate the existence of a range of other
-% concurrent collection types with deterministic semantics fitting the
-% presented correct-by-construction single-assignment model, such as
-% bounded buffers, dataflow streams and maps, all of which have
-% higher-order operators expressed in terms of the same basic
-% primitives.
-% On the implementation level, we anticipate the need of embedding the
-% callbacks within the data-structure itself, as is the case with
-% callback-based futures and FlowPools -- this offers a particular
-% benefit on platforms which do not by default support efficient
-% continuations.
+The abstraction for concurrent dataflow programming we
+presented provides a composable deterministic programming model.
+It can be implemented in a provably non-blocking manner
+and is efficient as well, as shown in experiments.
+
+In conclusion, we postulate the existence of other
+concurrent collection types with deterministic semantics, which enrich
+the correct-by-construction single-assignment model, such as
+bounded buffers, dataflow streams and maps.
+On the implementation level, we anticipate the need of embedding the
+callbacks within the data-structure itself, as is the case with
+callback-based futures and FlowPools -- this offers a particular
+benefit on platforms which do not by default support efficient
+continuations.
 
 \bibliographystyle{abbrv}
 \bibliography{bib}
@@ -2376,7 +2379,7 @@ WRITE instructions:
 \item $CAS_{expand-nxt}$ corresponds to the CAS on $next$ in \verb=expand=, line \ref{cas_expand}.
 \item $CAS_{expand-curr}$ corresponds to the CAS on $current$ in \verb=expand=, line \ref{cas_block}.
 \item $CAS_{seal}$ corresponds to the CAS on the $Terminal$ in \verb=tryWriteSeal=, line \ref{cas_seal}.
-\item $CAS_{foreach}$ corresponds to the CAS on the $Terminal$ in \verb=asyncFor=, line \ref{cas_foreach}.
+\item $CAS_{foreach}$ corresponds to the CAS on the $Terminal$ in \verb=asyncFor=, line \ref{cas_callback}.
 \item $WRITE_{app}$ corresponds to the WRITE on the new $index$ in \verb=append=, line \ref{write_append}.
 \item $WRITE_{adv}$ corresponds to the WRITE on the new $index$ in \verb=advance=, line \ref{write_advance}.
 \item $WRITE_{seal}$ corresponds to the WRITE on the new $index$ in \verb=seal=, line \ref{write_seal}.
