@@ -135,18 +135,18 @@ to the whole MLFP) is required. The global seal may be in one of the
 following states (state transition graph in
 figure~\ref{fig:seal-states}):
 \begin{itemize}
-\item \verb+Unsealed+: No seal has yet been attempted, or all seales have
-  failed.
-\item \verb+Proposition(size)+: Sealing with given (total) size is
+\item \verb+Unsealed+ (U): No seal has yet been attempted, or all
+  seales have failed.
+\item \verb+Proposition(size)+ (P): Sealing with given (total) size is
   being attempted. No other sealing operation may be attempted until
   this state is resolved to one of the other two. Threads attempting
   to seal and encountering a \verb+Proposition+ state, shall help the
   resolution of the state. (This is required to ensure lock-freedom)
-\item \verb+Sealed(size, remain)+: The MLFP has been sealed with size
-  \verb+size+, where at the moment of the sealing, \verb+remain+ free
-  slots were remaining. The latter value is required to distribute the
-  remaining element slots amongst the lanes and will be explained in
-  detail later.
+\item \verb+Sealed(size, remain)+ (S): The MLFP has been sealed with
+  size \verb+size+, where at the moment of the sealing, \verb+remain+
+  free slots were remaining. The latter value is required to
+  distribute the remaining element slots amongst the lanes and will be
+  explained in detail later.
 \end{itemize}
 
 %% Seal-State transition graph
@@ -170,6 +170,20 @@ figure~\ref{fig:seal-states}):
   \label{fig:seal-states}
 \end{figure}
 
+Further, each lane holds its own seal state (similar to SLFPs) which
+may be one of the following. The state transitions are the same as for
+the global state (figure~\ref{fig:seal-states}).
+\begin{itemize}
+\item \verb+CallbackList+ (U): The lane is unsealed. A seal procedure
+  might have been started but is not yet completed. Insertion may be
+  handled as in a SLFP.
+\item \verb+SealTag+ (P): A seal procedure has been started and any
+  writer should resolve the tag by either helping to finish the
+  sealing or replace it based on the global state.
+\item \verb+Seal(size)+ (S): This lane has been sealed with the given 
+  size.
+\end{itemize}
+
 In the following, the different parts of the sealing procedure are
 explained in detail.
 
@@ -189,16 +203,26 @@ location of the given lane, using a similar procedure as the
 \verb+seal()+ procedure of the SLFP.
 
 A thread that tries to insert an element and encounters a
-\verb+SealTag+ must resolve the tag before it can continue on. (this
-procedure is explained later) This ensures that, once a
-\verb+SealTag+ has been placed in a lane, its size does not change
-any more until the seal is finished. This property allows to calculate
-a snapshot of the total number of elements in the MLFP. Note that
-during this procedure, one might also find that the seal has been
-completed (when encountering a \verb+Seal+ in a lane). In such a case,
-the helping can be stopped prematurely.
+\verb+SealTag+ must resolve the tag before it can continue on
+(explained later). This ensures that, once a \verb+SealTag+ has been
+placed in a lane, its size does not change any more until the seal is
+finished, which allows to calculate a snapshot of the total number of
+elements in the MLFP. Note that during this procedure, one might also
+find that the seal has been completed (when encountering a \verb+Seal+
+in a lane). In such a case, the helping can be stopped prematurely.
 
+Note that each \verb+SealTag+ holds the proposition it corresponds to,
+as other seal tags might still be present from a failed attempt to
+seal.
 
+When a thread that succeeds in calculating the snapshot of the size,
+it will then try to change the MLFP's state to sealed (or to unsealed,
+if the number of elements is too big) and replace every occurence of
+\verb+SealTag+ in the lanes by a \verb+Seal+.
+
+\textbf{Resolution of seal tags} When a writer encounters a
+\verb+SealTag+ it first checks the current global state.
+%% TODO continue here
 
 \subsection{Insertion}
 
@@ -223,13 +247,8 @@ the helping can be stopped prematurely.
   
   aggregator.future
 \}
-}}}
-\end{alltt}
-\end{minipage}
-\begin{minipage}[b]{6cm}
-\begin{alltt}
-{\scriptsize
-{\internallinenumbers{def seal(size: Int) \{
+
+def seal(size: Int) \{
   val cur_state = state
   cur_state match \{
     case Unsealed =>
@@ -241,12 +260,17 @@ the helping can be stopped prematurely.
       if (helpSeal(p)) failure()
       else seal(size)
     case Sealed(sz,_) if size != sz =>
-      failure("already sealed with different size")
-    case _ => // Sealed with same size: Done
+      failure("already sealed")
+    case _ => // Done
   \}
 \}
-
-def helpSeal(p: Proposition): Boolean = \{
+}}}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[b]{6cm}
+\begin{alltt}
+{\scriptsize
+{\internallinenumbers{def helpSeal(p: Proposition): Boolean = \{
   var sizes: Int = 0
     
   for (l <- lanes) \{
@@ -262,13 +286,30 @@ def helpSeal(p: Proposition): Boolean = \{
     val ns = Sealed(p.size, remaining)
     if (CAS(state, p, ns))
       finalizeSeals(remaining)
-    return true
+    true
   \} else \{
     // Seal MUST fail
     CAS(state, p, Unsealed)
     false
   \}
 
+\}
+
+def tryResolveTag[T](t: SealTag[T]) \{
+  val cur_state = state
+  cur_state match \{
+    case p: Proposition if (p eq t.p) =>
+      helpSeal(p)
+    case Sealed(_,rem) =>
+      val sz = sealSize(cur_state)
+      // Seal succeeded --> confirm tag
+      val cnt = totalElems(curblock, pos)
+        val sz = sealSize(bli, rem)
+        val ns = t.toSeal(cnt, sz)
+        if (CAS(curblock, pos, t, ns) && sz == 0)
+          applyCallbacks(t.callbacks, curblock)
+    case _ => CAS(t, t.callbacks)
+  \}
 \}
 }}}
 \end{alltt}
