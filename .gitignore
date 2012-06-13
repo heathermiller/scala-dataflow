@@ -21,4 +21,4 @@ target
 .DS_Store
 project/boot
 project/target
-paper/auto
+reports/*/auto
