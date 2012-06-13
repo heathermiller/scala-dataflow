@@ -4,7 +4,9 @@
 *.bbl
 *.blg
 *.log
+*.toc
 lcpc2012.pdf
+proj-report.pdf
 scaling-operations.ai
 hist-comm.ai
 *.dvi
