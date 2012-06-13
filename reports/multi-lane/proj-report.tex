@@ -7,6 +7,11 @@
 \usepackage{graphicx}
 \usepackage[normalem]{ulem}
 
+\usepackage{tikz}
+\usetikzlibrary{arrows,%
+                petri,%
+                topaths}%
+\usepackage{tkz-berge}
 
 \begin{document}
 
@@ -122,7 +127,78 @@ this future to the caller.
 The \verb+seal+ operation is the only one whose complexity increases
 with multiple lanes, as the overall size guarantee has to be
 established over all lanes while preserving lock-freedom and
-linearizability.
+linearizability, especially in the face of errors occuring while
+sealing.
+
+To ensure the latter, a global seal state (stored in a location common
+to the whole MLFP) is required. The global seal may be in one of the
+following states (state transition graph in
+figure~\ref{fig:seal-states}):
+\begin{itemize}
+\item \verb+Unsealed+: No seal has yet been attempted, or all seales have
+  failed.
+\item \verb+Proposition(size)+: Sealing with given (total) size is
+  being attempted. No other sealing operation may be attempted until
+  this state is resolved to one of the other two. Threads attempting
+  to seal and encountering a \verb+Proposition+ state, shall help the
+  resolution of the state. (This is required to ensure lock-freedom)
+\item \verb+Sealed(size, remain)+: The MLFP has been sealed with size
+  \verb+size+, where at the moment of the sealing, \verb+remain+ free
+  slots were remaining. The latter value is required to distribute the
+  remaining element slots amongst the lanes and will be explained in
+  detail later.
+\end{itemize}
+
+%% Seal-State transition graph
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[ node distance = 2cm ]
+    \Vertex[x = 0, y = 0]{U}
+    \Vertex[x = 3, y = 0]{P}
+    \Vertex[x = 6, y = 0]{S}
+
+    \tikzset{EdgeStyle/.style={post}}       % directed edges
+
+    \Edge[label = success](P)(S)
+
+    \tikzset{EdgeStyle/.append style = {bend right}}
+    \Edge[label = {seal()}](U)(P)
+    \Edge[label = failure](P)(U)
+
+  \end{tikzpicture}
+  \caption{State-transition graph of MLFP seal state}
+  \label{fig:seal-states}
+\end{figure}
+
+In the following, the different parts of the sealing procedure are
+explained in detail.
+
+\textbf{Seal} When a thread calls \verb+seal()+ it first checks the
+current state of the MLFP. If it is in unsealed state, it tries to
+change the seal state to proposition and then continue with the
+sealing. If the MLFP is already in proposition state, it helps
+finishing the current seal. If the MLFP is in \verb+Sealed+ state, the
+call succeeds or fails immediately, depending on whether the sizes are
+the same or not.
+
+\textbf{Help Sealing} Once the MLFP is in proposition state, any
+thread attempting to seal (or inserting an element as we will see
+later), will start propagating the proposition state to each lane. It
+does this by placing the special token \verb+SealTag+ into the state
+location of the given lane, using a similar procedure as the
+\verb+seal()+ procedure of the SLFP.
+
+A thread that tries to insert an element and encounters a
+\verb+SealTag+ must resolve the tag before it can continue on. (this
+procedure is explained later) This ensures that, once a
+\verb+SealTag+ has been placed in a lane, its size does not change
+any more until the seal is finished. This property allows to calculate
+a snapshot of the total number of elements in the MLFP. Note that
+during this procedure, one might also find that the seal has been
+completed (when encountering a \verb+Seal+ in a lane). In such a case,
+the helping can be stopped prematurely.
+
+
 
 \subsection{Insertion}
 
@@ -153,7 +229,47 @@ linearizability.
 \begin{minipage}[b]{6cm}
 \begin{alltt}
 {\scriptsize
-{\internallinenumbers{
+{\internallinenumbers{def seal(size: Int) \{
+  val cur_state = state
+  cur_state match \{
+    case Unsealed =>
+      val ns = Proposition(size)
+      if (!CAS(state, cur_state, ns))
+        seal(size)
+      else if (!helpSeal(ns)) failure()
+    case p: Proposition =>
+      if (helpSeal(p)) failure()
+      else seal(size)
+    case Sealed(sz,_) if size != sz =>
+      failure("already sealed with different size")
+    case _ => // Sealed with same size: Done
+  \}
+\}
+
+def helpSeal(p: Proposition): Boolean = \{
+  var sizes: Int = 0
+    
+  for (l <- lanes) \{
+    sealTag(l, p) match \{
+      case OnGoing(v) => sizes = sizes + v
+      case Finished(success) => return success
+    \}
+  \}
+
+  if (sizes <= p.size) \{
+    // Seal MUST succeed
+    val remaining = p.size - sizes
+    val ns = Sealed(p.size, remaining)
+    if (CAS(state, p, ns))
+      finalizeSeals(remaining)
+    return true
+  \} else \{
+    // Seal MUST fail
+    CAS(state, p, Unsealed)
+    false
+  \}
+
+\}
 }}}
 \end{alltt}
 \end{minipage}
