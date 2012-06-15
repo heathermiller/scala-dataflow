@@ -404,20 +404,38 @@ across all architectures.}
 
 \section{Correctness}
 This section uses the notation, definitions and results from
-\cite{FP12} and extends the proof given there to MLFPs.
+\cite{FP12} and extends the proofs given there to an outline of a
+correctness proof of MLFPs.
 
-\begin{lemma}[SealTag]
-  The addition of the \verb+SealTag+ does not alter the semantics of
-  the insert operation on a single lane of the FlowPool.
+\begin{definition}[Taggable abstract pool]
+  A taggable abstract pool is an abstract pool, except that
+  \[ seal \in \{ -2, -1 \} \cup \mathbb{N}_0 \]
+\end{definition}
+
+\begin{definition}[Taggable abstract pool operations]
+  A taggable abstract pool supports all operations of an abstract pool
+  and in addition:
+
+  Operation $tag()$, changes state from $(elems, cbs, -1)$ to $(elems,
+  cbs, -2)$. Operation $untag()$, changes state from $(elems, cbs,
+  -2)$ to $(elems, cbs, -1)$. In addition, no $append(\cdot)$ may be
+  performed while $seal = -2$ and $seal(\cdot)$ may only be performed
+  in states $(elems, cbs, -2)$.
+\end{definition}
+
+\begin{lemma}[MLFP Lanes]
+  Each lane of a MLFP is consistent with an taggable abstract
+  pool. (No proof given).
 \end{lemma}
 
 \begin{theorem}[Safety]
-  Given a MLFP with lanes $l_1, \ldots, l_N$ each one being consistent
-  with the abstract pools $(elems_i, cbs_i, seal_i)$, the MLFP
-  operations \verb+append+, \verb+aggregate+ and \verb+seal+ are 
-  consistent with the abstract pool $(elems, cbs, seal)$, where
+  Given a MLFP with lanes $L = \{l_1, \ldots, l_N\}$ each one being
+  consistent with the taggable abstract pools $(elems_i, cbs_i,
+  seal_i)$, the MLFP operations \verb+append+, \verb+foreach+ and
+  \verb+seal+ are consistent with the abstract pool $(elems, cbs,
+  seal)$, where 
   \[ elems = \bigcup_{i=1}^N elems_i \qquad
-     cbs = \bigcap_{i=1}^N cbs_i \]
+     cbs = \bigcap_{i=1}^N  cbs_i \]
 \end{theorem}
 
 \begin{theorem}[Linearizability]
