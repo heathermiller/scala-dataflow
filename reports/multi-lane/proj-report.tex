@@ -8,12 +8,8 @@
 \usepackage[normalem]{ulem}
 
 \usepackage{tikz}
-\usetikzlibrary{arrows,%
-                petri,%
-                topaths}%
+\usetikzlibrary{arrows,petri,topaths}
 \usepackage{tkz-berge}
-
-\newcommand{\hx}{\mathrm{x}}
 
 \begin{document}
 
@@ -36,6 +32,7 @@
   relatively simple to implement, insertions do not scale. MLFPs solve
   this limitation. This report goes into the details of the
   implementation of MLFPs and analyzes some benchmarking results in
+  %% TODO what does it?
   more detail to show that insertions MLFPs scale nicely, with respect
   to SLFPs, and other concurrent data structures.
 \end{abstract}
@@ -273,7 +270,7 @@ is no use in having more than one lane per thread and hence that the
 upper lane selection strategy is efficient. For further performance
 evaluation of MLFPs, please refer to \cite{FP12}.
 
-\begin{figure}
+\begin{figure}[tbp]
   \includegraphics[width=\textwidth]{../../benchmarks/graphs/lanef-scaling}
   \caption{Execution times with respect to number of lanes per
     inserting thread in MLFPs. $\times$~UltraSPARC~T2,
@@ -319,32 +316,6 @@ def seal(size: Int) \{
     case _ => // Done
   \}
 \}
-}}}
-\end{alltt}
-\end{minipage}
-\begin{minipage}[b]{6cm}
-\begin{alltt}
-{\scriptsize
-{\internallinenumbers{def helpSeal(p: Proposition): Boolean = \{
-  var sizes: Int = 0
-
-  for (l <- lanes) \{
-    writeSealTag(l, p) match \{
-      case OnGoing(v)   => sizes = sizes + v
-      case Finished(ok) => return ok
-    \}
-  \}
-
-  if (sizes <= p.size) \{
-    // Seal MUST succeed
-    val remaining = p.size - sizes
-    val ns = Sealed(p.size, remaining)
-    if (CAS(state, p, ns)) finalizeSeals(remaining)
-    true
-  \} else // Seal MUST fail
-    CAS(state, p, Unsealed); false
-
-\}
 
 def tryResolveTag[T](t: SealTag[T]) \{
   cur_state match \{
@@ -359,14 +330,112 @@ def tryResolveTag[T](t: SealTag[T]) \{
 }}}
 \end{alltt}
 \end{minipage}
+\begin{minipage}[b]{6cm}
+\begin{alltt}
+{\scriptsize
+{\internallinenumbers{def helpSeal(p: Proposition): Boolean = \{
+  var sizes: Int = 0
+
+  for (l <- lanes) \{
+    writeSealTag(l, p) match \{
+      case OnGoing(v)   =>
+        sizes = sizes + v
+      case Finished(success) => return success
+    \}
+  \}
+
+  if (sizes <= p.size) \{
+    // Seal MUST succeed
+    val remaining = p.size - sizes
+    val ns = Sealed(p.size, remaining)
+    if (CAS(state, p, ns))
+      finalizeSeals(remaining)
+    true
+  \} else \{
+    // Seal MUST fail
+    CAS(state, p, Unsealed)
+    false
+  \}
+
+\}
+
+def append(x: T) \{
+  val index = \{
+    if (collisions <= 0)
+      curTID % laneCount
+    else if (collisions <= laneCount)
+      hash(curTID, collisions)
+    else
+      findEmptyLane() // Fails if not found
+  \}
+
+  if (!lanes(index).append(x)) \{
+    increment(collisions)
+    append(x)
+  \}
+
+\}
+}}}
+\end{alltt}
+\end{minipage}
 
 \caption{Multi-Lane FlowPool operations pseudocode}
 \label{fig:mlfp-pseudocode}
 
 \end{figure}
 
-\section{Conclusion}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{../../benchmarks/graphs/scaling-operations}
+\caption{Execution time vs parallelization across three different
+  architectures on three important FlowPool operations; insert, map,
+  reduce.}
+\label{fig:eval-cpu-scaling}
+\end{figure}
 
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{../../benchmarks/graphs/hist-comm}
+\caption{Execution time vs parallelization on a real histogram application
+(top), \& communication benchmark (bottom) showing memory efficiency, 
+across all architectures.}
+\label{fig:eval-hist-comm}
+\end{figure}
+
+\section{Correctness}
+This section uses the notation, definitions and results from
+\cite{FP12} and extends the proof given there to MLFPs.
+
+\begin{lemma}[SealTag]
+  The addition of the \verb+SealTag+ does not alter the semantics of
+  the insert operation on a single lane of the FlowPool.
+\end{lemma}
+
+\begin{theorem}[Safety]
+  Given a MLFP with lanes $l_1, \ldots, l_N$ each one being consistent
+  with the abstract pools $(elems_i, cbs_i, seal_i)$, the MLFP
+  operations \verb+append+, \verb+aggregate+ and \verb+seal+ are 
+  consistent with the abstract pool $(elems, cbs, seal)$, where
+  \[ elems = \bigcup_{i=1}^N elems_i \qquad
+     cbs = \bigcap_{i=1}^N cbs_i \]
+\end{theorem}
+
+\begin{theorem}[Linearizability]
+  MLFP operations \verb+append+ and \verb+seal+ are linearizable.
+\end{theorem}
+
+\section{Conclusion}
+In this report we have shown that a FlowPool as proposed by
+\cite{FP12} can be implemented in a scalable way by using multiple
+single-lane FlowPools. Further, we have provided a detailed
+description including pseudo-code of how a multi-lane FlowPool is
+implemented, especially with respect to sealing -- which has to be
+fundamentally changed -- and the lane assignment rehashing strategy,
+that does not exist in single-lane FlowPools. We used and included
+benchmark results from the original paper to show that the proposed
+rehashing strategy is efficient for a number of lanes equal to the
+number of inserting threads.
+%% TODO correctness proof?
 
 \bibliographystyle{abbrv}
 \bibliography{bib}
