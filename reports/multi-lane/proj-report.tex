@@ -13,14 +13,18 @@
                 topaths}%
 \usepackage{tkz-berge}
 
+\newcommand{\hx}{\mathrm{x}}
+
 \begin{document}
 
 \title{Multi-Lane FlowPools: A detailed look}
-\author{Tobias Schlatter}
+\author{Tobias Schlatter\inst{1} \and Aleksandar Prokopec\inst{2} \and
+  Heather Miller\inst{2} \and Philipp Haller\inst{2} \and Martin
+  Odersky\inst{2}}
 
-\institute{EPFL, Switzerland}
+\authorrunning{Tobias Schlatter}
 
-%% TODO how to add advisor, etc.
+\institute{Student, EPFL \and Advisor, EPFL}
 
 \maketitle
 
@@ -221,10 +225,61 @@ if the number of elements is too big) and replace every occurence of
 \verb+SealTag+ in the lanes by a \verb+Seal+.
 
 \textbf{Resolution of seal tags} When a writer encounters a
-\verb+SealTag+ it first checks the current global state.
-%% TODO continue here
+\verb+SealTag+ it first checks the current global state. If it
+indicates, that the seal operation corresponding to the \verb+SealTag+
+is still going on, the writer helps sealing as described above, then
+retries writing. If the global state indicates that the structure has
+been sealed, the writer calculates the remaining slots for this lane
+according to the following formula and then seals this lane.
+\[ n_{seal} = n_{cur} + \frac{n_{remain}}{l_{total}} +
+   1_{\{ l_{cur} < n_{remain} \bmod l_{total} \}} \]
+If the writer finds that the current global state is unsealed or a
+different proposition than in the tag, it removes the tag and
+continues inserting normaly.
+
+\textbf{Finalization} Some procedures that are required to invoke the
+callback scheduling properly when sealing (i.e. ensuring the
+finalization procedure of each callback is called exactly once) have
+been omitted here for simplicity.
 
 \subsection{Insertion}
+Insertion into a MLFP happens the same way as into a SLFP, however,
+the lane in which the element is to be inserted has to be chosen
+first. For the choice of the lane we want to:
+\begin{itemize}
+\item Avoid collision between competing threads to a maximum.
+\item Allow to change the thread-lane assignment, once some lanes have
+  been entirely filled (after a seal).
+\item Assure we can properly fill up the FlowPool entirely.
+\end{itemize}
+To achieve this, the following mapping is used at the beginning:
+\[ l_{cur} = T_{cur} \bmod l_{total} \qquad
+  (T_{cur} \text{ : Current thread ID}) \] 
+
+When the first collision (i.e. attempted insertion into a full lane)
+happens, the following hashed mapping is used:
+\[ l_{cur} = \mathrm{rb}((T_{cur} + C) \cdot 9e3775cd_{16})
+   \cdot 9e3775cd_{16}  \bmod l_{total} \]
+where $C$ is the (global) number of collisions so far and
+$\mathrm{rb}(\cdot)$ inverses the byte order.
+
+After a certain number of collisions (currently the number of lanes),
+the insertion switches to a linear search over all lanes to guarantee
+that either the FlowPool is filled, or an error is raised due to too
+many inserted elements.
+
+Experimental results in figure~\ref{fig:lanef-scaling} show that there
+is no use in having more than one lane per thread and hence that the
+upper lane selection strategy is efficient. For further performance
+evaluation of MLFPs, please refer to \cite{FP12}.
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{../../benchmarks/graphs/lanef-scaling}
+  \caption{Execution times with respect to number of lanes per
+    inserting thread in MLFPs. $\times$~UltraSPARC~T2,
+    $\triangle$~4-core~i7}
+  \label{fig:lanef-scaling}
+\end{figure}
 
 \begin{figure}
 
@@ -272,11 +327,11 @@ def seal(size: Int) \{
 {\scriptsize
 {\internallinenumbers{def helpSeal(p: Proposition): Boolean = \{
   var sizes: Int = 0
-    
+
   for (l <- lanes) \{
-    sealTag(l, p) match \{
-      case OnGoing(v) => sizes = sizes + v
-      case Finished(success) => return success
+    writeSealTag(l, p) match \{
+      case OnGoing(v)   => sizes = sizes + v
+      case Finished(ok) => return ok
     \}
   \}
 
@@ -284,31 +339,21 @@ def seal(size: Int) \{
     // Seal MUST succeed
     val remaining = p.size - sizes
     val ns = Sealed(p.size, remaining)
-    if (CAS(state, p, ns))
-      finalizeSeals(remaining)
+    if (CAS(state, p, ns)) finalizeSeals(remaining)
     true
-  \} else \{
-    // Seal MUST fail
-    CAS(state, p, Unsealed)
-    false
-  \}
+  \} else // Seal MUST fail
+    CAS(state, p, Unsealed); false
 
 \}
 
 def tryResolveTag[T](t: SealTag[T]) \{
-  val cur_state = state
   cur_state match \{
     case p: Proposition if (p eq t.p) =>
       helpSeal(p)
     case Sealed(_,rem) =>
       val sz = sealSize(cur_state)
-      // Seal succeeded --> confirm tag
-      val cnt = totalElems(curblock, pos)
-        val sz = sealSize(bli, rem)
-        val ns = t.toSeal(cnt, sz)
-        if (CAS(curblock, pos, t, ns) && sz == 0)
-          applyCallbacks(t.callbacks, curblock)
-    case _ => CAS(t, t.callbacks)
+      writeSeal(Seal(sz))
+    case _ => revertTag()
   \}
 \}
 }}}
@@ -320,20 +365,8 @@ def tryResolveTag[T](t: SealTag[T]) \{
 
 \end{figure}
 
-\section{Evaluation}
-
-\begin{figure}
-\centering
-\includegraphics[width=\textwidth]{../../benchmarks/graphs/scaling-operations}
-\setlength{\abovecaptionskip}{-10pt}
-\setlength{\belowcaptionskip}{-20pt}
-\caption{Execution time vs parallelization across three different
-architectures on three important FlowPool operations; insert, map, 
-reduce.}
-\label{fig:eval-cpu-scaling}
-\end{figure}
-
 \section{Conclusion}
+
 
 \bibliographystyle{abbrv}
 \bibliography{bib}
