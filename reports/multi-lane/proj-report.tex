@@ -30,11 +30,10 @@
   paper proposes two ways of implementing a FlowPool: Single-Lane
   FlowPools (SLFP) and Multi-Lane FlowPools (MLFP). While SLFPs are
   relatively simple to implement, insertions do not scale. MLFPs solve
-  this limitation. This report goes into the details of the
-  implementation of MLFPs and analyzes some benchmarking results in
-  %% TODO what does it?
-  more detail to show that insertions MLFPs scale nicely, with respect
-  to SLFPs, and other concurrent data structures.
+  this limitation as benchmarks discussed in \cite{FP12} have
+  shown. This report goes into the details of the implementation of
+  MLFPs and shows some benchmarking results related to the interiors
+  of MLFPs.
 \end{abstract}
 
 \section{Introduction}
@@ -402,45 +401,80 @@ across all architectures.}
 \label{fig:eval-hist-comm}
 \end{figure}
 
-\section{Correctness}
-This section uses the notation, definitions and results from
-\cite{FP12} and extends the proofs given there to an outline of a
-correctness proof of MLFPs.
+% \section{Correctness}
+% This section uses the notation, definitions and results from
+% \cite{FP12} and extends the proofs given there to an outline of a
+% correctness proof of MLFPs.
 
-\begin{definition}[Taggable abstract pool]
-  A taggable abstract pool is an abstract pool, except that
-  \[ seal \in \{ -2, -1 \} \cup \mathbb{N}_0 \]
-\end{definition}
+% \begin{definition}[Taggable abstract pool]
+%   A taggable abstract pool is an abstract pool, except that
+%   \[ seal \in \{ -2, -1 \} \cup \mathbb{N}_0 \]
+% \end{definition}
 
-\begin{definition}[Taggable abstract pool operations]
-  A taggable abstract pool supports all operations of an abstract pool
-  and in addition:
+% \begin{definition}[Taggable abstract pool operations]
+%   A taggable abstract pool supports all operations of an abstract pool
+%   plus the following.
 
-  Operation $tag()$, changes state from $(elems, cbs, -1)$ to $(elems,
-  cbs, -2)$. Operation $untag()$, changes state from $(elems, cbs,
-  -2)$ to $(elems, cbs, -1)$. In addition, no $append(\cdot)$ may be
-  performed while $seal = -2$ and $seal(\cdot)$ may only be performed
-  in states $(elems, cbs, -2)$.
-\end{definition}
+%   Operation $tag()$, changes state from $(elems, cbs, -1)$ to $(elems,
+%   cbs, -2)$. Operation $untag()$, changes state from $(elems, cbs,
+%   -2)$ to $(elems, cbs, -1)$. In addition, no $append(\cdot)$ may be
+%   performed while $seal = -2$ and $seal(\cdot)$ may only be performed
+%   in states $(elems, cbs, -2)$.
+% \end{definition}
 
-\begin{lemma}[MLFP Lanes]
-  Each lane of a MLFP is consistent with an taggable abstract
-  pool. (No proof given).
-\end{lemma}
+% \begin{lemma}[MLFP Lanes]
+%   Each lane of a MLFP is a tagglable abstract pool. (No proof given).
+% \end{lemma}
 
-\begin{theorem}[Safety]
-  Given a MLFP with lanes $L = \{l_1, \ldots, l_N\}$ each one being
-  consistent with the taggable abstract pools $(elems_i, cbs_i,
-  seal_i)$, the MLFP operations \verb+append+, \verb+foreach+ and
-  \verb+seal+ are consistent with the abstract pool $(elems, cbs,
-  seal)$, where 
-  \[ elems = \bigcup_{i=1}^N elems_i \qquad
-     cbs = \bigcap_{i=1}^N  cbs_i \]
-\end{theorem}
+% \begin{definition}[MultiLaneFlowPool]
+%   A MLFP $mpool$ is an object that has a reference to multiple taggable
+%   abstract pools $mpool.lanes$ and a global seal state
+%   $mpool.sstate$. The MLFP state is defined as the states of all the
+%   lanes and the global seal state.
+% \end{definition}
 
-\begin{theorem}[Linearizability]
-  MLFP operations \verb+append+ and \verb+seal+ are linearizable.
-\end{theorem}
+% \begin{definition}[Consistency]
+%   A multi-lane FlowPool state $\mathbb{S}$ with is \textbf{consistent} with
+%   an abstract pool $\mathbb{P} = (elems, callbacks, seal)$ at $t_0$ if
+%   and only if $\mathbb{S}$ is a valid state and:
+%   \begin{description}
+%   \item $\forall e \in Elem : \exists l \in lanes : hasElem(l.start,e)
+%     \Leftrightarrow e \in elems$
+%   \item $\forall f \in Elem => Unit : \forall l \in lanes :
+%     hasCallback(l.start,l) \Leftrightarrow f \in callbacks$
+%   \item $\forall f \in Elem => Unit : \forall e \in Elem : \forall l \in
+%     lanes : willBeCalled(l.start, e, f) \Leftrightarrow \exists t_1 \ge
+%     t_0 : \forall t_2 > t_1 : \mathbb{P}(t_2) = (elems_2,(f,called_2)
+%     \cup callbacks_2, seal_2), elems \subset called_2$
+%   \item $\forall s \in \mathbb{N}_0 \forall l \in lanes \exists v \in $
+%   \end{description}
+
+% \end{definition}
+
+% \begin{theorem}[Safety]
+%   Given a MLFP with lanes $L = \{l_1, \ldots, l_N\}$ each one being
+%   consistent with the taggable abstract pools $(elems_i, cbs_i,
+%   seal_i)$, the MLFP operations \verb+append+, \verb+foreach+ and
+%   \verb+seal+ are consistent with the abstract pool $(elems, cbs,
+%   seal)$, where 
+%   \begin{equation}
+%     elems = \bigcup_{i=1}^N elems_i \qquad
+%     cbs = \bigcap_{i=1}^N  cbs_i \label{eq:mlfp-aggreg}
+%   \end{equation}
+% \end{theorem}
+
+% \begin{proof}
+%   Given a MLFP in its initial state $(\emptyset, \emptyset, -1)$ and
+%   hence with all lanes in state $(\emptyset, \emptyset, -1)$,
+%   trivially, we have \eqref{eq:mlfp-aggreg}.
+
+%   For \verb+append+ we have
+% \end{proof}
+
+% \begin{theorem}[Linearizability]
+%   MLFP operations \verb+append+ and \verb+seal+ are linearizable. (No
+%   proof given).
+% \end{theorem}
 
 \section{Conclusion}
 In this report we have shown that a FlowPool as proposed by
@@ -453,7 +487,6 @@ that does not exist in single-lane FlowPools. We used and included
 benchmark results from the original paper to show that the proposed
 rehashing strategy is efficient for a number of lanes equal to the
 number of inserting threads.
-%% TODO correctness proof?
 
 \bibliographystyle{abbrv}
 \bibliography{bib}
