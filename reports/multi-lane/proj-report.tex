@@ -20,7 +20,7 @@
 
 \authorrunning{Tobias Schlatter}
 
-\institute{Student, EPFL \and Advisor, EPFL}
+\institute{Student, EPFL \and Advisors, EPFL}
 
 \maketitle
 
@@ -86,7 +86,7 @@ elements, where the last non-empty element does not hold actual data,
 but the state of the FlowPool, i.e. a list with all the callbacks and
 the seal state of the FlowPool. Changes to the SLFP are only allowed
 by CASing at this particular point, which hence serves as
-linearization point of the datastructure.
+linearization point of the data structure.
 
 With competing, concurrent writers, this approach does not scale
 nicely (see figure~\ref{fig:eval-cpu-scaling}). Mainly due to cache
@@ -100,14 +100,14 @@ scaling by applying a simple but effective idea: Instead of having a
 single SLFP, we use one SLFP (from now on called lane) for each
 processor (or thread). This means, that on one hand, every processor
 (or thread) gets its own lane to which it appends elements to,
-avoiding CAS collisions and cache contetion. On the other hand, every
+avoiding CAS collisions and cache contention. On the other hand, every
 callback or aggregation has to be registered on each of these lanes
-seperately and completing the callback future has to be externaly
-syncrhonized.
+separately and completing the callback future has to be externally
+synchronized.
 
 In the following, the implementation of the FlowPool operations in the
 MLFP are explained in detail. Please refer to
-figure~\ref{fig:mlfp-pseudocode} for pseudocode of the operations.
+figure~\ref{fig:mlfp-pseudocode} for pseudo code of the operations.
 
 \subsection{Callbacks}
 When calling \verb+aggregate+ on a MLFP, the implementation has to
@@ -127,7 +127,7 @@ this future to the caller.
 The \verb+seal+ operation is the only one whose complexity increases
 with multiple lanes, as the overall size guarantee has to be
 established over all lanes while preserving lock-freedom and
-linearizability, especially in the face of errors occuring while
+linearizability, especially in the face of errors occurring while
 sealing.
 
 To ensure the latter, a global seal state (stored in a location common
@@ -136,7 +136,7 @@ following states (state transition graph in
 figure~\ref{fig:seal-states}):
 \begin{itemize}
 \item \verb+Unsealed+ (U): No seal has yet been attempted, or all
-  seales have failed.
+  seals have failed.
 \item \verb+Proposition(size)+ (P): Sealing with given (total) size is
   being attempted. No other sealing operation may be attempted until
   this state is resolved to one of the other two. Threads attempting
@@ -217,7 +217,7 @@ seal.
 
 When a thread that succeeds in calculating the snapshot of the size,
 it will then try to change the MLFP's state to sealed (or to unsealed,
-if the number of elements is too big) and replace every occurence of
+if the number of elements is too big) and replace every occurrence of
 \verb+SealTag+ in the lanes by a \verb+Seal+.
 
 \textbf{Resolution of seal tags} When a writer encounters a
@@ -231,7 +231,7 @@ according to the following formula and then seals this lane.
    1_{\{ l_{cur} < n_{remain} \bmod l_{total} \}} \]
 If the writer finds that the current global state is unsealed or a
 different proposition than in the tag, it removes the tag and
-continues inserting normaly.
+continues inserting normally.
 
 \textbf{Finalization} Some procedures that are required to invoke the
 callback scheduling properly when sealing (i.e. ensuring the
