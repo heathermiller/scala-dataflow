@@ -1,5 +1,6 @@
 \documentclass[runningheads,a4paper,fleqn]{llncs}
 
+\usepackage{url}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{alltt}
@@ -32,8 +33,10 @@
   relatively simple to implement, insertions do not scale. MLFPs solve
   this limitation as benchmarks discussed in \cite{FP12} have
   shown. This report goes into the details of the implementation of
-  MLFPs and shows some benchmarking results related to the interiors
-  of MLFPs.
+  MLFPs and lies out the benchmarking results from \cite{FP12} to show
+  that MLFPs may reduce insertion time by $49 - 54\%$ on a 4-core i7
+  machine with respect to comparable concurrent queue data structures
+  in the Java standard library.
 \end{abstract}
 
 \section{Introduction}
@@ -79,6 +82,69 @@ determinism of the model. Subsequent call to \verb+seal+ will fail iff
 the FlowPool has already been sealed with a different size or the
 number of elements in the FlowPool is larger than the seal size.\\
 Signature: \verb+def seal(size: Int): Unit+
+
+Figure~\ref{fig:mon-impl} shows the implementation of some common
+monadic operations on top of the given primitives.
+\begin{figure}
+\begin{minipage}[t]{4 cm}
+\begin{alltt}
+{\scriptsize
+def filter
+  (pred: T => Boolean)
+  val p = new FlowPool[T]
+  val b = p.builder
+  aggregate(0)(_ + _) \{
+    (acc, x) => if pred(x) \{
+      b << x
+      1
+    \} else 0
+  \} map \{ sz => b.seal(sz) \}
+  p
+
+
+
+}
+\end{alltt}
+\end{minipage}\begin{minipage}[t]{4 cm}
+\begin{alltt}
+{\scriptsize
+def flatMap[S]
+  (f: T => FlowPool[S])
+  val p = new FlowPool[S]
+  val b = p.builder
+  aggregate(future(0))(add) \{
+    (af, x) =>
+    val sf = for (y <- f(x))
+      b << y
+    add(af, sf)
+  \} map \{ sz => b.seal(sz) \}
+  p
+
+def add(f: Future[Int], g: Future[Int]) =
+  for (a <- f; b <- g) yield a + b
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[t]{4 cm}
+\begin{alltt}
+{\scriptsize
+def union[T]
+  (that: FlowPool[T])
+  val p = new FlowPool[T]
+  val b = p.builder
+  val f = for (x <- this) b << x
+  val g = for (y <- that) b << y
+  for (s1 <- f; s2 <- g)
+    b.seal(s1 + s2)
+  p
+}
+\end{alltt}
+\end{minipage}
+
+\caption{Some common monadic operations implemented using the FlowPool
+  primitives (taken from \cite{FP12})} \label{fig:mon-impl}
+\end{figure}
+
 
 \subsection{Single-Lane FlowPool}
 SLFPs are implemented using a single linked-list of arrays of
@@ -253,7 +319,7 @@ To achieve this, the following mapping is used at the beginning:
   (T_{cur} \text{ : Current thread ID}) \] 
 
 When the first collision (i.e. attempted insertion into a full lane)
-happens, the following hashed mapping is used:
+happens, the following hashed mapping is used \cite{BSH}:
 \[ l_{cur} = \mathrm{rb}((T_{cur} + C) \cdot 9e3775cd_{16})
    \cdot 9e3775cd_{16}  \bmod l_{total} \]
 where $C$ is the (global) number of collisions so far and
@@ -266,10 +332,10 @@ many inserted elements.
 
 Experimental results in figure~\ref{fig:lanef-scaling} show that there
 is no use in having more than one lane per thread and hence that the
-upper lane selection strategy is efficient. For further performance
-evaluation of MLFPs, please refer to \cite{FP12}.
+upper lane selection strategy is efficient. For details, refer to
+section~\ref{sec:evaluation}. 
 
-\begin{figure}[tbp]
+\begin{figure}
   \includegraphics[width=\textwidth]{../../benchmarks/graphs/lanef-scaling}
   \caption{Execution times with respect to number of lanes per
     inserting thread in MLFPs. $\times$~UltraSPARC~T2,
@@ -378,10 +444,117 @@ def append(x: T) \{
 \end{alltt}
 \end{minipage}
 
-\caption{Multi-Lane FlowPool operations pseudocode}
+\caption{Multi-Lane FlowPool operations pseudo code}
 \label{fig:mlfp-pseudocode}
 
 \end{figure}
+
+\section{Evaluation}
+\label{sec:evaluation}
+This section comes mainly from~\cite{FP12} and is just repeated here
+for convenience.
+
+\textbf{Setup} We evaluate our implementation (single-lane and
+multi-lane FlowPools) against the LinkedTransferQueue
+\cite{SchererLS09} for all benchmarks and the ConcurrentLinkedQueue
+\cite{Michael96} for the insert benchmark, both found in JDK 1.7, on
+three different architectures; a quad-core 3.4 GHz i7-2600, 4x
+octa-core 2.27 GHz Intel Xeon x7560 (both with hyperthreading) and an
+octa-core  1.2GHz UltraSPARC T2 with 64 hardware threads. 
+
+\textbf{Benchmarks and Scaling} In the \emph{Insert} benchmark, Figure
+\ref{fig:eval-cpu-scaling}, we evaluate the ability to write
+concurrently, by distributing the work of inserting $N$ elements into
+the data structure concurrently across $P$ threads. 
+In Figure \ref{fig:eval-cpu-scaling}, it's evident that both
+single-lane FlowPools and concurrent queues do 
+not scale well with the number of concurrent threads, particularly
+on the i7 architecture. They seem to slow down rapidly, likely due to cache
+line collisions and CAS failures.
+On the other hand, multi-lane FlowPools scale well, as threads
+write to different lanes, and hence different cache lines on
+most occasions, meanwhile also avoiding CAS failures. This may reduce execution
+time for insertions up to $54\%$ on the i7, $63\%$ on the
+Xeon and $92\%$ on the UltraSPARC T2.
+
+Usage of the inserted data is evaluated in the \emph{Reduce}, \emph{Map} (both
+in Figure \ref{fig:eval-cpu-scaling}) and \emph{Histogram} benchmarks (Figure
+\ref{fig:eval-hist-comm}). It's important to note that the \emph{Histogram} benchmark
+serves as a ``real life'' example, which uses both the \verb=map= and \verb=reduce=
+operations that are benchmarked in Figure \ref{fig:eval-cpu-scaling}.
+
+The \textit{Reduce} benchmark starts $P$ threads which concurrently
+insert a total of $N$ elements. The \verb=aggregate= operation is used
+to reduce the set of values inserted into the pool. Note that in the
+FlowPool implementation there may be as many threads computing the
+aggregation as there are different lanes -- elements from different
+lanes are batched together once the pool is sealed.
+
+The \textit{Map} benchmark is similar to the \textit{Reduce}
+benchmark, but instead of reducing a value, each element is mapped
+into a new one and added to a second pool.
+
+In the \textit{Histogram} benchmark, Figure \ref{fig:eval-hist-comm},
+$P$ threads produce a total of $N$ elements, adding them to the
+FlowPool. The \verb=aggregate= operation is then used to produce 10
+different histograms concurrently with a different number of bins. 
+Each separate histogram is constructed by its own thread (or up to
+$P$, for multi-lane FlowPools).
+A crucial difference between queues and FlowPools here, is that with 
+FlowPools, multiple histograms are produced 
+by invoking several \verb=aggregate= operations, while queues require
+writing each element to several queues-- one for each histogram.
+Without additional synchronization, reading a single queue is not an
+option, since elements have to be removed from the queue eventually, and
+it is not clear to each reader when to do this.
+With FlowPools, elements are automatically garbage collected when no
+longer needed.
+
+Finally, to validate the last claim of garbage being automatically
+collected, in the \textit{Communication/Garbage Collection} benchmark, 
+Figure \ref{fig:eval-hist-comm}, we create a pool in which a
+large number of elements $N$ are added concurrently by $P$
+threads. Each element is then processed by one of $P$ threads through
+the use of the \verb=aggregate= operation.
+We benchmark against linked transfer queues, where $P$ threads concurrently remove
+elements from the queue and process it.
+For each run, we vary the size of the $N$ and examine its impact on the execution time.
+Especially in the cases of the Intel architectures, the multi-lane 
+FlowPools perform considerably better than the linked transfer queues. 
+As a matter of fact, the linked transfer queue on the Xeon benchmark ran out of 
+memory, and was unable to complete, while the multi-lane FlowPool scaled effortlessly 
+to 400 million elements, indicating that unneeded elements are properly garbage collected.
+
+\textbf{Scaling in Input Size} In figure~\ref{fig:eval-size-scaling}
+we can see that the Input, Map, Reduce and Histogram benchmark all
+scale linearly in the input size with any parallelism level. The Comm
+benchmark has not been tested for different sizes. 
+
+\textbf{Multi-Lane Scaling} By default, the number of lanes is set to
+the parallelism level $P$, corresponding to the number of used
+CPUs. However, since the implementation has to use hashing on the
+thread IDs instead of the real CPU index, we tested whether varying
+the number of lanes to $1.5 P$, $2P$, $3P$ and $4P$ results in
+performance gain due to fewer collisions. Benchmarks have shown (see
+figure~\ref{fig:lanef-scaling}) that this yields no observable gain --
+in fact, this sometimes even decreased performance slightly.
+
+\textbf{Performance Gain} As stated in the abstract, FlowPools -- or
+more precisely multi-lane FlowPools -- may reduce execution time by
+$49 - 54\%$ on 4-core i7. These figures have been obtained by
+comparing medians of execution times for insertions between multi-lane
+FlowPools and concurrent linked queues (which were always faster than 
+linked transfer queues), where each structure was evaluated on its
+optimal parallelization level. The resulting data is shown in
+table~\ref{tbl:execution-times}.
+
+\textbf{Methodology} All the presented configurations have been
+measured $20$ times, where the $5$ first values have been discarded to
+let the JIT stabilize. Aggregated values are always medians. The
+benchmarks have been written using \verb=scala.testing.Benchmark= and
+executed through SBT\footnote{Simple Build Tool} using the following
+flags for the JavaVM: \texttt{-Xmx2048m -Xms2048m -XX:+UseCondCardMark
+  -verbose:gc -XX:+PrintGCDetails -server}.
 
 \begin{figure}
 \centering
@@ -401,80 +574,39 @@ across all architectures.}
 \label{fig:eval-hist-comm}
 \end{figure}
 
-% \section{Correctness}
-% This section uses the notation, definitions and results from
-% \cite{FP12} and extends the proofs given there to an outline of a
-% correctness proof of MLFPs.
+\begin{figure}
+\includegraphics[width=\textwidth]{../../benchmarks/graphs/size-scaling-par1}
+\includegraphics[width=\textwidth]{../../benchmarks/graphs/size-scaling-par8}
+\caption{Execution time vs benchmark size ($P = 1, 8$).
+  $\Diamond$ SLFP,
+  $\times$ MLFP,
+  $\triangle$ linked transfer queue,
+  $\circ$ concurrent linked queue} \label{fig:eval-size-scaling}
+\end{figure}
 
-% \begin{definition}[Taggable abstract pool]
-%   A taggable abstract pool is an abstract pool, except that
-%   \[ seal \in \{ -2, -1 \} \cup \mathbb{N}_0 \]
-% \end{definition}
+\begin{table}[t]
+\centering
+\begin{tabular}{l@{\qquad}r@{\quad}r@{\quad}r@{\quad}r@{\quad}r@{\qquad}r}
+  Architecture & Elements & FlowPool $t [ms]$ & $P$ & Queue $t [ms]$ & $P$ & decr.\\
+\hline
+    4-core i7 &  2M &  17 &  8 &   35 & 1 & 51\%\\
+    4-core i7 &  5M &  44 &  8 &   87 & 1 & 49\%\\
+    4-core i7 & 15M & 118 &  8 &  258 & 1 & 54\%\\
+\hline
+UltraSPARC T2 &  1M &  23 & 32 &  111 & 4 & 79\%\\
+UltraSPARC T2 &  2M &  34 & 64 &  224 & 4 & 84\%\\
+UltraSPARC T2 &  5M &  62 & 64 &  556 & 4 & 88\%\\
+UltraSPARC T2 & 15M & 129 & 64 & 1661 & 4 & 92\%\\
+\hline
+ 32-core Xeon &  2M &  30 &  8 &   50 & 1 & 40\%\\
+ 32-core Xeon &  5M &  46 & 64 &  120 & 1 & 61\%\\
+ 32-core Xeon & 15M & 126 & 64 &  347 & 1 & 63\%\\
+\end{tabular}
 
-% \begin{definition}[Taggable abstract pool operations]
-%   A taggable abstract pool supports all operations of an abstract pool
-%   plus the following.
-
-%   Operation $tag()$, changes state from $(elems, cbs, -1)$ to $(elems,
-%   cbs, -2)$. Operation $untag()$, changes state from $(elems, cbs,
-%   -2)$ to $(elems, cbs, -1)$. In addition, no $append(\cdot)$ may be
-%   performed while $seal = -2$ and $seal(\cdot)$ may only be performed
-%   in states $(elems, cbs, -2)$.
-% \end{definition}
-
-% \begin{lemma}[MLFP Lanes]
-%   Each lane of a MLFP is a tagglable abstract pool. (No proof given).
-% \end{lemma}
-
-% \begin{definition}[MultiLaneFlowPool]
-%   A MLFP $mpool$ is an object that has a reference to multiple taggable
-%   abstract pools $mpool.lanes$ and a global seal state
-%   $mpool.sstate$. The MLFP state is defined as the states of all the
-%   lanes and the global seal state.
-% \end{definition}
-
-% \begin{definition}[Consistency]
-%   A multi-lane FlowPool state $\mathbb{S}$ with is \textbf{consistent} with
-%   an abstract pool $\mathbb{P} = (elems, callbacks, seal)$ at $t_0$ if
-%   and only if $\mathbb{S}$ is a valid state and:
-%   \begin{description}
-%   \item $\forall e \in Elem : \exists l \in lanes : hasElem(l.start,e)
-%     \Leftrightarrow e \in elems$
-%   \item $\forall f \in Elem => Unit : \forall l \in lanes :
-%     hasCallback(l.start,l) \Leftrightarrow f \in callbacks$
-%   \item $\forall f \in Elem => Unit : \forall e \in Elem : \forall l \in
-%     lanes : willBeCalled(l.start, e, f) \Leftrightarrow \exists t_1 \ge
-%     t_0 : \forall t_2 > t_1 : \mathbb{P}(t_2) = (elems_2,(f,called_2)
-%     \cup callbacks_2, seal_2), elems \subset called_2$
-%   \item $\forall s \in \mathbb{N}_0 \forall l \in lanes \exists v \in $
-%   \end{description}
-
-% \end{definition}
-
-% \begin{theorem}[Safety]
-%   Given a MLFP with lanes $L = \{l_1, \ldots, l_N\}$ each one being
-%   consistent with the taggable abstract pools $(elems_i, cbs_i,
-%   seal_i)$, the MLFP operations \verb+append+, \verb+foreach+ and
-%   \verb+seal+ are consistent with the abstract pool $(elems, cbs,
-%   seal)$, where 
-%   \begin{equation}
-%     elems = \bigcup_{i=1}^N elems_i \qquad
-%     cbs = \bigcap_{i=1}^N  cbs_i \label{eq:mlfp-aggreg}
-%   \end{equation}
-% \end{theorem}
-
-% \begin{proof}
-%   Given a MLFP in its initial state $(\emptyset, \emptyset, -1)$ and
-%   hence with all lanes in state $(\emptyset, \emptyset, -1)$,
-%   trivially, we have \eqref{eq:mlfp-aggreg}.
-
-%   For \verb+append+ we have
-% \end{proof}
-
-% \begin{theorem}[Linearizability]
-%   MLFP operations \verb+append+ and \verb+seal+ are linearizable. (No
-%   proof given).
-% \end{theorem}
+\caption{Execution times for insert benchmark for MLFP and concurrent
+  linked queues, including execution time decrease
+  percentage.} \label{tbl:execution-times}
+\end{table}
 
 \section{Conclusion}
 In this report we have shown that a FlowPool as proposed by
@@ -484,9 +616,11 @@ description including pseudo-code of how a multi-lane FlowPool is
 implemented, especially with respect to sealing -- which has to be
 fundamentally changed -- and the lane assignment rehashing strategy,
 that does not exist in single-lane FlowPools. We used and included
-benchmark results from the original paper to show that the proposed
-rehashing strategy is efficient for a number of lanes equal to the
-number of inserting threads.
+benchmark results from the original paper to show that MLFPs scale
+nicely, may significantly reduce execution time with respect to
+comparable data structures and that the proposed rehashing strategy is
+efficient for a number of lanes equal to the number of inserting
+threads.
 
 \bibliographystyle{abbrv}
 \bibliography{bib}
