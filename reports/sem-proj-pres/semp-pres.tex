@@ -150,9 +150,8 @@
   \frametitle{Implementation}
   \framesubtitle{Basic Structure}
 
-  { \Huge [  x x x x c - - - ] }
-
-- now to the concrete implementation - show how the data structure looks like: [xxxc-----] -> [---------] -> [------------] etc.
+  \centering
+  \includegraphics{figs/SLFP}
 
 \end{frame}
 
@@ -160,16 +159,13 @@
   \frametitle{Implementation}
   \framesubtitle{Some preliminaries}
 
-- 1 slide for what CAS each
-- 1 slide for lock-freedom - use 2 snippets of programs which are and are not lock-free (and use CAS)
-
-
   \begin{block}{Compare and Swap}
-
+    \texttt{CAS(var, old\_value, new\_value)}
   \end{block}
 
   \begin{block}{Lock-Freedom}
-
+    Show algorithm using only CAS that is not lock-free. (live-lock?)
+    % TODO
   \end{block}
 
 \end{frame}
@@ -192,6 +188,13 @@
 - comment that it's straightforward to extend flow-pools to multiple lanes to achieve scalability
 - multilane - show how the data structure looks like
 
+\end{frame}
+
+\begin{frame}
+  \frametitle{Multi-Lane FlowPools}
+  \framesubtitle{Basic Structure}
+  \centering
+  \includegraphics{figs/MLFP}
 \end{frame}
 
 \begin{frame}
