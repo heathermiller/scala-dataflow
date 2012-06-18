@@ -1,0 +1,230 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{alltt}
+\usepackage{xcolor}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows,petri,topaths}
+\usepackage{tkz-berge}
+
+%% Colors for source highlighting
+\definecolor{scKW}  {HTML}{AA37F2}
+\definecolor{scFct} {HTML}{1010FF}
+\definecolor{scType}{HTML}{228B22}
+\definecolor{scVar} {HTML}{A45936}
+\definecolor{scComm}{HTML}{B32525}
+
+%% Defince _s_cala commands
+\newcommand{\sK}[1]{{\color{scKW} #1}}
+\newcommand{\sF}[1]{{\color{scFct} #1}}
+\newcommand{\sV}[1]{{\color{scVar} #1}}
+\newcommand{\sT}[1]{{\color{scType} #1}}
+\newcommand{\sC}[1]{{\color{scComm} #1}}
+\newcommand{\sH}[1]{{\color{white} #1}}
+\newcommand{\sS}{\vspace{0.8mm}}
+
+\setbeamercovered{transparent}
+\setbeamertemplate{navigation symbols}
+
+\title{FlowPools}
+\subtitle{A Lock-Free Deterministic Concurrent Dataflow Abstraction}
+
+\author{Tobias Schlatter\inst{1} \and Aleksandar Prokopec\inst{2} \and
+  Heather Miller\inst{2} \and  Philipp Haller\inst{2} \and Martin
+  Odersky\inst{2}}
+\date{June 21, 2012}
+\institute{\inst{1}Student, EPFL \and \inst{2}Advisors, LAMP, EPFL}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\section{Introduction}
+\begin{frame}
+  \frametitle{Outline}
+  
+  \begin{block}{What is a FlowPool}\end{block}
+  \begin{block}{Implementation}\end{block}
+  \begin{block}{Multi-Lane FlowPools}\end{block}
+  \begin{block}{Benchmarks}\end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{What is a FlowPool}
+  \framesubtitle{Big Picture}
+
+  \begin{block}{Collection}
+    \begin{itemize}
+    \item Deterministic
+    \item Lock-Free
+    \item Asynchronous
+    \item Unordered
+    \end{itemize}
+  \end{block}
+
+  \pause
+
+  \begin{block}{Determinism}
+    Every execution of a given program with given input eventually
+    \begin{itemize}
+    \item Always reaches the same state
+    \item[] \qquad or
+    \item Always fails
+    \end{itemize}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{What is a FlowPool}
+  \framesubtitle{Programming Model}
+
+  \begin{block}{Elementary Operations}
+    \begin{alltt} \small
+      \sK{def} \sF{<<}(\sV x: \sT T): \sT{FlowPool[T]}\sS\\
+      \pause
+      \sK{def} \sF{seal}(\sV{size}: \sT{Int}): \sT{Unit}\sS\\
+      \pause
+      \sK{def} \sF{aggregate}[\sT S](\sV{zero}: \sT{=>S})(\sV{cmb}: \sT{(S, S) => S})\\
+      \sH{def aggregate[S]}(\sV{folder}: \sT{(S, T) => S}): \sT{Future[S]}
+    \end{alltt}
+  \end{block}   
+  \pause
+  \begin{block}{Higher Level Operations}
+    \begin{alltt} \small
+      \sK{def} \sF{foreach}[\sT U](\sV f: \sT{T => U}): \sT{Future[Unit]}\sS\\
+      \sK{def} \sF{++}[\sT{S >: T}](\sV{that}: \sT{FlowPool[S]}): \sT{FlowPool[S]}\sS\\
+      \sK{def} \sF{filter}(\sV p: \sT{T => Boolean}): \sT{FlowPool[T]}\sS\\
+      \sK{def} \sF{map}[\sT S](\sV f: \sT{T => S}): \sT{FlowPool[S]}\sS\\
+      \sK{def} \sF{flatMap}[\sT S](\sV f: \sT{T => FlowPool[S]}): \sT{FlowPool[S]}\sS\\
+      \sK{def} \sF{iterate}[\sT T](\sV{start}: \sT T, \sV{len}: \sT{Int})(\sV f: \sT{(T) => T}): \sT{FlowPool[T]}
+    \end{alltt}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{What is a FlowPool}
+  \framesubtitle{Flow Graph}
+
+  \centering
+  \begin{tikzpicture}[ node distance = 2cm ]
+    \Vertex[x =  0, y =  4, L = $S_1$]{S1}
+    \Vertex[x =  2, y =  0, L = $S_2$]{S2}
+
+    \Vertex[x =  4, y =  0, L = {\tiny++} ]{AG1}
+    \Vertex[x =  4, y =  2, L = {\tiny++} ]{AG2}
+
+    \Vertex[x =  8, y =  4, L = $R_1$]{R1}
+    \Vertex[x =  8, y =  2, L = $R_2$]{R2}
+    \Vertex[x =  8, y =  0, L = $R_3$]{R3}
+
+    \SetVertexNoLabel
+
+    \Vertex[x =  2, y =  2]{S1M}
+    \Vertex[x =  4, y =  4]{S1F}
+
+    \tikzset{EdgeStyle/.style={post}}       % directed edges
+
+    %\tikzset{EdgeStyle/.append style = {bend right}}
+    \Edge[label = map](S1)(S1M)
+    \Edge[label = filter](S1)(S1F)
+    \Edge(S2)(AG1)
+    \Edge(S1M)(AG1)
+    \Edge(S1M)(AG2)
+    \Edge(S1F)(AG2)
+    \Edge[label = aggregate](S1F)(R1)
+    \Edge[label = aggregate](AG2)(R2)
+    \Edge[label = aggregate](AG1)(R3)
+
+  \end{tikzpicture}  
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Implementation}
+  \framesubtitle{Basic Structure}
+
+  { \Huge [  x x x x c - - - ] }
+
+- now to the concrete implementation - show how the data structure looks like: [xxxc-----] -> [---------] -> [------------] etc.
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Implementation}
+  \framesubtitle{Some preliminaries}
+
+- 1 slide for what CAS each
+- 1 slide for lock-freedom - use 2 snippets of programs which are and are not lock-free (and use CAS)
+
+
+  \begin{block}{Compare and Swap}
+
+  \end{block}
+
+  \begin{block}{Lock-Freedom}
+
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Implementation}
+  \framesubtitle{In Depth View}
+
+- show how append works on a picture involving just one array chunk:        [xyzc------], [xyzcc-----], [xyzwc-----]   
+- show how seal works, feel free to spend several minutes here, use an animation if necessary
+
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Multi-Lane FlowPools}
+  \framesubtitle{Overview}
+
+- downside - doesn't scale, just like concurrent queues in the java stdlib
+- comment that it's straightforward to extend flow-pools to multiple lanes to achieve scalability
+- multilane - show how the data structure looks like
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Multi-Lane FlowPools}
+  \framesubtitle{Implementational Details}
+
+- show how you pick a lane to append to - thread.id
+- comment that foreach is easy to extend
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Multi-Lane FlowPools}
+  \framesubtitle{Seal}
+
+- show the difficulties of seal by going into the details of its implementation - feel free to spend several minutes with an animation if necessary
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Benchmarks}
+
+- benchmarks
+\end{frame}
+
+\begin{frame}
+- conclusion
+\end{frame}
+
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
