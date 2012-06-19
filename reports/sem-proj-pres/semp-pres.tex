@@ -61,7 +61,7 @@
   \frametitle{What is a FlowPool}
   \framesubtitle{Big Picture}
 
-  \begin{block}{Collection}
+  \begin{block}{Concurrent Collection}
     \begin{itemize}
     \item Deterministic
     \item Lock-Free
@@ -238,7 +238,7 @@
 
   \begin{block}{Single-Lane FlowPools: Issues}
     \begin{itemize}
-    \item Bad scaling
+    \item Bad scaling (insertions)
     \item Like Java's concurrent queues
     \end{itemize}
   \end{block}
@@ -298,14 +298,46 @@
 
 \begin{frame}
   \frametitle{Benchmarks}
+  \framesubtitle{CPU-Scaling -- Insertions}
+  \includegraphics[width=\textwidth]{../../benchmarks/pres_graphs/cpu-scaling-insert}
 
-- benchmarks
 \end{frame}
+
+\begin{frame}
+  \frametitle{Benchmarks}
+  \framesubtitle{CPU-Scaling -- Reduce}
+  \includegraphics[width=\textwidth]{../../benchmarks/pres_graphs/cpu-scaling-reduce}
+
+\end{frame}
+
+%% TODO add comm benchmarks
 
 \begin{frame}
   \frametitle{Conclusion}
 
-  
+  {\Large FlowPools are \ldots}
+
+  \pause
+  \begin{block}{Basic Traits}
+    \begin{itemize}
+    \item Flow-Based Collection
+    \item Asynchronous
+    \item Deterministic
+    \end{itemize}
+  \end{block}
+      
+  \pause
+  \begin{block}{Ressource Use}
+    \begin{itemize}
+    \item Speed comparable to Java std Qs
+    \item Scalable
+    \item Automatic disposal
+    \end{itemize}
+  \end{block}
+
+  \pause
+  \begin{block}{¿Questions?}
+  \end{block}
 
 \end{frame}
 
