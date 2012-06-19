@@ -16,7 +16,7 @@
 \definecolor{scVar} {HTML}{A45936}
 \definecolor{scComm}{HTML}{B32525}
 
-%% Defince _s_cala commands
+%% Define _s_cala commands
 \newcommand{\sK}[1]{{\color{scKW} #1}}
 \newcommand{\sF}[1]{{\color{scFct} #1}}
 \newcommand{\sV}[1]{{\color{scVar} #1}}
@@ -24,6 +24,9 @@
 \newcommand{\sC}[1]{{\color{scComm} #1}}
 \newcommand{\sH}[1]{{\color{white} #1}}
 \newcommand{\sS}{\vspace{0.8mm}}
+
+%% Define other commands
+\newcommand{\KW}{\textbf}
 
 \setbeamercovered{transparent}
 \setbeamertemplate{navigation symbols}
@@ -114,33 +117,45 @@
 
   \centering
   \begin{tikzpicture}[ node distance = 2cm ]
+    \tikzset{EdgeStyle/.style={post}}       % directed edges
+
     \Vertex[x =  0, y =  4, L = $S_1$]{S1}
     \Vertex[x =  2, y =  0, L = $S_2$]{S2}
 
-    \Vertex[x =  4, y =  0, L = {\tiny++} ]{AG1}
-    \Vertex[x =  4, y =  2, L = {\tiny++} ]{AG2}
+    \pause
+
+    \Vertex[x =  4, y =  4, L = { }]{S1F}
+    \Edge[label = filter](S1)(S1F)
+
+    \pause
 
     \Vertex[x =  8, y =  4, L = $R_1$]{R1}
-    \Vertex[x =  8, y =  2, L = $R_2$]{R2}
-    \Vertex[x =  8, y =  0, L = $R_3$]{R3}
+    \Edge[label = aggregate](S1F)(R1)
 
-    \SetVertexNoLabel
+    \pause
 
-    \Vertex[x =  2, y =  2]{S1M}
-    \Vertex[x =  4, y =  4]{S1F}
-
-    \tikzset{EdgeStyle/.style={post}}       % directed edges
-
-    %\tikzset{EdgeStyle/.append style = {bend right}}
-    \Edge[label = map](S1)(S1M)
-    \Edge[label = filter](S1)(S1F)
-    \Edge(S2)(AG1)
+    \Vertex[x =  2, y =  2, L = { }]{S1M}
+    \Vertex[x =  4, y =  0, L = {\tiny++} ]{AG1}
     \Edge(S1M)(AG1)
+    \Edge(S2)(AG1)
+    \Edge[label = map](S1)(S1M)
+
+    \pause
+
+    \Vertex[x =  8, y =  0, L = $R_3$]{R3}
+    \Edge[label = aggregate](AG1)(R3)
+
+    \pause
+
+    \Vertex[x =  4, y =  2, L = {\tiny++} ]{AG2}
+    \Vertex[x =  8, y =  2, L = $R_2$]{R2}
+
+    \Edge[label = aggregate](AG2)(R2)
+
     \Edge(S1M)(AG2)
     \Edge(S1F)(AG2)
-    \Edge[label = aggregate](S1F)(R1)
-    \Edge[label = aggregate](AG2)(R2)
-    \Edge[label = aggregate](AG1)(R3)
+
+    %\tikzset{EdgeStyle/.append style = {bend right}}
 
   \end{tikzpicture}  
 
@@ -150,8 +165,9 @@
   \frametitle{Implementation}
   \framesubtitle{Basic Structure}
 
-  \centering
-  \includegraphics{figs/SLFP}
+  \begin{center}
+    \includegraphics{figs/SLFP}
+  \end{center}
 
 \end{frame}
 
@@ -172,11 +188,47 @@
 
 \begin{frame}
   \frametitle{Implementation}
-  \framesubtitle{In Depth View}
+  \framesubtitle{Insert}
 
-- show how append works on a picture involving just one array chunk:        [xyzc------], [xyzcc-----], [xyzwc-----]   
-- show how seal works, feel free to spend several minutes here, use an animation if necessary
+  \begin{center}
+    \includegraphics<1>[page=1]{figs/SLFP_insert}
+    \includegraphics<2>[page=2]{figs/SLFP_insert}
+    \includegraphics<3>[page=3]{figs/SLFP_insert}
+    \includegraphics<4>[page=4]{figs/SLFP_insert}
+    \includegraphics<5>[page=5]{figs/SLFP_insert}
+    \includegraphics<6>[page=6]{figs/SLFP_insert}
+    \includegraphics<7>[page=7]{figs/SLFP_insert}
+  \end{center}
 
+  \begin{alltt} \small
+    \alert<1-3>{do \{ curo = block(i) \} while (isElem(curo) \&\& i++)}\\
+    \alert<4>  {next = block(i+1)}\\
+    \alert<4>  {curo = block(i)}\\
+                check(curo)\\
+    \alert<5>  {if (!CAS(block(i + 1), next, curo)) retry()}\\
+    \alert<6>  {if (!CAS(block(i), el, curo)) retry()}\\
+    \alert<7>  {invokeCallbacks(el, next)}
+  \end{alltt}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Implementation}
+  \framesubtitle{Seal}
+
+  \begin{center}
+    \includegraphics<1>[page=1]{figs/SLFP_seal}
+    \includegraphics<2>[page=2]{figs/SLFP_seal}
+    \includegraphics<3>[page=3]{figs/SLFP_seal}
+    \includegraphics<4>[page=4]{figs/SLFP_seal}
+  \end{center}
+
+  \begin{alltt} \small
+    \alert<2>  {do \{ curo = block(i) \} while (isElem(curo) \&\& i++)}\\
+    \alert<3>  {if (isSeal(curo) || sealsize < i) error()}\\
+    \alert<4>  {s = Seal(sealsize, curo)}\\
+    \alert<4>  {if (!CAS(block(i), s, curo)) retry()}\\
+  \end{alltt}
 
 \end{frame}
 
@@ -184,25 +236,48 @@
   \frametitle{Multi-Lane FlowPools}
   \framesubtitle{Overview}
 
-- downside - doesn't scale, just like concurrent queues in the java stdlib
-- comment that it's straightforward to extend flow-pools to multiple lanes to achieve scalability
-- multilane - show how the data structure looks like
+  \begin{block}{Single-Lane FlowPools: Issues}
+    \begin{itemize}
+    \item Bad scaling
+    \item Like Java's concurrent queues
+    \end{itemize}
+  \end{block}
+
+  \begin{block}{Solution}
+    \begin{itemize}
+    \item Extend to multiple lanes
+    \item Scales nicely
+    \end{itemize}
+  \end{block}
 
 \end{frame}
 
 \begin{frame}
   \frametitle{Multi-Lane FlowPools}
   \framesubtitle{Basic Structure}
-  \centering
-  \includegraphics{figs/MLFP}
+  \begin{center}
+    \includegraphics{figs/MLFP}
+  \end{center}
 \end{frame}
 
 \begin{frame}
   \frametitle{Multi-Lane FlowPools}
   \framesubtitle{Implementational Details}
 
-- show how you pick a lane to append to - thread.id
-- comment that foreach is easy to extend
+  \begin{block}{Choice of Lane}
+    \begin{enumerate}
+    \item $L_{id} = T_{id} \bmod L_{tot}$
+    \item $L_{id} = hash(T_{id} + C) \bmod L_{tot}$
+    \item Exhaustive search
+    \end{enumerate}
+  \end{block}
+
+  \begin{block}{Aggregate / Foreach}
+    \begin{itemize}
+    \item One for each lane
+    \item Aggregate at end
+    \end{itemize}
+  \end{block}
 
 \end{frame}
 
