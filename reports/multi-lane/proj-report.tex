@@ -30,13 +30,13 @@
   dataflow logic in highly parallelized applications. The original
   paper proposes two ways of implementing a FlowPool: Single-Lane
   FlowPools (SLFP) and Multi-Lane FlowPools (MLFP). While SLFPs are
-  relatively simple to implement, insertions do not scale. MLFPs solve
-  this limitation as benchmarks discussed in \cite{FP12} have
-  shown. This report goes into the details of the implementation of
-  MLFPs and lies out the benchmarking results from \cite{FP12} to show
-  that MLFPs may reduce insertion time by $49 - 54\%$ on a 4-core i7
-  machine with respect to comparable concurrent queue data structures
-  in the Java standard library.
+  showed decent performance overall, insertion operations do not
+  scale. MLFPs solve this limitation as benchmarks discussed in
+  \cite{FP12} have shown. This report goes into the details of the
+  implementation of MLFPs and lies out the benchmarking results from
+  \cite{FP12} to show that MLFPs may reduce insertion time by $49 -
+  54\%$ on a 4-core i7 machine with respect to comparable concurrent
+  queue data structures in the Java standard library.
 \end{abstract}
 
 \section{Introduction}
@@ -177,7 +177,7 @@ figure~\ref{fig:mlfp-pseudocode} for pseudo code of the operations.
 
 \subsection{Callbacks}
 When calling \verb+aggregate+ on a MLFP, the implementation has to
-assure that a copy of this callback is known to every underlying lane
+ensure that a copy of this callback is known to every underlying lane
 and that upon completion of the callbacks for every lane, the values
 are aggregated in the final result and the future is completed. Note
 that callback addition to a given lane is no different than in SLFPs.
@@ -257,16 +257,16 @@ explained in detail.
 current state of the MLFP. If it is in unsealed state, it tries to
 change the seal state to proposition and then continue with the
 sealing. If the MLFP is already in proposition state, it helps
-finishing the current seal. If the MLFP is in \verb+Sealed+ state, the
-call succeeds or fails immediately, depending on whether the sizes are
-the same or not.
+to complete the current seal. If the MLFP is in \verb+Sealed+ state, the
+call returns immediately, succeeding if the size in \verb+Sealed+ is
+equal to the proposed sealing size, failing otherwise.
 
 \textbf{Help Sealing} Once the MLFP is in proposition state, any
 thread attempting to seal (or inserting an element as we will see
 later), will start propagating the proposition state to each lane. It
 does this by placing the special token \verb+SealTag+ into the state
-location of the given lane, using a similar procedure as the
-\verb+seal()+ procedure of the SLFP.
+location of the given lane, using a procedure similar to \verb+seal()+
+on SLFPs.
 
 A thread that tries to insert an element and encounters a
 \verb+SealTag+ must resolve the tag before it can continue on
@@ -277,9 +277,10 @@ elements in the MLFP. Note that during this procedure, one might also
 find that the seal has been completed (when encountering a \verb+Seal+
 in a lane). In such a case, the helping can be stopped prematurely.
 
-Note that each \verb+SealTag+ holds the proposition it corresponds to,
-as other seal tags might still be present from a failed attempt to
-seal.
+Note that each \verb+SealTag+ holds a reference to the global
+proposition object that caused its creation. This is required as a
+sentinel as other seal tags might still be present from a failed
+attempt to seal.
 
 When a thread that succeeds in calculating the snapshot of the size,
 it will then try to change the MLFP's state to sealed (or to unsealed,
@@ -331,9 +332,9 @@ that either the FlowPool is filled, or an error is raised due to too
 many inserted elements.
 
 Experimental results in figure~\ref{fig:lanef-scaling} show that there
-is no use in having more than one lane per thread and hence that the
-upper lane selection strategy is efficient. For details, refer to
-section~\ref{sec:evaluation}. 
+is no use in having more than one lane per inserting thread and hence
+that the upper lane selection strategy is efficient. For details,
+refer to section~\ref{sec:evaluation}. 
 
 \begin{figure}
   \includegraphics[width=\textwidth]{../../benchmarks/graphs/lanef-scaling}
@@ -613,7 +614,7 @@ In this report we have shown that a FlowPool as proposed by
 \cite{FP12} can be implemented in a scalable way by using multiple
 single-lane FlowPools. Further, we have provided a detailed
 description including pseudo-code of how a multi-lane FlowPool is
-implemented, especially with respect to sealing -- which has to be
+implemented, especially with respect to sealing -- which had to be
 fundamentally changed -- and the lane assignment rehashing strategy,
 that does not exist in single-lane FlowPools. We used and included
 benchmark results from the original paper to show that MLFPs scale

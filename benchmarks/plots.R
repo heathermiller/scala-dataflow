@@ -82,9 +82,11 @@ dev.off()
 xyplot(time ~ factor(lanef) | btype,
        data = mdat,
        group = arch,
-       subset = par == 8 & ave(size, btype, machine, FUN = max) == size &
+       subset = par == 8 &
+                (ave(size, btype, machine, FUN = max) == size |
+                 btype == "Comm" & size == 100000000) &
                 machine != "wolf" & imptype == "Multi-Lane FlowPool",
-       xlab = "Factor of Lanes"
+       xlab = "Number of Lanes per Inserting Thread"
        )
 
 pdf("graphs/lanef-scaling.pdf", height = 5)
