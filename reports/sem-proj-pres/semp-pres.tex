@@ -34,6 +34,8 @@
 \setbeamercovered{transparent}
 \setbeamertemplate{navigation symbols}
 
+\setbeamertemplate{footline}{\makebox[0.98\paperwidth][r]{\large \raisebox{1.2ex}{\insertframenumber}}}
+
 \title{FlowPools}
 \subtitle{A Lock-Free Deterministic Concurrent Dataflow Abstraction}
 
@@ -397,6 +399,7 @@
     \end{itemize}
   \end{block}
 
+  \pause
   \begin{block}{Solution}
     \begin{itemize}
     \item Use unordered property
