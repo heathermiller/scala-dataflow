@@ -4,6 +4,8 @@
 
 \usepackage{alltt}
 \usepackage{xcolor}
+\usepackage[overlay,absolute]{textpos}
+\usepackage[normalem]{ulem}
 
 \usepackage{tikz}
 \usetikzlibrary{arrows,petri,topaths}
@@ -26,7 +28,7 @@
 \newcommand{\sS}{\vspace{0.8mm}}
 
 %% Define other commands
-\newcommand{\KW}{\textbf}
+\newcommand<>{\strike}[1]{\alt#2{\sout{#1}}{#1}}
 
 \setbeamercovered{transparent}
 \setbeamertemplate{navigation symbols}
@@ -37,7 +39,7 @@
 \author{Tobias Schlatter\inst{1} \and Aleksandar Prokopec\inst{2} \and
   Heather Miller\inst{2} \and  Philipp Haller\inst{2} \and Martin
   Odersky\inst{2}}
-\date{June 21, 2012}
+\date{June 22, 2012}
 \institute{\inst{1}Student, EPFL \and \inst{2}Advisors, LAMP, EPFL}
 
 \begin{document}
@@ -61,53 +63,149 @@
   \frametitle{What is a FlowPool}
   \framesubtitle{Big Picture}
 
-  \begin{block}{Concurrent Collection}
-    \begin{itemize}
-    \item Deterministic
-    \item Lock-Free
-    \item Asynchronous
-    \item Unordered
-    \end{itemize}
-  \end{block}
+  \begin{columns}[t]
+    \column{.5\textwidth}
 
-  \pause
+    Pool: concurrent collections abstraction
 
-  \begin{block}{Determinism}
-    Every execution of a given program with given input eventually
-    \begin{itemize}
-    \item Always reaches the same state
-    \item[] \qquad or
-    \item Always fails
-    \end{itemize}
-  \end{block}
+    \begin{block}{FlowPool Properties}
+      \begin{itemize}
+      \item<1> Pool semantics
+      \item<2> Deterministic
+      \item<3> Lock-Free
+      \item<4> Asynchronous
+      \item<5> Unneeded Elements GC'd
+      \end{itemize}
+    \end{block}
+
+    \column{.5\textwidth}
+
+    \begin{overprint}
+      \onslide<1>
+      \begin{block}{Pool semantics}
+        \begin{itemize}
+        \item Unordered
+        \item Multiple occurences
+        \item Insertion
+        \item Traversal
+        \end{itemize}
+      \end{block}
+
+      \onslide<2>
+      \begin{block}{Determinism}
+        Every execution of a given program with given input eventually
+        \begin{itemize}
+        \item Always reaches same state
+        \item[] \qquad or
+        \item Always fails
+        \end{itemize}
+      \end{block}
+
+      \onslide<3>
+      \begin{block}{Locking}
+        \begin{alltt}
+          \sK{synchronized} \{\\
+          \sH{xx}i = i + 1\\
+          \}
+        \end{alltt}
+      \end{block}
+
+      \begin{block}{Lock-Free}
+        \begin{alltt}
+          \sK{do} \{\\
+          \sH{xx}ov = READ(i)\\
+          \sH{xx}nv = ov + 1\\
+          \} \sK{while} (!CAS(i, nv, ov))
+        \end{alltt}
+      \end{block}
+
+    \end{overprint}
+
+  \end{columns}
 
 \end{frame}
 
 \begin{frame}
   \frametitle{What is a FlowPool}
-  \framesubtitle{Programming Model}
+  \framesubtitle{Programming Model -- Elementary Operations}
 
-  \begin{block}{Elementary Operations}
+  \begin{alltt} \small
+    \sK{def} \sF{<<}(\sV x: \sT T): \sT{FlowPool[T]}\sS\\
+    \strike<6>{\sK{def} \sF{foreach}[\sT U](\sV f: \sT{T => U}): \sT{Future[Unit]}}\sS\\
+    \uncover<2->{\sK{def} \sF{seal}(\sV{size}: \sT{Int}): \sT{Unit}\sS}\\
+    \uncover<4->{\sK{def} \sF{aggregate}[\sT S](\sV{zero}: \sT{=>S})(\sV{cmb}: \sT{(S, S) => S})}\\
+    \uncover<4->{\sH{def aggregate[S]}(\sV{folder}: \sT{(S, T) => S}): \sT{Future[S]}}\\
+    \sH{xx}
+  \end{alltt}
+
+  \begin{overprint}
+    \onslide<3>
     \begin{alltt} \small
-      \sK{def} \sF{<<}(\sV x: \sT T): \sT{FlowPool[T]}\sS\\
-      \pause
-      \sK{def} \sF{seal}(\sV{size}: \sT{Int}): \sT{Unit}\sS\\
-      \pause
-      \sK{def} \sF{aggregate}[\sT S](\sV{zero}: \sT{=>S})(\sV{cmb}: \sT{(S, S) => S})\\
-      \sH{def aggregate[S]}(\sV{folder}: \sT{(S, T) => S}): \sT{Future[S]}
+      \sK{def} \sF{fill}[\sT T](\sV n: \sT{Int})(\sV{el}: \sT{=>T}): \sT{FlowPool[T]} = \{\\
+      \sH{xx}\sK{val} \sV p = \sK{new} FlowPool[T]\\
+      \sH{xx}\sK{for} (i <- 1 to n) \{ p << el \}\\
+      \sH{xx}p.seal(n); p\\
+      \}
     \end{alltt}
-  \end{block}   
-  \pause
-  \begin{block}{Higher Level Operations}
+    \onslide<5>
+    \begin{alltt} \small
+      \sK{def} \sF{filter}(\sV{pred}: \sT{T => Boolean}): \sT{FlowPool[T]} = \{\\
+      \sH{xx}\sK{val} \sV p = \sK{new} FlowPool[T]\\
+      \sH{xx}\sK{this}.aggregate(0)(\_ + \_) \{\\
+      \sH{xxxx}(acc, x) => \sK{if} pred(x) \{\\
+      \sH{xxxxxx}b << x; acc + 1\\
+      \sH{xxxx}\} \sK{else} acc\\
+      \sH{xx}\} map \{ sz => b.seal(sz) \}; p\\
+      \}
+    \end{alltt}
+  \end{overprint}
+
+  \begin{textblock}{2}(13,9)
+    \begin{onlyenv}<3>
+      \begin{tikzpicture}[ node distance = 2cm ]
+        \tikzset{EdgeStyle/.style={post}}       % directed edges
+      
+        \Vertex[x = 0, y = 2, L = $fill$]{S}
+
+        \SetVertexNormal[LineColor=white] 
+        \Vertex[x = 0, y = 0, L = { }]{G}
+        \SetVertexNormal[LineColor=black] 
+
+        \Edge(S)(G)
+
+      \end{tikzpicture}  
+    \end{onlyenv}
+  \end{textblock}
+
+  \begin{textblock}{2}(13,9)
+    \begin{onlyenv}<5>
+      \begin{tikzpicture}[ node distance = 2cm ]
+        \tikzset{EdgeStyle/.style={post}}       % directed edges
+      
+        \Vertex[x = 0, y = 3, L = $this$]{S}
+        \Vertex[x = 0, y = 0, L = $p$]{G}
+
+        \Edge[label = filter](S)(G)
+
+      \end{tikzpicture}  
+    \end{onlyenv}
+  \end{textblock}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{What is a FlowPool}
+  \framesubtitle{Programming Model -- Higher Level Operations}
+
     \begin{alltt} \small
       \sK{def} \sF{foreach}[\sT U](\sV f: \sT{T => U}): \sT{Future[Unit]}\sS\\
       \sK{def} \sF{++}[\sT{S >: T}](\sV{that}: \sT{FlowPool[S]}): \sT{FlowPool[S]}\sS\\
       \sK{def} \sF{filter}(\sV p: \sT{T => Boolean}): \sT{FlowPool[T]}\sS\\
       \sK{def} \sF{map}[\sT S](\sV f: \sT{T => S}): \sT{FlowPool[S]}\sS\\
       \sK{def} \sF{flatMap}[\sT S](\sV f: \sT{T => FlowPool[S]}): \sT{FlowPool[S]}\sS\\
+      \sK{def} \sF{fold}[\sT{U >: T}](\sV z: \sT U)(\sV{op}: \sT{(U, U) => U}): \sT{Future[U]}\sS\\
       \sK{def} \sF{iterate}[\sT T](\sV{start}: \sT T, \sV{len}: \sT{Int})(\sV f: \sT{(T) => T}): \sT{FlowPool[T]}
     \end{alltt}
-  \end{block}
 
 \end{frame}
 
@@ -115,75 +213,72 @@
   \frametitle{What is a FlowPool}
   \framesubtitle{Flow Graph}
 
-  \centering
-  \begin{tikzpicture}[ node distance = 2cm ]
-    \tikzset{EdgeStyle/.style={post}}       % directed edges
+  \begin{columns}
+    \begin{column}{.5\textwidth}
 
-    \Vertex[x =  0, y =  4, L = $S_1$]{S1}
-    \Vertex[x =  2, y =  0, L = $S_2$]{S2}
+      \begin{tikzpicture}[ node distance = 2cm ]
+        \tikzset{EdgeStyle/.style={post}}       % directed edges
 
-    \pause
+        \Vertex[x =  2, y =  7, L = \texttt{s}]{S}
 
-    \Vertex[x =  4, y =  4, L = { }]{S1F}
-    \Edge[label = filter](S1)(S1F)
+        \uncover<2->{
+          \Vertex[x =  4, y =  5, L = \texttt{m}]{M}
+          \Edge[label = map](S)(M)
+        }
 
-    \pause
+        \uncover<3->{
+          \Vertex[x =  0, y =  5, L = \texttt{f}]{F}
+          \Edge[label = filter](S)(F)
+        }
 
-    \Vertex[x =  8, y =  4, L = $R_1$]{R1}
-    \Edge[label = aggregate](S1F)(R1)
+        \uncover<4->{
+          \Vertex[x =  2, y =  3, L = {\tiny ++}]{A}
+          \Edge(M)(A)
+          \Edge(F)(A)
+        }
 
-    \pause
+        \uncover<5->{
+          \Vertex[x =  2, y =  0, L = \texttt{r}]{R}
+          \Edge[label = fold](A)(R)
+        }
 
-    \Vertex[x =  2, y =  2, L = { }]{S1M}
-    \Vertex[x =  4, y =  0, L = {\tiny++} ]{AG1}
-    \Edge(S1M)(AG1)
-    \Edge(S2)(AG1)
-    \Edge[label = map](S1)(S1M)
+        % \tikzset{EdgeStyle/.append style = {bend right}}
 
-    \pause
+      \end{tikzpicture}  
 
-    \Vertex[x =  8, y =  0, L = $R_3$]{R3}
-    \Edge[label = aggregate](AG1)(R3)
+    \end{column}
 
-    \pause
+    \begin{column}{.5\textwidth}
+      
+      \begin{alltt}
+        s = \sK{new} FlowPool[Int]\\
+        \uncover<2->{m = s.map(\_ * 2)}\\
+        \uncover<3->{f = s.filter(\_ > 10)}\\
+        \uncover<4->{a = m ++ f}\\
+        \uncover<5->{r = a.fold(0)(\_ + \_)}\\
+        \sH{x}\\
+        \uncover<6->{\sK{for} (i <- 0 to 1000) \{\\
+        \sH{xx}s << i\\
+        \}}
+      \end{alltt}
 
-    \Vertex[x =  4, y =  2, L = {\tiny++} ]{AG2}
-    \Vertex[x =  8, y =  2, L = $R_2$]{R2}
+    \end{column}
 
-    \Edge[label = aggregate](AG2)(R2)
-
-    \Edge(S1M)(AG2)
-    \Edge(S1F)(AG2)
-
-    %\tikzset{EdgeStyle/.append style = {bend right}}
-
-  \end{tikzpicture}  
+  \end{columns}
 
 \end{frame}
 
 \begin{frame}
   \frametitle{Implementation}
-  \framesubtitle{Basic Structure}
+  \framesubtitle{Basic Structure / Garbage Collection of Unneeded Elements}
 
   \begin{center}
     \includegraphics<1>[page=1]{figs/SLFP}
     \includegraphics<2>[page=2]{figs/SLFP}
+    \includegraphics<3>[page=3]{figs/SLFP}
+    \includegraphics<4>[page=4]{figs/SLFP}
+    \includegraphics<5>[page=5]{figs/SLFP}
   \end{center}
-
-\end{frame}
-
-\begin{frame}
-  \frametitle{Implementation}
-  \framesubtitle{Some preliminaries}
-
-  \begin{block}{Compare and Swap}
-    \texttt{CAS(var, old\_value, new\_value)}
-  \end{block}
-
-  \begin{block}{Lock-Freedom}
-    Show algorithm using only CAS that is not lock-free. (live-lock?)
-    % TODO
-  \end{block}
 
 \end{frame}
 
@@ -201,15 +296,44 @@
     \includegraphics<7>[page=7]{figs/SLFP_insert}
   \end{center}
 
-  \begin{alltt} \small
-    \alert<1-3>{do \{ curo = block(i) \} while (isElem(curo) \&\& i++)}\\
-    \alert<4>  {next = block(i+1)}\\
-    \alert<4>  {curo = block(i)}\\
-                check(curo)\\
-    \alert<5>  {if (!CAS(block(i + 1), next, curo)) retry()}\\
-    \alert<6>  {if (!CAS(block(i), el, curo)) retry()}\\
-    \alert<7>  {invokeCallbacks(el, next)}
-  \end{alltt}
+  \begin{enumerate}
+    \item<4-> \texttt{next = block(i+1)}
+    \item<4-> \texttt{curo = block(i)}
+    \item<5-> \texttt{CAS(block(i + 1), next, curo)}
+    \item<6-> \texttt{CAS(block(i), el, curo)}
+    \item<7-> \texttt{invokeCallbacks(el, next)}
+  \end{enumerate}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Implementation}
+  \framesubtitle{Wrong Insert}
+
+  \begin{center}
+    \includegraphics<1>[page=1]{figs/SLFP_wrong_insert}
+    \includegraphics<2>[page=2]{figs/SLFP_wrong_insert}
+    \includegraphics<3>[page=3]{figs/SLFP_wrong_insert}
+    \includegraphics<4,5>[page=4]{figs/SLFP_wrong_insert}
+    \includegraphics<6>[page=5]{figs/SLFP_wrong_insert}
+    \includegraphics<7>[page=6]{figs/SLFP_wrong_insert}
+  \end{center}
+
+  \begin{enumerate}
+  \item<1-> \texttt{curo = block(i)\phantom{xxxx}(= C)}
+  \item<4-> \texttt{next = block(i+1)\phantom{xx}(= C')}
+  \item<6-> \texttt{CAS(block(i + 1), next, curo)}
+  \item<7-> \texttt{CAS(block(i), el, curo)}
+  \item<7-> \texttt{invokeCallbacks(el, next)}
+  \end{enumerate}
+
+  \begin{textblock}{6}(9.5,8.6)  
+    \begin{visibleenv}<5->
+      Observed State (\alert<5>{inconsistent})
+      \includegraphics{figs/wrong_state}
+    \end{visibleenv}
+  \end{textblock}
+
 
 \end{frame}
 
@@ -224,12 +348,11 @@
     \includegraphics<4>[page=4]{figs/SLFP_seal}
   \end{center}
 
-  \begin{alltt} \small
-    \alert<2>  {do \{ curo = block(i) \} while (isElem(curo) \&\& i++)}\\
-    \alert<3>  {if (isSeal(curo) || sealsize < i) error()}\\
-    \alert<4>  {s = Seal(sealsize, curo)}\\
-    \alert<4>  {if (!CAS(block(i), s, curo)) retry()}\\
-  \end{alltt}
+  \begin{enumerate}
+    \item<2-> \texttt{cbs = block(i)}
+    \item[]<3-> \texttt{s = Seal(sealsize, cbs)}
+    \item<4-> \texttt{CAS(block(i + 1), next, cbs)}
+  \end{enumerate}
 
 \end{frame}
 
@@ -240,14 +363,19 @@
   \begin{block}{Single-Lane FlowPools: Issues}
     \begin{itemize}
     \item Bad scaling (insertions)
-    \item Like Java's concurrent queues
+      \begin{itemize}
+      \item CAS failures
+      \item Cache contention
+      \end{itemize}
     \end{itemize}
   \end{block}
 
   \begin{block}{Solution}
     \begin{itemize}
+    \item Use unordered property
     \item Extend to multiple lanes
     \item Scales nicely
+    \item BUT: Seal is complex
     \end{itemize}
   \end{block}
 
@@ -263,27 +391,6 @@
 
 \begin{frame}
   \frametitle{Multi-Lane FlowPools}
-  \framesubtitle{Implementational Details}
-
-  \begin{block}{Choice of Lane}
-    \begin{enumerate}
-    \item $L_{id} = T_{id} \bmod L_{tot}$
-    \item $L_{id} = hash(T_{id} + C) \bmod L_{tot}$
-    \item Exhaustive search
-    \end{enumerate}
-  \end{block}
-
-  \begin{block}{Aggregate / Foreach}
-    \begin{itemize}
-    \item One for each lane
-    \item Aggregate at end
-    \end{itemize}
-  \end{block}
-
-\end{frame}
-
-\begin{frame}
-  \frametitle{Multi-Lane FlowPools}
   \framesubtitle{Seal}
 
   \includegraphics<1>[page=1]{figs/MLFP_seal}
@@ -294,6 +401,31 @@
   \includegraphics<6>[page=6]{figs/MLFP_seal}
   \includegraphics<7>[page=7]{figs/MLFP_seal}
   \includegraphics<8>[page=8]{figs/MLFP_seal}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Multi-Lane FlowPools}
+  \framesubtitle{Insert / Choice of Lane}
+
+  \includegraphics<1>[page=1]{figs/MLFP_insert}
+  \includegraphics<2>[page=2]{figs/MLFP_insert}
+  \includegraphics<3>[page=3]{figs/MLFP_insert}
+  \includegraphics<4>[page=4]{figs/MLFP_insert}
+  \includegraphics<5>[page=5]{figs/MLFP_insert}
+  \includegraphics<6>[page=6]{figs/MLFP_insert}
+  \includegraphics<7>[page=7]{figs/MLFP_insert}
+  \includegraphics<8>[page=8]{figs/MLFP_insert}
+  \includegraphics<9>[page=9]{figs/MLFP_insert}
+
+  \begin{textblock}{8}(8,2)
+    \begin{enumerate}
+    \item<1-> $L_{id} = T_{id} \bmod L_{tot}$
+    \item<4-> $L_{id} = hash(T_{id} + C) \bmod L_{tot}$
+    \item<6-> Exhaustive search
+    \end{enumerate}
+  \end{textblock}
+
 
 \end{frame}
 
@@ -328,11 +460,11 @@
   \end{block}
       
   \pause
-  \begin{block}{Ressource Use}
+  \begin{block}{Resource Use}
     \begin{itemize}
     \item Speed comparable to Java std Qs
     \item Scalable
-    \item Automatic disposal
+    \item Uneeded Elements GC'd
     \end{itemize}
   \end{block}
 
