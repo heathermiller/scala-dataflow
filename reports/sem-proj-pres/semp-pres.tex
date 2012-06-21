@@ -25,6 +25,7 @@
 \newcommand{\sT}[1]{{\color{scType} #1}}
 \newcommand{\sC}[1]{{\color{scComm} #1}}
 \newcommand{\sH}[1]{{\color{white} #1}}
+\newcommand{\sN}[1]{{\color{black} #1}}
 \newcommand{\sS}{\vspace{0.8mm}}
 
 %% Define other commands
@@ -310,7 +311,7 @@
 
 \begin{frame}
   \frametitle{Implementation}
-  \framesubtitle{Insert}
+  \framesubtitle{Insert \quad \texttt{\sF{<<}\sN(\sV x\sN:\;\sT T\sN)}}
 
   \begin{center}
     \includegraphics<1>[page=1]{figs/SLFP_insert}
@@ -327,14 +328,14 @@
     \item<4-> \texttt{curo = block(i)}
     \item<5-> \texttt{CAS(block(i + 1), next, curo)}
     \item<6-> \texttt{CAS(block(i), el, curo)}
-    \item<7-> \texttt{invokeCallbacks(el, next)}
+    \item<7-> \texttt{invokeCallbacks(el, curo)}
   \end{enumerate}
 
 \end{frame}
 
 \begin{frame}
   \frametitle{Implementation}
-  \framesubtitle{Wrong Insert}
+  \framesubtitle{Wrong Insert \quad \texttt{\sF{<<}\sN(\sV x\sN:\;\sT T\sN)}}
 
   \begin{center}
     \includegraphics<1>[page=1]{figs/SLFP_wrong_insert}
@@ -365,7 +366,7 @@
 
 \begin{frame}
   \frametitle{Implementation}
-  \framesubtitle{Seal}
+  \framesubtitle{Seal \quad \texttt{\sF{seal}\sN(\sV n\sN:\;\sT{Int}\sN)}}
 
   \begin{center}
     \includegraphics<1>[page=1]{figs/SLFP_seal}
@@ -417,7 +418,7 @@
 
 \begin{frame}
   \frametitle{Multi-Lane FlowPools}
-  \framesubtitle{Seal}
+  \framesubtitle{Seal \quad \texttt{\sF{seal}\sN(\sV n\sN:\;\sT{Int}\sN)}}
 
   \includegraphics<1>[page=1]{figs/MLFP_seal}
   \includegraphics<2>[page=2]{figs/MLFP_seal}
@@ -443,12 +444,14 @@
   \includegraphics<7>[page=7]{figs/MLFP_insert}
   \includegraphics<8>[page=8]{figs/MLFP_insert}
   \includegraphics<9>[page=9]{figs/MLFP_insert}
+  \includegraphics<10>[page=10]{figs/MLFP_insert}
+  \includegraphics<11>[page=11]{figs/MLFP_insert}
 
   \begin{textblock}{8}(8,2)
     \begin{enumerate}
     \item<1-> $L_{id} = T_{id} \bmod L_{tot}$
     \item<4-> $L_{id} = hash(T_{id} + C) \bmod L_{tot}$
-    \item<6-> Exhaustive search
+    \item<7-> Exhaustive search
     \end{enumerate}
   \end{textblock}
 
@@ -458,18 +461,51 @@
 \begin{frame}
   \frametitle{Benchmarks}
   \framesubtitle{CPU-Scaling -- Insertions}
-  \includegraphics[width=\textwidth]{../../benchmarks/pres_graphs/cpu-scaling-insert}
+
+  %% Hack to use whole frame
+  \begin{columns}[c]
+    \begin{column}{\paperwidth}
+      \centering
+      \includegraphics[trim = 35mm 0mm 36mm 0mm, clip, width=0.95\paperwidth]
+      {../../benchmarks/pres_graphs/cpu-scaling-insert}
+      \par
+    \end{column}
+  \end{columns}
 
 \end{frame}
 
 \begin{frame}
   \frametitle{Benchmarks}
   \framesubtitle{CPU-Scaling -- Reduce}
-  \includegraphics[width=\textwidth]{../../benchmarks/pres_graphs/cpu-scaling-reduce}
+
+  %% Hack to use whole frame
+  \begin{columns}[c]
+    \begin{column}{\paperwidth}
+      \centering
+      \includegraphics[trim = 35mm 0mm 36mm 0mm, clip, width=0.95\paperwidth]
+      {../../benchmarks/pres_graphs/cpu-scaling-reduce}
+      \par
+    \end{column}
+  \end{columns}
 
 \end{frame}
 
-%% TODO add comm benchmarks
+\begin{frame}
+  \frametitle{Benchmarks}
+  \framesubtitle{CPU-Scaling -- Communication/Garbage Collection}
+
+  %% Hack to use whole frame
+  \begin{columns}[c]
+    \begin{column}{\paperwidth}
+      \centering
+      \includegraphics[trim = 35mm 0mm 32mm 0mm, clip, width=0.95\paperwidth]
+      {../../benchmarks/pres_graphs/comm}
+      \par
+    \end{column}
+  \end{columns}
+
+\end{frame}
+
 
 \begin{frame}
   \frametitle{Conclusion}
