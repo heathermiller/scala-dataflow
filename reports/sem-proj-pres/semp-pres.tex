@@ -171,9 +171,9 @@
       \sH{xx}\sK{val} \sV p = \sK{new} FlowPool[T]\\
       \sH{xx}\sK{this}.aggregate(0)(\_ + \_) \{\\
       \sH{xxxx}(acc, x) => \sK{if} pred(x) \{\\
-      \sH{xxxxxx}b << x; acc + 1\\
+      \sH{xxxxxx}p << x; acc + 1\\
       \sH{xxxx}\} \sK{else} acc\\
-      \sH{xx}\} map \{ sz => b.seal(sz) \}; p\\
+      \sH{xx}\} map \{ sz => p.seal(sz) \}; p\\
       \}
     \end{alltt}
     \onslide<6>
