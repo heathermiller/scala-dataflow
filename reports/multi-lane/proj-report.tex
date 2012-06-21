@@ -205,9 +205,9 @@ figure~\ref{fig:seal-states}):
   seals have failed.
 \item \verb+Proposition(size)+ (P): Sealing with given (total) size is
   being attempted. No other sealing operation may be attempted until
-  this state is resolved to one of the other two. Threads attempting
-  to seal and encountering a \verb+Proposition+ state, shall help the
-  resolution of the state. (This is required to ensure lock-freedom)
+  this state is resolved to one of the other two. Threads that attempt
+  to seal which then encounter a \verb+Proposition+ state, will help seal
+  the FlowPool. (This is required to ensure lock-freedom)
 \item \verb+Sealed(size, remain)+ (S): The MLFP has been sealed with
   size \verb+size+, where at the moment of the sealing, \verb+remain+
   free slots were remaining. The latter value is required to
@@ -254,32 +254,32 @@ In the following, the different parts of the sealing procedure are
 explained in detail.
 
 \textbf{Seal} When a thread calls \verb+seal()+ it first checks the
-current state of the MLFP. If it is in unsealed state, it tries to
+current state of the MLFP. If it is in the unsealed state, it tries to
 change the seal state to proposition and then continue with the
-sealing. If the MLFP is already in proposition state, it helps
-to complete the current seal. If the MLFP is in \verb+Sealed+ state, the
+sealing. If the MLFP is already in the proposition state, it helps
+to complete the current seal. If the MLFP is in the \verb+Sealed+ state, the
 call returns immediately, succeeding if the size in \verb+Sealed+ is
 equal to the proposed sealing size, failing otherwise.
 
-\textbf{Help Sealing} Once the MLFP is in proposition state, any
-thread attempting to seal (or inserting an element as we will see
-later), will start propagating the proposition state to each lane. It
-does this by placing the special token \verb+SealTag+ into the state
+\textbf{Help Sealing} Once the MLFP is in the proposition state, any
+thread attempting to seal (or attempting to insert an element as we will see
+later), will begin propagating the proposition state to each lane. It
+does this by placing a special token, \verb+SealTag+, into the state
 location of the given lane, using a procedure similar to \verb+seal()+
 on SLFPs.
 
 A thread that tries to insert an element and encounters a
 \verb+SealTag+ must resolve the tag before it can continue on
 (explained later). This ensures that, once a \verb+SealTag+ has been
-placed in a lane, its size does not change any more until the seal is
-finished, which allows to calculate a snapshot of the total number of
+placed in a lane, its size does not change until the seal is
+finished, which makes it possible to calculate a snapshot of the total number of
 elements in the MLFP. Note that during this procedure, one might also
 find that the seal has been completed (when encountering a \verb+Seal+
-in a lane). In such a case, the helping can be stopped prematurely.
+in a lane). In such a case, helping can be stopped prematurely.
 
 Note that each \verb+SealTag+ holds a reference to the global
 proposition object that caused its creation. This is required as a
-sentinel as other seal tags might still be present from a failed
+sentinel since other seal tags might still be present from a failed
 attempt to seal.
 
 When a thread that succeeds in calculating the snapshot of the size,
@@ -311,7 +311,7 @@ the lane in which the element is to be inserted has to be chosen
 first. For the choice of the lane we want to:
 \begin{itemize}
 \item Avoid collision between competing threads to a maximum.
-\item Allow to change the thread-lane assignment, once some lanes have
+\item Make it possible to change the thread-lane assignment, once some lanes have
   been entirely filled (after a seal).
 \item Assure we can properly fill up the FlowPool entirely.
 \end{itemize}
