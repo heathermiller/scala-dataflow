@@ -9,16 +9,17 @@ figure('units','pixels','Position',[1 1 1440 600]);
 
 % WOLF
 load('data/wolf_insert_map_reduce_hist.mat');
-subplot(131)
+subplot(133)
 set(gca,'YScale','log');
 set(gca,'Xtick',1:4);
 set(gca,'XTickLabel',par);
-set(gca,'FontSize',20);
+set(gca,'FontSize',15);
 grid on;
 hold on;
 
 title('32-core Xeon');
-ylabel('Execution Time [ms]');
+xlabel('Number of CPUs');
+
 plotScaling(1:length(par),ltqreduce,'--sq',cols(1,:)); 
 plotScaling(1:length(par),slfpreduce,'-x',cols(3,:));
 plotScaling(1:length(par),mlfpreduce,'-d',cols(4,:)); 
@@ -34,12 +35,13 @@ subplot(132)
 set(gca,'YScale','log');
 set(gca,'Xtick',1:4);
 set(gca,'XTickLabel',par);
-set(gca,'FontSize',20);
+set(gca,'FontSize',15);
 grid on;
 hold on;
 
 title('4-core i7');
-ylabel('Execution Time [ms]');
+xlabel('Number of CPUs');
+
 plotScaling(1:length(par),ltqreduce,'--sq',cols(1,:)); 
 plotScaling(1:length(par),slfpreduce,'-x',cols(3,:));
 plotScaling(1:length(par),mlfpreduce,'-d',cols(4,:));
@@ -52,16 +54,18 @@ hold off;
 % MAGLITE
 load('data/maglite_insert_map_reduce_hist.mat');
 par = [ 1 2 4 8 16 32 ];
-subplot(133)
+subplot(131)
 set(gca,'YScale','log');
 set(gca,'Xtick',1:6);
 set(gca,'XTickLabel',par);
-set(gca,'FontSize',20);
+set(gca,'FontSize',15);
 grid on;
 hold on;
 
 title('UltraSPARC T2');
+xlabel('Number of CPUs');
 ylabel('Execution Time [ms]');
+
 plotScaling(1:length(par),ltqreduce,'--sq',cols(1,:));
 plotScaling(1:length(par),slfpreduce,'-x',cols(3,:));
 plotScaling(1:length(par),mlfpreduce,'-d',cols(4,:));
