@@ -5,7 +5,7 @@ par = [1 2 4 8];
 
 
 
-figure('units','pixels','Position',[1 1 1440 400]);
+figure('units','pixels','Position',[1 1 1440 600]);
 
 % WOLF
 load('data/wolf_insert_map_reduce_hist.mat');
@@ -73,3 +73,4 @@ set(l1,'FontSize',12,'Color',[1 1 1]);
 
 axis([1 6 100 10000]);
 hold off;
+
