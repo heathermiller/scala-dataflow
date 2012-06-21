@@ -69,7 +69,7 @@ ylabel('Execution Time [ms]');
 plotScaling(1:length(par),ltqreduce,'--sq',cols(1,:));
 plotScaling(1:length(par),slfpreduce,'-x',cols(3,:));
 plotScaling(1:length(par),mlfpreduce,'-d',cols(4,:));
-l1 = legend('Java LTQ','SingleLane FlowPool','MultiLane FlowPool','Location','SouthEast');
+l1 = legend('Java LTQ','SingleLane FlowPool','MultiLane FlowPool','Location','SouthWest');
 set(l1,'FontSize',12,'Color',[1 1 1]);
 
 axis([1 6 100 10000]);
