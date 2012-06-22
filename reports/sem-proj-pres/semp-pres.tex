@@ -73,11 +73,11 @@
 
     \begin{block}{FlowPool Properties}
       \begin{itemize}
-      \item<1> Pool semantics
-      \item<2> Deterministic
-      \item<3> Lock-Free
-      \item<4> Asynchronous
-      \item<5> Unneeded Elements GC'd
+      \item<+> Pool semantics
+      \item<+> Asynchronous
+      \item<+> Deterministic
+      \item<+> Lock-Free
+      \item<+> Unneeded Elements GC'd
       \end{itemize}
     \end{block}
 
@@ -95,6 +95,22 @@
       \end{block}
 
       \onslide<2>
+      \begin{block}{Blocking}
+        \begin{alltt}
+          println(f.result)
+        \end{alltt}
+      \end{block}
+
+      \begin{block}{Asynchronous}
+        \begin{alltt}
+          f.onComplete \{ x => \\
+          \sH{xx}println(x)\\
+          \}
+        \end{alltt}
+      \end{block}
+
+
+      \onslide<3>
       \begin{block}{Determinism}
         Every execution of a given program with given input eventually
         \begin{itemize}
@@ -104,7 +120,7 @@
         \end{itemize}
       \end{block}
 
-      \onslide<3>
+      \onslide<4>
       \begin{block}{Locking}
         \begin{alltt}
           \sK{synchronized} \{\\
@@ -122,20 +138,6 @@
         \end{alltt}
       \end{block}
 
-      \onslide<4>
-      \begin{block}{Blocking}
-        \begin{alltt}
-          println(f.result)
-        \end{alltt}
-      \end{block}
-
-      \begin{block}{Asynchronous}
-        \begin{alltt}
-          f.onComplete \{ x => \\
-          \sH{xx}println(x)\\
-          \}
-        \end{alltt}
-      \end{block}
 
     \end{overprint}
 
@@ -230,6 +232,7 @@
       \sK{def} \sF{map}[\sT S](\sV f: \sT{T => S}): \sT{FlowPool[S]}\sS\\
       \sK{def} \sF{flatMap}[\sT S](\sV f: \sT{T => FlowPool[S]}): \sT{FlowPool[S]}\sS\\
       \sK{def} \sF{fold}[\sT{U >: T}](\sV z: \sT U)(\sV{op}: \sT{(U, U) => U}): \sT{Future[U]}\sS\\
+      \sH{x}\\
       \sK{def} \sF{fill}[\sT T](\sV n: \sT{Int})(\sV{el}: \sT{=>T}): \sT{FlowPool[T]} \sS\\
       \sK{def} \sF{iterate}[\sT T](\sV{start}: \sT T, \sV{len}: \sT{Int})(\sV f: \sT{(T) => T}): \sT{FlowPool[T]}
     \end{alltt}
