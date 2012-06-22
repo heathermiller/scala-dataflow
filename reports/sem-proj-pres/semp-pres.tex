@@ -39,11 +39,9 @@
 \title{FlowPools}
 \subtitle{A Lock-Free Deterministic Concurrent Dataflow Abstraction}
 
-\author{Tobias Schlatter\inst{1} \and Aleksandar Prokopec\inst{2} \and
-  Heather Miller\inst{2} \and  Philipp Haller\inst{2} \and Martin
-  Odersky\inst{2}}
+\author{Tobias Schlatter}
 \date{June 22, 2012}
-\institute{\inst{1}Student, EPFL \and \inst{2}Advisors, LAMP, EPFL}
+\institute{Advisors: Aleksandar Prokopec, Heather Miller, Philipp Haller and Martin Odersky}
 
 \begin{document}
 
@@ -52,6 +50,28 @@
 \end{frame}
 
 \section{Introduction}
+
+\begin{frame}
+  \frametitle{Some Context \& Motivation}
+  
+  \begin{columns}
+    \begin{column}{.5\textwidth}
+      \begin{itemize}
+      \item Paper in LCPC
+      \item Project Focus:\\
+        Multi-Lane FlowPools
+      \item $49 - 54\%$ speedup
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{.5\textwidth}
+      \includegraphics[trim = 157mm 0mm 140mm 0mm, clip, width=\textwidth]
+      {../../benchmarks/pres_graphs/cpu-scaling-insert}
+    \end{column}
+  \end{columns}
+
+\end{frame}
+
 
 \begin{frame}
   \frametitle{Outline}
@@ -76,11 +96,11 @@
 
     \begin{block}{FlowPool Properties}
       \begin{itemize}
-      \item<+> Pool semantics
-      \item<+> Asynchronous
-      \item<+> Deterministic
-      \item<+> Lock-Free
-      \item<+> Unneeded Elements GC'd
+      \item<1> Pool semantics
+      \item<2,3> Asynchronous
+      \item<4> Deterministic
+      \item<5> Lock-Free
+      \item<6> Unneeded Elements GC'd
       \end{itemize}
     \end{block}
 
@@ -91,30 +111,19 @@
       \begin{block}{Pool semantics}
         \begin{itemize}
         \item Unordered
-        \item Multiple occurences
+        \item Multiple occurrences
         \item Insertion (\texttt{<<})
         \item Traversal (\texttt{foreach})
         \end{itemize}
       \end{block}
 
       \onslide<2>
-      \includegraphics{figs/async}
-      % \begin{block}{Blocking}
-      %   \begin{alltt}
-      %     println(f.result)
-      %   \end{alltt}
-      % \end{block}
-
-      % \begin{block}{Asynchronous}
-      %   \begin{alltt}
-      %     f.onComplete \{ x => \\
-      %     \sH{xx}println(x)\\
-      %     \}
-      %   \end{alltt}
-      % \end{block}
-
+      \includegraphics[page=1]{figs/async}
 
       \onslide<3>
+      \includegraphics[page=2]{figs/async}
+
+      \onslide<4>
       \begin{block}{Determinism}
         Every execution of a given program with given input eventually
         \begin{itemize}
@@ -124,7 +133,7 @@
         \end{itemize}
       \end{block}
 
-      \onslide<4>
+      \onslide<5>
       \begin{block}{Locking}
         \begin{alltt}
           \sK{synchronized} \{\\
@@ -138,7 +147,7 @@
           \sK{do} \{\\
           \sH{xx}ov = READ(i)\\
           \sH{xx}nv = ov + 1\\
-          \} \sK{while} (!CAS(i, nv, ov))
+          \} \sK{while} (!CAS(i, ov, nv))
         \end{alltt}
       \end{block}
 
@@ -291,10 +300,11 @@
         \uncover<4->{a = m ++ f}\\
         \uncover<5->{r = a.fold(0)(\_ + \_)}\\
         \sH{x}\\
-        \uncover<6->{\sK{for} (i <- 1 to 1000) \{\\
+        \uncover<6->{
+        s.seal(1000)\\
+        \sK{for} (i <- 1 to 1000) \{\\
         \sH{xx}s << i\\
-        \}\\
-        s.seal(1000)
+        \}
         }
       \end{alltt}
 
@@ -338,8 +348,8 @@
     \item<4-> \texttt{next = block(i+1)}
     \item<4-> \texttt{curo = block(i)}
     \item<5-> \texttt{CAS(block(i + 1), next, curo)}
-    \item<6-> \texttt{CAS(block(i), el, curo)}
-    \item<7-> \texttt{invokeCallbacks(el, curo)}
+    \item<6-> \texttt{CAS(block(i), curo, W)}
+    \item<7-> \texttt{invokeCallbacks(W, curo)}
   \end{enumerate}
 
 \end{frame}
@@ -361,17 +371,17 @@
   \item<1-> \texttt{curo = block(i)\phantom{xxxx}(= C)}
   \item<4-> \texttt{next = block(i+1)\phantom{xx}(= C')}
   \item<6-> \texttt{CAS(block(i + 1), next, curo)}
-  \item<7-> \texttt{CAS(block(i), el, curo)}
-  \item<7-> \texttt{invokeCallbacks(el, next)}
+  \item<7-> \texttt{CAS(block(i), curo, W)}
+  \item<7-> \texttt{invokeCallbacks(W, curo)}
   \end{enumerate}
 
+  % Observed State box
   \begin{textblock}{6}(9.5,8.6)  
     \begin{visibleenv}<5->
       Observed State (\alert<5>{inconsistent})
       \includegraphics{figs/wrong_state}
     \end{visibleenv}
   \end{textblock}
-
 
 \end{frame}
 
@@ -389,7 +399,7 @@
   \begin{enumerate}
     \item<2-> \texttt{cbs = block(i)}
     \item[]<3-> \texttt{s = Seal(sealsize, cbs)}
-    \item<4-> \texttt{CAS(block(i + 1), next, cbs)}
+    \item<4-> \texttt{CAS(block(i), cbs, s)}
   \end{enumerate}
 
 \end{frame}
@@ -539,11 +549,11 @@
   \end{block}
       
   \pause
-  \begin{block}{Resource Use}
+  \begin{block}{Performance \& Scalability}
     \begin{itemize}
-    \item Speed comparable to Java std Qs
+    \item Speed comparable to Java standard Queues
     \item Scalable
-    \item Uneeded Elements GC'd
+    \item Unneeded Elements GC'd
     \end{itemize}
   \end{block}
 
@@ -616,9 +626,9 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{Hash Fct}
+  \frametitle{Hash Function}
 
-  Byteswap Hashing
+  Byte-swap Hashing
   \[ hash(x) = \mathrm{rb}(x \cdot 9e3775cd_{16}) \cdot 9e3775cd_{16} \]
 
 \end{frame}
