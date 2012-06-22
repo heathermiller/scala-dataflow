@@ -1,4 +1,5 @@
 *.nav
 *.out
-*.pdf
+/*.pdf
 *.snm
+*.pdf.info
