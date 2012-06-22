@@ -52,6 +52,7 @@
 \end{frame}
 
 \section{Introduction}
+
 \begin{frame}
   \frametitle{Outline}
   
@@ -61,6 +62,8 @@
   \begin{block}{Benchmarks}\end{block}
 
 \end{frame}
+
+\section{What is a FlowPool}
 
 \begin{frame}
   \frametitle{What is a FlowPool}
@@ -300,6 +303,8 @@
 
 \end{frame}
 
+\section{Implementation}
+
 \begin{frame}
   \frametitle{Implementation}
   \framesubtitle{Basic Structure / Garbage Collection of Unneeded Elements}
@@ -388,6 +393,8 @@
 
 \end{frame}
 
+\section{Multi-Lane FlowPools}
+
 \begin{frame}
   \frametitle{Multi-Lane FlowPools}
   \framesubtitle{Overview}
@@ -464,6 +471,8 @@
 
 \end{frame}
 
+\section{Benchmarks}
+
 \begin{frame}
   \frametitle{Benchmarks}
   \framesubtitle{CPU-Scaling -- Insertions}
@@ -512,6 +521,7 @@
 
 \end{frame}
 
+\section{Conclusion}
 
 \begin{frame}
   \frametitle{Conclusion}
@@ -542,6 +552,83 @@
 
 \end{frame}
 
+\section{Appendix}
+
+\begin{frame}
+  \frametitle{Details about Benchmarks}
+
+  \begin{columns}[t]
+    \begin{column}{.5\textwidth}
+      \begin{block}{Insert / Reduce}
+        \begin{itemize}
+        \item $5\cdot10^6$ elements
+        \item 20 measurements
+        \end{itemize}
+      \end{block}
+
+      \begin{block}{Communication / GC}
+        \begin{itemize}
+        \item Parallelization level: 1
+        \item Measurements
+          \begin{itemize}
+          \item UltraSPARC T2: 2
+          \item 4-core i7: 10
+          \item 32-core Xeon: 3
+          \end{itemize}
+        \end{itemize}
+      \end{block}
+
+    \end{column}
+    \begin{column}{.5\textwidth}
+      \begin{block}{Java Command}
+        \small\texttt{-Xmx2048m -Xms2048m -XX:+UseCondCardMark
+          -verbose:gc -XX:+PrintGCDetails -server}.
+      \end{block}
+      \begin{block}{Java Version}
+        \begin{itemize}
+        \item Intel \small\texttt{
+            1.7.0\_04-ea-b15\\
+            HotSpot 64-Bit Server VM (build 23.0-b16, mixed mode)
+          }
+        \item SPARC \small\texttt{
+            1.7.0\_03-b04\\
+            HotSpot Server VM (build 22.1-b02, mixed mode)
+          }
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+    
+\end{frame}
+
+\begin{frame}
+  \frametitle{Details about Benchmarks}
+
+  \begin{block}{Architectures}
+    \begin{itemize}
+    \item octa-core 1.2GHz UltraSPARC T2 w/ 64 HW threads
+    \item quad-core 3.4 GHz i7-2600 (w/ HT)
+    \item 4x octa-core 2.27 GHz Intel Xeon x7560 (w/ HT)
+    \end{itemize}
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Hash Fct}
+
+  Byteswap Hashing
+  \[ hash(x) = \mathrm{rb}(x \cdot 9e3775cd_{16}) \cdot 9e3775cd_{16} \]
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Efficiency of Hashing}
+
+  \includegraphics[width=\textwidth]{../../benchmarks/graphs/lanef-scaling}\\
+  $\times$ UltraSPARC T2, $\triangle$ 4-core i7
+
+\end{frame}
 
 \end{document}
 
