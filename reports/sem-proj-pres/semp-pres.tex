@@ -164,15 +164,18 @@
 
   \begin{alltt} \small
     \sK{def} \sF{<<}(\sV x: \sT T): \sT{FlowPool[T]}\sS\\
-    \strike<6>{\sK{def} \sF{foreach}[\sT U](\sV f: \sT{T => U}): \sT{Future[Unit]}}\sS\\
+    \strike<7>{\sK{def} \sF{foreach}[\sT U](\sV f: \sT{T => U}): \sT{Future[Unit]}}\sS\\
     \uncover<2->{\sK{def} \sF{seal}(\sV{size}: \sT{Int}): \sT{Unit}\sS}\\
-    \uncover<4->{\sK{def} \sF{aggregate}[\sT S](\sV{zero}: \sT{=>S})(\sV{cmb}: \sT{(S, S) => S})}\\
-    \uncover<4->{\sH{def aggregate[S]}(\sV{folder}: \sT{(S, T) => S}): \sT{Future[S]}}\\
+    \uncover<6->{\sK{def} \sF{aggregate}[\sT S](\sV{zero}: \sT{=>S})(\sV{cmb}: \sT{(S, S) => S})}\\
+    \uncover<6->{\sH{def aggregate[S]}(\sV{folder}: \sT{(S, T) => S}): \sT{Future[S]}}\\
     \sH{xx}
   \end{alltt}
 
   \begin{overprint}
-    \onslide<3>
+    \onslide<3,4>
+    \texttt{Thread 1:            \qquad \qquad \qquad Thread 2:}\\
+    \texttt{\sH{xx}p << x\sH{xx} \qquad \qquad \qquad \sH{xx}p.seal(\only<4>{1})}
+    \onslide<5>
     \begin{alltt} \small
       \sK{def} \sF{fill}[\sT T](\sV n: \sT{Int})(\sV{el}: \sT{=>T}): \sT{FlowPool[T]} = \{\\
       \sH{xx}\sK{val} \sV p = \sK{new} FlowPool[T]\\
@@ -180,7 +183,7 @@
       \sH{xx}p.seal(n); p\\
       \}
     \end{alltt}
-    \onslide<5>
+    \onslide<6>
     \begin{alltt} \small
       \sK{def} \sF{filter}(\sV{pred}: \sT{T => Boolean}): \sT{FlowPool[T]} = \{\\
       \sH{xx}\sK{val} \sV p = \sK{new} FlowPool[T]\\
@@ -191,7 +194,7 @@
       \sH{xx}\} map \{ sz => p.seal(sz) \}; p\\
       \}
     \end{alltt}
-    \onslide<6>
+    \onslide<7>
     \begin{alltt} \small
       \sK{def} \sF{foreach}[\sT U](\sV f: \sT{T => U}): \sT{Future[Unit]} = \{\\
       \sH{xx}aggregate(())((\_, \_) => ()) \{\\
@@ -202,7 +205,7 @@
   \end{overprint}
 
   \begin{textblock}{2}(13,9)
-    \begin{onlyenv}<3>
+    \begin{onlyenv}<5>
       \begin{tikzpicture}[ node distance = 2cm ]
         \tikzset{EdgeStyle/.style={post}}       % directed edges
       
@@ -219,7 +222,7 @@
   \end{textblock}
 
   \begin{textblock}{2}(13,9)
-    \begin{onlyenv}<5>
+    \begin{onlyenv}<6>
       \begin{tikzpicture}[ node distance = 2cm ]
         \tikzset{EdgeStyle/.style={post}}       % directed edges
       
