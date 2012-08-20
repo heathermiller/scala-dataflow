@@ -14,7 +14,7 @@ trait FPInsertBench extends testing.Benchmark with Utils.Props with FPBuilder {
     val writers = for (ti <- 1 to par) yield task {
       var i = 0
       while (i < work) {
-        builder << data
+        builder += data
         i += 1
       }
     }

@@ -1,27 +1,31 @@
 package scala.dataflow
 
+
+
 import java.lang.Thread
 import java.util.concurrent.ThreadLocalRandom
 import scala.collection.mutable.{ Set => MSet }
 import impl._
+
+
 
 object MLFPTest extends App {
   import Utils._
 
   val tasks = 1000
   val n = 100
-  val pool = new MultiLaneFlowPool[(Int,Int)](tasks)
-  val b = pool.builder
+  val p = new pool.MultiLane[(Int,Int)](tasks)
+  val b = p.builder
 
   val vals = MSet.empty[(Int,Int)]
 
-  val sfill = pool.foreach { x =>
+  val sfill = p.foreach { x =>
     vals.synchronized {
       vals += x
     }
   }
-  val rf = pool.mapFold(0)(_ + _)(x => x._2)
-  val sf = pool.mapFold(0)(_ + _)(x => x._1)
+  val rf = p.mapFold(0)(_ + _)(x => x._2)
+  val sf = p.mapFold(0)(_ + _)(x => x._1)
 
   val rc = n * (n + 1) / 2 * tasks
   val sc = tasks * (tasks + 1) / 2 * n
@@ -36,7 +40,7 @@ object MLFPTest extends App {
     task {
       val v = ThreadLocalRandom.current()
       for (j <- 1 to n) {
-        b << (i,j)
+        b += (i, j)
         Thread.sleep(v.nextLong(10))
       }
     }

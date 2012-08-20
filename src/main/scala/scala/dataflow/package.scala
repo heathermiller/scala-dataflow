@@ -15,7 +15,6 @@ package object dataflow {
   }
   
   private[dataflow] def getUnsafe(): Unsafe = {
-    // Not on bootclasspath
     if (this.getClass.getClassLoader == null) Unsafe.getUnsafe()
     try {
       val fld = classOf[Unsafe].getDeclaredField("theUnsafe")
@@ -31,4 +30,12 @@ package object dataflow {
 
 package dataflow {
   
+  trait FlowFactory[+CC[_]] {
+
+    def apply[T](): CC[T]
+
+    def unfold[T](start: T*)(f: T => FlowPool[T]): CC[T]
+
+  }
+
 }

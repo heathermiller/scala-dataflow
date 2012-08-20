@@ -7,18 +7,18 @@ trait FPReduceBench extends testing.Benchmark with Utils.Props with FPBuilder {
   import Utils._
   
   override def run() {
-    val pool = newFP[Data]
-    val builder = pool.builder
+    val p = newFP[Data]
+    val builder = p.builder
     val work = size / par
     val data = new Data(1)
 
-    val res = pool.aggregate(0)(_ + _)(_ + _.i)
+    val res = p.aggregate(0)(_ + _)(_ + _.i)
     //val res = pool.mapFold(0)(_ + _)(_.i)
     
     for (ti <- 1 to par) yield task {
       var i = 0
       while (i < work) {
-        builder << data
+        builder += data
         i += 1
       }
     }
@@ -27,7 +27,7 @@ trait FPReduceBench extends testing.Benchmark with Utils.Props with FPBuilder {
 
     res.blocking
     println(res.blocking)
-    println(impl.CallbackElem.debug.computestarts)
+    println(pool.CallbackElem.debug.computestarts)
   }
   
   def run2() {
@@ -41,7 +41,7 @@ trait FPReduceBench extends testing.Benchmark with Utils.Props with FPBuilder {
     for (ti <- 1 to par) yield task {
       var i = 0
       while (i < work) {
-        builder << ()
+        builder += ()
         i += 1
       }
     }

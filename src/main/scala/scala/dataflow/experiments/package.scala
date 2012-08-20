@@ -5,7 +5,7 @@ package scala.dataflow
 
 
 
-package object api {
+package object experiments {
   
   type Id[X] = X
   
@@ -29,7 +29,7 @@ package object api {
 }
 
 
-package api {
+package experiments {
   
   trait FlowLike[T] {
     

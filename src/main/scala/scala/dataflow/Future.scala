@@ -77,3 +77,9 @@ class Future[T] {
   }
 
 }
+
+
+object Future {
+  def lift[T, R](op: (T, T) => R): (Future[T], Future[T]) => Future[R] =
+    (f: Future[T], g: Future[T]) => for (x <- f; y <- g) yield op(x, y)
+}

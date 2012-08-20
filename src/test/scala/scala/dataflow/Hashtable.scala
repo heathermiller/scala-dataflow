@@ -8,7 +8,7 @@ package scala.dataflow
 object HashTable extends testing.Benchmark with Utils.Props {
   import Utils._
   
-  var table = new impl.FlowHashTable[Data, Data]()
+  var table = new hashtable.FlowHashTable[Data, Data]()
   val data = new Array[Data](size)
   for (i <- 0 until size) data(i) = new Data(i)
   
@@ -24,7 +24,7 @@ object HashTable extends testing.Benchmark with Utils.Props {
   }
   
   override def setUp() {
-    table = new impl.FlowHashTable()
+    table = new hashtable.FlowHashTable()
   }
   
   def run() {

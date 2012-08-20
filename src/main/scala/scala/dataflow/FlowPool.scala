@@ -6,7 +6,7 @@ import jsr166y._
 
 
 
-trait FlowPool[T] {
+trait FlowPool[T] extends Builder[T] {
   
   def newPool[S]: FlowPool[S]
   
@@ -14,6 +14,10 @@ trait FlowPool[T] {
   
   def aggregate[S](zero: =>S)(cmb: (S, S) => S)(folder: (S, T) => S): Future[S]
   
+  /* views */
+
+  def diverger = new pool.Diverger[T](this)
+
   /* combinators */
   
   def mapFold[U, V >: U](zero: =>V)(cmb: (V, V) => V)(map: T => U) =
@@ -29,12 +33,17 @@ trait FlowPool[T] {
       (all, x) => all && p(x)
     }
   
+  def count(p: T => Boolean): Future[Int] =
+    aggregate(0)(_ + _) {
+      (cnt, x) => cnt + (if (p(x)) 1 else 0)
+    }
+  
   def ++[S >: T](that: FlowPool[S]): FlowPool[S] = {
     val fp = newPool[S]
     val b  = fp.builder
     
-    for (x <- this) b << x
-    for (y <- that) b << y
+    for (x <- this) b += x
+    for (y <- that) b += y
     
     fp
   }
@@ -45,7 +54,7 @@ trait FlowPool[T] {
     
     aggregate(0)(_ + _) {
       (acc, x) => if (p(x)) {
-        b << x
+        b += x
         acc + 1
       } else acc + 0
     } map { b.seal(_) }
@@ -63,7 +72,7 @@ trait FlowPool[T] {
       (sf1, x) =>
       val sf2 = f(x).aggregate(0)(_ + _) {
         (acc, y) =>
-        b << y
+        b += y
         acc + 1
       }
       futureAdd(sf1, sf2)
@@ -86,7 +95,7 @@ trait FlowPool[T] {
 
     aggregate(0)(_ + _) {
       (acc, x) =>
-      b << f(x)
+      b += f(x)
       acc + 1
     } map { b.seal _ }
 
@@ -95,7 +104,8 @@ trait FlowPool[T] {
 
 }
 
-object FlowPool {
+
+object FlowPool extends pool.Factory[FlowPool] {
   def BLOCKSIZE = 256
   def LAST_CALLBACK_POS = BLOCKSIZE - 3
   def MUST_EXPAND_POS = BLOCKSIZE - 2
@@ -105,12 +115,18 @@ object FlowPool {
   private[dataflow] def newBlock(idx: Int, initEl: AnyRef) = {
     val bl = new Array[AnyRef](BLOCKSIZE)
     bl(0) = initEl
-    bl(MUST_EXPAND_POS) = impl.MustExpand
+    bl(MUST_EXPAND_POS) = pool.MustExpand
     bl(IDX_POS) = idx.asInstanceOf[AnyRef]
     bl
   }
   
   val forkjoinpool = new ForkJoinPool
+  
+  def apply[T]() = linear[T]
+
+  def linear[T] = new pool.Linear[T]
+  
+  def multi[T](lanes: Int) = new pool.MultiLane[T](lanes)
   
   def task[T](fjt: ForkJoinTask[T]) = Thread.currentThread match {
     case fjw: ForkJoinWorkerThread =>
@@ -118,4 +134,17 @@ object FlowPool {
     case _ =>
       forkjoinpool.execute(fjt)
   }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+

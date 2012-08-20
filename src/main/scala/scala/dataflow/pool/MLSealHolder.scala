@@ -1,4 +1,4 @@
-package scala.dataflow.impl
+package scala.dataflow.pool
 
 import scala.annotation.tailrec
 

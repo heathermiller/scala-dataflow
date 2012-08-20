@@ -25,7 +25,7 @@ trait FPHistBench extends testing.Benchmark with Utils.Props with FPBuilder {
     for (ti <- 1 to par) yield task {
       var i = 0
       while (i < work) {
-        builder << data
+        builder += data
         i += 1
       }
     }
