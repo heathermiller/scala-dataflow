@@ -15,10 +15,8 @@ package object pool {
 
       fp ++= (start: _*)
 
-      val diverger = fp.diverger
-      for (x <- diverger) {
+      for (x <- fp) {
         val more = f(x)
-        diverger.depend(more)
         for (y <- more) fp += y
       }
 

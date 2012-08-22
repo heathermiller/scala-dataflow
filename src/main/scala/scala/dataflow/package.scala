@@ -3,6 +3,8 @@ package scala
 
 
 import sun.misc.Unsafe
+import language.experimental.macros
+import scala.reflect.makro.Context
 
 
 
@@ -23,6 +25,20 @@ package object dataflow {
     } catch {
       case e => throw new RuntimeException("Could not obtain access to sun.misc.Unsafe", e)
     }
+  }
+
+  /* macros */
+
+  def seal[T](body: T): T = macro seal_impl[T]
+
+  def seal_impl[T](c: Context)(body: c.Expr[T]): c.Expr[T] = {
+    import c.universe._
+
+    // analyze body
+
+    // invoke special seal at the end if that is safe
+
+    body
   }
 
 }

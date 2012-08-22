@@ -14,10 +14,6 @@ trait FlowPool[T] extends Builder[T] {
   
   def aggregate[S](zero: =>S)(cmb: (S, S) => S)(folder: (S, T) => S): Future[S]
   
-  /* views */
-
-  def diverger = new pool.Diverger[T](this)
-
   /* combinators */
   
   def mapFold[U, V >: U](zero: =>V)(cmb: (V, V) => V)(map: T => U) =

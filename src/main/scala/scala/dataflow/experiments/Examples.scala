@@ -17,7 +17,7 @@ object Examples {
     def interpret(suffix: String) {
       val possibilities = for {
         length <- 0 until (longest min suffix.length)
-        val firstword = suffix.substring(0, length)
+        firstword = suffix.substring(0, length)
         if dictionary(firstword)
         solution <- solutions.blocking(suffix.substring(length, suffix.length))
       } yield firstword :: solution
@@ -42,7 +42,7 @@ object Examples {
     def interpret(suffix: String) {
       for (
         length <- 0 until (longest min suffix.length);
-        val firstword = suffix.substring(0, length);
+        firstword = suffix.substring(0, length);
         if dictionary(firstword);
         possibleSolutions <- solutions(suffix.substring(length, suffix.length))
       ) {
@@ -332,7 +332,7 @@ object Examples {
 
 
 object Scratchpad {
-  
+
 }
 
 

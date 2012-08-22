@@ -172,7 +172,7 @@ object MultiLane extends Factory[MultiLane] {
             else sealTag(p, bli, curblock, pos)
           } else sealTag(p, bli, curblock, pos + 1)
         case _: Seal[_] => Right(true)
-        case ov @ SealTag(op, cbs) =>
+        case ov @ SealTag(op, cbs: CallbackList[T]) =>
           val cnt = totalElems(curblock, pos)
           if (op eq p) Left(cnt)
           else {
@@ -180,7 +180,7 @@ object MultiLane extends Factory[MultiLane] {
               case gpr: Proposition =>
                 if (gpr ne p) Right(false)
                 else {
-                  val nv = SealTag(p, cbs)
+                  val nv = SealTag[T](p, cbs)
                   if (cnt > p.size) Right(false)
                   else if (CAS(curblock, pos, ov, nv)) Left(cnt)
                   else sealTag(p, bli, curblock, pos)

@@ -10,8 +10,4 @@ trait Builder[T] {
   	for (x <- xs) this += x
   	this
   }
-
-  def <<<(fp: FlowPool[T]): this.type = {
-    null // TODO
-  }
 }

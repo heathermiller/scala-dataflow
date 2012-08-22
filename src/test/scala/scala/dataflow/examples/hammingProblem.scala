@@ -41,7 +41,7 @@ trait Hamming extends testing.Benchmark with Utils.Props {
     val output = factory.unfold(1) { num =>
       for {
         p <- primes
-        val multiple = num * p
+        multiple = num * p
         if multiple <= greatest
       } yield multiple
     }

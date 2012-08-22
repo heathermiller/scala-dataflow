@@ -2,7 +2,7 @@ package scala.dataflow
 
 
 
-import impl._
+import pool._
 
 
 

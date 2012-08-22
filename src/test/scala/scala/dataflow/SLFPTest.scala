@@ -1,6 +1,6 @@
 package scala.dataflow
 
-import impl._
+import pool._
 
 object SLFPTest extends App {
 

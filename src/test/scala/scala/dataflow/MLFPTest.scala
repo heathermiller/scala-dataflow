@@ -5,7 +5,7 @@ package scala.dataflow
 import java.lang.Thread
 import java.util.concurrent.ThreadLocalRandom
 import scala.collection.mutable.{ Set => MSet }
-import impl._
+import pool._
 
 
 

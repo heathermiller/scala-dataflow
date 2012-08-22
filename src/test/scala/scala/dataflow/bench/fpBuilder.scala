@@ -3,7 +3,7 @@ package scala.dataflow.bench
 
 
 import scala.dataflow._
-import impl._
+import pool._
 
 
 
