@@ -93,15 +93,15 @@
   \begin{columns}[t]
     \column{.5\textwidth}
 
-    Pool: concurrent collections abstraction
+    Pool: concurrent collections abstraction for Scala
 
     \begin{block}{FlowPool Properties}
       \begin{itemize}
       \item<1> Pool semantics
-      \item<2,3> Asynchronous
-      \item<4> Deterministic
-      \item<5> Lock-Free
-      \item<6> Unneeded Elements GC'd
+      \item<2,3,4> Asynchronous
+      \item<5> Deterministic
+      \item<6> Lock-Free
+      \item<7> Unneeded Elements GC'd
       \end{itemize}
     \end{block}
 
@@ -125,6 +125,18 @@
       \includegraphics[page=2]{figs/async}
 
       \onslide<4>
+      \begin{block}{Closures}
+        \begin{alltt} \small
+          \sK{val} \sV s = \sK{new} FlowPool[Int]\\
+          \sK{val} \sV c = 5\\
+          \\
+          c.foreach \{\\
+          \sH{xx}x => println(c + x)\\
+          \}
+        \end{alltt}
+      \end{block}
+
+      \onslide<5>
       \begin{block}{Determinism}
         Every execution of a given program with given input eventually
         \begin{itemize}
@@ -134,7 +146,7 @@
         \end{itemize}
       \end{block}
 
-      \onslide<5>
+      \onslide<6>
       \begin{block}{Locking}
         \begin{alltt}
           \sK{synchronized} \{\\
@@ -152,7 +164,7 @@
         \end{alltt}
       \end{block}
 
-      \onslide<6>
+      \onslide<7>
       %% TODO add explanations here!
 
     \end{overprint}
