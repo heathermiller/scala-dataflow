@@ -39,9 +39,10 @@
 \title{FlowPools}
 \subtitle{A Lock-Free Deterministic Concurrent Dataflow Abstraction}
 
-\author{Tobias Schlatter}
-\date{June 22, 2012}
-\institute{Advisors: Aleksandar Prokopec, Heather Miller, Philipp Haller and Martin Odersky}
+\author{Aleksandar Prokopec \and Heather Miller \and Tobias Schlatter
+  \and Philipp Haller \and Martin Odersky}
+\date{September 12, 2012}
+\institute{LAMP, EPFL}
 
 \begin{document}
 
@@ -151,6 +152,8 @@
         \end{alltt}
       \end{block}
 
+      \onslide<6>
+      %% TODO add explanations here!
 
     \end{overprint}
 
@@ -435,55 +438,6 @@
 
 \end{frame}
 
-\begin{frame}
-  \frametitle{Multi-Lane FlowPools}
-  \framesubtitle{Basic Structure}
-  \begin{center}
-    \includegraphics{figs/MLFP}
-  \end{center}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Multi-Lane FlowPools}
-  \framesubtitle{Seal \quad \texttt{\sF{seal}\sN(\sV n\sN:\;\sT{Int}\sN)}}
-
-  \includegraphics<1>[page=1]{figs/MLFP_seal}
-  \includegraphics<2>[page=2]{figs/MLFP_seal}
-  \includegraphics<3>[page=3]{figs/MLFP_seal}
-  \includegraphics<4>[page=4]{figs/MLFP_seal}
-  \includegraphics<5>[page=5]{figs/MLFP_seal}
-  \includegraphics<6>[page=6]{figs/MLFP_seal}
-  \includegraphics<7>[page=7]{figs/MLFP_seal}
-  \includegraphics<8>[page=8]{figs/MLFP_seal}
-
-\end{frame}
-
-\begin{frame}
-  \frametitle{Multi-Lane FlowPools}
-  \framesubtitle{Insert / Choice of Lane}
-
-  \includegraphics<1>[page=1]{figs/MLFP_insert}
-  \includegraphics<2>[page=2]{figs/MLFP_insert}
-  \includegraphics<3>[page=3]{figs/MLFP_insert}
-  \includegraphics<4>[page=4]{figs/MLFP_insert}
-  \includegraphics<5>[page=5]{figs/MLFP_insert}
-  \includegraphics<6>[page=6]{figs/MLFP_insert}
-  \includegraphics<7>[page=7]{figs/MLFP_insert}
-  \includegraphics<8>[page=8]{figs/MLFP_insert}
-  \includegraphics<9>[page=9]{figs/MLFP_insert}
-  \includegraphics<10>[page=10]{figs/MLFP_insert}
-  \includegraphics<11>[page=11]{figs/MLFP_insert}
-
-  \begin{textblock}{8}(8,2)
-    \begin{enumerate}
-    \item<1-> $L_{id} = T_{id} \bmod L_{tot}$
-    \item<4-> $L_{id} = hash(T_{id} + C) \bmod L_{tot}$
-    \item<7-> Exhaustive search
-    \end{enumerate}
-  \end{textblock}
-
-
-\end{frame}
 
 \section{Benchmarks}
 
@@ -625,6 +579,56 @@
     \item 4x octa-core 2.27 GHz Intel Xeon x7560 (w/ HT)
     \end{itemize}
   \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Multi-Lane FlowPools}
+  \framesubtitle{Basic Structure}
+  \begin{center}
+    \includegraphics{figs/MLFP}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Multi-Lane FlowPools}
+  \framesubtitle{Seal \quad \texttt{\sF{seal}\sN(\sV n\sN:\;\sT{Int}\sN)}}
+
+  \includegraphics<1>[page=1]{figs/MLFP_seal}
+  \includegraphics<2>[page=2]{figs/MLFP_seal}
+  \includegraphics<3>[page=3]{figs/MLFP_seal}
+  \includegraphics<4>[page=4]{figs/MLFP_seal}
+  \includegraphics<5>[page=5]{figs/MLFP_seal}
+  \includegraphics<6>[page=6]{figs/MLFP_seal}
+  \includegraphics<7>[page=7]{figs/MLFP_seal}
+  \includegraphics<8>[page=8]{figs/MLFP_seal}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Multi-Lane FlowPools}
+  \framesubtitle{Insert / Choice of Lane}
+
+  \includegraphics<1>[page=1]{figs/MLFP_insert}
+  \includegraphics<2>[page=2]{figs/MLFP_insert}
+  \includegraphics<3>[page=3]{figs/MLFP_insert}
+  \includegraphics<4>[page=4]{figs/MLFP_insert}
+  \includegraphics<5>[page=5]{figs/MLFP_insert}
+  \includegraphics<6>[page=6]{figs/MLFP_insert}
+  \includegraphics<7>[page=7]{figs/MLFP_insert}
+  \includegraphics<8>[page=8]{figs/MLFP_insert}
+  \includegraphics<9>[page=9]{figs/MLFP_insert}
+  \includegraphics<10>[page=10]{figs/MLFP_insert}
+  \includegraphics<11>[page=11]{figs/MLFP_insert}
+
+  \begin{textblock}{8}(8,2)
+    \begin{enumerate}
+    \item<1-> $L_{id} = T_{id} \bmod L_{tot}$
+    \item<4-> $L_{id} = hash(T_{id} + C) \bmod L_{tot}$
+    \item<7-> Exhaustive search
+    \end{enumerate}
+  \end{textblock}
+
 
 \end{frame}
 
