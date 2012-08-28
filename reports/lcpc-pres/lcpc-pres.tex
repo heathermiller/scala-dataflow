@@ -52,28 +52,6 @@
 
 \section{Introduction}
 
-% \begin{frame}
-%   \frametitle{Some Context \& Motivation}
-  
-%   \begin{columns}
-%     \begin{column}{.5\textwidth}
-%       \begin{itemize}
-%       \item Paper in LCPC
-%       \item Project Focus:\\
-%         Multi-Lane FlowPools
-%       \item $49 - 54\%$ speedup
-%       \end{itemize}
-%     \end{column}
-
-%     \begin{column}{.5\textwidth}
-%       \includegraphics[trim = 157mm 0mm 140mm 0mm, clip, width=\textwidth]
-%       {../../benchmarks/pres_graphs/cpu-scaling-insert}
-%     \end{column}
-%   \end{columns}
-
-% \end{frame}
-
-
 \begin{frame}
   \frametitle{Outline}
   
@@ -213,14 +191,16 @@
   \frametitle{What is a FlowPool}
   \framesubtitle{Programming Model -- Elementary Operations}
 
-  \begin{alltt} \small
-    \sK{def} \sF{<<}(\sV x: \sT T): \sK{this}.\sK{type}\sS\\
-    \strike<7>{\sK{def} \sF{foreach}[\sT U](\sV f: \sT{T => U}): \sT{Future[Unit]}}\sS\\
-    \uncover<2->{\sK{def} \sF{seal}(\sV{size}: \sT{Int}): \sT{Unit}\sS}\\
-    \uncover<6->{\sK{def} \sF{aggregate}[\sT S](\sV{zero}: \sT{=>S})(\sV{cmb}: \sT{(S, S) => S})}\\
-    \uncover<6->{\sH{def aggregate[S]}(\sV{folder}: \sT{(S, T) => S}): \sT{Future[S]}}\\
-    \sH{\ \ }
-  \end{alltt}
+  \vspace{\baselineskip}
+
+  \begin{itemize}
+  \item Insertion (\texttt{<<})
+  \item Traversal (\texttt{foreach})
+  \item<2-> Sealing (\texttt{seal(n)})
+  \item<6-> Aggregation (\texttt{aggregate})
+  \end{itemize}
+
+  \vspace{\baselineskip}
 
   \begin{overprint}
     \onslide<3,4>
@@ -292,17 +272,14 @@
   \frametitle{What is a FlowPool}
   \framesubtitle{Programming Model -- Higher Level Operations}
 
-    \begin{alltt} \small
-      \sK{def} \sF{foreach}[\sT U](\sV f: \sT{T => U}): \sT{Future[Unit]}\sS\\
-      \sK{def} \sF{++}[\sT{S >: T}](\sV{that}: \sT{FlowPool[S]}): \sT{FlowPool[S]}\sS\\
-      \sK{def} \sF{filter}(\sV p: \sT{T => Boolean}): \sT{FlowPool[T]}\sS\\
-      \sK{def} \sF{map}[\sT S](\sV f: \sT{T => S}): \sT{FlowPool[S]}\sS\\
-      \sK{def} \sF{flatMap}[\sT S](\sV f: \sT{T => FlowPool[S]}): \sT{FlowPool[S]}\sS\\
-      \sK{def} \sF{fold}[\sT{U >: T}](\sV z: \sT U)(\sV{op}: \sT{(U, U) => U}): \sT{Future[U]}\sS\\
-      \sH{\ }\\
-      \sK{def} \sF{fill}[\sT T](\sV n: \sT{Int})(\sV{el}: \sT{=>T}): \sT{FlowPool[T]} \sS\\
-      \sK{def} \sF{iterate}[\sT T](\sV{start}: \sT T, \sV{len}: \sT{Int})(\sV f: \sT{(T) => T}): \sT{FlowPool[T]}
-    \end{alltt}
+  \begin{itemize}
+  \item Union (\texttt{++})
+  \item \texttt{filter}
+  \item \texttt{map}
+  \item \texttt{flatMap}
+  \item Reduction (\texttt{fold})
+  \item Generation (\texttt{fill}, \texttt{iterate})
+  \end{itemize}
 
 \end{frame}
 
@@ -494,9 +471,9 @@
   \pause
   \begin{block}{Performance \& Scalability}
     \begin{itemize}
-    \item Speed comparable to Java standard Queues
+    \item Speed comparable to Java standard queues
     \item Scalable
-    \item Unneeded Elements GC'd
+    \item Unneeded elements garbage collected
     \end{itemize}
   \end{block}
 
