@@ -52,26 +52,26 @@
 
 \section{Introduction}
 
-\begin{frame}
-  \frametitle{Some Context \& Motivation}
+% \begin{frame}
+%   \frametitle{Some Context \& Motivation}
   
-  \begin{columns}
-    \begin{column}{.5\textwidth}
-      \begin{itemize}
-      \item Paper in LCPC
-      \item Project Focus:\\
-        Multi-Lane FlowPools
-      \item $49 - 54\%$ speedup
-      \end{itemize}
-    \end{column}
+%   \begin{columns}
+%     \begin{column}{.5\textwidth}
+%       \begin{itemize}
+%       \item Paper in LCPC
+%       \item Project Focus:\\
+%         Multi-Lane FlowPools
+%       \item $49 - 54\%$ speedup
+%       \end{itemize}
+%     \end{column}
 
-    \begin{column}{.5\textwidth}
-      \includegraphics[trim = 157mm 0mm 140mm 0mm, clip, width=\textwidth]
-      {../../benchmarks/pres_graphs/cpu-scaling-insert}
-    \end{column}
-  \end{columns}
+%     \begin{column}{.5\textwidth}
+%       \includegraphics[trim = 157mm 0mm 140mm 0mm, clip, width=\textwidth]
+%       {../../benchmarks/pres_graphs/cpu-scaling-insert}
+%     \end{column}
+%   \end{columns}
 
-\end{frame}
+% \end{frame}
 
 
 \begin{frame}
@@ -146,26 +146,18 @@
         \end{itemize}
       \end{block}
 
-      \onslide<6>
-      \begin{block}{Locking}
-        \begin{alltt}
-          \sK{synchronized} \{\\
-          \sH{xx}i = i + 1\\
-          \}
-        \end{alltt}
-      \end{block}
-
-      \begin{block}{Lock-Free}
-        \begin{alltt}
-          \sK{do} \{\\
-          \sH{xx}ov = READ(i)\\
-          \sH{xx}nv = ov + 1\\
-          \} \sK{while} (!CAS(i, ov, nv))
-        \end{alltt}
-      \end{block}
-
       \onslide<7>
-      %% TODO add explanations here!
+      \begin{block}{Garbage Collection}
+        \begin{alltt}
+          \sK{def} create() = \{\\
+          \sH{\ \ }\sK{val} a = \sK{new} Object()\\
+          \sH{\ \ }\sK{val} b = \sK{new} Object()\\
+          \sH{\ \ }\sK{return} a\\
+          \}\\
+          \\
+          \sK{val} x = create()
+        \end{alltt}
+      \end{block}
 
     \end{overprint}
 
@@ -178,7 +170,7 @@
   \framesubtitle{Programming Model -- Elementary Operations}
 
   \begin{alltt} \small
-    \sK{def} \sF{<<}(\sV x: \sT T): \sT{FlowPool[T]}\sS\\
+    \sK{def} \sF{<<}(\sV x: \sT T): \sK{this}.\sK{type}\sS\\
     \strike<7>{\sK{def} \sF{foreach}[\sT U](\sV f: \sT{T => U}): \sT{Future[Unit]}}\sS\\
     \uncover<2->{\sK{def} \sF{seal}(\sV{size}: \sT{Int}): \sT{Unit}\sS}\\
     \uncover<6->{\sK{def} \sF{aggregate}[\sT S](\sV{zero}: \sT{=>S})(\sV{cmb}: \sT{(S, S) => S})}\\
