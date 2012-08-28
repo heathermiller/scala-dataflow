@@ -131,7 +131,7 @@
           \sK{val} \sV c = 5\\
           \\
           c.foreach \{\\
-          \sH{xx}x => println(c + x)\\
+          \sH{\ \ }x => println(c + x)\\
           \}
         \end{alltt}
       \end{block}
@@ -175,38 +175,38 @@
     \uncover<2->{\sK{def} \sF{seal}(\sV{size}: \sT{Int}): \sT{Unit}\sS}\\
     \uncover<6->{\sK{def} \sF{aggregate}[\sT S](\sV{zero}: \sT{=>S})(\sV{cmb}: \sT{(S, S) => S})}\\
     \uncover<6->{\sH{def aggregate[S]}(\sV{folder}: \sT{(S, T) => S}): \sT{Future[S]}}\\
-    \sH{xx}
+    \sH{\ \ }
   \end{alltt}
 
   \begin{overprint}
     \onslide<3,4>
     \texttt{Thread 1:            \qquad \qquad \qquad Thread 2:}\\
-    \texttt{\sH{xx}p << x\sH{xx} \qquad \qquad \qquad \sH{xx}p.seal(\only<4>{1})}
+    \texttt{\sH{\ \ }p << x\sH{\ \ } \qquad \qquad \qquad \sH{\ \ }p.seal(\only<4>{1})}
     \onslide<5>
     \begin{alltt} \small
       \sK{def} \sF{fill}[\sT T](\sV n: \sT{Int})(\sV{el}: \sT{=>T}): \sT{FlowPool[T]} = \{\\
-      \sH{xx}\sK{val} \sV p = \sK{new} FlowPool[T]\\
-      \sH{xx}\sK{for} (i <- 1 to n) \{ p << el \}\\
-      \sH{xx}p.seal(n); p\\
+      \sH{\ \ }\sK{val} \sV p = \sK{new} FlowPool[T]\\
+      \sH{\ \ }\sK{for} (i <- 1 to n) \{ p << el \}\\
+      \sH{\ \ }p.seal(n); p\\
       \}
     \end{alltt}
     \onslide<6>
     \begin{alltt} \small
       \sK{def} \sF{filter}(\sV{pred}: \sT{T => Boolean}): \sT{FlowPool[T]} = \{\\
-      \sH{xx}\sK{val} \sV p = \sK{new} FlowPool[T]\\
-      \sH{xx}\sK{this}.aggregate(0)(\_ + \_) \{\\
-      \sH{xxxx}(acc, x) => \sK{if} pred(x) \{\\
-      \sH{xxxxxx}p << x; acc + 1\\
-      \sH{xxxx}\} \sK{else} acc\\
-      \sH{xx}\} map \{ sz => p.seal(sz) \}; p\\
+      \sH{\ \ }\sK{val} \sV p = \sK{new} FlowPool[T]\\
+      \sH{\ \ }\sK{this}.aggregate(0)(\_ + \_) \{\\
+      \sH{\ \ \ \ }(acc, x) => \sK{if} pred(x) \{\\
+      \sH{\ \ \ \ \ \ }p << x; acc + 1\\
+      \sH{\ \ \ \ }\} \sK{else} acc\\
+      \sH{\ \ }\} map \{ sz => p.seal(sz) \}; p\\
       \}
     \end{alltt}
     \onslide<7>
     \begin{alltt} \small
       \sK{def} \sF{foreach}[\sT U](\sV f: \sT{T => U}): \sT{Future[Unit]} = \{\\
-      \sH{xx}aggregate(())((\_, \_) => ()) \{\\
-      \sH{xxxx}(acc, x) => f(x); ()\\
-      \sH{xx}\}\\
+      \sH{\ \ }aggregate(())((\_, \_) => ()) \{\\
+      \sH{\ \ \ \ }(acc, x) => f(x); ()\\
+      \sH{\ \ }\}\\
       \}
     \end{alltt}
   \end{overprint}
@@ -255,7 +255,7 @@
       \sK{def} \sF{map}[\sT S](\sV f: \sT{T => S}): \sT{FlowPool[S]}\sS\\
       \sK{def} \sF{flatMap}[\sT S](\sV f: \sT{T => FlowPool[S]}): \sT{FlowPool[S]}\sS\\
       \sK{def} \sF{fold}[\sT{U >: T}](\sV z: \sT U)(\sV{op}: \sT{(U, U) => U}): \sT{Future[U]}\sS\\
-      \sH{x}\\
+      \sH{\ }\\
       \sK{def} \sF{fill}[\sT T](\sV n: \sT{Int})(\sV{el}: \sT{=>T}): \sT{FlowPool[T]} \sS\\
       \sK{def} \sF{iterate}[\sT T](\sV{start}: \sT T, \sV{len}: \sT{Int})(\sV f: \sT{(T) => T}): \sT{FlowPool[T]}
     \end{alltt}
@@ -309,11 +309,11 @@
         \uncover<3->{f = s.filter(\_ > 10)}\\
         \uncover<4->{a = m ++ f}\\
         \uncover<5->{r = a.fold(0)(\_ + \_)}\\
-        \sH{x}\\
+        \sH{\ }\\
         \uncover<6->{
         s.seal(1000)\\
         \sK{for} (i <- 1 to 1000) \{\\
-        \sH{xx}s << i\\
+        \sH{\ \ }s << i\\
         \}
         }
       \end{alltt}
@@ -418,7 +418,6 @@
 
 \begin{frame}
   \frametitle{Multi-Lane FlowPools}
-  \framesubtitle{Overview}
 
   \begin{block}{Single-Lane FlowPools: Issues}
     \begin{itemize}
