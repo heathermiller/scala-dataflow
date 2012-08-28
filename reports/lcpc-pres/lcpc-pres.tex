@@ -88,6 +88,69 @@
 
 \begin{frame}
   \frametitle{What is a FlowPool}
+  \framesubtitle{Flow Graph}
+
+  \begin{columns}
+    \begin{column}{.5\textwidth}
+
+      \begin{tikzpicture}[ node distance = 2cm ]
+        \tikzset{EdgeStyle/.style={post}}       % directed edges
+
+        \Vertex[x =  2, y =  7, L = \texttt{s}]{S}
+
+        \uncover<2->{
+          \Vertex[x =  4, y =  5, L = \texttt{m}]{M}
+          \Edge[label = map](S)(M)
+        }
+
+        \uncover<3->{
+          \Vertex[x =  0, y =  5, L = \texttt{f}]{F}
+          \Edge[label = filter](S)(F)
+        }
+
+        \uncover<4->{
+          \Vertex[x =  2, y =  3, L = \texttt{a}]{A}
+          \Edge(M)(A)
+          \Edge(F)(A)
+        }
+
+        \uncover<5->{
+          \Vertex[x =  2, y =  0, L = \texttt{r}]{R}
+          \Edge[label = fold](A)(R)
+        }
+
+        % \tikzset{EdgeStyle/.append style = {bend right}}
+
+      \end{tikzpicture}  
+
+    \end{column}
+
+    \begin{column}{.5\textwidth}
+      
+      \begin{alltt}
+        s = \sK{new} FlowPool[Int]\\
+        \uncover<2->{m = s.map(\_ * 2)}\\
+        \uncover<3->{f = s.filter(\_ > 10)}\\
+        \uncover<4->{a = m ++ f}\\
+        \uncover<5->{r = a.fold(0)(\_ + \_)}\\
+        \sH{\ }\\
+        \uncover<6->{
+        s.seal(1000)\\
+        \sK{for} (i <- 1 to 1000) \{\\
+        \sH{\ \ }s << i\\
+        \}
+        }
+      \end{alltt}
+
+    \end{column}
+
+  \end{columns}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{What is a FlowPool}
   \framesubtitle{Big Picture}
 
   \begin{columns}[t]
@@ -98,10 +161,10 @@
     \begin{block}{FlowPool Properties}
       \begin{itemize}
       \item<1> Pool semantics
-      \item<2,3,4> Asynchronous
-      \item<5> Deterministic
-      \item<6> Lock-Free
-      \item<7> Unneeded Elements GC'd
+      \item<2,3> Asynchronous
+      \item<4> Deterministic
+      \item<5> Lock-Free
+      \item<6> Garbage collection of unused elements
       \end{itemize}
     \end{block}
 
@@ -125,18 +188,6 @@
       \includegraphics[page=2]{figs/async}
 
       \onslide<4>
-      \begin{block}{Closures}
-        \begin{alltt} \small
-          \sK{val} \sV s = \sK{new} FlowPool[Int]\\
-          \sK{val} \sV c = 5\\
-          \\
-          c.foreach \{\\
-          \sH{\ \ }x => println(c + x)\\
-          \}
-        \end{alltt}
-      \end{block}
-
-      \onslide<5>
       \begin{block}{Determinism}
         Every execution of a given program with given input eventually
         \begin{itemize}
@@ -146,17 +197,10 @@
         \end{itemize}
       \end{block}
 
-      \onslide<7>
-      \begin{block}{Garbage Collection}
-        \begin{alltt}
-          \sK{def} create() = \{\\
-          \sH{\ \ }\sK{val} a = \sK{new} Object()\\
-          \sH{\ \ }\sK{val} b = \sK{new} Object()\\
-          \sH{\ \ }\sK{return} a\\
-          \}\\
-          \\
-          \sK{val} x = create()
-        \end{alltt}
+      \onslide<5>
+      \begin{block}{Lock-Freedom}
+        At least one operation will complete in a finite number of
+        steps.
       \end{block}
 
     \end{overprint}
@@ -262,67 +306,6 @@
 
 \end{frame}
 
-\begin{frame}
-  \frametitle{What is a FlowPool}
-  \framesubtitle{Flow Graph}
-
-  \begin{columns}
-    \begin{column}{.5\textwidth}
-
-      \begin{tikzpicture}[ node distance = 2cm ]
-        \tikzset{EdgeStyle/.style={post}}       % directed edges
-
-        \Vertex[x =  2, y =  7, L = \texttt{s}]{S}
-
-        \uncover<2->{
-          \Vertex[x =  4, y =  5, L = \texttt{m}]{M}
-          \Edge[label = map](S)(M)
-        }
-
-        \uncover<3->{
-          \Vertex[x =  0, y =  5, L = \texttt{f}]{F}
-          \Edge[label = filter](S)(F)
-        }
-
-        \uncover<4->{
-          \Vertex[x =  2, y =  3, L = \texttt{a}]{A}
-          \Edge(M)(A)
-          \Edge(F)(A)
-        }
-
-        \uncover<5->{
-          \Vertex[x =  2, y =  0, L = \texttt{r}]{R}
-          \Edge[label = fold](A)(R)
-        }
-
-        % \tikzset{EdgeStyle/.append style = {bend right}}
-
-      \end{tikzpicture}  
-
-    \end{column}
-
-    \begin{column}{.5\textwidth}
-      
-      \begin{alltt}
-        s = \sK{new} FlowPool[Int]\\
-        \uncover<2->{m = s.map(\_ * 2)}\\
-        \uncover<3->{f = s.filter(\_ > 10)}\\
-        \uncover<4->{a = m ++ f}\\
-        \uncover<5->{r = a.fold(0)(\_ + \_)}\\
-        \sH{\ }\\
-        \uncover<6->{
-        s.seal(1000)\\
-        \sK{for} (i <- 1 to 1000) \{\\
-        \sH{\ \ }s << i\\
-        \}
-        }
-      \end{alltt}
-
-    \end{column}
-
-  \end{columns}
-
-\end{frame}
 
 \section{Implementation}
 
@@ -500,7 +483,7 @@
   {\Large FlowPools are \ldots}
 
   \pause
-  \begin{block}{Basic Traits}
+  \begin{block}{Basic Properties}
     \begin{itemize}
     \item Flow-Based Collection
     \item Asynchronous
