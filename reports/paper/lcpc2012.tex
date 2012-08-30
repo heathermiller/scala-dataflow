@@ -273,7 +273,7 @@ data structure we no longer need, thus reducing memory consumption.
 
 Our contributions are the following:
 \begin{enumerate}
-\item The design and Scala implementation\footnote{See \texttt{http://www.assembla.com/code/scala-dataflow/git/nodes}}
+\item The design and Scala~\cite{Odersky10} implementation\footnote{See \texttt{http://www.assembla.com/code/scala-dataflow/git/nodes}}
 of a parallel dataflow abstraction and underlying data structure that 
 is deterministic, lock-free, \& composable.
 \item Proofs of lock-freedom, linearizability, and determinism.
@@ -423,7 +423,7 @@ which ensure that resulting programs are deterministic.
 \begin{enumerate}
 \item Single-assignment - an element added to the FlowPool cannot be removed.
 \item No order - data elements in FlowPools are unordered.
-\item Purity - traversals are pure, except when invoking FlowPool operations.
+\item Purity - traversals are side-effect free (pure), except when invoking FlowPool operations.
 %% TODO, what does this mean? operations to foreach may have side
 %% effects (n.b. writing into another flowpool) -- tobias
 %% --> right -- they can access (and mutate) other single-assignment
@@ -434,11 +434,13 @@ which ensure that resulting programs are deterministic.
 %As previously alluded to, the main reason for these properties is to guarantee
 %determinism in the following sense.
 
-We strive to provide the definition of determinism that is useful in practice.
-We claim that FlowPools are deterministic in the sense that all
-execution schedules either lead to some form of non-termination (\textit{e.g.}, some
-exception), or the program terminates and no difference can be observed in the final state of the
-resulting data structures. For a more formal definition and proof, see section
+We claim that FlowPools are deterministic in the sense that all execution
+schedules either lead to some form of non-termination (\textit{e.g.}, some
+exception), or the program terminates and no difference can be observed in the
+final state of the resulting data structures. This definition is practically
+useful, because in the case of non-termination it is guaranteed that on some
+thread an exception is thrown which aids debugging, \eg, by including a stack
+trace. For a more formal definition and proof of determinism, see section
 \ref{sec:correctness}.
 
 %== PREVIOUS MODEL OF COMPUTATION TEXT ==
@@ -547,8 +549,10 @@ Another way to traverse the elements is to provide a higher-order
 \verb=foreach= operator which takes a user-specified function as an argument
 and applies it to every element. For it to be deterministic, it must be called
 for every element that is eventually inserted into the FlowPool, rather than
-only on those present when \verb=foreach= is called. For it to be non-
-blocking, it cannot not wait until additional elements are added to the
+only on those present when \verb=foreach= is called. Furthermore, determinism 
+still holds even if the user-specified function contains side-effecting 
+FlowPool operations such as \texttt{<<}. For \verb=foreach= to be 
+non-blocking, it cannot wait until additional elements are added to the
 FlowPool. Given these design goals, the \verb=foreach= operation must execute
 asynchronously, and be eventually applied to every element. Its signature is
 \verb+def foreach[U](f: T => U): Future[Int]+, and its  return type
@@ -617,7 +621,11 @@ A convenient and sufficient way to make \verb=seal= deterministic
 is to provide the expected pool size as an argument.
 The semantics of \verb=seal= is that it fails if the pool
 is already sealed with a different size or the number of elements
-is greater than the desired size.
+is greater than the desired size. Note that it is not guaranteed that the
+same exception will occur on the same thread-- rather, we guarantee 
+that if \emph{any} exception is thrown by \emph{any} thread, any
+execution schedule will result in \emph{some} exception.
+
 
 \textbf{Higher-order operators.}
 We now show how these basic abstractions can be used
@@ -1399,11 +1407,15 @@ most occasions, meanwhile also avoiding CAS failures. This may reduce execution
 time for insertions up to $54\%$ on the i7, $63\%$ on the
 Xeon and $92\%$ on the UltraSPARC T2.
 
-Usage of the inserted data is evaluated in the \emph{Reduce}, \emph{Map} (both
-in Figure \ref{fig:eval-cpu-scaling}) and \emph{Histogram} benchmarks (Figure
-\ref{fig:eval-hist-comm}). It's important to note that the \emph{Histogram} benchmark
-serves as a ``real life'' example, which uses both the \verb=map= and \verb=reduce=
-operations that are benchmarked in Figure \ref{fig:eval-cpu-scaling}.
+The performance of higher-order functions is evaluated in the \emph{Reduce},
+\emph{Map} (both in Figure \ref{fig:eval-cpu-scaling}) and \emph{Histogram}
+benchmarks (Figure \ref{fig:eval-hist-comm}).  It's important to note that the
+\emph{Histogram} benchmark serves as a ``real life'' example, which uses both
+the \verb=map= and \verb=reduce= operations that are benchmarked in Figure
+\ref{fig:eval-cpu-scaling}. Also note that in all of these benchmarks, the
+time it takes to insert elements into the FlowPool is also measured, since the
+FlowPool programming model allows one to insert elements concurrently with the
+execution of higher-order functions.
 
 In the \textit{Histogram} benchmark, Figure \ref{fig:eval-hist-comm}, $P$ threads produce a total of
 $N$ elements, adding them to the FlowPool.
@@ -1467,7 +1479,7 @@ Non-blocking concurrent linked queues are described by Michael and
 Scott \cite{Michael96}. This CAS-based
 queue implementation is cited and used widely today, a variant of
 which is present in the Java standard library.
-More recently, Scherer, Lea and Scott \cite{SchererLS09} describe a
+More recently, Scherer, Lea and Scott \cite{SchererLS09} describe
 synchronous queues which internally hold both data and requests.
 Both approaches above entail blocking (or spinning) at least on the
 consumer's part when the queue is empty.
@@ -1486,7 +1498,9 @@ continuations.
 %Blocking is less efficient on the JVM, CLR and many native
 %environments.
 
-The concept of single-assignment variables is embodied in
+The concept of single-assignment variables is used to provide logical
+variables in concurrent logic programming languages~\cite{Shapiro89}.
+It is also embodied in
 futures proposed by Baker and Hewitt \cite{Hewitt77}, and promises
 first mentioned by Friedman and Wise \cite{Wise76}.
 Futures were first implemented in MultiLISP \cite{Halstead85},
@@ -1506,7 +1520,7 @@ the concept of futures into other data-structures.
 Single-assignment variables have been generalized to I-Structures~\cite{Arvind89} which are essentially
 single-assignment arrays.
 CnC~\cite{Burke11,CnC10} is a parallel programming model
-influenced by dynamic dataflow, stream-processing and tuple spaces.
+influenced by dynamic dataflow, stream-processing and tuple spaces \cite{Gelernter85}.
 In CnC the user provides high-level operations along with the ordering
 constraints that form a computation dependency graph.
 FlumeJava~\cite{Chambers10} is a distributed programming model which
