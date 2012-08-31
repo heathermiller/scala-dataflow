@@ -249,10 +249,9 @@ fundamental dataflow collections abstraction which can be used as a building
 block for larger and more complex \textit{deterministic} and parallel
 dataflow programs. Our FlowPool abstraction is backed by an efficient
 non-blocking data structure, which we go on to prove is lock-free.
-
 As a result, our data structure benefits from the increased robustness
-provided by lock-freedom~\cite{Herlihy90}, since its operations are unaffected
-by thread delays. We provide a lock-freedom proof, which guarantees progress
+provided by lock-freedom~\cite{Herlihy90}, since its operations are not blocked
+by delayed threads. We provide a lock-freedom proof, which guarantees progress
 regardless of the behavior, including the failure, of concurrent threads.
 
 % I don't like how it says "we go on to show"
@@ -389,6 +388,7 @@ other popular concurrent data structures.
 % computation.
 
 
+\vspace{-0.4cm}
 \section{Model of Computation}
 
 FlowPools are similar to a typical collections abstraction.
@@ -411,11 +411,10 @@ This structure allows for complete asynchrony, allowing the runtime to extract
 parallelism as a result. That is, elements can be asynchronously inserted, all
 registered operations can be asynchronously executed, and new operations can
 be asynchronously registered.
-
 Put another way, invoking several higher-order functions in succession on a given
 FlowPool does not add barriers between nodes in the DAG, it only extends the DAG.
 This means that individual elements within a FlowPool can \textit{flow} through 
-different edges of the DAG independently of each other.
+different edges of the DAG independently.
 
 \textbf{Properties of FlowPools}. In our model, FlowPools have certain properties
 which ensure that resulting programs are deterministic.
@@ -514,6 +513,7 @@ trace. For a more formal definition and proof of determinism, see section
 % deterministic.
 
 
+\vspace{-0.3cm}
 \section{Programming Interface}
 \label{sec:programming-interface}
 
@@ -556,7 +556,7 @@ FlowPool operations such as \texttt{<<}. For \verb=foreach= to be
 non-blocking, it cannot wait until additional elements are added to the
 FlowPool. Thus, the \verb=foreach= operation must execute
 asynchronously, and be eventually applied to every element. Its signature is
-\verb+def foreach[U](f: T => U): Future[Int]+, and its  return type
+\verb+def foreach[U](f: T => U):+ \verb+Future[Int]+, and its  return type
 \verb=Future[Int]= is an integer value which becomes available once
 \verb=foreach= traverses all the elements added to the pool. This integer
 denotes the number of times the \verb=foreach= has been called.
@@ -584,9 +584,10 @@ element and it can have side-effects.
 While in an imperative programming model, \verb=foreach= and \verb=aggregate= are
 equivalent in the sense that one can be implemented in terms of the
 other, in a single-assignment programming model \verb=aggregate= is more
-expressive than \verb=foreach=.
-The \verb=foreach= operation can be implemented using \verb=aggregate=, but not vice versa,
-due to the absence of mutable variables.
+expressive.
+%than \verb=foreach=.
+The \verb=foreach= operation can be implemented using \verb=aggregate=, but not vice versa.
+%due to the absence of mutable variables.
 
 \textbf{Builders.}
 The FlowPool described so far must maintain a reference  to all the elements
@@ -603,15 +604,15 @@ needed objects.
 
 
 \textbf{Seal.}
-When it is known that no more elements will be added to the pool,
-it is possible to disallow further appends by calling \verb=seal=.
+After deciding that no more elements will be added,
+further appends can be disallowed by calling \verb=seal=.
 This has the advantage of discarding the registered \verb=foreach=
 operations.
-Though, most importantly, \verb=aggregate= can complete its future, which is only possible
-once it is certain that no more elements will be added.
+More importantly, the \verb=aggregate= can complete its future-- this is only possible
+once it is known there will be no more appends.
 
-an approach to \verb=seal=ing which simply prevents calling append
-from the point when "seal" is called, however, yields a
+Simply preventing append calls
+after the point when \verb=seal= is called, however, yields a
 nondeterministic programming model.
 Imagine a thread that attempts to seal the pool executing concurrently
 with a thread that appends an element.
@@ -623,10 +624,10 @@ A convenient and sufficient way to make \verb=seal= deterministic
 is to provide the expected pool size as an argument.
 The semantics of \verb=seal= is that it fails if the pool
 is already sealed with a different size or the number of elements
-is greater than the desired size. Note that it is not guaranteed that the
-same exception will occur on the same thread-- rather, we guarantee 
-that if \emph{any} exception is thrown by \emph{any} thread, any
-execution schedule will result in \emph{some} exception.
+is greater than the desired size. Note that we do not guarantee that the
+same exception always occurs on the same thread-- rather, 
+if \emph{any} thread throws \emph{some} exception in \emph{some} execution schedule,
+then in \emph{all} execution schedules \emph{some} thread will throw \emph{some} exception.
 
 
 \textbf{Higher-order operators.}
@@ -700,16 +701,15 @@ Finally, the reference to the pool is returned.
 
 A typical higher-order collection operator \verb=map= is used to
 map each element of a dataset to produce a new dataset.
-This corresponds to chaining or pipelining the nodes in a dataflow graph.
-We implement it by traversing the elements of the \verb=this= FlowPool
-and
-appending each mapped element to the builder.
+This corresponds to chaining or pipelining the dataflow graph nodes.
+Operator \verb=map= traverses the elements of \verb=this= FlowPool
+and appends each mapped element to the builder.
 The \verb=for= loop is syntactic sugar for calling the
 \verb=foreach= method on \verb=this=.
 We assume that the \verb=foreach= return type \verb=Future[Int]=
 has \verb=map= and \verb=flatMap= operations, executed
 once the future value becomes available.
-The \verb=Future.map= above ensures that if the current pool (\verb=this=) is ever
+The \verb=Future.map= above ensures that once the current pool (\verb=this=) is
 sealed, the mapped pool is sealed to the appropriate size.
 
 As argued before, \verb=foreach= can be expressed in terms of
@@ -789,7 +789,7 @@ The \verb=flatMap= operation retrieves a pool for each element of
 Given two FlowPools, it can be used to generate the Cartesian product
 of their elements.
 The implementation is similar to that of \verb=filter=,
-but we reduce the size on the future values of the sizes, because each
+but we reduce the size on the future values of the sizes-- each
 intermediate pool may not yet be sealed.
 %Implementing this operation is sufficient to show that a FlowPool is
 %a monad.
@@ -1010,6 +1010,8 @@ def asyncFor(f: Elem => Unit, b: Block, idx: Int)
 \label{f-pseudo}
 \end{figure}
 
+
+\vspace{-0.3cm}
 \section{Implementation}
 
 We now describe the FlowPool and its basic operations.
@@ -1039,10 +1041,10 @@ to some block in the chain.
 
 Each FlowPool is associated with a list of callbacks which have
 to be called in the future as new elements are added.
-Each FlowPool can also potentially be in a sealed state, meaning there is a bound on
-the number of elements it stores.
+Each FlowPool can also be in a sealed state, meaning there is a bound on
+the number of elements it can have.
 This information is stored as a \verb=Terminal= value in the first
-free entry of the array.
+free array entry.
 At all times, we maintain the invariant that the array in each block
 starts with a sequence of elements, followed by a \verb=Terminal=
 delimiter. From a higher-level perspective, appending an element
@@ -1135,11 +1137,13 @@ thus ensuring that the \verb=append= operation scales.
 %You find an evaluation of the performance of Multi-Lane FlowPools in
 %section~\ref{sec:evaluation}.
 
+
+\vspace{-0.3cm}
 \section{Correctness}
 \label{sec:correctness}
 We give an outline of the correctness proof here. More formal
 definitions, and a complete set of lemmas and proofs can be found 
-in appendix \ref{appendix-correctness}.
+in the tech report \cite{Prokopec12}.
 
 We define the notion of an abstract pool $\mathbb{A} = (elems,
 callbacks, seal)$ of elements in the pool, callbacks and the seal
@@ -1207,18 +1211,18 @@ consistent with an abstract pool $(elems, cbs, s)$, where either $seal
 \end{lemma}
 
 \begin{theorem}[Safety]
-FlowPool operations \verb=append=, \verb=foreach=
+Operations \verb=append=, \verb=foreach=
 and \verb=seal= are consistent with the abstract pool semantics.
 \end{theorem}
 
-\begin{theorem}[Linearizable operations]
-FlowPool operations \verb=append= and \verb=seal= are linearizable.
+\begin{theorem}[Linearizability]
+Operations \verb=append= and \verb=seal= are linearizable.
 \end{theorem}
 
 \begin{lemma}
 %[Non-consistency changing instructions]
 After invoking a FlowPool operation \verb=append=, \verb=seal= or
-\verb=foreach=, if a non-consistency changing CAS instruction in lines
+\verb=foreach=, if a non-consistency changing CAS in lines
 \ref{cas_propagate}, \ref{cas_expand}, or \ref{cas_block} fails, they must have
 already been completed by another thread since the FlowPool operation began.
 \end{lemma}
@@ -1226,9 +1230,9 @@ already been completed by another thread since the FlowPool operation began.
 \begin{lemma}
 %[Consistency changing instructions]
 After invoking a FlowPool operation \verb=append=, \verb=seal= or
-\verb=foreach=, if a consistency-changing CAS instruction in lines
+\verb=foreach=, if a consistency changing CAS in lines
 \ref{cas_append}, \ref{cas_seal}, or \ref{cas_callback} fails, then some thread
-has successfully completed a consistency changing CAS after some finite number
+has successfully completed a consistency changing CAS in a finite number
 of steps.
 \end{lemma}
 
@@ -1289,10 +1293,10 @@ n \in \mathbb{N}
 \textbf{Determinism.}
 We claim that the FlowPool abstraction is
 \emph{deterministic} in the sense that a program computes the same
-result (which can also be an error) regardless of the interleaving of
-concurrent operations. Here, we give an outline of the determinism
-proof. A complete formal proof can be found in appendix 
-\ref{appendix-determinism}.
+result (possibly an error) regardless of the interleaving of
+execution steps. Here we give an outline of the determinism
+proof. A complete formal proof can be found in the technical report
+\cite{Prokopec12}.
 
 The following definitions and the determinism theorem are based on the
 language shown in Figure~\ref{fig:syntax}. The semantics of our core
@@ -1377,7 +1381,7 @@ octa-core 2.27 GHz Intel Xeon x7560 (both with hyperthreading) and an octa-core
 1.2GHz UltraSPARC T2 with 64 hardware threads. In this section, we focus
 on the scaling properties of the above-mentioned data structures, Figures
 \ref{fig:eval-cpu-scaling} \& \ref{fig:eval-hist-comm}. 
-See appendix~\ref{sec:add-eval} for further evaluation.
+%See technical report \cite{Prokopec12} for further evaluation.
 
 \begin{figure}[ht!]
 \centering
@@ -1395,8 +1399,8 @@ reduce.}
 %   $\circ$ concurrent linked queue} \label{fig:eval-cpu-scaling}
 \end{figure}
 
-In the \emph{Insert} benchmark, Figure \ref{fig:eval-cpu-scaling}, we evaluate the ability to write
-concurrently, by distributing the
+In the \emph{Insert} benchmark, Figure \ref{fig:eval-cpu-scaling},
+we evaluate concurrent insert operations, by distributing the
 work of inserting $N$ elements into the data structure concurrently
 across $P$ threads.
 In Figure \ref{fig:eval-cpu-scaling}, it's evident that both single-lane FlowPools and concurrent queues do
@@ -1404,10 +1408,10 @@ not scale well with the number of concurrent threads, particularly
 on the i7 architecture. They quickly slow down, likely due to cache
 line collisions and CAS failures.
 On the other hand, multi-lane FlowPools scale well, as threads
-write to different lanes, and hence different cache lines on
-most occasions, meanwhile also avoiding CAS failures. This appears to reduce execution
+write to different lanes, and hence different cache lines,
+meanwhile also avoiding CAS failures. This appears to reduce execution
 time for insertions up to $54\%$ on the i7, $63\%$ on the
-Xeon and $92\%$ on the UltraSPARC T2.
+Xeon and $92\%$ on the UltraSPARC.
 
 The performance of higher-order functions is evaluated in the \emph{Reduce},
 \emph{Map} (both in Figure \ref{fig:eval-cpu-scaling}) and \emph{Histogram}
@@ -1526,14 +1530,13 @@ influenced by dynamic dataflow, stream-processing and tuple spaces \cite{Gelernt
 In CnC the user provides high-level operations along with the ordering
 constraints that form a computation dependency graph.
 FlumeJava~\cite{Chambers10} is a distributed programming model which
-relies heavily on the concept of collections containing a set of
-futures.
+relies heavily on the concept of collections containing futures.
 An issue that often arises with dataflow programming models are
 unbalanced loads.
-This is often solved through the use of bounded buffers which prevent
+This is often solved using bounded buffers which prevent
 the producer from overflowing the consumer.
-Analytical approaches to modeling pipelined applications have also
-been addressed~\cite{Cascaval09}.
+%Analytical approaches to modeling pipelined applications have also
+%been addressed~\cite{Cascaval09}.
 
 Opposed to the correct-by-construction determinism described thus far,
 a type-systematic approach can also ensure that concurrent executions
@@ -1574,14 +1577,14 @@ presented provides a composable deterministic programming model.
 It can be implemented in a provably non-blocking manner
 and is efficient as well, as shown in experiments.
 
-In future work, we plan on developing other
+As future work, we plan developing other
 concurrent collection types with deterministic semantics, which enrich
 the correct-by-construction single-assignment model, such as
-bounded buffers, dataflow streams and maps.
+bounded buffers, streams and maps.
 On the implementation level, we anticipate the need of embedding the
 callbacks within the data-structure itself, as is the case with
-callback-based futures and FlowPools -- this offers a particular
-benefit on platforms which do not by default support efficient
+callback-based futures and FlowPools -- this has a particular
+benefit on platforms which do not support efficient
 continuations.
 
 \bibliographystyle{abbrv}
