@@ -248,7 +248,8 @@ In this paper, we present the design and implementation of FlowPools, a
 fundamental dataflow collections abstraction which can be used as a building
 block for larger and more complex \textit{deterministic} and parallel
 dataflow programs. Our FlowPool abstraction is backed by an efficient
-non-blocking data structure, which we go on to prove is lock-free.
+non-blocking data structure.
+%, which we go on to prove is lock-free. ---> no need to say this twice, see end of paragraph
 As a result, our data structure benefits from the increased robustness
 provided by lock-freedom~\cite{Herlihy90}, since its operations are not blocked
 by delayed threads. We provide a lock-freedom proof, which guarantees progress
@@ -543,8 +544,8 @@ A pool containing a set of elements is of little use if its elements cannot be
 manipulated in some manner. One of the most basic data structure operations is
 element traversal, often provided by iterators or streams-- stateful objects
 which store the current position in the data structure. However, since their
-state can be manipulated by several threads, using streams or iterators can
-result in nondeterministic execution.
+state can be manipulated by several threads at once, using streams or iterators can
+result in nondeterministic executions.
 
 Another way to traverse the elements is to provide a higher-order
 \verb=foreach= operator which takes a user-specified function as an argument
@@ -593,7 +594,7 @@ The \verb=foreach= operation can be implemented using \verb=aggregate=, but not 
 The FlowPool described so far must maintain a reference  to all the elements
 at all times to implement the \verb=foreach= operation correctly. Since
 elements are never removed, the pool may grow indefinitely and run out of
-memory. However, it's important to note that appending new elements does not
+memory. However, it is important to note that appending new elements does not
 necessarily require a reference to any of the existing elements. This
 observation allows us to move the \verb=<<= operation out of the FlowPool and
 into a different abstraction called a \verb=builder=. Thus, a typical
@@ -622,7 +623,7 @@ To avoid nondeterminism, there has to be an agreement on the
 current state of the pool.
 A convenient and sufficient way to make \verb=seal= deterministic
 is to provide the expected pool size as an argument.
-The semantics of \verb=seal= is that it fails if the pool
+The semantics of \verb=seal= is such that it fails if the pool
 is already sealed with a different size or the number of elements
 is greater than the desired size. Note that we do not guarantee that the
 same exception always occurs on the same thread-- rather, 
@@ -695,9 +696,10 @@ The \verb=tabulate= generator starts by creating a FlowPool of an
 arbitrary type \verb=T= and creating its builder instance.
 It then starts an asynchronous computation using the \verb=future=
 construct (see the companion technical report \cite{Prokopec12} 
-for additional examples), which recursively applies \verb=f= to each number and
+for explanation and examples), which recursively applies \verb=f= to each number and
 adds it to the builder.
-Finally, the reference to the pool is returned.
+The reference to the pool \verb=p= is returned \emph{immediately},
+before the asynchronous computation completes.
 
 A typical higher-order collection operator \verb=map= is used to
 map each element of a dataset to produce a new dataset.
@@ -1031,7 +1033,8 @@ This way, most writes amount to a simple array-write, while allocation
 occurs only occasionally.
 Each block contains a hint \verb=index= to the first free entry in
 the array, i.e. one that does not contain an element.
-An \verb=index= is a hint, since it may actually reference an earlier index.
+An \verb=index= is a hint, since it may actually reference an entry
+that comes earlier than the first free entry.
 Additionally, a FlowPool also maintains a reference to the first block called
 \verb=start=.
 It also maintains a hint to the last block in the chain of blocks,
@@ -1087,9 +1090,9 @@ In the implementation, we do not schedule an asynchronous
 computation for each element.
 Instead, the callback invocations are batched to avoid the scheduling overhead--
 the array is scanned for new elements
-until there are no more left.
+until the first free entry is reached.
 
-Interestingly, inverting the order of the reads in lines
+Interestingly, note that inverting the order of the reads in lines
 \ref{read_next} and \ref{read_current} would cause a race in which a
 thread could overwrite a \verb=Terminal= value with some older
 \verb=Terminal= value if some other thread appended an element in between.
@@ -1519,7 +1522,7 @@ Futures have been generalized to data-driven futures,
 which provide additional information to the scheduler~\cite{Tasirlar11}.
 Many frameworks have constructs that start an asynchronous
 computation and yield a future holding its result, for example, Habanero Java~\cite{Shirako11} (\verb=async=)
-and Scala (\verb=future=).
+and Scala~\cite{Odersky10} (\verb=future=).
 
 A number of other models and frameworks recognized the need to embed
 the concept of futures into other data-structures.
