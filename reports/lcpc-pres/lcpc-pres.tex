@@ -68,63 +68,94 @@
   \frametitle{What is a FlowPool}
   \framesubtitle{Flow Graph}
 
-  \begin{columns}
-    \begin{column}{.5\textwidth}
-
-      \begin{tikzpicture}[ node distance = 2cm ]
-        \tikzset{EdgeStyle/.style={post}}       % directed edges
-
-        \Vertex[x =  2, y =  7, L = \texttt{s}]{S}
-
-        \uncover<2->{
-          \Vertex[x =  4, y =  5, L = \texttt{m}]{M}
-          \Edge[label = map](S)(M)
-        }
-
-        \uncover<3->{
-          \Vertex[x =  0, y =  5, L = \texttt{f}]{F}
-          \Edge[label = filter](S)(F)
-        }
-
-        \uncover<4->{
-          \Vertex[x =  2, y =  3, L = \texttt{a}]{A}
-          \Edge(M)(A)
-          \Edge(F)(A)
-        }
-
-        \uncover<5->{
-          \Vertex[x =  2, y =  0, L = \texttt{r}]{R}
-          \Edge[label = fold](A)(R)
-        }
-
-        % \tikzset{EdgeStyle/.append style = {bend right}}
-
-      \end{tikzpicture}  
-
-    \end{column}
-
-    \begin{column}{.5\textwidth}
-      
-      \begin{alltt}
-        s = \sK{new} FlowPool[Int]\\
-        \uncover<2->{m = s.map(\_ * 2)}\\
-        \uncover<3->{f = s.filter(\_ > 10)}\\
-        \uncover<4->{a = m ++ f}\\
-        \uncover<5->{r = a.fold(0)(\_ + \_)}\\
-        \sH{\ }\\
-        \uncover<6->{
-        s.seal(1000)\\
-        \sK{for} (i <- 1 to 1000) \{\\
-        \sH{\ \ }s << i\\
-        \}
-        }
-      \end{alltt}
-
-    \end{column}
-
-  \end{columns}
+  \includegraphics<+>[page=1,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=2,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=3,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=4,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=5,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=6,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=7,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=8,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=9,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=10,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=11,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=12,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=13,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=14,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=15,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=16,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=17,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=18,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=19,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=20,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=21,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=22,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=23,width=\textwidth]{figs/intuition-dataflow-illustration}
+  \includegraphics<+>[page=24,width=\textwidth]{figs/intuition-dataflow-illustration}
 
 \end{frame}
+
+% \begin{frame}
+%   \frametitle{What is a FlowPool}
+%   \framesubtitle{Flow Graph}
+
+%   \begin{columns}
+%     \begin{column}{.5\textwidth}
+
+%       \begin{tikzpicture}[ node distance = 2cm ]
+%         \tikzset{EdgeStyle/.style={post}}       % directed edges
+
+%         \Vertex[x =  2, y =  7, L = \texttt{s}]{S}
+
+%         \uncover<2->{
+%           \Vertex[x =  4, y =  5, L = \texttt{m}]{M}
+%           \Edge[label = map](S)(M)
+%         }
+
+%         \uncover<3->{
+%           \Vertex[x =  0, y =  5, L = \texttt{f}]{F}
+%           \Edge[label = filter](S)(F)
+%         }
+
+%         \uncover<4->{
+%           \Vertex[x =  2, y =  3, L = \texttt{a}]{A}
+%           \Edge(M)(A)
+%           \Edge(F)(A)
+%         }
+
+%         \uncover<5->{
+%           \Vertex[x =  2, y =  0, L = \texttt{r}]{R}
+%           \Edge[label = fold](A)(R)
+%         }
+
+%         % \tikzset{EdgeStyle/.append style = {bend right}}
+
+%       \end{tikzpicture}  
+
+%     \end{column}
+
+%     \begin{column}{.5\textwidth}
+      
+%       \begin{alltt}
+%         s = \sK{new} FlowPool[Int]\\
+%         \uncover<2->{m = s.map(\_ * 2)}\\
+%         \uncover<3->{f = s.filter(\_ > 10)}\\
+%         \uncover<4->{a = m ++ f}\\
+%         \uncover<5->{r = a.fold(0)(\_ + \_)}\\
+%         \sH{\ }\\
+%         \uncover<6->{
+%         s.seal(1000)\\
+%         \sK{for} (i <- 1 to 1000) \{\\
+%         \sH{\ \ }s << i\\
+%         \}
+%         }
+%       \end{alltt}
+
+%     \end{column}
+
+%   \end{columns}
+
+% \end{frame}
 
 
 \begin{frame}
