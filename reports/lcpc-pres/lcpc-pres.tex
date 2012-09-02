@@ -239,21 +239,23 @@
     \texttt{\sH{\ \ }p << x\sH{\ \ } \qquad \qquad \qquad \sH{\ \ }p.seal(\only<4>{1})}
     \onslide<5>
     \begin{alltt} \small
-      \sK{def} \sF{fill}[\sT T](\sV n: \sT{Int})(\sV{el}: \sT{=>T}): \sT{FlowPool[T]} = \{\\
-      \sH{\ \ }\sK{val} \sV p = \sK{new} FlowPool[T]\\
-      \sH{\ \ }\sK{for} (i <- 1 to n) \{ p << el \}\\
-      \sH{\ \ }p.seal(n); p\\
+      \sK{def} \sF{fill}(\sV n: \sT{Int}, \sV{el}: \sT{T}) \{\\
+      \sH{\ \ }\sV p = \sK{new} FlowPool[T]\\
+      \sH{\ \ }\sK{for} (i = 1 to n) \{ p << el \}\\
+      \sH{\ \ }p.seal(n)\\
+      \sH{\ \ }\sK{return} p\\
       \}
     \end{alltt}
     \onslide<6>
     \begin{alltt} \small
-      \sK{def} \sF{filter}(\sV{pred}: \sT{T => Boolean}): \sT{FlowPool[T]} = \{\\
-      \sH{\ \ }\sK{val} \sV p = \sK{new} FlowPool[T]\\
+      \sK{def} \sF{filter}(\sV{cond}) \{\\
+      \sH{\ \ }\sV p = \sK{new} FlowPool\\
       \sH{\ \ }\sK{this}.aggregate(0)(\_ + \_) \{\\
-      \sH{\ \ \ \ }(acc, x) => \sK{if} pred(x) \{\\
-      \sH{\ \ \ \ \ \ }p << x; acc + 1\\
-      \sH{\ \ \ \ }\} \sK{else} acc\\
-      \sH{\ \ }\} map \{ sz => p.seal(sz) \}; p\\
+      \sH{\ \ \ \ }\sK{if} (cond(x)) \{\\
+      \sH{\ \ \ \ \ \ }p << x; size + 1\\
+      \sH{\ \ \ \ }\} \sK{else} size\\
+      \sH{\ \ }\} map \{ p.seal(size) \}\\
+      \sH{\ \ }\sK{return} p\\
       \}
     \end{alltt}
     \onslide<7>
@@ -266,7 +268,7 @@
     \end{alltt}
   \end{overprint}
 
-  \begin{textblock}{2}(13,9)
+  \begin{textblock}{2}(13,8.5)
     \begin{onlyenv}<5>
       \begin{tikzpicture}[ node distance = 2cm ]
         \tikzset{EdgeStyle/.style={post}}       % directed edges
@@ -283,7 +285,7 @@
     \end{onlyenv}
   \end{textblock}
 
-  \begin{textblock}{2}(13,9)
+  \begin{textblock}{2}(13,8.5)
     \begin{onlyenv}<6>
       \begin{tikzpicture}[ node distance = 2cm ]
         \tikzset{EdgeStyle/.style={post}}       % directed edges
