@@ -53,6 +53,34 @@
 \section{Introduction}
 
 \begin{frame}
+  \frametitle{Scala}
+
+  \begin{columns}
+    \begin{column}{.5\textwidth}
+      \includegraphics[width=.4\textwidth]{figs/scala}
+      \vspace{\baselineskip}
+      \begin{itemize}
+      \item Functional
+      \item Object-Oriented
+      \item Runs on JVM
+      \end{itemize}
+    \end{column}
+    \begin{column}{.5\textwidth}
+      \includegraphics[width=.6\textwidth]{figs/juniper-networks}
+      \vspace{\baselineskip}
+      \includegraphics[width=.6\textwidth]{figs/twitter}
+      \vspace{\baselineskip}
+      \includegraphics[width=.6\textwidth]{figs/linkedin}
+      \vspace{\baselineskip}
+      \includegraphics[width=.6\textwidth]{figs/guardian}
+      \vspace{\baselineskip}
+      \includegraphics[width=.6\textwidth]{figs/foursquare}
+    \end{column}
+  \end{columns}
+
+\end{frame}
+
+\begin{frame}
   \frametitle{Outline}
   
   \begin{block}{What is a FlowPool}\end{block}
@@ -248,15 +276,11 @@
     \end{alltt}
     \onslide<6>
     \begin{alltt} \small
-      \sK{def} \sF{filter}(\sV{cond}) \{\\
-      \sH{\ \ }\sV p = \sK{new} FlowPool\\
-      \sH{\ \ }\sK{this}.aggregate(0)(\_ + \_) \{\\
-      \sH{\ \ \ \ }\sK{if} (cond(x)) \{\\
-      \sH{\ \ \ \ \ \ }p << x; size + 1\\
-      \sH{\ \ \ \ }\} \sK{else} size\\
-      \sH{\ \ }\} map \{ p.seal(size) \}\\
-      \sH{\ \ }\sK{return} p\\
-      \}
+      \sK{def} \sF{count}(\sV{cond}) = \\
+      \sH{\ \ }\sK{this}.aggregate(0)(\_ + \_) \{ x =>\\
+      \sH{\ \ \ \ }\sK{if} (cond(x)) cnt + 1\\
+      \sH{\ \ \ \ }\sK{else} cnt\\
+      \sH{\ \ }\}
     \end{alltt}
     \onslide<7>
     \begin{alltt} \small
@@ -291,9 +315,9 @@
         \tikzset{EdgeStyle/.style={post}}       % directed edges
       
         \Vertex[x = 0, y = 3, L = $this$]{S}
-        \Vertex[x = 0, y = 0, L = $p$]{G}
+        \Vertex[x = 0, y = 0, L = $c$]{G}
 
-        \Edge[label = filter](S)(G)
+        \Edge[label = count](S)(G)
 
       \end{tikzpicture}  
     \end{onlyenv}
@@ -308,8 +332,7 @@
   \begin{itemize}
   \item Union (\texttt{++})
   \item \texttt{filter}
-  \item \texttt{map}
-  \item \texttt{flatMap}
+  \item Transformation (\texttt{map}, \texttt{flatMap})
   \item Reduction (\texttt{fold})
   \item Generation (\texttt{fill}, \texttt{iterate})
   \end{itemize}
@@ -522,6 +545,7 @@
     \begin{itemize}
     \item Speed comparable to Java standard queues
     \item Scalable
+    \item Composable
     \item Unneeded elements garbage collected
     \end{itemize}
   \end{block}
