@@ -2,13 +2,15 @@ package scala.dataflow.array
 
 import scala.annotation.tailrec
 
-private[array] class FlowArrayJob(j: () => Unit) extends Function0[Unit] {
+import jsr166y._
+
+final private[array] class FlowArrayJob(j: () => Unit) extends RecursiveAction {
 
   import FlowArrayJob._
 
   // Job list management
   private var head: JobElem = JobElem(j)
-  private var tail: JobElem = head
+  @volatile private var tail: JobElem = head
 
   // Utility
   private val unsafe = getUnsafe()
@@ -16,9 +18,27 @@ private[array] class FlowArrayJob(j: () => Unit) extends Function0[Unit] {
   @inline private def CAS_NEXT(el: JobElem, ov: JobList, nv: JobList) =
     unsafe.compareAndSwapObject(el, NEXTOFFSET, ov, nv)
 
-  override def apply() {
-    
-    // TODO implement
+  @tailrec
+  protected def compute() {
+
+    // Do the work
+    head.j()
+
+    /*READ*/head.next match {
+      case Done => sys.error("compute() called twice!")
+      case Free =>
+        if (!CAS_NEXT(head, Free, Done)) {
+          /*READ*/head.next match {
+            case je: JobElem =>
+              head = je
+              compute()
+            case _ => sys.error("multiple threads for same JobElem!")
+          }
+        }
+      case je: JobElem =>
+        head = je
+        compute()
+    }
 
   }
 
@@ -52,10 +72,19 @@ object FlowArrayJob {
   case object Free extends JobList
   case class JobElem(j: () => Unit, var next: JobList = Free) extends JobList
 
+  val forkjoinpool = new ForkJoinPool
+  
+  private def task[T](fjt: ForkJoinTask[T]) = Thread.currentThread match {
+    case fjw: ForkJoinWorkerThread =>
+      fjt.fork()
+    case _ =>
+      forkjoinpool.execute(fjt)
+  }
+
   def apply(j: () => Unit) = {
     val job = new FlowArrayJob(j)
 
-    // TODO schedule
+    task(job)
     
     job
   }
