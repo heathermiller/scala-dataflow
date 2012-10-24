@@ -56,12 +56,11 @@ class FlowArray[A : ClassManifest] private (
 
   }
 
-  // Functions
-  def map[B : ClassManifest](f: A => B) = {
+  private def dispatchTransJob[B : ClassManifest](job: (Int, FlowArray[A], FlowArray[B]) => () => Unit) = {
     val ret = new FlowArray(new Array[B](data.length), false)
 
     for (bli <- 0 to blCount - 1) {
-      val work = mapJob(bli, this, ret, f)
+      val work = job(bli, this, ret)
 
       val njob = blStates(bli) /* READ */ match {
         case Waiting =>
@@ -75,12 +74,24 @@ class FlowArray[A : ClassManifest] private (
             job
       }
 
+      // TODO unable to inline this. Why?
       CAS(ret.blStates, bli, Waiting, Assigned(njob))
 
     }
 
     ret
+
   }
+
+  // Functions
+  def map[B : ClassManifest](f: A => B) =
+    dispatchTransJob(mapJob(f) _)
+
+  def converge(cond: A => Boolean)(it: A => A) =
+    dispatchTransJob(convJob(cond, it) _)
+
+  def converge(count: Int)(it: A => A) =
+    dispatchTransJob(convJob(count, it) _)
 
   def done = /*READ*/doneCount == blCount
 
@@ -101,11 +112,10 @@ object FlowArray {
   case class  Assigned(job: FlowArrayJob) extends BlockState
   case object Waiting extends BlockState
 
-  def mapJob[A : ClassManifest,B : ClassManifest](
+  def mapJob[A : ClassManifest,B : ClassManifest](f: A => B)(
     bli: Int,
     src: FlowArray[A],
-    dest: FlowArray[B],
-    f: A => B
+    dest: FlowArray[B]
   ) = () => {
 
     val offset = bli * src.blSize
@@ -114,6 +124,36 @@ object FlowArray {
     }
 
     dest.doneBlock(bli)
+
+  }
+
+  def convJob[A : ClassManifest]
+    (cond: A => Boolean, it: A => A)
+    (bli: Int, src: FlowArray[A], dest: FlowArray[A]) = () => {
+
+    val offset = bli * src.blSize
+    for (i <- offset to math.min(offset + src.blSize, src.size) - 1) {
+      var x: A = src.data(i)
+      while (!cond(x)) {
+        x = it(x)
+      }
+      dest.data(i) = x
+    }
+
+  }
+
+  def convJob[A : ClassManifest]
+    (count: Int, it: A => A)
+    (bli: Int, src: FlowArray[A], dest: FlowArray[A]) = () => {
+
+    val offset = bli * src.blSize
+    for (i <- offset to math.min(offset + src.blSize, src.size) - 1) {
+      var x: A = src.data(i)
+      for (j <- 1 to count) {
+        x = it(x)
+      }
+      dest.data(i) = x
+    }
 
   }
 
