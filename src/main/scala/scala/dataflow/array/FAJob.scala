@@ -4,8 +4,9 @@ import scala.annotation.tailrec
 import jsr166y._
 
 private[array] abstract class FAJob(
-  val start: Int,
-  val end:   Int,
+  val start:  Int,
+  val end:    Int,
+  val thresh: Int,
   var observer: FAJob.Observer
 ) extends RecursiveAction with FAJob.Observer {
 
@@ -49,7 +50,7 @@ private[array] abstract class FAJob(
   val size = end - start + 1
 
   /** checks if this job still needs splitting */
-  def needSplit = size > 10000
+  def needSplit = size > thresh
 
   /***************************/
   /* ForkJoinTask internals  */
