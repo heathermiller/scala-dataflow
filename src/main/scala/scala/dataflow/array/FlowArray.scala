@@ -16,7 +16,7 @@ class FlowArray[A : ClassManifest](
   // Functions
   def map[B : ClassManifest](f: A => B): FlowArray[B] = {
     val ret = new FlowArray(new Array[B](length))
-    val newJob = new FATransformJob(this, ret, f, 0, length - 1, this)
+    val newJob = new FATransformJob(this, ret, f, 0, length - 1, ret)
     val curJob = /*READ*/srcJob
 
     // Setup destination

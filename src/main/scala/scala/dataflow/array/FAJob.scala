@@ -49,7 +49,7 @@ private[array] abstract class FAJob(
   val size = end - start + 1
 
   /** checks if this job still needs splitting */
-  def needSplit = size > 100
+  def needSplit = size > 10000
 
   /***************************/
   /* ForkJoinTask internals  */
@@ -170,7 +170,7 @@ private[array] abstract class FAJob(
           else
             None
         case DoneEnd =>
-          newJob.fork()
+          schedule(newJob)
           None
       }
     }
