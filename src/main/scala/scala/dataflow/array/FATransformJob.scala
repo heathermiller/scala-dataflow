@@ -5,14 +5,15 @@ private[array] class FATransformJob[A : ClassManifest, B : ClassManifest](
   val dst: FlowArray[B],
   val f: A => B,
   start: Int,
-  end: Int
-) extends FAJob(start, end) {
+  end: Int,
+  obs: FAJob.Observer
+) extends FAJob(start, end, obs) {
 
   protected def subJobs: (FAJob, FAJob) = {
     val ((s1, e1), (s2, e2)) = splitInds
     
-    (new FATransformJob(src, dst, f, s1, e1),
-     new FATransformJob(src, dst, f, s2, e2))
+    (new FATransformJob(src, dst, f, s1, e1, this),
+     new FATransformJob(src, dst, f, s2, e2, this))
   }
 
   protected def doCompute() {

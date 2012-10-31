@@ -5,8 +5,9 @@ import jsr166y._
 
 private[array] abstract class FAJob(
   val start: Int,
-  val end:   Int
-) extends RecursiveAction {
+  val end:   Int,
+  var observer: FAJob.Observer
+) extends RecursiveAction with FAJob.Observer {
 
   import FAJob._
 
@@ -68,12 +69,30 @@ private[array] abstract class FAJob(
   final private def finalizeCompute(): Unit = /*READ*/state match {
     case PendingChain(next: FAJob) =>
       state = /*WRITE*/DoneChain(next)
+      notifyObservers()
       next.fork()
     case PendingFree =>
       if (!CAS(PendingFree, DoneEnd))
         finalizeCompute()
+      else
+        notifyObservers()
     case _ =>
       throw new IllegalStateException("Concurrent invocations")
+  }
+
+  /***************************/
+  /* Done signaling          */
+  /***************************/
+  override def jobDone() {
+    if (done) notifyObservers()
+  }
+
+  protected def notifyObservers() {
+    val obs = /*READ*/observer
+    if (obs != null) {
+      obs.jobDone()
+      observer/*WRITE*/ = null
+    }
   }
 
   /// Public Members ///
@@ -88,11 +107,15 @@ private[array] abstract class FAJob(
     // yet started (otherwise: not splitting)
   }
 
+  /***************************/
+  /* Dependency / Split      */
+  /***************************/
+
   /**
    * Splits this task in two subtasks (including chained tasks)
    * @return tuple with subtasks
    */
-  final def split(): (FAJob, FAJob) = {
+  final private def split(): (FAJob, FAJob) = {
     // Stupid workaround for tail-rec
     @tailrec
     def split0(): (FAJob, FAJob) = {
@@ -182,7 +205,7 @@ object FAJob {
   }
 
   trait Observer {
-    def done() {}
+    def jobDone() {}
   }
 
 }
