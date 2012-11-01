@@ -7,7 +7,7 @@ private[array] abstract class FAJob(
   val start:  Int,
   val end:    Int,
   val thresh: Int,
-  var observer: FAJob.Observer
+  protected var observer: FAJob.Observer
 ) extends RecursiveAction with FAJob.Observer {
 
   import FAJob._
@@ -41,7 +41,7 @@ private[array] abstract class FAJob(
   /***************************/
 
   /** indices to handle after split */ 
-  protected def splitInds = {
+  @inline protected final def splitInds = {
     val mid = start + size / 2
     ((start, mid),(mid + 1, end))
   }
@@ -50,7 +50,7 @@ private[array] abstract class FAJob(
   val size = end - start + 1
 
   /** checks if this job still needs splitting */
-  def needSplit = size > thresh
+  @inline final def needSplit = size > thresh
 
   /***************************/
   /* ForkJoinTask internals  */
@@ -100,7 +100,7 @@ private[array] abstract class FAJob(
 
   /** Checks whether this Job is done */
   def done: Boolean = state match {
-    case Split(j1: FAJob, j2: FAJob) =>
+    case Split(j1, j2) =>
       j1.done && j2.done
     case DoneChain(_) | DoneEnd => true
     case _ => false
