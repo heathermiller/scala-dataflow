@@ -33,7 +33,14 @@ private[array] abstract class FAJob(
   /* Abstract Members        */
   /***************************/
 
-  protected def subJobs: (FAJob, FAJob)
+  protected def subCopy(start: Int, end: Int): FAJob
+
+  protected def subJobs: (FAJob, FAJob) = {
+    val ((s1, e1), (s2, e2)) = splitInds
+    
+    (subCopy(s1, e1), subCopy(s2, e2))
+  }
+
   protected def doCompute(): Unit
 
   /***************************/
@@ -51,6 +58,13 @@ private[array] abstract class FAJob(
 
   /** checks if this job still needs splitting */
   @inline final def needSplit = size > thresh
+
+  /** returns both subtasks (exception if not split) */
+  final protected def subTasks = state match {
+    case Split(j1, j2) => (j1, j2)
+    case _ => throw new IllegalStateException("not split!")
+  }
+
 
   /***************************/
   /* ForkJoinTask internals  */
@@ -204,6 +218,12 @@ object FAJob {
     case _ =>
       forkjoinpool.execute(job)
   }
+
+  def threshold(size: Int) = (
+    scala.collection.parallel.thresholdFromSize(
+      size, scala.collection.parallel.availableProcessors
+    )
+  )
 
   trait Observer {
     def jobDone() {}

@@ -1,5 +1,6 @@
 package scala.dataflow.array
 
+import scala.dataflow.Future
 import scala.annotation.tailrec
 
 class FlowArray[A : ClassManifest](
@@ -16,7 +17,7 @@ class FlowArray[A : ClassManifest](
   // Functions
   def map[B : ClassManifest](f: A => B): FlowArray[B] = {
     val ret = new FlowArray(new Array[B](length))
-    val newJob = new FATransformJob(this, ret, f)
+    val newJob = FATransformJob(this, ret, f)
     val curJob = /*READ*/srcJob
 
     // Setup destination
@@ -39,14 +40,19 @@ class FlowArray[A : ClassManifest](
     dispatchTransJob(convJob(count, it) _)
     */
 
-  /*
-  def fold[A1 : ClassManifest >: A](z: A1)(op: (A1, A1) => A1): A1 = {
-    val res = 
+  def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): Future[A1] = {
+    val (job, fut) = FAFoldJob(this, z, op)
+    val curJob = /*READ*/srcJob
+
+    if (curJob != null)
+      curJob.depending(job)
+    else
+      FAJob.schedule(job)
+
+    fut
   }
-  */
 
   override def jobDone() {
-    // TODO use parking for that!
     synchronized { notifyAll() }
   }
 
