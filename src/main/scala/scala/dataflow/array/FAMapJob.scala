@@ -1,6 +1,6 @@
 package scala.dataflow.array
 
-private[array] class FATransformJob[A : ClassManifest, B : ClassManifest] private (
+private[array] class FAMapJob[A : ClassManifest, B : ClassManifest] private (
   val src: FlowArray[A],
   val dst: FlowArray[B],
   val f: A => B,
@@ -14,7 +14,7 @@ private[array] class FATransformJob[A : ClassManifest, B : ClassManifest] privat
     this(src, dst, f, 0, src.size - 1, FAJob.threshold(src.size), dst)
 
   protected def subCopy(s: Int, e: Int) = 
-    new FATransformJob(src, dst, f, s, e, thresh, this)
+    new FAMapJob(src, dst, f, s, e, thresh, this)
 
   protected def doCompute() {
     for (i <- start to end) {
@@ -24,11 +24,11 @@ private[array] class FATransformJob[A : ClassManifest, B : ClassManifest] privat
 
 }
 
-object FATransformJob {
+object FAMapJob {
 
   def apply[A : ClassManifest, B : ClassManifest](
     src: FlowArray[A],
     dst: FlowArray[B],
-    f: A => B) = new FATransformJob(src, dst, f)
+    f: A => B) = new FAMapJob(src, dst, f)
 
 }
