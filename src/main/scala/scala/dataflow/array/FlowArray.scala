@@ -14,20 +14,36 @@ class FlowArray[A : ClassManifest](
   // Calculation Information
   @volatile private var srcJob: FAJob = null
 
-  // Functions
-  def map[B : ClassManifest](f: A => B): FlowArray[B] = {
-    val ret = new FlowArray(new Array[B](length))
-    val newJob = FAMapJob(this, ret, f)
-    val curJob = /*READ*/srcJob
-
+  // Helpers
+  @inline private def dispatch[B : ClassManifest](
+    newJob: FAJob,
+    dest: FlowArray[B]
+  ) {
     // Setup destination
-    ret.srcJob = newJob
+    dest.srcJob = newJob
+
+    dispatch(newJob)
+  }
+
+  @inline private def dispatch(newJob: FAJob) {
+    val curJob = /*READ*/srcJob
 
     // Schedule job
     if (curJob != null)
       curJob.depending(newJob)
     else
       FAJob.schedule(newJob)
+  }
+
+  def newFA[B : ClassManifest] = 
+    new FlowArray(new Array[B](length))
+
+  // Functions
+  def map[B : ClassManifest](f: A => B): FlowArray[B] = {
+    val ret = newFA[B]
+    dispatch( FAMapJob(this, ret, f), ret )
+    ret
+  }
 
     ret
   }
@@ -42,13 +58,7 @@ class FlowArray[A : ClassManifest](
 
   def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): Future[A1] = {
     val (job, fut) = FAFoldJob(this, z, op)
-    val curJob = /*READ*/srcJob
-
-    if (curJob != null)
-      curJob.depending(job)
-    else
-      FAJob.schedule(job)
-
+    dispatch(job)
     fut
   }
 
