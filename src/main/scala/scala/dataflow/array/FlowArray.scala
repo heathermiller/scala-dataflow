@@ -45,13 +45,19 @@ class FlowArray[A : ClassManifest](
     ret
   }
 
+  def mutConverge(cond: A => Boolean)(it: A => Unit) = {
+    val ret = newFA[A]
+    dispatch( FAMutConvJob(this, ret, it, cond), ret )
+    ret
+  }
+
+  def converge(cond: A => Boolean)(it: A => A) = {
+    val ret = newFA[A]
+    dispatch( FAIMutConvJob(this, ret, it, cond), ret )
     ret
   }
 
   /*
-  def converge(cond: A => Boolean)(it: A => A) =
-    dispatchTransJob(convJob(cond, it) _)
-
   def converge(count: Int)(it: A => A) =
     dispatchTransJob(convJob(count, it) _)
     */
