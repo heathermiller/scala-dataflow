@@ -50,7 +50,7 @@ private[array] abstract class FAJob(
   /** indices to handle after split */ 
   @inline protected final def splitInds = {
     val mid = start + size / 2
-    ((start, mid),(mid + 1, end))
+    ((start, mid - 1),(mid, end))
   }
 
   /** Number of elements this job handles */
