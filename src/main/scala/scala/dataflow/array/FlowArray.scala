@@ -7,12 +7,21 @@ class FlowArray[A : ClassManifest](
   private[array] val data: Array[A]
 ) extends FAJob.Observer {
 
+  import FlowArray._
+
   // Fields
   val size = data.length
   def length = size
 
   // Calculation Information
   @volatile private var srcJob: FAJob = null
+  @volatile private var waiting: WaitList = Empty
+
+  // Unsafe stuff
+  private val unsafe = getUnsafe()
+  private val OFFSET = unsafe.objectFieldOffset(classOf[FlowArray[_]].getDeclaredField("waiting"))
+  @inline private def CAS(ov: WaitList, nv: WaitList) =
+    unsafe.compareAndSwapObject(this, OFFSET, ov, nv)
 
   // Helpers
   @inline private def dispatch[B : ClassManifest](
@@ -69,27 +78,53 @@ class FlowArray[A : ClassManifest](
   }
 
   override def jobDone() {
-    synchronized { notifyAll() }
+    srcJob = null
+
+    @tailrec
+    def done0: Unit = /*READ*/waiting match {
+      case Empty => 
+        if (!CAS(Empty, Complete)) done0
+      case ov@Blocking(thr, next) =>
+        if (CAS(ov, next)) {
+          unsafe.unpark(thr)
+          done0
+        } else done0
+      case Complete => /* this shouldn't happen */
+    }
+
+    done0
+
   }
 
-  def done = {
-    val curJob = /*READ*/srcJob
-    if (curJob == null)
-      true
+  /**
+   * Checks if this job is done
+   *
+   * This may NOT be implemented by checking waiting == Complete because otherwise
+   * the jobs that are woken up by jobDone will park again!
+   */
+  def done = /*READ*/srcJob == null
+
+  @tailrec
+  final def blocking: Array[A] = {
+    val curo = /*READ*/waiting
+
+    if (done || curo == Complete) data
     else {
-      if (curJob.done) {
-        srcJob/*WRITE*/ = null
-        true
-      } else false
+      val nv = Blocking(Thread.currentThread, curo)
+      if (CAS(curo, nv))
+        unsafe.park(false, 0)
+
+      blocking
     }
   }
 
-  def blocking = {
-    synchronized {
-      while (!done) wait()
-    }
-    data
-  }
-  
+}
+
+object FlowArray {
+
+  sealed abstract class WaitList
+  case object Empty    extends WaitList
+  case object Complete extends WaitList
+  case class  Blocking(thr: Thread, next: WaitList) extends WaitList
 
 }
