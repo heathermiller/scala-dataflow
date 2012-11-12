@@ -24,7 +24,7 @@ class FlowArray[A : ClassManifest](
     unsafe.compareAndSwapObject(this, OFFSET, ov, nv)
 
   // Helpers
-  @inline private def dispatch[B : ClassManifest](
+  @inline private final def dispatch[B : ClassManifest](
     newJob: FAJob,
     dest: FlowArray[B]
   ) {
@@ -34,7 +34,7 @@ class FlowArray[A : ClassManifest](
     dispatch(newJob)
   }
 
-  @inline private def dispatch(newJob: FAJob) {
+  @inline private[array] final def dispatch(newJob: FAJob) {
     val curJob = /*READ*/srcJob
 
     // Schedule job
@@ -47,10 +47,19 @@ class FlowArray[A : ClassManifest](
   def newFA[B : ClassManifest] = 
     new FlowArray(new Array[B](length))
 
+  def newFA[B : ClassManifest](fact: Int) = 
+    new FlowArray(new Array[B](length * fact))
+
   // Functions
   def map[B : ClassManifest](f: A => B): FlowArray[B] = {
     val ret = newFA[B]
     dispatch( FAMapJob(this, ret, f), ret )
+    ret
+  }
+
+  def flatMapN[B : ClassManifest](n: Int)(f: A => FlowArray[B]): FlowArray[B] = {
+    val ret = newFA[B](n)
+    dispatch( FAFlatMapJob(this, ret, f, n), ret )
     ret
   }
 
@@ -66,13 +75,13 @@ class FlowArray[A : ClassManifest](
     ret
   }
 
-  /*
-  def converge(count: Int)(it: A => A) =
-    dispatchTransJob(convJob(count, it) _)
-    */
-
   def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): Future[A1] = {
-    val (job, fut) = FAFoldJob(this, z, op)
+    import FAFoldJob.FoldFuture
+
+    val job = FAFoldJob(this, z, op)
+    val fut = new FoldFuture(job)
+    job.addObserver(fut)
+
     dispatch(job)
     fut
   }
@@ -89,7 +98,8 @@ class FlowArray[A : ClassManifest](
           unsafe.unpark(thr)
           done0
         } else done0
-      case Complete => /* this shouldn't happen */
+      case Complete =>
+        /* this can sporadically happen, as jobDone needs to be idempotent */
     }
 
     done0

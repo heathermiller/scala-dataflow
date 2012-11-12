@@ -10,9 +10,6 @@ private[array] class FAMapJob[A : ClassManifest, B : ClassManifest] private (
   obs: FAJob.Observer
 ) extends FAJob(start, end, thr, obs) {
 
-  def this(src: FlowArray[A], dst: FlowArray[B], f: A => B) =
-    this(src, dst, f, 0, src.size - 1, FAJob.threshold(src.size), dst)
-
   protected def subCopy(s: Int, e: Int) = 
     new FAMapJob(src, dst, f, s, e, thresh, this)
 
@@ -29,6 +26,7 @@ object FAMapJob {
   def apply[A : ClassManifest, B : ClassManifest](
     src: FlowArray[A],
     dst: FlowArray[B],
-    f: A => B) = new FAMapJob(src, dst, f)
+    f: A => B) =
+      new FAMapJob(src, dst, f, 0, src.size - 1, FAJob.threshold(src.size), dst)
 
 }

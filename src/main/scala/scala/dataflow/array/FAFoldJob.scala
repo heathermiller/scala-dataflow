@@ -10,10 +10,7 @@ private[array] class FAFoldJob[A : ClassManifest, A1 >: A] private (
   obs: FAJob.Observer
 ) extends FAJob(start, end, thr, obs) {
 
-  var result: A1 = z
-
-  def this(src: FlowArray[A], z: A1, f: (A1, A1) => A1, obs: FAJob.Observer) =
-    this(src, z, f, 0, src.size - 1, FAJob.threshold(src.size), obs)
+  private var result: A1 = z
 
   protected def subCopy(s: Int, e: Int) = 
     new FAFoldJob(src, z, f, s, e, thresh, this)
@@ -41,15 +38,11 @@ object FAFoldJob {
 
   import scala.dataflow.Future
 
-  def apply[A : ClassManifest, A1 >: A](src: FlowArray[A], z: A1, f: (A1, A1) => A1) = {
-    val job = new FAFoldJob(src, z, f, null)
-    val fut = new FoldFuture(job)
-    job.observer = fut
-    (job, fut)
-  }
+  def apply[A : ClassManifest, A1 >: A](src: FlowArray[A], z: A1, f: (A1, A1) => A1) =
+    new FAFoldJob(src, z, f, 0, src.size - 1, FAJob.threshold(src.size), null)
 
   class FoldFuture[A](job: FAFoldJob[_,A]) extends Future[A] with FAJob.Observer {
-    override def jobDone() { complete(job.result) }
+    override def jobDone() { tryComplete(job.result) }
   }
 
 }
