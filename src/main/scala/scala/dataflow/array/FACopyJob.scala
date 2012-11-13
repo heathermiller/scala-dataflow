@@ -1,8 +1,8 @@
 package scala.dataflow.array
 
 private[array] class FACopyJob[A : ClassManifest] private (
-  val src: FlowArray[A],
-  val dst: FlowArray[A],
+  val src: FlatFlowArray[A],
+  val dst: FlatFlowArray[A],
   val offset: Int,
   start: Int,
   end: Int,
@@ -24,8 +24,8 @@ private[array] class FACopyJob[A : ClassManifest] private (
 object FACopyJob {
 
   def apply[A : ClassManifest](
-    src: FlowArray[A],
-    dst: FlowArray[A],
+    src: FlatFlowArray[A],
+    dst: FlatFlowArray[A],
     offset: Int,
     obs: FAJob.Observer) =
       new FACopyJob(src, dst, offset, 0, src.size - 1, FAJob.threshold(src.size), obs)

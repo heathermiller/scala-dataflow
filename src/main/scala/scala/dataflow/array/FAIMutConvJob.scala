@@ -1,8 +1,8 @@
 package scala.dataflow.array
 
 private[array] class FAIMutConvJob[A : ClassManifest] private (
-  val src: FlowArray[A],
-  val dst: FlowArray[A],
+  val src: FlatFlowArray[A],
+  val dst: FlatFlowArray[A],
   val f: A => A,
   val cond: A => Boolean,
   start: Int,
@@ -11,7 +11,7 @@ private[array] class FAIMutConvJob[A : ClassManifest] private (
   obs: FAJob.Observer
 ) extends FAJob(start, end, thr, obs) {
 
-  def this(src: FlowArray[A], dst: FlowArray[A], f: A => A, cond: A => Boolean) =
+  def this(src: FlatFlowArray[A], dst: FlatFlowArray[A], f: A => A, cond: A => Boolean) =
     this(src, dst, f, cond, 0, src.size - 1, FAJob.threshold(src.size), dst)
 
   protected def subCopy(s: Int, e: Int) = 
@@ -32,8 +32,8 @@ private[array] class FAIMutConvJob[A : ClassManifest] private (
 object FAIMutConvJob {
 
   def apply[A : ClassManifest](
-    src: FlowArray[A],
-    dst: FlowArray[A],
+    src: FlatFlowArray[A],
+    dst: FlatFlowArray[A],
     f: A => A,
     cond: A => Boolean
   ) = new FAIMutConvJob(src, dst, f, cond)

@@ -1,7 +1,7 @@
 package scala.dataflow.array
 
 private[array] class FAGenerateJob[A : ClassManifest] private (
-  val dst: FlowArray[A],
+  val dst: FlatFlowArray[A],
   val f: Int => A,
   start: Int,
   end: Int,
@@ -23,7 +23,7 @@ private[array] class FAGenerateJob[A : ClassManifest] private (
 object FAGenerateJob {
 
   def apply[A : ClassManifest](
-    dst: FlowArray[A],
+    dst: FlatFlowArray[A],
     f: Int => A,
     obs: FAJob.Observer) =
       new FAGenerateJob(dst, f, 0, dst.size - 1, FAJob.threshold(dst.size), dst)

@@ -1,8 +1,8 @@
 package scala.dataflow.array
 
 private[array] class FAMapJob[A : ClassManifest, B : ClassManifest] private (
-  val src: FlowArray[A],
-  val dst: FlowArray[B],
+  val src: FlatFlowArray[A],
+  val dst: FlatFlowArray[B],
   val f: A => B,
   start: Int,
   end: Int,
@@ -24,8 +24,8 @@ private[array] class FAMapJob[A : ClassManifest, B : ClassManifest] private (
 object FAMapJob {
 
   def apply[A : ClassManifest, B : ClassManifest](
-    src: FlowArray[A],
-    dst: FlowArray[B],
+    src: FlatFlowArray[A],
+    dst: FlatFlowArray[B],
     f: A => B) =
       new FAMapJob(src, dst, f, 0, src.size - 1, FAJob.threshold(src.size), dst)
 
