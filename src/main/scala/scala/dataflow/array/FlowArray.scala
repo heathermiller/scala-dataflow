@@ -137,4 +137,12 @@ object FlowArray {
   case object Complete extends WaitList
   case class  Blocking(thr: Thread, next: WaitList) extends WaitList
 
+  def tabulate[A : ClassManifest](n: Int)(f: Int => A) = {
+    val ret = new FlowArray(new Array[A](n))
+    val job = FAGenerateJob(ret, f, ret)
+    ret.srcJob = job
+    FAJob.schedule(job)
+    ret
+  }
+
 }
