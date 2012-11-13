@@ -5,14 +5,19 @@ import scala.collection.parallel.mutable.ParArray
 
 object PABench extends testing.Benchmark {
 
-  val pa1 = ParArray.tabulate(1000000)(x => x*x)
+  val no = 10000
+  val ni = 1000
 
   def run {
+    val pa1 = ParArray.tabulate(no)(x => x*x)
     val pa2 = pa1.map(_ * 2)
     val pa3 = pa2.map(_ / 2.34)
-    val pa4 = pa3.map(_ / 1.2)
+    val pa4 = pa3 flatMap { x =>
+      ParArray.tabulate(ni)(y => x * y)
+    }
+    val pa5 = pa4.map(_ / 1.2)
 
-    println(pa4(30))
+    println(pa5(30))
   }
 
 }
