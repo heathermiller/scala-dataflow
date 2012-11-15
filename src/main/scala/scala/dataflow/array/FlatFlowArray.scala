@@ -26,6 +26,17 @@ class FlatFlowArray[A : ClassManifest](
     dispatch(newJob)
   }
 
+  // Helpers
+  @inline private final def dispatch[B : ClassManifest](
+    newJob: FAJob,
+    dest: HierFlowArray[B]
+  ) {
+    // Setup destination
+    dest.srcJob = newJob
+
+    dispatch(newJob)
+  }
+
   @inline private[array] final def dispatch(newJob: FAJob) {
     val curJob = /*READ*/srcJob
 
@@ -35,12 +46,6 @@ class FlatFlowArray[A : ClassManifest](
     else
       FAJob.schedule(newJob)
   }
-
-  def newFA[B : ClassManifest] = 
-    new FlatFlowArray(new Array[B](length))
-
-  def newFA[B : ClassManifest](fact: Int) = 
-    new FlatFlowArray(new Array[B](length * fact))
 
   // Functions
   def map[B : ClassManifest](f: A => B): FlowArray[B] = {

@@ -14,6 +14,13 @@ abstract class FlowArray[A : ClassManifest] {
   // Internals
   @volatile private var waiting: WaitList = Empty
 
+  // Utilities
+  @inline protected final def newFA[B : ClassManifest] = 
+    new FlatFlowArray(new Array[B](length))
+
+  @inline protected final def newFA[B : ClassManifest](n: Int) = 
+    new HierFlowArray(new Array[FlowArray[B]](size), n)
+
   // Unsafe stuff
   private val unsafe = getUnsafe()
   private val OFFSET = unsafe.objectFieldOffset(classOf[FlowArray[_]].getDeclaredField("waiting"))
