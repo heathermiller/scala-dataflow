@@ -3,9 +3,11 @@ package scala.dataflow.array
 import scala.dataflow.Future
 import scala.annotation.tailrec
 
-abstract class FlowArray[A : ClassManifest] {
+abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
 
   import FlowArray._
+
+  type JobGen = (FlatFlowArray[A], Int) => FAJob
 
   // Fields
   def size: Int
@@ -14,12 +16,39 @@ abstract class FlowArray[A : ClassManifest] {
   // Internals
   @volatile private var waiting: WaitList = Empty
 
+  // Calculation Information
+  @volatile private var srcJob: FAJob = null
+
   // Utilities
   @inline protected final def newFA[B : ClassManifest] = 
     new FlatFlowArray(new Array[B](length))
 
   @inline protected final def newFA[B : ClassManifest](n: Int) = 
     new HierFlowArray(new Array[FlowArray[B]](size), n)
+
+  private[array] def copyToArray(trg: Array[A], offset: Int): Unit
+
+  // Dispatcher
+  private[array] def dispatch(gen: JobGen): FAJob = dispatch(gen, 0)
+  private[array] def dispatch(gen: JobGen, offset: Int): FAJob
+
+  @inline private[array] final def dispatch(newJob: FAJob) {
+    val curJob = /*READ*/srcJob
+
+    // Schedule job
+    if (curJob != null)
+      curJob.depending(newJob)
+    else
+      FAJob.schedule(newJob)
+  }
+
+  @inline private final def setupDep[B](gen: JobGen, ret: FlowArray[B]) = {
+    val job = dispatch(gen)
+    ret.srcJob = job
+    job.addObserver(ret)
+    ret
+  }
+
 
   // Unsafe stuff
   private val unsafe = getUnsafe()
@@ -28,19 +57,48 @@ abstract class FlowArray[A : ClassManifest] {
     unsafe.compareAndSwapObject(this, OFFSET, ov, nv)
 
   // Public members
-  def map[B : ClassManifest](f: A => B): FlowArray[B]
-  def flatMapN[B : ClassManifest](n: Int)(f: A => FlowArray[B]): FlowArray[B]
-  def mutConverge(cond: A => Boolean)(it: A => Unit): FlowArray[A]
-  def converge(cond: A => Boolean)(it: A => A): FlowArray[A]
+  def map[B : ClassManifest](f: A => B): FlowArray[B] = {
+    val ret = newFA[B]
+    setupDep((fa, of) => FAMapJob(fa, ret, f, of), ret)
+  }
+
+  def flatMapN[B : ClassManifest](n: Int)(f: A => FlowArray[B]): FlowArray[B] = {
+    val ret = newFA[B](n)
+    setupDep((fa, of) => FAFlatMapJob(fa, ret, f, n, of), ret)
+  }
+
+  // TODO implement those two!
+  def mutConverge(cond: A => Boolean)(it: A => Unit): FlowArray[A] = null
+  def converge(cond: A => Boolean)(it: A => A): FlowArray[A] = null
+
   def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): Future[A1]
 
-  def done: Boolean
+  private[array] final def addObserver(obs: FAJob.Observer) {
+    val curJob = /*READ*/srcJob
+    if (curJob == null) obs.jobDone()
+    else curJob.addObserver(obs)
+  }
+
+
+  /**
+   * Checks if this job is done
+   *
+   * This may NOT be implemented by checking waiting == Complete because otherwise
+   * the jobs that are woken up by jobDone will park again!
+   */
+  def done = /*READ*/srcJob == null
+
   def blocking: Array[A]
+
+  override def jobDone() {
+    srcJob = null
+    freeBlocked()
+  }
 
   // Implementations
 
   @tailrec
-  final protected def freeBlocked(): Unit = /*READ*/waiting match {
+  final private def freeBlocked(): Unit = /*READ*/waiting match {
     case Empty => 
       if (!CAS(Empty, Complete))
         freeBlocked()

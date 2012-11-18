@@ -6,18 +6,15 @@ object FATest extends App {
 
   val n = 4000
 
-  val raw = Array.tabulate(n)(x => x*x toLong)
-
-  val fa1 = new FlowArray(raw)
+  val fa1 = FlowArray.tabulate(n)(x => x*x toLong)
   val fa2 = fa1.flatMapN(n)(mkFA _)
   //val fa3 = fa2.map(_ / 2)
   //val fut = fa3.fold(0L)(_ + _)
 
-  println(fa2.blocking(0))
+  println(fa2.blocking(8002))
 
   def mkFA(v: Long) = {
-    val raw = Array.tabulate(n)(x => x*v)
-    new FlowArray(raw)
+    FlowArray.tabulate(n)(x => x*v)
   }
 
 }

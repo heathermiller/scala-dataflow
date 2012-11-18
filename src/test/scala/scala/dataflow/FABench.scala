@@ -5,8 +5,8 @@ import array._
 
 object FABench extends testing.Benchmark {
 
-  val no = 10000
-  val ni = 1000
+  val no = 1000
+  val ni = 10000
 
   def run {
     val fa1 = FlowArray.tabulate(no)(x => x*x)
@@ -18,6 +18,10 @@ object FABench extends testing.Benchmark {
     val fa5 = fa4.map(_ / 1.2)
 
     println(fa5.blocking(30))
+  }
+
+  override def tearDown {
+    FAJob.printStats()
   }
 
 }

@@ -11,17 +11,32 @@ class HierFlowArray[A : ClassManifest](
   // Fields
   val size = subData.length * subSize
 
-  // Calculation Information
-  @volatile private[array] var srcJob: FAJob = null
+  private[array] final def dispatch(gen: JobGen, offset: Int): FAJob = {
+    val job = FADispatcherJob(this, gen, offset)
+    dispatch(job)
+    job
+  }
 
-  def map[B : ClassManifest](f: A => B): FlowArray[B] = null
-  def flatMapN[B : ClassManifest](n: Int)(f: A => FlowArray[B]): FlowArray[B] = null
-  def mutConverge(cond: A => Boolean)(it: A => Unit): FlowArray[A] = null
-  def converge(cond: A => Boolean)(it: A => A): FlowArray[A] = null
-  def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): Future[A1] = null
+  final private[array] def copyToArray(trg: Array[A], offset: Int) {
+    for ((sd, i) <- subData.zipWithIndex) {
+      sd.copyToArray(trg, offset + i*subSize)
+    }
+  }
 
-  def blocking: Array[A] = null
+  // TODO implement
+  def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): Future[A1] = {
+    null
+  }
 
-  def done = subData.forall(_.done)
+  def blocking: Array[A] = {
+    block()
+    subData.foreach(_.block())
+
+    val ret = new Array[A](size)
+    copyToArray(ret, 0)
+    ret
+  }
+
+  override def done = super.done && subData.forall(_.done)
 
 }

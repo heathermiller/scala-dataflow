@@ -85,6 +85,7 @@ private[array] abstract class FAJob(
       val (j1, j2) = split()
       ForkJoinTask.invokeAll(j1, j2)
     } else {
+      statRecLen(size)
       doCompute()
       if (autoFinalize)
         finalizeCompute()
@@ -93,10 +94,10 @@ private[array] abstract class FAJob(
 
   @tailrec
   final protected def finalizeCompute(): Unit = /*READ*/state match {
-    case Delegated(deleg) =>
-      deleg.addObserver(this)
+    case Delegated(delegs, _) =>
+      delegs.foreach(_.addObserver(this))
       // Prevent races
-      if (deleg.done)
+      if (delegs.forall(_.done))
         notifyObservers()
     case PendingChain(next) =>
       state = /*WRITE*/DoneChain(next)
@@ -119,7 +120,13 @@ private[array] abstract class FAJob(
   /* Done signaling          */
   /***************************/
   override def jobDone() {
-    if (done) notifyObservers()
+    if (done) {
+      if (popDelegate())
+        // Work down the dependency chain, and notify observers
+        finalizeCompute()
+      else
+        notifyObservers()
+    }
   }
 
   final protected def notifyObservers() {
@@ -147,11 +154,11 @@ private[array] abstract class FAJob(
   /// Public Members ///
 
   /** Checks whether this Job is done */
-  def done: Boolean = state match {
+  def done: Boolean = /*READ*/state match {
     case Split(j1, j2) =>
       j1.done && j2.done
     case DoneChain(_) | DoneEnd => true
-    case Delegated(deleg) => deleg.done
+    case Delegated(delegs, _) => delegs.forall(_.done)
     case _ => false
     // Note: If state is splitting, there IS a next job which is not
     // yet started (otherwise: not splitting)
@@ -196,29 +203,37 @@ private[array] abstract class FAJob(
   }
 
   /**
-   * Delegates this job to another job. Should be called in the
-   * doCompute body of a concrete subclass. Delegating has the
+   * Delegates this job some other jobs. MUST NOT be called elsewhere than
+   * in thedoCompute body of a concrete subclass. Delegating has the
    * following effects: 
-   * 1) This job's dependency list is moved downstream the delegated
-   *    job's dependency list (actually done in this method)
-   * 2) Future calls to depend and done are proxied to the delegate
-   *    (done in pattern matching in the two methods)
-   * 3) This job's observers are only notified, once the delegate
+   * 1) This job's dependency list is kept but delayed until all
+   *    delegated jobs complete.
+   * 2) Future calls to done are proxied to the delegates
+   *    (done in pattern matching in done method)
+   * 3) This job's observers are only notified, once the delegates
    *    completes. (done in finalizeCompute)
    * 
-   * Note that this method does *not* schedule the delegate.
+   * Note that this method does *not* schedule the delegates.
    */
   @tailrec
-  final protected def delegate(deleg: FAJob) {
+  final protected def delegate(deleg: Seq[FAJob]) {
     /*READ*/state match {
-      case PendingChain(next) => 
-        deleg.depending(next)
-        state/*WRITE*/ = Delegated(deleg)
+      case cs@PendingChain(next) => 
+        state/*WRITE*/ = Delegated(deleg, cs)
       case PendingFree => 
-        if (!CAS_ST(PendingFree, Delegated(deleg)))
+        if (!CAS_ST(PendingFree, Delegated(deleg, PendingFree)))
           delegate(deleg)
       case _ => throw new IllegalStateException("Delegate called while not executing.")
     }
+  }
+
+  final private def popDelegate(): Boolean = /*READ*/state match {
+    case ov@Delegated(_, cs) =>
+      if (!CAS_ST(ov, cs))
+        popDelegate()
+      else
+        true
+    case _ => false
   }
 
   /**
@@ -234,9 +249,13 @@ private[array] abstract class FAJob(
         case _: Splitting =>
           cur.split()
           dep0(cur, newJob)
-        case Delegated(deleg) =>
-          deleg.depending(newJob)
-          None
+        case Delegated(_, PendingChain(next)) =>
+          dep0(next, newJob)
+        case ov@Delegated(delegs, PendingFree) =>
+          if (!CAS_ST(ov, Delegated(delegs, PendingChain(newJob))))
+            dep0(cur, newJob)
+          else
+            None
         case Split(j1, j2) =>
           Some((j1, j2))
         case PendingChain(next) =>
@@ -266,13 +285,30 @@ private[array] abstract class FAJob(
 
 object FAJob {
 
+  import java.util.concurrent.atomic.AtomicInteger
+
+  val statCount    = new AtomicInteger(0)
+  val statCumSize  = new AtomicInteger(0)
+
+  private def statRecLen(size: Int) {
+    statCount.incrementAndGet()
+    statCumSize.addAndGet(size)
+  }
+
+  def printStats() = {
+    val count = statCount.get
+    val len   = statCumSize.get.toDouble / count
+    println("Computed %d jobs with %.2f average length".format(count, len))
+  }
+
   sealed abstract class State
+  sealed abstract class ChainState extends State
   case class Splitting(j1: FAJob, j2: FAJob, next: FAJob) extends State
   case class Split(j1: FAJob, j2: FAJob) extends State
-  case class PendingChain(next: FAJob) extends State
+  case class PendingChain(next: FAJob) extends ChainState
   case class DoneChain(next: FAJob) extends State
-  case class Delegated(deleg: FAJob) extends State
-  case object PendingFree extends State
+  case class Delegated(deleg: Seq[FAJob], oldState: ChainState) extends State
+  case object PendingFree extends ChainState
   case object DoneEnd extends State
 
   sealed abstract class ObsStack
@@ -289,9 +325,10 @@ object FAJob {
   }
 
   def threshold(size: Int) = (
-    scala.collection.parallel.thresholdFromSize(
+    math.max(256,
+      scala.collection.parallel.thresholdFromSize(
       size, scala.collection.parallel.availableProcessors
-    )
+    ))
   )
 
   trait Observer {

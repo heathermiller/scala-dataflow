@@ -5,6 +5,7 @@ private[array] class FAFlatMapJob[A : ClassManifest, B : ClassManifest] private 
   val dst: HierFlowArray[B],
   val f: A => FlowArray[B],
   val n: Int,
+  val offset: Int,
   start: Int,
   end: Int,
   thr: Int,
@@ -12,13 +13,13 @@ private[array] class FAFlatMapJob[A : ClassManifest, B : ClassManifest] private 
 ) extends FAJob(start, end, thr, obs) {
 
   protected def subCopy(s: Int, e: Int) = 
-    new FAFlatMapJob(src, dst, f, n, s, e, thresh, this)
+    new FAFlatMapJob(src, dst, f, n, offset, s, e, thresh, this)
 
   protected def doCompute() {
     for (i <- start to end) {
       val sub = f(src.data(i))
-      assert(sub.size == n)
-      dst.subData(i) = sub
+      assert(n == sub.size)
+      dst.subData(i + offset) = sub
     }
   }
 
@@ -30,7 +31,8 @@ object FAFlatMapJob {
     src: FlatFlowArray[A],
     dst: HierFlowArray[B],
     f: A => FlowArray[B],
-    n: Int) =
-      new FAFlatMapJob(src, dst, f, n, 0, src.size - 1, FAJob.threshold(src.size), dst)
+    n: Int,
+    of: Int) =
+      new FAFlatMapJob(src, dst, f, n, of, 0, src.size - 1, FAJob.threshold(src.size), dst)
 
 }

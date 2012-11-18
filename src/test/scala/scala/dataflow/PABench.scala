@@ -5,8 +5,8 @@ import scala.collection.parallel.mutable.ParArray
 
 object PABench extends testing.Benchmark {
 
-  val no = 10000
-  val ni = 1000
+  val no = 1000
+  val ni = 10000
 
   def run {
     val pa1 = ParArray.tabulate(no)(x => x*x)

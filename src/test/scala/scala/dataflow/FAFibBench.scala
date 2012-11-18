@@ -4,8 +4,7 @@ import array._
 
 object FAFibBench extends testing.Benchmark {
 
-  val raw = Array.tabulate(40)(x => x)
-  val fa1 = new FlowArray(raw)
+  val fa1 = FlowArray.tabulate(40)(x => x)
 
   // Stupid fib implementation to have value dependent task time
   def fib(i: Int): Int =
