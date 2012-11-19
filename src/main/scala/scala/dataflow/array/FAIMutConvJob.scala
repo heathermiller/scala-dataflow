@@ -5,17 +5,15 @@ private[array] class FAIMutConvJob[A : ClassManifest] private (
   val dst: FlatFlowArray[A],
   val f: A => A,
   val cond: A => Boolean,
+  val offset: Int,
   start: Int,
   end: Int,
   thr: Int,
   obs: FAJob.Observer
 ) extends FAJob(start, end, thr, obs) {
 
-  def this(src: FlatFlowArray[A], dst: FlatFlowArray[A], f: A => A, cond: A => Boolean) =
-    this(src, dst, f, cond, 0, src.size - 1, FAJob.threshold(src.size), dst)
-
   protected def subCopy(s: Int, e: Int) = 
-    new FAIMutConvJob(src, dst, f, cond, s, e, thresh, this)
+    new FAIMutConvJob(src, dst, f, cond, offset, s, e, thresh, this)
 
   protected def doCompute() {
     for (i <- start to end) {
@@ -23,7 +21,7 @@ private[array] class FAIMutConvJob[A : ClassManifest] private (
       while (!cond(x)) {
         x = f(x)
       }
-      dst.data(i) = x
+      dst.data(i + offset) = x
     }
   }
 
@@ -35,7 +33,8 @@ object FAIMutConvJob {
     src: FlatFlowArray[A],
     dst: FlatFlowArray[A],
     f: A => A,
-    cond: A => Boolean
-  ) = new FAIMutConvJob(src, dst, f, cond)
+    cond: A => Boolean,
+    offset: Int
+  ) = new FAIMutConvJob(src, dst, f, cond, offset, 0, src.size - 1, FAJob.threshold(src.size), dst)
 
 }

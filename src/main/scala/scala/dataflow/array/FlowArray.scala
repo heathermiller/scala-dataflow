@@ -32,7 +32,7 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
   private[array] def dispatch(gen: JobGen): FAJob = dispatch(gen, 0)
   private[array] def dispatch(gen: JobGen, offset: Int): FAJob
 
-  @inline private[array] final def dispatch(newJob: FAJob) {
+  protected final def dispatch(newJob: FAJob) {
     val curJob = /*READ*/srcJob
 
     // Schedule job
@@ -67,9 +67,15 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
     setupDep((fa, of) => FAFlatMapJob(fa, ret, f, n, of), ret)
   }
 
-  // TODO implement those two!
-  def mutConverge(cond: A => Boolean)(it: A => Unit): FlowArray[A] = null
-  def converge(cond: A => Boolean)(it: A => A): FlowArray[A] = null
+  def mutConverge(cond: A => Boolean)(it: A => Unit): FlowArray[A] = {
+    val ret = newFA[A]
+    setupDep((fa, of) => FAMutConvJob(fa, ret, it, cond, of), ret)
+  }
+
+  def converge(cond: A => Boolean)(it: A => A): FlowArray[A] = {
+    val ret = newFA[A]
+    setupDep((fa, of) => FAIMutConvJob(fa, ret, it, cond, of), ret)
+  }
 
   def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): Future[A1]
 
