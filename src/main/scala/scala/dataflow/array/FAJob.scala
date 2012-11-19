@@ -74,6 +74,20 @@ private[array] abstract class FAJob(
     case _ => throw new IllegalStateException("not split!")
   }
 
+  final protected def isSplit = /*READ*/state match {
+    case Split(_, _) => true
+    case _ => false
+  }
+
+  final protected def isDelegated = /*READ*/state match {
+    case Delegated(_, _) => true
+    case _ => false
+  }
+
+  final protected def delegates = /*READ*/state match {
+    case Delegated(delegs, _) => delegs
+    case _ => throw new IllegalStateException("not delegated!")
+  }
 
   /***************************/
   /* ForkJoinTask internals  */
