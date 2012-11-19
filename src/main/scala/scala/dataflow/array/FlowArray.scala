@@ -77,7 +77,12 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
     setupDep((fa, of) => FAIMutConvJob(fa, ret, it, cond, of), ret)
   }
 
-  def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): Future[A1]
+  def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): Future[A1] = {
+    val ret = new FoldFuture(z, op)
+    val job = dispatch((fa, of) => FAFoldJob(fa, ret, z, op))
+    job.addObserver(ret)
+    ret
+  }
 
   private[array] final def addObserver(obs: FAJob.Observer) {
     val curJob = /*READ*/srcJob

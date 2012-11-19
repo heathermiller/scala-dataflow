@@ -22,20 +22,20 @@ class FlowArraySuite extends FunSuite {
     verEls(fa)(_ == _)
   }
 
-  test("map a FA once") {
+  test("map a FlatFA once") {
     val fa = nFA
     val mfa = fa.map(_ * 2)
     verEls(mfa)(_ == 2*_)
   }
 
-  test("map a FA twice") {
+  test("map a FlatFA twice") {
     val fa = nFA
     val m1fa = fa.map(_ * 2)
     val m2fa = m1fa.map(_ * 2)
     verEls(m2fa)(_ == 4*_)
   }
 
-  test("branch on FA flow") {
+  test("branch on FlatFA flow") {
     val fa = nFA
     val m1fa = fa.map(_ * 4)
     val m2fa = fa.map(_ * 3)
@@ -52,6 +52,28 @@ class FlowArraySuite extends FunSuite {
     }
   }
 
-  
+  test("map on HierFA") {
+    val n = 100
+    val fa = nFA(n).flatMapN(n)(x => nFA(n)).map(_ * 2)
+    val b = fa.blocking
+    b.take(200).foreach(println _)
+    verEls(fa)((x,i) => x == (i % n) * 2)
+    fa.blocking.take(200).foreach(println _)
+  }
+
+  test("fold on FlatFA") {
+    val fa = nFA
+    val fld = fa.fold(0)(_ + _)
+    assert(fld.blocking == (size-1)*size / 2)
+  }
+
+  /*
+  test("fold on HierFA") {
+    val n = 500
+    val bfa = nFA(n).flatMapN(n)(x => nFA(n))
+    val fld = bfa.fold(0)(_ + _)
+    assert(fld.blocking == n * (n-1) * n / 2)
+  }
+  */
 
 }

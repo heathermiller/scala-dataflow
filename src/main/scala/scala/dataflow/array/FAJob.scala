@@ -50,7 +50,6 @@ private[array] abstract class FAJob(
     (subCopy(s1, e1), subCopy(s2, e2))
   }
 
-  protected val autoFinalize: Boolean = true
   protected def doCompute(): Unit
 
   /***************************/
@@ -87,8 +86,7 @@ private[array] abstract class FAJob(
     } else {
       statRecLen(size)
       doCompute()
-      if (autoFinalize)
-        finalizeCompute()
+      finalizeCompute()
     }
   }
 
@@ -102,10 +100,7 @@ private[array] abstract class FAJob(
     case PendingChain(next) =>
       state = /*WRITE*/DoneChain(next)
       notifyObservers()
-      if (autoFinalize)
-        next.fork()
-      else
-        schedule(next)
+      next.fork()
     case PendingFree =>
       if (!CAS_ST(PendingFree, DoneEnd))
         finalizeCompute()

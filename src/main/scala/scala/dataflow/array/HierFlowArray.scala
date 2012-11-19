@@ -1,6 +1,5 @@
 package scala.dataflow.array
 
-import scala.dataflow.Future
 import scala.annotation.tailrec
 
 class HierFlowArray[A : ClassManifest](
@@ -21,11 +20,6 @@ class HierFlowArray[A : ClassManifest](
     for ((sd, i) <- subData.zipWithIndex) {
       sd.copyToArray(trg, offset + i*subSize)
     }
-  }
-
-  // TODO implement
-  def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): Future[A1] = {
-    null
   }
 
   def blocking: Array[A] = {
