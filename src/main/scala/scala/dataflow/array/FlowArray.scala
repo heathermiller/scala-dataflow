@@ -151,7 +151,7 @@ object FlowArray {
 
   def tabulate[A : ClassManifest](n: Int)(f: Int => A) = {
     val ret = new FlatFlowArray(new Array[A](n))
-    val job = FAGenerateJob(ret, f, ret)
+    val job = FAGenerateJob(ret, f)
     ret.srcJob = job
     FAJob.schedule(job)
     ret
