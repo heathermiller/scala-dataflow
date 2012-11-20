@@ -4,7 +4,7 @@ import scala.annotation.tailrec
 
 class FlatFlowArray[A : ClassManifest](
   private[array] val data: Array[A]
-) extends FlowArray[A] with FAJob.Observer {
+) extends FlowArray[A] {
 
   import FlowArray._
 
