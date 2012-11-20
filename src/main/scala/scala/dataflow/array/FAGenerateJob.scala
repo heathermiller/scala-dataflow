@@ -24,8 +24,7 @@ object FAGenerateJob {
 
   def apply[A : ClassManifest](
     dst: FlatFlowArray[A],
-    f: Int => A,
-    obs: FAJob.Observer) =
+    f: Int => A) =
       new FAGenerateJob(dst, f, 0, dst.size - 1, FAJob.threshold(dst.size), dst)
 
 }
