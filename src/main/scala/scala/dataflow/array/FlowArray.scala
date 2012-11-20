@@ -109,17 +109,22 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
   // Implementations
 
   @tailrec
-  final private def freeBlocked(): Unit = /*READ*/waiting match {
-    case Empty => 
-      if (!CAS(Empty, Complete))
-        freeBlocked()
-    case ov@Blocking(thr, next) =>
-      if (CAS(ov, next)) {
+  final protected def freeBlocked() {
+    @tailrec
+    def free0(w: WaitList): Unit = w match {
+      case Blocking(thr, next) =>
+        println("Unparking")
         unsafe.unpark(thr)
-        freeBlocked()
-      } else freeBlocked()
-    case Complete =>
-      /* this may sporadically happen */
+        free0(next)
+      case Empty | Complete => 
+    }
+
+    val ov = /*READ*/waiting
+
+    if (!CAS(ov, Complete))
+      freeBlocked()
+    else
+      free0(ov)
   }
 
   @tailrec
