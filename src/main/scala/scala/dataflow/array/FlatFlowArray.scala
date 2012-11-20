@@ -21,6 +21,11 @@ class FlatFlowArray[A : ClassManifest](
     Array.copy(data, 0, trg, offset, size)
   }
 
+  override def jobDone() {
+    setDone()
+    freeBlocked()
+  }
+
   override def blocking = {
     block()
     data

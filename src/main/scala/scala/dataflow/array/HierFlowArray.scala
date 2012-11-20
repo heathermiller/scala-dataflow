@@ -10,6 +10,8 @@ class HierFlowArray[A : ClassManifest](
   // Fields
   val size = subData.length * subSize
 
+  @volatile var doneInd: Int = 0
+
   private[array] final def dispatch(gen: JobGen, offset: Int): FAJob = {
     val job = FADispatcherJob(this, gen, offset)
     dispatch(job)
@@ -24,13 +26,32 @@ class HierFlowArray[A : ClassManifest](
 
   def blocking: Array[A] = {
     block()
-    subData.foreach(_.block())
 
     val ret = new Array[A](size)
     copyToArray(ret, 0)
     ret
   }
 
-  override def done = super.done && subData.forall(_.done)
+  @tailrec
+  override final def jobDone() {
+    setDone()
+    if (done)
+      freeBlocked()
+    else if (!subData(doneInd).tryAddObserver(this))
+      jobDone()
+  }
+
+  override def done = super.done && {
+    val di = advDone()
+    println("done at " + di)
+    di >= subData.length
+  }
+
+  private def advDone() = {
+    var i = /*READ*/doneInd
+    while (i < subData.length && subData(i).done) { i += 1 }
+    doneInd/*WRITE*/ = i
+    i
+  }
 
 }

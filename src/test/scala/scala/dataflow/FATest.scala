@@ -4,6 +4,7 @@ import array._
 
 object FATest extends App {
 
+  /*
   val n = 10000
 
   val fa1 = FlowArray.tabulate(n)(x => x*x toLong)
@@ -19,5 +20,12 @@ object FATest extends App {
   def mkFA(v: Long) = {
     FlowArray.tabulate(n)(x => x*v)
   }
+  */
+
+  val fa = (FlowArray.tabulate(200)(x => x * 100) flatMapN 100) { x =>
+    FlowArray.tabulate(100)(y => x + y)
+  }
+
+  val res = fa.blocking
 
 }

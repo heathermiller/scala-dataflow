@@ -56,9 +56,9 @@ class FlowArraySuite extends FunSuite {
     val n = 100
     val fa = nFA(n).flatMapN(n)(x => nFA(n)).map(_ * 2)
     val b = fa.blocking
-    b.take(200).foreach(println _)
+    //b.take(200).foreach(println _)
     verEls(fa)((x,i) => x == (i % n) * 2)
-    fa.blocking.take(200).foreach(println _)
+    //fa.blocking.take(200).foreach(println _)
   }
 
   test("fold on FlatFA") {

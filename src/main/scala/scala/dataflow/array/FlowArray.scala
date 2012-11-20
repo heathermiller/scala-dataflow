@@ -84,12 +84,18 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
     ret
   }
 
-  private[array] final def addObserver(obs: FAJob.Observer) {
+  private[array] final def tryAddObserver(obs: FAJob.Observer) = {
     val curJob = /*READ*/srcJob
-    if (curJob == null) obs.jobDone()
-    else curJob.addObserver(obs)
+    if (curJob == null) false
+    else {
+      curJob.addObserver(obs)
+      true
+    }
   }
 
+  private[array] final def addObserver(obs: FAJob.Observer) {
+    if (!tryAddObserver(obs)) obs.jobDone()
+  }
 
   /**
    * Checks if this job is done
@@ -101,10 +107,7 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
 
   def blocking: Array[A]
 
-  override def jobDone() {
-    srcJob = null
-    freeBlocked()
-  }
+  final protected def setDone() { srcJob = null }
 
   // Implementations
 
@@ -113,7 +116,6 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
     @tailrec
     def free0(w: WaitList): Unit = w match {
       case Blocking(thr, next) =>
-        println("Unparking")
         unsafe.unpark(thr)
         free0(next)
       case Empty | Complete => 
