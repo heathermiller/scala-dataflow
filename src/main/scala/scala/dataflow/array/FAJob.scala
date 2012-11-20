@@ -16,7 +16,7 @@ private[array] abstract class FAJob(
 
   /** observers of this FAJob */
   @volatile private var observers: ObsStack = 
-    if (observer == null) ObsBot else ObsEl(observer)
+    if (observer == null) ObsEmpty else ObsEl(observer)
 
   /** state of this FAJob (done/pending/split/chained) */
   @volatile private var state: State = PendingFree
@@ -138,26 +138,22 @@ private[array] abstract class FAJob(
     }
   }
 
+  @tailrec
   final protected def notifyObservers() {
-    @tailrec
-    def not0(cur: ObsStack): Unit = cur match {
-      case ObsEl(obs, next) =>
-        obs.jobDone()
-        not0(next)
-      case ObsBot =>
-    }
-    not0(/*READ*/observers)
-
-    // Free stuff
-    observers/*WRITE*/ = ObsBot
+    val ov = /*READ*/observers
+    if (CAS_OB(ov, ObsNotified))
+      ov.jobDone()
+    else
+      notifyObservers()
   }
 
   @tailrec
-  final def addObserver(obs: Observer) {
-    val ov = /*READ*/observers
-    val nv = ObsEl(obs, ov)
-    if (!CAS_OB(ov, nv))
-      addObserver(obs)
+  final def addObserver(obs: Observer): Unit = /*READ*/observers match {
+    case ObsNotified => obs.jobDone()
+    case ov => 
+      val nv = ObsEl(obs, ov)
+      if (!CAS_OB(ov, nv))
+        addObserver(obs)
   }
 
   /// Public Members ///
@@ -320,9 +316,12 @@ object FAJob {
   case object PendingFree extends ChainState
   case object DoneEnd extends State
 
-  sealed abstract class ObsStack
-  case class ObsEl(cur: Observer, n: ObsStack = ObsBot) extends ObsStack
-  case object ObsBot extends ObsStack
+  sealed abstract class ObsStack extends Observer
+  case class ObsEl(cur: Observer, n: ObsStack = ObsEmpty) extends ObsStack {
+    override final def jobDone() { cur.jobDone(); n.jobDone() }
+  }
+  case object ObsEmpty extends ObsStack
+  case object ObsNotified extends ObsStack
 
   val forkjoinpool = new ForkJoinPool
 
