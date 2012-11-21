@@ -99,7 +99,10 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
    * This may NOT be implemented by checking waiting == Complete because otherwise
    * the jobs that are woken up by jobDone will park again!
    */
-  def done = /*READ*/srcJob == null
+  def done = {
+    val job = /*READ*/srcJob
+    job == null || job.done
+  }
 
   def blocking: Array[A]
 
