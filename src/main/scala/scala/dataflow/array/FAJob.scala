@@ -112,11 +112,11 @@ private[array] abstract class FAJob(
       if (delegs.forall(_.done))
         notifyObservers()
     case PendingChain(next) =>
-      state = /*WRITE*/DoneChain(next)
+      state = /*WRITE*/Done
       notifyObservers()
       next.fork()
     case PendingFree =>
-      if (!CAS_ST(PendingFree, DoneEnd))
+      if (!CAS_ST(PendingFree, Done))
         finalizeCompute()
       else
         notifyObservers()
@@ -168,7 +168,7 @@ private[array] abstract class FAJob(
   def done: Boolean = /*READ*/state match {
     case Split(j1, j2) =>
       j1.done && j2.done
-    case DoneChain(_) | DoneEnd => true
+    case Done => true
     case Delegated(delegs, _) => delegs.forall(_.done)
     case _ => false
     // Note: If state is splitting, there IS a next job which is not
@@ -269,14 +269,12 @@ private[array] abstract class FAJob(
           Some((j1, j2))
         case PendingChain(next) =>
           dep0(next, newJob)
-        case DoneChain(next) =>
-          dep0(next, newJob)
         case PendingFree =>
           if (!CAS_ST(PendingFree, PendingChain(newJob)))
             dep0(cur, newJob)
           else
             None
-        case DoneEnd =>
+        case Done =>
           schedule(newJob)
           None
       }
@@ -315,10 +313,9 @@ object FAJob {
   case class Splitting(j1: FAJob, j2: FAJob, next: FAJob) extends State
   case class Split(j1: FAJob, j2: FAJob) extends State
   case class PendingChain(next: FAJob) extends ChainState
-  case class DoneChain(next: FAJob) extends State
   case class Delegated(deleg: Seq[FAJob], oldState: ChainState) extends State
   case object PendingFree extends ChainState
-  case object DoneEnd extends State
+  case object Done extends State
 
   sealed abstract class ObsStack extends Observer
   case class ObsEl(cur: Observer, n: ObsStack = ObsEmpty) extends ObsStack {
