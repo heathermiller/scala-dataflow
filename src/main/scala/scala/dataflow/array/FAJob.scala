@@ -107,14 +107,17 @@ private[array] abstract class FAJob(
   @tailrec
   final protected def finalizeCompute(): Unit = /*READ*/state match {
     case Delegated(delegs, _) =>
-      delegs.foreach(_.addObserver(this))
+      delegs.foreach(_.tryAddObserver(this))
       // Prevent races
       if (delegs.forall(_.done))
         notifyObservers()
-    case PendingChain(next) =>
-      state = /*WRITE*/Done
-      notifyObservers()
-      next.fork()
+    case ov@PendingChain(next) =>
+      if (!CAS_ST(ov, Done))
+        finalizeCompute()
+      else {
+        notifyObservers()
+        next.fork()
+      }
     case PendingFree =>
       if (!CAS_ST(PendingFree, Done))
         finalizeCompute()
