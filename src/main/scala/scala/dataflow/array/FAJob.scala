@@ -229,10 +229,8 @@ private[array] abstract class FAJob(
   @tailrec
   final protected def delegate(deleg: Seq[FAJob]) {
     /*READ*/state match {
-      case cs@PendingChain(next) => 
-        state/*WRITE*/ = Delegated(deleg, cs)
-      case PendingFree => 
-        if (!CAS_ST(PendingFree, Delegated(deleg, PendingFree)))
+      case ov: ChainState =>
+        if (!CAS_ST(ov, Delegated(deleg, ov)))
           delegate(deleg)
       case _ => throw new IllegalStateException("Delegate called while not executing.")
     }
