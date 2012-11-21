@@ -43,7 +43,6 @@ class HierFlowArray[A : ClassManifest](
 
   override def done = super.done && {
     val di = advDone()
-    println("done at " + di)
     di >= subData.length
   }
 
