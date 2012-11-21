@@ -28,13 +28,13 @@ object FAMapJob {
     src: FlatFlowArray[A],
     dst: FlatFlowArray[B],
     f: A => B) =
-      new FAMapJob(src, dst, f, 0, 0, src.size - 1, FAJob.threshold(src.size), dst)
+      new FAMapJob(src, dst, f, 0, 0, src.size - 1, FAJob.threshold(src.size), null)
 
   def apply[A : ClassManifest, B : ClassManifest](
     src: FlatFlowArray[A],
     dst: FlatFlowArray[B],
     f: A => B,
     offset: Int) =
-      new FAMapJob(src, dst, f, offset, 0, src.size - 1, FAJob.threshold(src.size), dst)
+      new FAMapJob(src, dst, f, offset, 0, src.size - 1, FAJob.threshold(src.size), null)
 
 }

@@ -35,6 +35,6 @@ object FAIMutConvJob {
     f: A => A,
     cond: A => Boolean,
     offset: Int
-  ) = new FAIMutConvJob(src, dst, f, cond, offset, 0, src.size - 1, FAJob.threshold(src.size), dst)
+  ) = new FAIMutConvJob(src, dst, f, cond, offset, 0, src.size - 1, FAJob.threshold(src.size), null)
 
 }

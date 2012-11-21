@@ -33,6 +33,6 @@ object FAFlatMapJob {
     f: A => FlowArray[B],
     n: Int,
     of: Int) =
-      new FAFlatMapJob(src, dst, f, n, of, 0, src.size - 1, FAJob.threshold(src.size), dst)
+      new FAFlatMapJob(src, dst, f, n, of, 0, src.size - 1, FAJob.threshold(src.size), null)
 
 }

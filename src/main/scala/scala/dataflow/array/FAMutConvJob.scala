@@ -33,6 +33,6 @@ object FAMutConvJob {
     f: A => Unit,
     cond: A => Boolean,
     offset: Int
-  ) = new FAMutConvJob(src, dst, f, cond, offset, 0, src.size - 1, FAJob.threshold(src.size), dst)
+  ) = new FAMutConvJob(src, dst, f, cond, offset, 0, src.size - 1, FAJob.threshold(src.size), null)
 
 }

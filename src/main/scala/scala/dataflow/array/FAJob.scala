@@ -114,7 +114,7 @@ private[array] abstract class FAJob(
       delegs.foreach(_.tryAddObserver(this))
       // Prevent races
       if (delegs.forall(_.done))
-        notifyObservers()
+        jobDone()
     case ov@PendingChain(next) =>
       if (!CAS_ST(ov, Done))
         finalizeCompute()
