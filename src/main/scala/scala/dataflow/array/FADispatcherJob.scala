@@ -29,7 +29,8 @@ object FADispatcherJob {
     src: HierFlowArray[A],
     d: (FlatFlowArray[A], Int) => FAJob,
     offset: Int): FADispatcherJob[A] =
-      new FADispatcherJob(src, d, offset, 0, src.size - 1, FAJob.threshold(src.size), null)
+      new FADispatcherJob(src, d, offset, 0, src.outerSize - 1,
+                          FAJob.threshold(src.outerSize), null)
 
   def apply[A : ClassManifest](
     src: HierFlowArray[A],
