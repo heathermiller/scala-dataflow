@@ -94,13 +94,17 @@ private[array] abstract class FAJob(
   /***************************/
 
   final protected def compute() {
-    if (needSplit) {
-      val (j1, j2) = split()
-      ForkJoinTask.invokeAll(j1, j2)
-    } else {
-      statRecLen(size)
-      doCompute()
-      finalizeCompute()
+    try {
+      if (needSplit) {
+        val (j1, j2) = split()
+        ForkJoinTask.invokeAll(j1, j2)
+      } else {
+        statRecLen(size)
+        doCompute()
+        finalizeCompute()
+      }
+    } catch {
+      case e: Exception => e.printStackTrace()
     }
   }
 
