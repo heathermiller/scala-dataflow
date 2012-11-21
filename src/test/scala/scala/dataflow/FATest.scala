@@ -22,10 +22,12 @@ object FATest extends App {
   }
   */
 
-  val fa = (FlowArray.tabulate(200)(x => x * 100) flatMapN 100) { x =>
+  val fa = (FlowArray.tabulate(100)(x => x * 100) flatMapN 100) { x =>
     FlowArray.tabulate(100)(y => x + y)
-  }
+  } map { x => if (x % 100 == 0) {println("mapping: " + x )}; x }
 
   val res = fa.blocking
+
+  println("done")
 
 }

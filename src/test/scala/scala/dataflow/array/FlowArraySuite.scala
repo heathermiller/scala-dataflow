@@ -65,13 +65,11 @@ class FlowArraySuite extends FunSuite {
     assert(fld.blocking == (size-1)*size / 2)
   }
 
-  /*
   test("fold on HierFA") {
     val n = 500
     val bfa = nFA(n).flatMapN(n)(x => nFA(n))
     val fld = bfa.fold(0)(_ + _)
     assert(fld.blocking == n * (n-1) * n / 2)
   }
-  */
 
 }

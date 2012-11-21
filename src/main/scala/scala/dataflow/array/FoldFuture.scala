@@ -15,7 +15,6 @@ class FoldFuture[A](z: A, f: (A, A) => A) extends Future[A] with FAJob.Observer 
 
   @tailrec
   private[array] final def acc(x: A) {
-    println("Acc: " + x)
     val ov = /*READ*/result
     val nv = f(ov, x)
     if (!CAS(ov, nv)) acc(x)
