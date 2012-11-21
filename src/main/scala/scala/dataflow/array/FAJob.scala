@@ -109,7 +109,7 @@ private[array] abstract class FAJob(
   }
 
   @tailrec
-  final protected def finalizeCompute(): Unit = /*READ*/state match {
+  final private def finalizeCompute(): Unit = /*READ*/state match {
     case Delegated(delegs, _) =>
       delegs.foreach(_.tryAddObserver(this))
       // Prevent races
@@ -135,7 +135,7 @@ private[array] abstract class FAJob(
   /***************************/
   /* Done signaling          */
   /***************************/
-  override def jobDone() {
+  final override def jobDone() {
     if (done) {
       if (popDelegate())
         // Work down the dependency chain, and notify observers
@@ -146,7 +146,7 @@ private[array] abstract class FAJob(
   }
 
   @tailrec
-  final protected def notifyObservers() {
+  final private def notifyObservers() {
     val ov = /*READ*/observers
     if (CAS_OB(ov, ObsNotified))
       ov.jobDone()
@@ -172,7 +172,7 @@ private[array] abstract class FAJob(
   /// Public Members ///
 
   /** Checks whether this Job is done */
-  def done: Boolean = /*READ*/state match {
+  final def done: Boolean = /*READ*/state match {
     case Split(j1, j2) =>
       j1.done && j2.done
     case Done => true

@@ -8,7 +8,7 @@ class HierFlowArray[A : ClassManifest](
 ) extends FlowArray[A] {
 
   // Fields
-  val outerSize = subData.length
+  private[array] val outerSize = subData.length
   val size = subData.length * subSize
 
   @volatile var doneInd: Int = 0
