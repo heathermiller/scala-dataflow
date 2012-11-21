@@ -218,7 +218,7 @@ private[array] abstract class FAJob(
 
   /**
    * Delegates this job some other jobs. MUST NOT be called elsewhere than
-   * in thedoCompute body of a concrete subclass. Delegating has the
+   * in the doCompute body of a concrete subclass. Delegating has the
    * following effects: 
    * 1) This job's dependency list is kept but delayed until all
    *    delegated jobs complete.
