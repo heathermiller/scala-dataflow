@@ -86,11 +86,7 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
 
   private[array] final def tryAddObserver(obs: FAJob.Observer) = {
     val curJob = /*READ*/srcJob
-    if (curJob == null) false
-    else {
-      curJob.addObserver(obs)
-      true
-    }
+    curJob != null && curJob.tryAddObserver(obs)
   }
 
   private[array] final def addObserver(obs: FAJob.Observer) {

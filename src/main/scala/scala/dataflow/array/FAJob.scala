@@ -148,12 +148,18 @@ private[array] abstract class FAJob(
   }
 
   @tailrec
-  final def addObserver(obs: Observer): Unit = /*READ*/observers match {
-    case ObsNotified => obs.jobDone()
+  final def tryAddObserver(obs: Observer): Boolean = /*READ*/observers match {
+    case ObsNotified => false
     case ov => 
       val nv = ObsEl(obs, ov)
       if (!CAS_OB(ov, nv))
-        addObserver(obs)
+        tryAddObserver(obs)
+      else
+        true
+  }
+
+  final def addObserver(obs: Observer) {
+    if (!tryAddObserver(obs)) obs.jobDone()
   }
 
   /// Public Members ///
