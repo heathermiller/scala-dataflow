@@ -22,6 +22,7 @@ object FABench extends testing.Benchmark {
 
   override def tearDown {
     FAJob.printStats()
+    FAJob.resetStats()
   }
 
 }

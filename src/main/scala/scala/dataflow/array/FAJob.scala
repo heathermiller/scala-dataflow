@@ -315,6 +315,11 @@ object FAJob {
     println("Computed %d jobs with %.2f average length".format(count, len))
   }
 
+  def resetStats() {
+    statCount.set(0)
+    statCumSize.set(0)
+  }
+
   sealed abstract class State
   sealed abstract class ChainState extends State
   case class Splitting(j1: FAJob, j2: FAJob, next: FAJob) extends State
