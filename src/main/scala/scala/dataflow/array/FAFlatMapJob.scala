@@ -23,6 +23,11 @@ private[array] class FAFlatMapJob[A : ClassManifest, B : ClassManifest] private 
     }
   }
 
+  override protected def covers(from: Int, to: Int) = {
+    val is = dst.subSize
+    super.covers(from/is, to/is)
+  }
+
 }
 
 object FAFlatMapJob {

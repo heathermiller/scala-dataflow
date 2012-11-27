@@ -31,4 +31,6 @@ class FlatFlowArray[A : ClassManifest](
     data
   }
 
+  final def unsafe(i: Int) = data(i)
+
 }

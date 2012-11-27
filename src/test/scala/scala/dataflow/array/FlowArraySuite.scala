@@ -72,4 +72,19 @@ class FlowArraySuite extends FunSuite {
     assert(fld.blocking == n * (n-1) * n / 2)
   }
 
+  test("zipMap on two FlatFA") {
+    val fa1 = nFA
+    val fa2 = nFA
+    val res = (fa1 zipMap fa2)(_ + _)
+    verEls(res)((x,i) => x == 2*i)
+  }
+
+  test("zipMap on FlatFA and HierFA") {
+    val isize = 100
+    val fa1 = nFA
+    val fa2 = nFA(size / isize).flatMapN(isize)(x => nFA(isize))
+    val res = (fa1 zipMap fa2)(_ + _)
+    verEls(res)((x,i) => x == i + (i % isize))
+  }
+
 }

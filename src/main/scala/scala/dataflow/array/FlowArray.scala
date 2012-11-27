@@ -28,6 +28,10 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
 
   private[array] def copyToArray(trg: Array[A], offset: Int): Unit
 
+  // Slice-wise dependencies
+  private[array] final def sliceJob(from: Int, to: Int) =
+    Option(/*READ*/srcJob).map(_.destSliceJob(from, to))
+
   // Dispatcher
   private[array] def dispatch(gen: JobGen): FAJob = dispatch(gen, 0)
   private[array] def dispatch(gen: JobGen, offset: Int): FAJob
@@ -60,6 +64,15 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
   def map[B : ClassManifest](f: A => B): FlowArray[B] = {
     val ret = newFA[B]
     setupDep((fa, of) => FAMapJob(fa, ret, f, of), ret)
+  }
+
+  def zipMap[B : ClassManifest, C : ClassManifest](
+    that: FlowArray[B])(f: (A,B) => C): FlowArray[C] = {
+      
+    require(size == that.size)
+    val ret = newFA[C]
+    setupDep((fa, of) => FAZipMapJob(fa, that, ret, f, of), ret)
+
   }
 
   def flatMapN[B : ClassManifest](n: Int)(f: A => FlowArray[B]): FlowArray[B] = {
@@ -104,6 +117,7 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
     job == null || job.done
   }
 
+  def unsafe(i: Int): A
   def blocking: Array[A]
 
   final protected def setDone() { srcJob = null }

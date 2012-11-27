@@ -33,6 +33,8 @@ class HierFlowArray[A : ClassManifest](
     ret
   }
 
+  final def unsafe(i: Int) = subData(i / subSize).unsafe(i % subSize) 
+
   @tailrec
   override final def jobDone() {
     setDone()

@@ -22,6 +22,8 @@ private[array] class FAFoldJob[A : ClassManifest, A1 >: A] private (
     trg.acc(tmp)
   }
 
+  protected override def covers(from: Int, to: Int) = false
+
 }
 
 object FAFoldJob {

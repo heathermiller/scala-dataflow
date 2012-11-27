@@ -80,12 +80,12 @@ private[array] abstract class FAJob(
   }
 
   final protected def isDelegated = /*READ*/state match {
-    case Delegated(_, _) => true
+    case Delegated(_, _, _) => true
     case _ => false
   }
 
   final protected def delegates = /*READ*/state match {
-    case Delegated(delegs, _) => delegs
+    case Delegated(delegs, _, _) => delegs
     case _ => throw new IllegalStateException("not delegated!")
   }
 
@@ -110,7 +110,7 @@ private[array] abstract class FAJob(
 
   @tailrec
   final private def finalizeCompute(): Unit = /*READ*/state match {
-    case d@Delegated(delegs, _) =>
+    case d@Delegated(delegs, _, _) =>
       d.setObs(this)
       // Prevent races
       if (d.done) jobDone()
@@ -175,7 +175,7 @@ private[array] abstract class FAJob(
     case Split(j1, j2) =>
       j1.done && j2.done
     case Done => true
-    case v@Delegated(delegs, _) => v.done
+    case v@Delegated(delegs, _, _) => v.done
     case _ => false
     // Note: If state is splitting, there IS a next job which is not
     // yet started (otherwise: not splitting)
@@ -242,12 +242,25 @@ private[array] abstract class FAJob(
     }
   }
 
+  @tailrec
+  final protected def delegateThen(deleg: IndexedSeq[FAJob])(then: () => Unit) {
+    /*READ*/state match {
+      case ov: ChainState =>
+        if (!CAS_ST(ov, Delegated(deleg, ov, then)))
+          delegateThen(deleg)(then)
+      case _ => throw new IllegalStateException("Delegate called while not executing.")
+    }
+  }
+
   final private def popDelegate(): Boolean = /*READ*/state match {
-    case ov@Delegated(_, cs) =>
+    case ov@Delegated(_, cs, then) =>
       if (!CAS_ST(ov, cs))
         popDelegate()
-      else
+      else {
+        if (then != null)
+          then()
         true
+      }
     case _ => false
   }
 
@@ -264,10 +277,10 @@ private[array] abstract class FAJob(
         case _: Splitting =>
           cur.split()
           dep0(cur, newJob)
-        case Delegated(_, PendingChain(next)) =>
+        case Delegated(_, PendingChain(next), _) =>
           dep0(next, newJob)
-        case ov@Delegated(delegs, PendingFree) =>
-          if (!CAS_ST(ov, Delegated(delegs, PendingChain(newJob))))
+        case ov@Delegated(delegs, PendingFree, then) =>
+          if (!CAS_ST(ov, Delegated(delegs, PendingChain(newJob), then)))
             dep0(cur, newJob)
           else
             None
@@ -293,6 +306,25 @@ private[array] abstract class FAJob(
         j2.depending(nj2)
     }
   }
+
+  /**
+   * Returns the job responsible for this particular slice in
+   * destination FA indices. Uses 
+   */ 
+  @tailrec
+  final def destSliceJob(from: Int, to: Int): FAJob = /*READ*/state match {
+    case _: Splitting =>
+      // Help splitting
+      split()
+      destSliceJob(from, to)
+    case Split(j, _) if j.covers(from, to) => j
+    case Split(_, j) if j.covers(from, to) => j
+    case _ => this
+  }
+
+  /** whether this job entirely covers the given slice */
+  protected def covers(from: Int, to: Int) =
+    from >= start && to <= end
 
 }
 
@@ -324,7 +356,8 @@ object FAJob {
   case class Splitting(j1: FAJob, j2: FAJob, next: FAJob) extends State
   case class Split(j1: FAJob, j2: FAJob) extends State
   case class PendingChain(next: FAJob) extends ChainState
-  case class Delegated(deleg: IndexedSeq[FAJob], oldState: ChainState)
+  case class Delegated(deleg: IndexedSeq[FAJob], oldState: ChainState,
+                       then: () => Unit = null)
   extends State with Observer {
   
     @volatile var doneInd: Int = 0
