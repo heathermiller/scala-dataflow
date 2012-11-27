@@ -18,14 +18,14 @@ private[array] class FAZipMapJob[A : ClassManifest,
     new FAZipMapJob(src, osrc, dst, f, offset, s, e, thresh, this)
 
   protected def doCompute() {
-    osrc.sliceJob(start, end) map { j =>
+    osrc.sliceJob(offset + start, offset + end) map { j =>
       delegateThen(Vector(j)) { calculate _ }
     } getOrElse { calculate() }
   }
 
   private def calculate() {
     for (i <- start to end) {
-      dst.data(i + offset) = f(src.data(i), osrc.unsafe(i))
+      dst.data(i + offset) = f(src.data(i), osrc.unsafe(i + offset))
     }
   }
 

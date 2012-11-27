@@ -87,6 +87,14 @@ class FlowArraySuite extends FunSuite {
     verEls(res)((x,i) => x == i + (i % isize))
   }
 
+  test("zipMap on HierFA and FlatFA") {
+    val isize = 1000
+    val fa1 = nFA(size / isize).flatMapN(isize)(x => nFA(isize))
+    val fa2 = nFA
+    val res = (fa1 zipMap fa2)(_ + _)
+    verEls(res)((x,i) => x == i + (i % isize))
+  }
+
   test("zipMap on FlatFA and HierFA with small inner size") {
     val isize = 100
     val fa1 = nFA
