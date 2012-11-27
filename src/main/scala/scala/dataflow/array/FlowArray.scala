@@ -151,7 +151,7 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
 
     def nnow = (new Date()).getTime
 
-    val isTimed  = !isAbs && msecs == 0
+    val isTimed  = isAbs || msecs > 0
     val until = if (isAbs) msecs else nnow + msecs
 
     def timeOver = nnow >= until
