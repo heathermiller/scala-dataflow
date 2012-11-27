@@ -16,8 +16,9 @@ object PABench extends testing.Benchmark {
       ParArray.tabulate(ni)(y => x * y)
     }
     val pa5 = pa4.map(_ / 1.2)
+    val res = pa5.fold(0.0)(_ + _)
 
-    println(pa5(30))
+    println(res)
   }
 
 }

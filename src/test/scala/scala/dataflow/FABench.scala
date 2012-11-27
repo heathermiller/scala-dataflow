@@ -16,8 +16,9 @@ object FABench extends testing.Benchmark {
       FlowArray.tabulate(ni)(y => x *y)
     }
     val fa5 = fa4.map(_ / 1.2)
+    val fut = fa5.fold(0.0)(_ + _)
 
-    println(fa5.blocking(30))
+    println(fut.blocking)
   }
 
   override def tearDown {
