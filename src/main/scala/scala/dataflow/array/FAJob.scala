@@ -110,11 +110,10 @@ private[array] abstract class FAJob(
 
   @tailrec
   final private def finalizeCompute(): Unit = /*READ*/state match {
-    case Delegated(delegs, _) =>
-      delegs.foreach(_.tryAddObserver(this))
+    case d@Delegated(delegs, _) =>
+      d.setObs(this)
       // Prevent races
-      if (delegs.forall(_.done))
-        jobDone()
+      if (d.done) jobDone()
     case ov@PendingChain(next) =>
       if (!CAS_ST(ov, Done))
         finalizeCompute()
@@ -176,7 +175,7 @@ private[array] abstract class FAJob(
     case Split(j1, j2) =>
       j1.done && j2.done
     case Done => true
-    case Delegated(delegs, _) => delegs.forall(_.done)
+    case v@Delegated(delegs, _) => v.done
     case _ => false
     // Note: If state is splitting, there IS a next job which is not
     // yet started (otherwise: not splitting)
@@ -234,7 +233,7 @@ private[array] abstract class FAJob(
    * Note that this method does *not* schedule the delegates.
    */
   @tailrec
-  final protected def delegate(deleg: Seq[FAJob]) {
+  final protected def delegate(deleg: IndexedSeq[FAJob]) {
     /*READ*/state match {
       case ov: ChainState =>
         if (!CAS_ST(ov, Delegated(deleg, ov)))
@@ -325,7 +324,33 @@ object FAJob {
   case class Splitting(j1: FAJob, j2: FAJob, next: FAJob) extends State
   case class Split(j1: FAJob, j2: FAJob) extends State
   case class PendingChain(next: FAJob) extends ChainState
-  case class Delegated(deleg: Seq[FAJob], oldState: ChainState) extends State
+  case class Delegated(deleg: IndexedSeq[FAJob], oldState: ChainState)
+  extends State with Observer {
+  
+    @volatile var doneInd: Int = 0
+    @volatile var obs: Observer = null
+
+    final def setObs(o: Observer) {
+      obs = o
+      deleg(0).addObserver(this)
+    }
+    final def done = advDone() >= deleg.size
+    @tailrec
+    final override def jobDone() {
+      if (done) { 
+        val o = /*READ*/obs
+        if (o != null) o.jobDone()
+      } else if (!deleg(doneInd).tryAddObserver(this))
+        jobDone()
+    }
+    private def advDone() = {
+      var i = /*READ*/doneInd
+      while (i < deleg.size && deleg(i).done) { i += 1 }
+      doneInd/*WRITE*/ = i
+      i
+    }
+  }
+
   case object PendingFree extends ChainState
   case object Done extends State
 
