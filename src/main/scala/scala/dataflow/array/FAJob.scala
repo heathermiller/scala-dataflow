@@ -311,15 +311,18 @@ private[array] abstract class FAJob(
    * Returns the job responsible for this particular slice in
    * destination FA indices. Uses 
    */ 
-  @tailrec
-  final def destSliceJob(from: Int, to: Int): FAJob = /*READ*/state match {
-    case _: Splitting =>
-      // Help splitting
-      split()
-      destSliceJob(from, to)
-    case Split(j, _) if j.covers(from, to) => j
-    case Split(_, j) if j.covers(from, to) => j
-    case _ => this
+  def destSliceJob(from: Int, to: Int) = {
+    @tailrec
+    def dsj0(cur: FAJob): FAJob = /*READ*/cur.state match {
+      case _: Splitting =>
+        // Help splitting
+        cur.split()
+        dsj0(cur)
+      case Split(j, _) if j.covers(from, to) => dsj0(j)
+      case Split(_, j) if j.covers(from, to) => dsj0(j)
+      case _ => cur
+    }
+    dsj0(this)
   }
 
   /** whether this job entirely covers the given slice */
