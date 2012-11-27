@@ -149,18 +149,16 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
 
     import java.util.Date
 
-    @inline def nnow = (new Date()).getTime
+    def nnow = (new Date()).getTime
 
-    val until =
-      if (isAbs) msecs else nnow + msecs
+    val isTimed  = !isAbs && msecs == 0
+    val until = if (isAbs) msecs else nnow + msecs
 
-    @inline def timeOver = nnow >= until
+    def timeOver = nnow >= until
 
-    @inline def park() { 
-      if (!isAbs && msecs == 0)
-        unsafe.park(false, 0)
-      else 
-        unsafe.park(true, until)
+    def park() { 
+      if (isTimed)  unsafe.park(false, 0)
+      else          unsafe.park(true, until)
     }
 
     @tailrec
@@ -169,10 +167,13 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
 
       if (!done && curo != Complete) {
         val nv = Blocking(Thread.currentThread, curo)
-        if (CAS(curo, nv)) park()
 
-        if (timeOver)
-          throw new InterruptedException()
+        if (CAS(curo, nv)) {
+          park()
+
+          if (isTimed && timeOver)
+            throw new InterruptedException()
+        }
 
         block0()
       }
