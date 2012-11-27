@@ -15,6 +15,10 @@ private[array] class FAFlatMapJob[A : ClassManifest, B : ClassManifest] private 
   protected def subCopy(s: Int, e: Int) = 
     new FAFlatMapJob(src, dst, f, n, offset, s, e, thresh, this)
 
+  // TODO: in a HFA, this job is marked as the final one, but not
+  // really finalizing all the work. Hence waiting on this job will
+  // not be sufficient to call unsafe!
+
   protected def doCompute() {
     for (i <- start to end) {
       val sub = f(src.data(i))
