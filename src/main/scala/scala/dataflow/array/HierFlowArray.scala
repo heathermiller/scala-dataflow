@@ -25,8 +25,8 @@ class HierFlowArray[A : ClassManifest](
     }
   }
 
-  def blocking: Array[A] = {
-    block()
+  override def blocking(isAbs: Boolean, msecs: Long): Array[A] = {
+    block(isAbs, msecs)
 
     val ret = new Array[A](size)
     copyToArray(ret, 0)

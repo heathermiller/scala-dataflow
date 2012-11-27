@@ -9,12 +9,13 @@ import org.scalatest.junit.JUnitRunner
 class FlowArraySuite extends FunSuite {
 
   val size = 10000
+  val timeout = 15000L // 10s
 
   def nFA: FlowArray[Int] = nFA(size)
   def nFA(s: Int): FlowArray[Int] = FlowArray.tabulate(s)(x => x)
 
   def verEls[A : ClassManifest](fa: FlowArray[A])(ver: (A, Int) => Boolean) = {
-    assert(fa.blocking.zipWithIndex.forall(ver.tupled))
+    assert(fa.blocking(false, timeout).zipWithIndex.forall(ver.tupled))
   }
 
   test("tabulate a FA") {

@@ -120,7 +120,8 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
   }
 
   def unsafe(i: Int): A
-  def blocking: Array[A]
+  def blocking(isAbs: Boolean, msecs: Long): Array[A]
+  def blocking: Array[A] = blocking(false, 0)
 
   final protected def setDone() { srcJob = null }
 
@@ -144,17 +145,40 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
       free0(ov)
   }
 
-  @tailrec
-  final def block() {
-    val curo = /*READ*/waiting
+  final def block(isAbs: Boolean = false, msecs: Long = 0) {
 
-    if (!done && curo != Complete) {
-      val nv = Blocking(Thread.currentThread, curo)
-      if (CAS(curo, nv))
+    import java.util.Date
+
+    @inline def nnow = (new Date()).getTime
+
+    val until =
+      if (isAbs) msecs else nnow + msecs
+
+    @inline def timeOver = nnow >= until
+
+    @inline def park() { 
+      if (!isAbs && msecs == 0)
         unsafe.park(false, 0)
-
-      block
+      else 
+        unsafe.park(true, until)
     }
+
+    @tailrec
+    def block0() {
+      val curo = /*READ*/waiting
+
+      if (!done && curo != Complete) {
+        val nv = Blocking(Thread.currentThread, curo)
+        if (CAS(curo, nv)) park()
+
+        if (timeOver)
+          throw new InterruptedException()
+
+        block0()
+      }
+    }
+
+    block0()
   }
 
 }

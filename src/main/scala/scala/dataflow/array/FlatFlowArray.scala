@@ -26,8 +26,8 @@ class FlatFlowArray[A : ClassManifest](
     freeBlocked()
   }
 
-  override def blocking = {
-    block()
+  override def blocking(isAbs: Boolean, msecs: Long): Array[A] = {
+    block(false, msecs)
     data
   }
 
