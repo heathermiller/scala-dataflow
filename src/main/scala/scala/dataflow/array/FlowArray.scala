@@ -66,6 +66,8 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
     setupDep((fa, of) => FAMapJob(fa, ret, f, of), ret)
   }
 
+  def zip[B : ClassManifest](that: FlowArray[B]) = zipMap(that)((_,_))
+
   def zipMap[B : ClassManifest, C : ClassManifest](
     that: FlowArray[B])(f: (A,B) => C): FlowArray[C] = {
       
