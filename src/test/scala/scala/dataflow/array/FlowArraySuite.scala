@@ -9,7 +9,7 @@ import org.scalatest.junit.JUnitRunner
 class FlowArraySuite extends FunSuite {
 
   val size = 10000
-  val timeout = 15000L // 10s
+  val timeout = 10000L // 10s
 
   def nFA: FlowArray[Int] = nFA(size)
   def nFA(s: Int): FlowArray[Int] = FlowArray.tabulate(s)(x => x)
@@ -56,7 +56,6 @@ class FlowArraySuite extends FunSuite {
   test("map on HierFA") {
     val n = 100
     val fa = nFA(n).flatMapN(n)(x => nFA(n)).map(_ * 2)
-    val b = fa.blocking
     verEls(fa)((x,i) => x == (i % n) * 2)
   }
 
