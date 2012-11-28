@@ -100,12 +100,7 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
     if (!tryAddObserver(obs)) obs.jobDone()
   }
 
-  /**
-   * Checks if this job is done
-   *
-   * This may NOT be implemented by checking waiting == Complete because otherwise
-   * the jobs that are woken up by jobDone will park again!
-   */
+  /** Checks if this job is done */
   def done = {
     val job = /*READ*/srcJob
     job == null || job.done
