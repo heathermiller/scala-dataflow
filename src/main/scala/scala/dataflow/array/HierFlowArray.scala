@@ -17,15 +17,21 @@ class HierFlowArray[A : ClassManifest](
 
   // Slice-wise dependencies
   private[array] override def sliceJobs(from: Int, to: Int): SliceDep = {
-    def rawSubFAJobs = {
+    def subSlices = {
       val lbound = from/ subSize
       val ubound = to  / subSize
-      for {   i <- lbound to ubound
-            job <- subData(i).sliceJobs(
-              if (i == lbound) from % subSize else 0,
-              if (i == ubound) to   % subSize else subSize - 1
-            )
-         } yield job
+      for (i <- lbound to ubound)
+        yield (i,
+               if (i == lbound) from % subSize else 0,
+               if (i == ubound) to   % subSize else subSize - 1
+             )
+    }
+
+    def rawSubFAJobs = {
+      val subs = subSlices
+      for { (i,l,u) <- subSlices
+             job <- subData(i).sliceJobs(l,u)
+          } yield job
     }
 
     def subFAJobs = {
@@ -37,7 +43,7 @@ class HierFlowArray[A : ClassManifest](
         Some((fjs, redo.exists(x => x)))
     }
 
-    super.sliceJobs(from, to) orElse subFAJobs
+    super.sliceJobs(from, to).map(x => (x._1, true)) orElse subFAJobs
   }
 
   private[array] final def dispatch(gen: JobGen, offset: Int): FAJob = {

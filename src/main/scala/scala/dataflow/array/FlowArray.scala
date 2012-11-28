@@ -77,7 +77,6 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
     require(size == that.size)
     val ret = newFA[C]
     setupDep((fa, of) => FAZipMapJob(fa, that, ret, f, of), ret)
-
   }
 
   def flatMapN[B : ClassManifest](n: Int)(f: A => FlowArray[B]): FlowArray[B] = {
