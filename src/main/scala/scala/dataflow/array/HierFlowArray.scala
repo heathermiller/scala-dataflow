@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 class HierFlowArray[A : ClassManifest](
   private[array] val subData: Array[FlowArray[A]],
   private[array] val subSize: Int
-) extends FlowArray[A] {
+) extends FlowArray[A] with Blocker {
 
   import FlowArray._
 
