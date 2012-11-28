@@ -134,12 +134,21 @@ private[array] abstract class FAJob(
   /***************************/
   /* Done signaling          */
   /***************************/
-  final override def jobDone() {
-    if (tryPopDelegate())
-      // Work down the dependency chain, and notify observers
-      finalizeCompute()
-    else if (done)
+  @tailrec
+  final override def jobDone(): Unit = /*READ*/state match {
+    // We are notified by a delegate
+    case ov@Delegated(_, cs, then) if ov.done =>
+      if (!CAS_ST(ov, cs)) jobDone()
+      else {
+        if (then != null) { then() }
+        // Work down the dependency chain, and notify observers
+        finalizeCompute()
+      }
+
+    // We are notified by a subjob
+    case Split(j1, j2) if j1.done && j2.done =>
       notifyObservers()
+    case _ =>
   }
 
   @tailrec
@@ -229,15 +238,7 @@ private[array] abstract class FAJob(
    * 
    * Note that this method does *not* schedule the delegates.
    */
-  @tailrec
-  final protected def delegate(deleg: IndexedSeq[FAJob]) {
-    /*READ*/state match {
-      case ov: ChainState =>
-        if (!CAS_ST(ov, Delegated(deleg, ov)))
-          delegate(deleg)
-      case _ => throw new IllegalStateException("Delegate called while not executing.")
-    }
-  }
+  final protected def delegate(deleg: IndexedSeq[FAJob]) = delegateThen(deleg)(null)
 
   @tailrec
   final protected def delegateThen(deleg: IndexedSeq[FAJob])(then: () => Unit) {
@@ -247,17 +248,6 @@ private[array] abstract class FAJob(
           delegateThen(deleg)(then)
       case _ => throw new IllegalStateException("Delegate called while not executing.")
     }
-  }
-
-  final private def tryPopDelegate(): Boolean = /*READ*/state match {
-    case ov@Delegated(_, cs, then) if ov.done =>
-      if (!CAS_ST(ov, cs))
-        tryPopDelegate()
-      else {
-        if (then != null) { then() }
-        true
-      }
-    case _ => false
   }
 
   /**
