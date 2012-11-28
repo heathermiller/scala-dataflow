@@ -135,13 +135,11 @@ private[array] abstract class FAJob(
   /* Done signaling          */
   /***************************/
   final override def jobDone() {
-    if (done) {
-      if (popDelegate())
-        // Work down the dependency chain, and notify observers
-        finalizeCompute()
-      else
-        notifyObservers()
-    }
+    if (tryPopDelegate())
+      // Work down the dependency chain, and notify observers
+      finalizeCompute()
+    else if (done)
+      notifyObservers()
   }
 
   @tailrec
@@ -175,7 +173,6 @@ private[array] abstract class FAJob(
     case Split(j1, j2) =>
       j1.done && j2.done
     case Done => true
-    case v@Delegated(delegs, _, _) => v.done
     case _ => false
     // Note: If state is splitting, there IS a next job which is not
     // yet started (otherwise: not splitting)
@@ -252,13 +249,12 @@ private[array] abstract class FAJob(
     }
   }
 
-  final private def popDelegate(): Boolean = /*READ*/state match {
-    case ov@Delegated(_, cs, then) =>
+  final private def tryPopDelegate(): Boolean = /*READ*/state match {
+    case ov@Delegated(_, cs, then) if ov.done =>
       if (!CAS_ST(ov, cs))
-        popDelegate()
+        tryPopDelegate()
       else {
-        if (then != null)
-          then()
+        if (then != null) { then() }
         true
       }
     case _ => false
