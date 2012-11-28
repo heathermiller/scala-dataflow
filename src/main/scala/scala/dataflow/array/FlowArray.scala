@@ -13,9 +13,6 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
   def size: Int
   def length = size
 
-  // Calculation Information
-  @volatile private var srcJob: FAJob = null
-
   // Utilities
   @inline private final def newFA[B : ClassManifest] = 
     new FlatFlowArray(new Array[B](length))
@@ -26,30 +23,15 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
   private[array] def copyToArray(trg: Array[A], offset: Int): Unit
 
   // Slice-wise dependencies
-  private[array] def sliceJobs(from: Int, to: Int): SliceDep = {
-    for { j  <- Option(/*READ*/srcJob)
-          sj <- Some(j.destSliceJob(from, to)) if !sj.done
-        } yield (Vector(sj), false)
-  }
+  private[array] def sliceJobs(from: Int, to: Int): SliceDep
 
   // Dispatcher
   private[array] def dispatch(gen: JobGen): FAJob = dispatch(gen, 0)
   private[array] def dispatch(gen: JobGen, offset: Int): FAJob
 
-  protected final def dispatch(newJob: FAJob) {
-    val curJob = /*READ*/srcJob
-
-    // Schedule job
-    if (curJob != null)
-      curJob.depending(newJob)
-    else
-      FAJob.schedule(newJob)
-  }
-
-  @inline private final def setupDep[B](gen: JobGen, ret: FlowArray[B]) = {
+  @inline private final def setupDep[B](gen: JobGen, ret: ConcreteFlowArray[B]) = {
     val job = dispatch(gen)
-    ret.srcJob = job
-    job.addObserver(ret)
+    ret.generatedBy(job)
     ret
   }
 
@@ -91,26 +73,15 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
     ret
   }
 
-  private[array] final def tryAddObserver(obs: FAJob.Observer) = {
-    val curJob = /*READ*/srcJob
-    curJob != null && curJob.tryAddObserver(obs)
-  }
-
-  private[array] final def addObserver(obs: FAJob.Observer) {
-    if (!tryAddObserver(obs)) obs.jobDone()
-  }
+  private[array] def tryAddObserver(obs: FAJob.Observer): Boolean
+  private[array] def addObserver(obs: FAJob.Observer): Unit
 
   /** Checks if this job is done */
-  def done = {
-    val job = /*READ*/srcJob
-    job == null || job.done
-  }
+  def done: Boolean
 
   def unsafe(i: Int): A
   def blocking(isAbs: Boolean, msecs: Long): Array[A]
   def blocking: Array[A] = blocking(false, 0)
-
-  final protected def setDone() { srcJob = null }
 
 }
 
@@ -121,7 +92,7 @@ object FlowArray {
   def tabulate[A : ClassManifest](n: Int)(f: Int => A) = {
     val ret = new FlatFlowArray(new Array[A](n))
     val job = FAGenerateJob(ret, f)
-    ret.srcJob = job
+    ret.generatedBy(job)
     FAJob.schedule(job)
     ret
   }

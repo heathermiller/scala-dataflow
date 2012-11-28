@@ -4,7 +4,7 @@ import scala.annotation.tailrec
 
 class FlatFlowArray[A : ClassManifest](
   private[array] val data: Array[A]
-) extends FlowArray[A] with Blocker {
+) extends ConcreteFlowArray[A] with Blocker {
 
   import FlowArray._
 
