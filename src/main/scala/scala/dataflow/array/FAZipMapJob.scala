@@ -18,9 +18,14 @@ private[array] class FAZipMapJob[A : ClassManifest,
     new FAZipMapJob(src, osrc, dst, f, offset, s, e, thresh, this)
 
   protected def doCompute() {
-    osrc.sliceJob(offset + start, offset + end) map { j =>
-      delegateThen(Vector(j)) { calculate _ }
-    } getOrElse { calculate() }
+    osrc.sliceJobs(offset + start, offset + end) match {
+      // no need to call sliceJobs again after completion
+      case Some((j, false)) => delegateThen(j) { calculate _ }
+      // required to call sliceJobs again after completion
+      case Some((j, true))  => delegateThen(j) { doCompute _ }
+      // None: osrc has finished!
+      case None => calculate()
+    }
   }
 
   private def calculate() {

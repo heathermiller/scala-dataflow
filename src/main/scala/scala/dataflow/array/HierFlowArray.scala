@@ -7,11 +7,38 @@ class HierFlowArray[A : ClassManifest](
   private[array] val subSize: Int
 ) extends FlowArray[A] {
 
+  import FlowArray._
+
   // Fields
   private[array] val outerSize = subData.length
   val size = subData.length * subSize
 
   @volatile var doneInd: Int = 0
+
+  // Slice-wise dependencies
+  private[array] override def sliceJobs(from: Int, to: Int): SliceDep = {
+    def rawSubFAJobs = {
+      val lbound = from/ subSize
+      val ubound = to  / subSize
+      for {   i <- lbound to ubound
+            job <- subData(i).sliceJobs(
+              if (i == lbound) from % subSize else 0,
+              if (i == ubound) to   % subSize else subSize - 1
+            )
+         } yield job
+    }
+
+    def subFAJobs = {
+      val (js, redo) = rawSubFAJobs.unzip
+      val fjs = js.flatten
+      if (fjs.isEmpty)
+        None
+      else
+        Some((fjs, redo.exists(x => x)))
+    }
+
+    super.sliceJobs(from, to) orElse subFAJobs
+  }
 
   private[array] final def dispatch(gen: JobGen, offset: Int): FAJob = {
     val job = FADispatcherJob(this, gen, offset)

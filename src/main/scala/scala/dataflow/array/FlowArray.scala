@@ -29,8 +29,11 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
   private[array] def copyToArray(trg: Array[A], offset: Int): Unit
 
   // Slice-wise dependencies
-  private[array] final def sliceJob(from: Int, to: Int) =
-    Option(/*READ*/srcJob).map(_.destSliceJob(from, to))
+  private[array] def sliceJobs(from: Int, to: Int): SliceDep = {
+    for { j  <- Option(/*READ*/srcJob)
+          sj <- Some(j.destSliceJob(from, to)) if !sj.done
+        } yield (Vector(sj), false)
+  }
 
   // Dispatcher
   private[array] def dispatch(gen: JobGen): FAJob = dispatch(gen, 0)
@@ -190,6 +193,8 @@ object FlowArray {
   case object Empty    extends WaitList
   case object Complete extends WaitList
   case class  Blocking(thr: Thread, next: WaitList) extends WaitList
+
+  type SliceDep = Option[(IndexedSeq[FAJob], Boolean)]
 
   def tabulate[A : ClassManifest](n: Int)(f: Int => A) = {
     val ret = new FlatFlowArray(new Array[A](n))
