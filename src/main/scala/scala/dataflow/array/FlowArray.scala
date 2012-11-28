@@ -17,10 +17,10 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
   @volatile private var srcJob: FAJob = null
 
   // Utilities
-  @inline protected final def newFA[B : ClassManifest] = 
+  @inline private final def newFA[B : ClassManifest] = 
     new FlatFlowArray(new Array[B](length))
 
-  @inline protected final def newFA[B : ClassManifest](n: Int) = 
+  @inline private final def newFA[B : ClassManifest](n: Int) = 
     new HierFlowArray(new Array[FlowArray[B]](size), n)
 
   private[array] def copyToArray(trg: Array[A], offset: Int): Unit
