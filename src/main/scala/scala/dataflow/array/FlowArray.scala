@@ -157,8 +157,8 @@ abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
     def timeOver = nnow >= until
 
     def park() { 
-      if (isTimed)  unsafe.park(false, 0)
-      else          unsafe.park(true, until)
+      if (isTimed)  unsafe.park(true, until)
+      else          unsafe.park(false, 0)
     }
 
     @tailrec
