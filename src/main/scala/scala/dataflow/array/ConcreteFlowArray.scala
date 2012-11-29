@@ -37,10 +37,6 @@ abstract class ConcreteFlowArray[A : ClassManifest] extends FlowArray[A] with FA
     curJob != null && curJob.tryAddObserver(obs)
   }
 
-  private[array] final def addObserver(obs: FAJob.Observer) {
-    if (!tryAddObserver(obs)) obs.jobDone()
-  }
-
   def done = {
     val job = /*READ*/srcJob
     job == null || job.done

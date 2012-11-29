@@ -74,7 +74,10 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
   }
 
   private[array] def tryAddObserver(obs: FAJob.Observer): Boolean
-  private[array] def addObserver(obs: FAJob.Observer): Unit
+
+  private[array] final def addObserver(obs: FAJob.Observer) {
+    if (!tryAddObserver(obs)) obs.jobDone()
+  }
 
   /** Checks if this job is done */
   def done: Boolean
