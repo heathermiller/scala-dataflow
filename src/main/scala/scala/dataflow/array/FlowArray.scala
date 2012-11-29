@@ -3,7 +3,7 @@ package scala.dataflow.array
 import scala.dataflow.Future
 import scala.annotation.tailrec
 
-abstract class FlowArray[A : ClassManifest] extends FAJob.Observer {
+abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer {
 
   import FlowArray._
 

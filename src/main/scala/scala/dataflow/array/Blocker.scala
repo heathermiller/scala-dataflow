@@ -3,7 +3,7 @@ package scala.dataflow.array
 import scala.annotation.tailrec
 import java.util.Date
 
-trait Blocker {
+abstract class Blocker {
 
   import Blocker._
 
