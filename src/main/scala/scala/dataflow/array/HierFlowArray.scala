@@ -15,21 +15,21 @@ class HierFlowArray[A : ClassManifest](
 
   @volatile var doneInd: Int = 0
 
+  private def subSlices(from: Int, to: Int) = {
+    val lbound = from/ subSize
+    val ubound = to  / subSize
+    for (i <- lbound to ubound)
+      yield (i,
+             if (i == lbound) from % subSize else 0,
+             if (i == ubound) to   % subSize else subSize - 1
+           )
+  }
+
   // Slice-wise dependencies
   private[array] override def sliceJobs(from: Int, to: Int): SliceDep = {
-    def subSlices = {
-      val lbound = from/ subSize
-      val ubound = to  / subSize
-      for (i <- lbound to ubound)
-        yield (i,
-               if (i == lbound) from % subSize else 0,
-               if (i == ubound) to   % subSize else subSize - 1
-             )
-    }
 
     def rawSubFAJobs = {
-      val subs = subSlices
-      for { (i,l,u) <- subSlices
+      for { (i,l,u) <- subSlices(from, to)
              job <- subData(i).sliceJobs(l,u)
           } yield job
     }
@@ -52,9 +52,11 @@ class HierFlowArray[A : ClassManifest](
     job
   }
 
-  final private[array] def copyToArray(trg: Array[A], offset: Int) {
-    for ((sd, i) <- subData.zipWithIndex) {
-      sd.copyToArray(trg, offset + i*subSize)
+  final private[array] def copyToArray(dst: Array[A], srcPos: Int, dstPos: Int, length: Int) {
+    val li = srcPos / subSize
+    val ld = srcPos % subSize
+    for ((i, l, u) <- subSlices(srcPos, srcPos + length - 1)) {
+      subData(i).copyToArray(dst, l, dstPos + (i - li)*subSize - ld, u - l + 1)
     }
   }
 
@@ -62,7 +64,7 @@ class HierFlowArray[A : ClassManifest](
     block(isAbs, msecs)
 
     val ret = new Array[A](size)
-    copyToArray(ret, 0)
+    copyToArray(ret, 0, 0, size)
     ret
   }
 

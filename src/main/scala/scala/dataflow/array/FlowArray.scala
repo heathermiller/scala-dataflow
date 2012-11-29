@@ -20,7 +20,7 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
   @inline private final def newFA[B : ClassManifest](n: Int) = 
     new HierFlowArray(new Array[FlowArray[B]](size), n)
 
-  private[array] def copyToArray(trg: Array[A], offset: Int): Unit
+  private[array] def copyToArray(dst: Array[A], srcPos: Int, dstPos: Int, length: Int): Unit
 
   // Slice-wise dependencies
   private[array] def sliceJobs(from: Int, to: Int): SliceDep

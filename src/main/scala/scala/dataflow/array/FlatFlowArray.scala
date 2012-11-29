@@ -17,8 +17,8 @@ class FlatFlowArray[A : ClassManifest](
     job
   }
 
-  final private[array] def copyToArray(trg: Array[A], offset: Int) {
-    Array.copy(data, 0, trg, offset, size)
+  final private[array] def copyToArray(dst: Array[A], srcPos: Int, dstPos: Int, length: Int) {
+    Array.copy(data, srcPos, dst, dstPos, length)
   }
 
   override def jobDone() {
