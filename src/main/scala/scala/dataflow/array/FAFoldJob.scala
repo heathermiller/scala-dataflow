@@ -28,8 +28,16 @@ private[array] class FAFoldJob[A : ClassManifest, A1 >: A] private (
 
 object FAFoldJob {
 
+  import FAJob.JobGen
+
   def apply[A : ClassManifest, A1 >: A](
-    src: FlatFlowArray[A], trg: FoldFuture[A1], z: A1, f: (A1, A1) => A1) =
-    new FAFoldJob(src, trg, z, f, 0, src.size - 1, FAJob.threshold(src.size), null)
+    trg: FoldFuture[A1],
+    z: A1,
+    f: (A1, A1) => A1
+  ) = new JobGen[A] {
+    def apply(src: FlatFlowArray[A], dstOffset: Int, srcOffset: Int, length: Int) =
+      new FAFoldJob(src, trg, z, f, srcOffset,
+                    srcOffset + length - 1, FAJob.threshold(length), null)
+  }
 
 }

@@ -399,6 +399,10 @@ object FAJob {
     ))
   )
 
+  trait JobGen[A] extends Function4[FlatFlowArray[A], Int, Int, Int, FAJob] {
+    def apply(src: FlatFlowArray[A], dstOffset: Int, srcOffset: Int, length: Int): FAJob
+  }
+
   trait Observer {
     /**
      * called at least once when the observed job is done.

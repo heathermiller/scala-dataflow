@@ -32,12 +32,16 @@ private[array] class FAFlatMapJob[A : ClassManifest, B : ClassManifest] private 
 
 object FAFlatMapJob {
 
+  import FAJob.JobGen
+
   def apply[A : ClassManifest, B : ClassManifest](
-    src: FlatFlowArray[A],
     dst: HierFlowArray[B],
     f: A => FlowArray[B],
-    n: Int,
-    of: Int) =
-      new FAFlatMapJob(src, dst, f, n, of, 0, src.size - 1, FAJob.threshold(src.size), null)
+    n: Int
+  ) = new JobGen[A] {
+    def apply(src: FlatFlowArray[A], dstOffset: Int, srcOffset: Int, length: Int) =
+      new FAFlatMapJob(src, dst, f, n, dstOffset, srcOffset,
+                       srcOffset + length - 1, FAJob.threshold(length), null)
+  }
 
 }

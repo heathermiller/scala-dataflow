@@ -7,7 +7,7 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
 
   import FlowArray._
 
-  type JobGen = (FlatFlowArray[A], Int) => FAJob
+  type JobGen = FAJob.JobGen[A]
 
   // Fields
   def size: Int
@@ -38,7 +38,7 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
   // Public members
   def map[B : ClassManifest](f: A => B): FlowArray[B] = {
     val ret = newFA[B]
-    setupDep((fa, of) => FAMapJob(fa, ret, f, of), ret)
+    setupDep(FAMapJob(ret, f), ret)
   }
 
   def zip[B : ClassManifest](that: FlowArray[B]) = zipMap(that)((_,_))
@@ -48,27 +48,29 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
       
     require(size == that.size)
     val ret = newFA[C]
-    setupDep((fa, of) => FAZipMapJob(fa, that, ret, f, of), ret)
+    setupDep(FAZipMapJob(that, ret, f), ret)
   }
 
   def flatMapN[B : ClassManifest](n: Int)(f: A => FlowArray[B]): FlowArray[B] = {
     val ret = newFA[B](n)
-    setupDep((fa, of) => FAFlatMapJob(fa, ret, f, n, of), ret)
+    setupDep(FAFlatMapJob(ret, f, n), ret)
   }
 
   def mutConverge(cond: A => Boolean)(it: A => Unit): FlowArray[A] = {
     val ret = newFA[A]
-    setupDep((fa, of) => FAMutConvJob(fa, ret, it, cond, of), ret)
+    //setupDep((fa, of) => FAMutConvJob(fa, ret, it, cond, of), ret)
+    null
   }
 
   def converge(cond: A => Boolean)(it: A => A): FlowArray[A] = {
     val ret = newFA[A]
-    setupDep((fa, of) => FAIMutConvJob(fa, ret, it, cond, of), ret)
+    //setupDep((fa, of) => FAIMutConvJob(fa, ret, it, cond, of), ret)
+    null
   }
 
   def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): Future[A1] = {
     val ret = new FoldFuture(z, op)
-    val job = dispatch((fa, of) => FAFoldJob(fa, ret, z, op))
+    val job = dispatch(FAFoldJob(ret, z, op))
     job.addObserver(ret)
     ret
   }

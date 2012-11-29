@@ -24,17 +24,15 @@ private[array] class FAMapJob[A : ClassManifest, B : ClassManifest] private (
 
 object FAMapJob {
 
-  def apply[A : ClassManifest, B : ClassManifest](
-    src: FlatFlowArray[A],
-    dst: FlatFlowArray[B],
-    f: A => B) =
-      new FAMapJob(src, dst, f, 0, 0, src.size - 1, FAJob.threshold(src.size), null)
+  import FAJob.JobGen
 
   def apply[A : ClassManifest, B : ClassManifest](
-    src: FlatFlowArray[A],
     dst: FlatFlowArray[B],
-    f: A => B,
-    offset: Int) =
-      new FAMapJob(src, dst, f, offset, 0, src.size - 1, FAJob.threshold(src.size), null)
+    f: A => B
+  ) = new JobGen[A] {
+    def apply(src: FlatFlowArray[A], dstOffset: Int, srcOffset: Int, length: Int) =
+      new FAMapJob(src, dst, f, dstOffset, srcOffset,
+                   srcOffset + length - 1, FAJob.threshold(length), null)
+  }
 
 }

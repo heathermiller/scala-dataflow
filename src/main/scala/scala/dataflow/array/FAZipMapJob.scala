@@ -38,12 +38,16 @@ private[array] class FAZipMapJob[A : ClassManifest,
 
 object FAZipMapJob {
 
+  import FAJob.JobGen
+
   def apply[A : ClassManifest, B : ClassManifest, C : ClassManifest](
-    src: FlatFlowArray[A],
     osrc: FlowArray[B],
     dst: FlatFlowArray[C],
-    f: (A,B) => C,
-    offset: Int) =
-      new FAZipMapJob(src, osrc, dst, f, offset, 0, src.size - 1, FAJob.threshold(src.size), null)
+    f: (A,B) => C
+  ) = new JobGen[A] {
+    def apply(src: FlatFlowArray[A], dstOffset: Int, srcOffset: Int, length: Int) =
+      new FAZipMapJob(src, osrc, dst, f, dstOffset, srcOffset,
+                      srcOffset + length - 1, FAJob.threshold(length), null)
+  }
 
 }

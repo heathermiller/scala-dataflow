@@ -2,7 +2,7 @@ package scala.dataflow.array
 
 private[array] class FADispatcherJob[A : ClassManifest] private (
   val src: HierFlowArray[A],
-  val d: (FlatFlowArray[A], Int) => FAJob,
+  val d: FAJob.JobGen[A],
   val offset: Int,
   start: Int,
   end: Int,
@@ -27,14 +27,9 @@ object FADispatcherJob {
 
   def apply[A : ClassManifest](
     src: HierFlowArray[A],
-    d: (FlatFlowArray[A], Int) => FAJob,
+    d: FAJob.JobGen[A],
     offset: Int): FADispatcherJob[A] =
       new FADispatcherJob(src, d, offset, 0, src.outerSize - 1,
                           FAJob.threshold(src.outerSize), null)
-
-  def apply[A : ClassManifest](
-    src: HierFlowArray[A],
-    d: (FlatFlowArray[A], Int) => FAJob): FADispatcherJob[A] =
-      FADispatcherJob(src, d, 0)
 
 }
