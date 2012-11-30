@@ -26,8 +26,8 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
   private[array] def sliceJobs(from: Int, to: Int): SliceDep
 
   // Dispatcher
-  private[array] def dispatch(gen: JobGen): FAJob = dispatch(gen, 0)
-  private[array] def dispatch(gen: JobGen, offset: Int): FAJob
+  private[array] def dispatch(gen: JobGen): FAJob = dispatch(gen, 0, 0, size)
+  private[array] def dispatch(gen: JobGen, dstOffset: Int, srcOffset: Int, length: Int): FAJob
 
   @inline private final def setupDep[B](gen: JobGen, ret: ConcreteFlowArray[B]) = {
     val job = dispatch(gen)

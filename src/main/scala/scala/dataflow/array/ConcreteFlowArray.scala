@@ -22,14 +22,18 @@ abstract class ConcreteFlowArray[A : ClassManifest] extends FlowArray[A] with FA
         } yield (Vector(sj), false)
   }
 
-  protected final def dispatch(newJob: FAJob) {
-    val curJob = /*READ*/srcJob
+  protected final def dispatch(newJob: FAJob, srcOffset: Int, length: Int) {
+    if (srcOffset == 0 && length == size) {
+      val curJob = /*READ*/srcJob
 
-    // Schedule job
-    if (curJob != null)
-      curJob.depending(newJob)
-    else
-      FAJob.schedule(newJob)
+      // Schedule job
+      if (curJob != null)
+        curJob.depending(newJob)
+      else
+        FAJob.schedule(newJob)
+    } else {
+      throw new UnsupportedOperationException()
+    }
   }
 
   private[array] final def tryAddObserver(obs: FAJob.Observer) = {
