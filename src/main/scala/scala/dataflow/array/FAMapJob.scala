@@ -31,7 +31,7 @@ object FAMapJob {
     f: A => B
   ) = new JobGen[A] {
     def apply(src: FlatFlowArray[A], dstOffset: Int, srcOffset: Int, length: Int) =
-      new FAMapJob(src, dst, f, dstOffset, srcOffset,
+      new FAMapJob(src, dst, f, dstOffset - srcOffset, srcOffset,
                    srcOffset + length - 1, FAJob.threshold(length), null)
   }
 
