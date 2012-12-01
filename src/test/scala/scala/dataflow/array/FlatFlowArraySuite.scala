@@ -6,20 +6,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class FlowArraySuite extends FunSuite {
-
-  val size = 10000
-  val timeout = 10000L // 10s
-
-  //def faBlock[A](fa: FlowArray[A]) = fa.blocking
-  def faBlock[A](fa: FlowArray[A]) = fa.blocking(false, timeout)
-
-  def nFA: FlowArray[Int] = nFA(size)
-  def nFA(s: Int): FlowArray[Int] = FlowArray.tabulate(s)(x => x)
-
-  def verEls[A : ClassManifest](fa: FlowArray[A])(ver: (A, Int) => Boolean) = {
-    assert(faBlock(fa).zipWithIndex.forall(ver.tupled))
-  }
+class FlatFlowArraySuite extends FunSuite with FATestHelper {
 
   test("tabulate a FA") {
     val fa = nFA
@@ -56,23 +43,10 @@ class FlowArraySuite extends FunSuite {
     }
   }
 
-  test("map on HierFA") {
-    val n = 100
-    val fa = nFA(n).flatMapN(n)(x => nFA(n)).map(_ * 2)
-    verEls(fa)((x,i) => x == (i % n) * 2)
-  }
-
   test("fold on FlatFA") {
     val fa = nFA
     val fld = fa.fold(0)(_ + _)
     assert(fld.blocking == (size-1)*size / 2)
-  }
-
-  test("fold on HierFA") {
-    val n = 500
-    val bfa = nFA(n).flatMapN(n)(x => nFA(n))
-    val fld = bfa.fold(0)(_ + _)
-    assert(fld.blocking == n * (n-1) * n / 2)
   }
 
   test("zipMap on two FlatFA") {
@@ -86,14 +60,6 @@ class FlowArraySuite extends FunSuite {
     val isize = 1000
     val fa1 = nFA
     val fa2 = nFA(size / isize).flatMapN(isize)(x => nFA(isize))
-    val res = (fa1 zipMap fa2)(_ + _)
-    verEls(res)((x,i) => x == i + (i % isize))
-  }
-
-  test("zipMap on HierFA and FlatFA") {
-    val isize = 1000
-    val fa1 = nFA(size / isize).flatMapN(isize)(x => nFA(isize))
-    val fa2 = nFA
     val res = (fa1 zipMap fa2)(_ + _)
     verEls(res)((x,i) => x == i + (i % isize))
   }

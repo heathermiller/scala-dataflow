@@ -78,6 +78,9 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
     ret
   }
 
+  def slice(start: Int, end: Int) =
+    new FlowArraySliceView(this, start, end - start + 1)
+
   private[array] def tryAddObserver(obs: FAJob.Observer): Boolean
 
   private[array] final def addObserver(obs: FAJob.Observer) {
