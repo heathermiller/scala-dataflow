@@ -29,6 +29,9 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
   private[array] def dispatch(gen: JobGen): FAJob = dispatch(gen, 0, 0, size)
   private[array] def dispatch(gen: JobGen, dstOffset: Int, srcOffset: Int, length: Int): FAJob
 
+  /** returns a job that aligns on this FlowArray with given offset and size */
+  private[array] def align(offset: Int, size: Int): FAAlignJob[A]
+
   @inline private final def setupDep[B](gen: JobGen, ret: ConcreteFlowArray[B]) = {
     val job = dispatch(gen)
     ret.generatedBy(job)
