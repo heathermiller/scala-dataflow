@@ -7,61 +7,83 @@ class FlowArraySliceView[A : ClassManifest](
   private val data: FlowArray[A],
   private val offset: Int,
   val size: Int
-) extends FlowArray[A] {
+) extends FlowArray[A] with FAJob.Observer {
 
-  // Cache job which is responsible for this view. Values:
-  // None: not yet populated
-  // Some: jobs to be scanned
-  // null: done
-  @volatile private var sliceJobCache: Option[IndexedSeq[FAJob]] = None 
+  import FlowArraySliceView._
 
-  @inline private def getSlice = {
+  case class Running(job: FAAlignJob[A]) extends State
+  
+  /// Internals ///
+  
+  private val unsafe = getUnsafe()
+  private val OFFSET =
+    unsafe.objectFieldOffset(classOf[FlowArraySliceView[_]].getDeclaredField("alignState"))
+  @inline private def CAS(ov: State, nv: State) =
+    unsafe.compareAndSwapObject(this, OFFSET, ov, nv)
 
-    def fetch = {
-      val res = data.sliceJobs(offset, offset + size - 1)
+  @volatile private var alignState: State = Unknown
 
-      res.map {
-        case (js, false) => sliceJobCache = Some(js)
-        case _ => 
-      } getOrElse { sliceJobCache = null }
-      
-      res
-    }
-
-    sliceJobCache match {
-      case Some(js) =>
-        val filter = js.filterNot(_.done)
-        if (filter.isEmpty) {
-          sliceJobCache = null
-          None
-        } else {
-          sliceJobCache = Some(filter)
-          Some((filter, false))
-        }
-      case None => fetch
-      case null => None
+  @inline
+  final private def tryStartAlign() {
+    val job = align(0, size)
+    if (CAS(Unknown, Running(job))) {
+      // We made THE job
+      job.addObserver(this)
+      FAJob.schedule(job)
     }
   }
+
+  private[array] def align(offset: Int, size: Int) =
+    data.align(this.offset + offset, math.min(size, this.size))
 
   private[array] def copyToArray(dst: Array[A], srcPos: Int, dstPos: Int, length: Int) {
     data.copyToArray(dst, srcPos + offset, dstPos, length)
   }
 
-  private[array] def sliceJobs(from: Int, to: Int) =
-    data.sliceJobs(offset + from, offset + to)
+  @tailrec
+  private[array] final def sliceJobs(from: Int, to: Int) = /*READ*/alignState match {
+    case Unknown =>
+      tryStartAlign()
+      sliceJobs(from, to)
+    case Done =>
+      None
+    case Running(j) =>
+      val js = j.destSliceJob(from, to)
+      Some(Vector(js), false)
+  }
 
+  /**
+   * Dispatch the jobs
+   *
+   * Note: we cannot actually use the job in alignState for dependency management since
+   * we do not know the underlying structure and hence are unable to actually create the
+   * jobs
+   */
   private[array] def dispatch(gen: JobGen, dstOffset: Int, srcOffset: Int, length: Int) =
-    null // TODO
+    data.dispatch(gen, dstOffset, srcOffset + offset, math.min(length, size))
 
-  private[array] def tryAddObserver(obs: FAJob.Observer) =
-    // TODO this notifies too late (but works)!
-    data.tryAddObserver(obs)
+  @tailrec
+  final private[array] def tryAddObserver(obs: FAJob.Observer) = /*READ*/alignState match {
+    case Unknown =>
+      tryStartAlign()
+      tryAddObserver(obs)
+    case Done => false
+    case Running(j) => j.tryAddObserver(obs)
+  }
 
   /** Checks if this job is done */
-  def done = getSlice map {
-    case (_, true) => false
-    case (j, false) => j.forall(_.done)
-  } getOrElse true
+  @tailrec
+  final def done: Boolean = /*READ*/alignState match {
+    case Unknown =>
+      tryStartAlign()
+      done
+    case Done => true
+    case Running(j) => j.done
+  }
+
+  override def jobDone() {
+    /*WRITE*/alignState = Done
+  }
 
   def unsafe(i: Int) = data.unsafe(i + offset)
   def blocking(isAbs: Boolean, msecs: Long) = {
@@ -71,5 +93,13 @@ class FlowArraySliceView[A : ClassManifest](
     copyToArray(ret, offset, 0, size)
     ret
   }
+
+}
+
+object FlowArraySliceView {
+
+  abstract class State
+  case object Unknown extends State
+  case object Done extends State
 
 }
