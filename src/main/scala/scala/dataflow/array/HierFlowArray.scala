@@ -15,7 +15,7 @@ class HierFlowArray[A : ClassManifest](
 
   @volatile var doneInd: Int = 0
 
-  private def subSlices(from: Int, to: Int) = {
+  final private[array] def subSlices(from: Int, to: Int) = {
     val lbound = from/ subSize
     val ubound = to  / subSize
     for (i <- lbound to ubound)

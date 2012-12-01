@@ -23,16 +23,17 @@ abstract class ConcreteFlowArray[A : ClassManifest] extends FlowArray[A] with FA
   }
 
   protected final def dispatch(newJob: FAJob, srcOffset: Int, length: Int) {
-    if (srcOffset == 0 && length == size) {
-      val curJob = /*READ*/srcJob
+    val curJob = /*READ*/srcJob
 
-      // Schedule job
-      if (curJob != null)
-        curJob.depending(newJob)
-      else
+    if (curJob == null) {
         FAJob.schedule(newJob)
+    } else if (srcOffset == 0 && length == size) {
+      curJob.depending(newJob)
     } else {
-      throw new UnsupportedOperationException()
+      // We need to realign the thing... :(
+      val raj = FAAlignJob(this, srcOffset, length - 1 + srcOffset)
+      FAJob.schedule(raj)
+      raj.depending(newJob)
     }
   }
 

@@ -16,8 +16,8 @@ private[array] class FADispatcherJob[A : ClassManifest] private (
   protected def doCompute() {
     val n = src.subSize
     val sJobs =
-      for (i <- start to end)
-      yield src.subData(i).dispatch(d, offset + i*n, 0, n)
+      for ( (i,l,u) <- src.subSlices(start, end) )
+        yield src.subData(i).dispatch(d, offset + i * n, l, u - l + 1)
 
     delegate(sJobs)
   }
@@ -33,7 +33,7 @@ object FADispatcherJob {
     srcOffset: Int,
     length: Int
   ): FADispatcherJob[A] =
-      new FADispatcherJob(src, d, dstOffset, srcOffset,
+      new FADispatcherJob(src, d, dstOffset - srcOffset, srcOffset,
                           srcOffset + length - 1, FAJob.threshold(length), null)
 
 }
