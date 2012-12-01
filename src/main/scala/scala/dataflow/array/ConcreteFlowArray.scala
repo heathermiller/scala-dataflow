@@ -26,7 +26,7 @@ abstract class ConcreteFlowArray[A : ClassManifest] extends FlowArray[A] with FA
     val curJob = /*READ*/srcJob
 
     if (curJob == null) {
-        FAJob.schedule(newJob)
+      FAJob.schedule(newJob)
     } else if (srcOffset == 0 && length == size) {
       curJob.depending(newJob)
     } else {
