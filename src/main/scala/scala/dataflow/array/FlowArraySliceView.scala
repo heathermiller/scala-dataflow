@@ -33,8 +33,10 @@ class FlowArraySliceView[A : ClassManifest](
     }
   }
 
-  private[array] def align(offset: Int, size: Int) =
-    data.align(this.offset + offset, math.min(size, this.size))
+  private[array] def align(offset: Int, size: Int) = {
+    assert(offset + size <= this.size)
+    data.align(this.offset + offset, size)
+  }
 
   private[array] def copyToArray(dst: Array[A], srcPos: Int, dstPos: Int, length: Int) {
     data.copyToArray(dst, srcPos + offset, dstPos, length)
@@ -83,6 +85,7 @@ class FlowArraySliceView[A : ClassManifest](
 
   override def jobDone() {
     /*WRITE*/alignState = Done
+    freeBlocked()
   }
 
   def unsafe(i: Int) = data.unsafe(i + offset)
