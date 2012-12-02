@@ -36,14 +36,12 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
 
   def mutConverge(cond: A => Boolean)(it: A => Unit): FlowArray[A] = {
     val ret = newFA[A]
-    //setupDep((fa, of) => FAMutConvJob(fa, ret, it, cond, of), ret)
-    null
+    setupDep(FAMutConvJob(ret, it, cond), ret)
   }
 
   def converge(cond: A => Boolean)(it: A => A): FlowArray[A] = {
     val ret = newFA[A]
-    //setupDep((fa, of) => FAIMutConvJob(fa, ret, it, cond, of), ret)
-    null
+    setupDep(FAIMutConvJob(ret, it, cond), ret)
   }
 
   def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): Future[A1] = {

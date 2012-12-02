@@ -29,12 +29,16 @@ private[array] class FAIMutConvJob[A : ClassManifest] private (
 
 object FAIMutConvJob {
 
+  import FAJob.JobGen
+
   def apply[A : ClassManifest](
-    src: FlatFlowArray[A],
     dst: FlatFlowArray[A],
     f: A => A,
-    cond: A => Boolean,
-    offset: Int
-  ) = new FAIMutConvJob(src, dst, f, cond, offset, 0, src.size - 1, FAJob.threshold(src.size), null)
+    cond: A => Boolean
+  ) = new JobGen[A] {
+    def apply(src: FlatFlowArray[A], dstOffset: Int, srcOffset: Int, length: Int) =
+      new FAIMutConvJob(src, dst, f, cond, dstOffset - srcOffset, srcOffset,
+                   srcOffset + length - 1, FAJob.threshold(length), null)
+  }
 
 }
