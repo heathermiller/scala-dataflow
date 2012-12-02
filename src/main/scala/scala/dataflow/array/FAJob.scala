@@ -100,11 +100,20 @@ private[array] abstract class FAJob(
         ForkJoinTask.invokeAll(j1, j2)
       } else {
         statRecLen(size)
-        doCompute()
+        try {
+          doCompute()
+        } catch {
+          // TODO catch any throwable, expose it to user!
+          case e: Exception =>
+            println("Inner")
+            e.printStackTrace()
+        }
         finalizeCompute()
       }
     } catch {
-      case e: Exception => e.printStackTrace()
+      case e: Exception =>
+        println("Fatal")
+        e.printStackTrace()
     }
   }
 

@@ -11,9 +11,9 @@ class FlatFlowArray[A : ClassManifest](
   // Fields
   val size = data.length
 
-  final private[array] def dispatch(gen: JobGen, offset: Int) = {
-    val job = gen(this, offset, 0, size)
-    dispatch(job)
+  final private[array] def dispatch(gen: JobGen, dstOffset: Int, srcOffset: Int, length: Int) = {
+    val job = gen(this, dstOffset, srcOffset, length)
+    dispatch(job, srcOffset, length)
     job
   }
 

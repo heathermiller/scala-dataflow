@@ -15,7 +15,7 @@ class HierFlowArray[A : ClassManifest](
 
   @volatile var doneInd: Int = 0
 
-  private def subSlices(from: Int, to: Int) = {
+  final private[array] def subSlices(from: Int, to: Int) = {
     val lbound = from/ subSize
     val ubound = to  / subSize
     for (i <- lbound to ubound)
@@ -46,9 +46,9 @@ class HierFlowArray[A : ClassManifest](
     super.sliceJobs(from, to).map(x => (x._1, true)) orElse subFAJobs
   }
 
-  private[array] final def dispatch(gen: JobGen, offset: Int): FAJob = {
-    val job = FADispatcherJob(this, gen, offset)
-    dispatch(job)
+  final private[array] def dispatch(gen: JobGen, dstOffset: Int, srcOffset: Int, length: Int) = {
+    val job = FADispatcherJob(this, gen, dstOffset, srcOffset, length)
+    dispatch(job, srcOffset, length)
     job
   }
 

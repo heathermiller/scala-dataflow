@@ -7,7 +7,8 @@ private[array] class FAZipMapJob[A : ClassManifest,
   val osrc: FlowArray[B],
   val dst: FlatFlowArray[C],
   val f: (A,B) => C,
-  val offset: Int,
+  val dstOffset: Int,
+  val oSrcOffset: Int,
   start: Int,
   end: Int,
   thr: Int,
@@ -15,10 +16,10 @@ private[array] class FAZipMapJob[A : ClassManifest,
 ) extends FAJob(start, end, thr, obs) {
 
   protected def subCopy(s: Int, e: Int) = 
-    new FAZipMapJob(src, osrc, dst, f, offset, s, e, thresh, this)
+    new FAZipMapJob(src, osrc, dst, f, dstOffset, oSrcOffset, s, e, thresh, this)
 
   protected def doCompute() {
-    osrc.sliceJobs(offset + start, offset + end) match {
+    osrc.sliceJobs(oSrcOffset + start, oSrcOffset + end) match {
       // no need to call sliceJobs again after completion
       case Some((j, false)) => delegateThen(j) { calculate _ }
       // required to call sliceJobs again after completion
@@ -30,7 +31,7 @@ private[array] class FAZipMapJob[A : ClassManifest,
 
   private def calculate() {
     for (i <- start to end) {
-      dst.data(i + offset) = f(src.data(i), osrc.unsafe(i + offset))
+      dst.data(i + dstOffset) = f(src.data(i), osrc.unsafe(i + oSrcOffset))
     }
   }
 
@@ -46,8 +47,8 @@ object FAZipMapJob {
     f: (A,B) => C
   ) = new JobGen[A] {
     def apply(src: FlatFlowArray[A], dstOffset: Int, srcOffset: Int, length: Int) =
-      new FAZipMapJob(src, osrc, dst, f, dstOffset, srcOffset,
-                      srcOffset + length - 1, FAJob.threshold(length), null)
+      new FAZipMapJob(src, osrc, dst, f, dstOffset - srcOffset, dstOffset - srcOffset,
+                      srcOffset, srcOffset + length - 1, FAJob.threshold(length), null)
   }
 
 }

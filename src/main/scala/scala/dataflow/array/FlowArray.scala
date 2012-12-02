@@ -26,8 +26,11 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
   private[array] def sliceJobs(from: Int, to: Int): SliceDep
 
   // Dispatcher
-  private[array] def dispatch(gen: JobGen): FAJob = dispatch(gen, 0)
-  private[array] def dispatch(gen: JobGen, offset: Int): FAJob
+  private[array] def dispatch(gen: JobGen): FAJob = dispatch(gen, 0, 0, size)
+  private[array] def dispatch(gen: JobGen, dstOffset: Int, srcOffset: Int, length: Int): FAJob
+
+  /** returns a job that aligns on this FlowArray with given offset and size */
+  private[array] def align(offset: Int, size: Int): FAAlignJob[A]
 
   @inline private final def setupDep[B](gen: JobGen, ret: ConcreteFlowArray[B]) = {
     val job = dispatch(gen)
@@ -74,6 +77,9 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
     job.addObserver(ret)
     ret
   }
+
+  def slice(start: Int, end: Int) =
+    new FlowArraySliceView(this, start, end - start + 1)
 
   private[array] def tryAddObserver(obs: FAJob.Observer): Boolean
 

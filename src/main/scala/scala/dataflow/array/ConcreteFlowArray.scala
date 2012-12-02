@@ -10,6 +10,9 @@ abstract class ConcreteFlowArray[A : ClassManifest] extends FlowArray[A] with FA
   // Calculation Information
   @volatile private var srcJob: FAJob = null
 
+  private[array] def align(offset: Int, size: Int) =
+    FAAlignJob(this, offset, size - 1 + offset)
+
   private[array] final def generatedBy(job: FAJob) {
     srcJob = job
     job.addObserver(this)
@@ -22,14 +25,19 @@ abstract class ConcreteFlowArray[A : ClassManifest] extends FlowArray[A] with FA
         } yield (Vector(sj), false)
   }
 
-  protected final def dispatch(newJob: FAJob) {
+  protected final def dispatch(newJob: FAJob, srcOffset: Int, length: Int) {
     val curJob = /*READ*/srcJob
 
-    // Schedule job
-    if (curJob != null)
-      curJob.depending(newJob)
-    else
+    if (curJob == null) {
       FAJob.schedule(newJob)
+    } else if (srcOffset == 0 && length == size) {
+      curJob.depending(newJob)
+    } else {
+      // We need to realign the thing... :(
+      val raj = this.align(srcOffset, length)
+      FAJob.schedule(raj)
+      raj.depending(newJob)
+    }
   }
 
   private[array] final def tryAddObserver(obs: FAJob.Observer) = {
