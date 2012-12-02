@@ -17,7 +17,7 @@ private[array] class FADispatcherJob[A : ClassManifest] private (
     val n = src.subSize
     val sJobs =
       for ( (i,l,u) <- src.subSlices(start, end) )
-        yield src.subData(i).dispatch(d, offset + i * n, l, u - l + 1)
+        yield src.subData(i).dispatch(d, offset + i * n + l, l, u - l + 1)
 
     delegate(sJobs)
   }
