@@ -16,13 +16,13 @@ class FlowArraySliceViewSuite extends FunSuite with FATestHelper {
 
   test("block on slice") {
     val sl = nSL
-    verEls(sl)((x,i) => x == i + slStart)
+    verEls(sl)(_ == _ + slStart)
   }
 
   test("map on slice") {
     val fa1 = nSL
     val fa2 = fa1.map(_ * 2)
-    verEls(fa2)((x,i) => x == (i + slStart) * 2)
+    verEls(fa2)((x,i) => x == 2 * (i + slStart))
   }
 
   test("fold on slice") {
@@ -35,8 +35,8 @@ class FlowArraySliceViewSuite extends FunSuite with FATestHelper {
   test("zipMap on FASliceView and FlatFA") {
     val sl = nSL
     val fl = nFA(slSize)
-    val res = (sl zipMap fl) { (x,y) => x + y }
-    verEls(res)((x,i) => x == 2 * i + slStart)
+    val res = (sl zipMap fl)(_ + _)
+    verEls(res)(_ == 2 * _ + slStart)
   }
 
 }
