@@ -45,7 +45,7 @@ class FlowArraySliceViewSuite extends FunSuite with FATestHelper {
 
     val isl = nSL.slice(is, ie)
     val res = isl.map(_ + 1)
-    verEls(res)(_ == _ + 1 - slStart - is)
+    verEls(res)(_ == _ + 1 + slStart + is)
   }
 
 }
