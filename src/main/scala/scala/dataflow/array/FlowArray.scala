@@ -9,36 +9,11 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
 
   type JobGen = FAJob.JobGen[A]
 
-  // Fields
+  ///// Public API /////
+
   def size: Int
   def length = size
 
-  // Utilities
-  @inline private final def newFA[B : ClassManifest] = 
-    new FlatFlowArray(new Array[B](length))
-
-  @inline private final def newFA[B : ClassManifest](n: Int) = 
-    new HierFlowArray(new Array[FlowArray[B]](size), n)
-
-  private[array] def copyToArray(dst: Array[A], srcPos: Int, dstPos: Int, length: Int): Unit
-
-  // Slice-wise dependencies
-  private[array] def sliceJobs(from: Int, to: Int): SliceDep
-
-  // Dispatcher
-  private[array] def dispatch(gen: JobGen): FAJob = dispatch(gen, 0, 0, size)
-  private[array] def dispatch(gen: JobGen, dstOffset: Int, srcOffset: Int, length: Int): FAJob
-
-  /** returns a job that aligns on this FlowArray with given offset and size */
-  private[array] def align(offset: Int, size: Int): FAAlignJob[A]
-
-  @inline private final def setupDep[B](gen: JobGen, ret: ConcreteFlowArray[B]) = {
-    val job = dispatch(gen)
-    ret.generatedBy(job)
-    ret
-  }
-
-  // Public members
   def map[B : ClassManifest](f: A => B): FlowArray[B] = {
     val ret = newFA[B]
     setupDep(FAMapJob(ret, f), ret)
@@ -81,18 +56,48 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
   def slice(start: Int, end: Int) =
     new FlowArraySliceView(this, start, end - start + 1)
 
+  /** Checks if this job is done */
+  def done: Boolean
+
+  def blocking(isAbs: Boolean, msecs: Long): Array[A]
+
+  def blocking: Array[A] = blocking(false, 0)
+
+  ///// FlowArray package private API /////
+
+  private[array] def unsafe(i: Int): A
+
+  private[array] def copyToArray(dst: Array[A], srcPos: Int, dstPos: Int, length: Int): Unit
+
+  // Slice-wise dependencies
+  private[array] def sliceJobs(from: Int, to: Int): SliceDep
+
+  // Dispatcher
+  private[array] def dispatch(gen: JobGen): FAJob = dispatch(gen, 0, 0, size)
+  private[array] def dispatch(gen: JobGen, dstOffset: Int, srcOffset: Int, length: Int): FAJob
+
+  /** returns a job that aligns on this FlowArray with given offset and size */
+  private[array] def align(offset: Int, size: Int): FAAlignJob[A]
+
   private[array] def tryAddObserver(obs: FAJob.Observer): Boolean
 
   private[array] final def addObserver(obs: FAJob.Observer) {
     if (!tryAddObserver(obs)) obs.jobDone()
   }
 
-  /** Checks if this job is done */
-  def done: Boolean
+  ///// Private utility functions /////
 
-  def unsafe(i: Int): A
-  def blocking(isAbs: Boolean, msecs: Long): Array[A]
-  def blocking: Array[A] = blocking(false, 0)
+  @inline private final def newFA[B : ClassManifest] = 
+    new FlatFlowArray(new Array[B](length))
+
+  @inline private final def newFA[B : ClassManifest](n: Int) = 
+    new HierFlowArray(new Array[FlowArray[B]](size), n)
+
+  @inline private final def setupDep[B](gen: JobGen, ret: ConcreteFlowArray[B]) = {
+    val job = dispatch(gen)
+    ret.generatedBy(job)
+    ret
+  }
 
 }
 
