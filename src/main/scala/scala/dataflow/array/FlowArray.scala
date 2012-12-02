@@ -53,11 +53,11 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
     ret
   }
 
-  def slice(start: Int, end: Int) =
+  def slice(start: Int, end: Int): FlowArray[A] =
     new FlowArraySliceView(this, start, end - start + 1)
 
   /** partitions this FA into n chunks */
-  def partition(n: Int) = tabulate(n) { x =>
+  def partition(n: Int): FlowArray[FlowArray[A]] = tabulate(n) { x =>
     slice(x * size / n, (x + 1) * size / n - 1)
   }
 
