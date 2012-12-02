@@ -93,7 +93,7 @@ class FlowArraySliceView[A : ClassManifest](
     block(isAbs, msecs)
 
     val ret = new Array[A](size)
-    copyToArray(ret, offset, 0, size)
+    copyToArray(ret, 0, 0, size)
     ret
   }
 
