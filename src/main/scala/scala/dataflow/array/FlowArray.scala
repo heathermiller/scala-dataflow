@@ -59,6 +59,8 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
     slice(x * size / n, (x + 1) * size / n - 1)
   }
 
+  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B]
+
   /** Checks if this job is done */
   def done: Boolean
 
@@ -107,6 +109,18 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
 object FlowArray {
 
   type SliceDep = Option[(IndexedSeq[FAJob], Boolean)]
+
+  trait CanFlatten[A,B] {
+    def flatten(fa: FlatFlowArray[A], n: Int): FlowArray[B]
+  }
+
+  implicit def flattenFaInFa[A : ClassManifest] = new CanFlatten[FlowArray[A], A] {
+    def flatten(fa: FlatFlowArray[FlowArray[A]], n: Int) = {
+      val res = new HierFlowArray(fa.data, n)
+      res.generatedBy(fa)
+      res
+    }
+  }
 
   def tabulate[A : ClassManifest](n: Int)(f: Int => A) = {
     val ret = new FlatFlowArray(new Array[A](n))

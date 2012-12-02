@@ -13,6 +13,12 @@ abstract class ConcreteFlowArray[A : ClassManifest] extends FlowArray[A] with FA
   private[array] def align(offset: Int, size: Int) =
     FAAlignJob(this, offset, size - 1 + offset)
 
+  private[array] final def generatedBy(fa: ConcreteFlowArray[_]) {
+    val curJob = /*READ*/fa.srcJob
+    if (curJob != null)
+      generatedBy(curJob)
+  }
+
   private[array] final def generatedBy(job: FAJob) {
     srcJob = job
     job.addObserver(this)

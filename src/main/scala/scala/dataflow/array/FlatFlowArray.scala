@@ -21,6 +21,9 @@ class FlatFlowArray[A : ClassManifest](
     Array.copy(data, srcPos, dst, dstPos, length)
   }
 
+  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] =
+    flat.flatten(this, n)
+
   override def jobDone() {
     setDone()
     freeBlocked()
