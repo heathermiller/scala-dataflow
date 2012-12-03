@@ -1,5 +1,7 @@
 package scala.dataflow.la
 
+import scala.dataflow.array._
+
 class Matrix(
   val n: Int,
   val m: Int,
@@ -8,17 +10,17 @@ class Matrix(
 
   require(n * m == data.size)
 
-  def +(that: Matrix[Double]) = {
+  def +(that: Matrix) = {
     require(this.n == that.n && this.m == that.m)
     new Matrix(n,m, (this.data zipMap that.data)(_ + _))
   }
 
-  def *(that: Matrix[Double]) = {
+  def *(that: Matrix) = {
     require(this.n == that.m)
     if (that.m != 1)
       throw new UnsupportedOperationException()
 
-    data.partition(n).flatMapN(1)(x => (x zipMap that)(_ * _).fold(0)(_ + _))
+    data.partition(n).map(x => (x zipMap that.data)(_ * _).fold(0.0)(_ + _)).flatten(1)
   }
 
 }
