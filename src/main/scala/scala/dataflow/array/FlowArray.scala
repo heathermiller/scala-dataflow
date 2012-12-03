@@ -110,18 +110,6 @@ object FlowArray {
 
   type SliceDep = Option[(IndexedSeq[FAJob], Boolean)]
 
-  trait CanFlatten[A,B] {
-    def flatten(fa: FlatFlowArray[A], n: Int): FlowArray[B]
-  }
-
-  implicit def flattenFaInFa[A : ClassManifest] = new CanFlatten[FlowArray[A], A] {
-    def flatten(fa: FlatFlowArray[FlowArray[A]], n: Int) = {
-      val res = new HierFlowArray(fa.data, n)
-      res.generatedBy(fa)
-      res
-    }
-  }
-
   def tabulate[A : ClassManifest](n: Int)(f: Int => A) = {
     val ret = new FlatFlowArray(new Array[A](n))
     val job = FAGenerateJob(ret, f)
