@@ -145,21 +145,24 @@ private[array] abstract class FAJob(
   /***************************/
   /* Done signaling          */
   /***************************/
-  @tailrec
-  final override def jobDone(): Unit = /*READ*/state match {
-    // We are notified by a delegate
-    case ov@Delegated(_, cs, then) if ov.done =>
-      if (!CAS_ST(ov, cs)) jobDone()
-      else {
-        if (then != null) { then() }
-        // Work down the dependency chain, and notify observers
-        finalizeCompute()
-      }
+  override def jobDone() {
+    @tailrec
+    def done0(): Unit = /*READ*/state match {
+      // We are notified by a delegate
+      case ov@Delegated(_, cs, then) if ov.done =>
+        if (!CAS_ST(ov, cs)) done0()
+        else {
+          if (then != null) { then() }
+          // Work down the dependency chain, and notify observers
+          finalizeCompute()
+        }
 
-    // We are notified by a subjob
-    case Split(j1, j2) if j1.done && j2.done =>
-      notifyObservers()
-    case _ =>
+      // We are notified by a subjob
+      case Split(j1, j2) if j1.done && j2.done =>
+        notifyObservers()
+      case _ =>
+    }
+    done0()
   }
 
   @tailrec
@@ -189,7 +192,7 @@ private[array] abstract class FAJob(
   /// Public Members ///
 
   /** Checks whether this Job is done */
-  final def done: Boolean = /*READ*/state match {
+  def done: Boolean = /*READ*/state match {
     case Split(j1, j2) =>
       j1.done && j2.done
     case Done => true

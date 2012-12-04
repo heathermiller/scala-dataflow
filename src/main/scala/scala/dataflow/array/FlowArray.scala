@@ -45,9 +45,8 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
   }
 
   def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): Future[A1] = {
-    val ret = new FoldFuture(z, op)
+    val ret = new Future[A1]()
     val job = dispatch(FAFoldJob(ret, z, op))
-    job.addObserver(ret)
     ret
   }
 
