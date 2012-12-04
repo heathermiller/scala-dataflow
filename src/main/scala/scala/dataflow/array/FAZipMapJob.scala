@@ -15,6 +15,8 @@ private[array] class FAZipMapJob[A : ClassManifest,
   obs: FAJob.Observer
 ) extends FAJob(start, end, thr, obs) {
 
+  override protected type SubJob = FAZipMapJob[A,B,C]
+
   protected def subCopy(s: Int, e: Int) = 
     new FAZipMapJob(src, osrc, dst, f, dstOffset, oSrcOffset, s, e, thresh, this)
 

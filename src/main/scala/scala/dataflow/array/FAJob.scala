@@ -19,12 +19,12 @@ private[array] abstract class FAJob(
     if (observer == null) ObsEmpty else ObsEl(observer)
 
   /** state of this FAJob (done/pending/split/chained) */
-  @volatile private var state: State = PendingFree
+  @volatile private var state: State[SubJob] = PendingFree
 
   private val unsafe = getUnsafe()
   private val STATE_OFFSET =
     unsafe.objectFieldOffset(classOf[FAJob].getDeclaredField("state"))
-  @inline private def CAS_ST(ov: State, nv: State) =
+  @inline private def CAS_ST(ov: State[_], nv: State[SubJob]) =
     unsafe.compareAndSwapObject(this, STATE_OFFSET, ov, nv)
   private val OBS_OFFSET =
     unsafe.objectFieldOffset(classOf[FAJob].getDeclaredField("observers"))
@@ -42,9 +42,11 @@ private[array] abstract class FAJob(
   /* Abstract Members        */
   /***************************/
 
-  protected def subCopy(start: Int, end: Int): FAJob
+  protected type SubJob <: FAJob
 
-  protected def subJobs: (FAJob, FAJob) = {
+  protected def subCopy(start: Int, end: Int): SubJob
+
+  protected def subJobs: (SubJob, SubJob) = {
     val ((s1, e1), (s2, e2)) = splitInds
     
     (subCopy(s1, e1), subCopy(s2, e2))
@@ -207,7 +209,7 @@ private[array] abstract class FAJob(
   final private def split(): (FAJob, FAJob) = {
     // Stupid workaround for tail-rec
     @tailrec
-    def split0(): (FAJob, FAJob) = {
+    def split0(): (SubJob, SubJob) = {
       val ov = /*READ*/state
       ov match {
         case PendingFree => 
@@ -252,7 +254,7 @@ private[array] abstract class FAJob(
   @tailrec
   final protected def delegateThen(deleg: IndexedSeq[FAJob])(then: () => Unit) {
     /*READ*/state match {
-      case ov: ChainState =>
+      case ov: ChainState[_] =>
         if (!CAS_ST(ov, Delegated(deleg, ov, then)))
           delegateThen(deleg)(then)
       case _ => throw new IllegalStateException("Delegate called while not executing.")
@@ -269,7 +271,7 @@ private[array] abstract class FAJob(
     @tailrec
     def dep0(cur: FAJob, newJob: FAJob): Option[(FAJob, FAJob)] = {
       /*READ*/cur.state match {
-        case _: Splitting =>
+        case _: Splitting[_] =>
           cur.split()
           dep0(cur, newJob)
         case Delegated(_, PendingChain(next), _) =>
@@ -309,7 +311,7 @@ private[array] abstract class FAJob(
   def destSliceJob(from: Int, to: Int) = {
     @tailrec
     def dsj0(cur: FAJob): FAJob = /*READ*/cur.state match {
-      case _: Splitting =>
+      case _: Splitting[_] =>
         // Help splitting
         cur.split()
         dsj0(cur)
@@ -349,14 +351,14 @@ object FAJob {
     statCumSize.set(0)
   }
 
-  sealed abstract class State
-  sealed abstract class ChainState extends State
-  case class Splitting(j1: FAJob, j2: FAJob, next: FAJob) extends State
-  case class Split(j1: FAJob, j2: FAJob) extends State
-  case class PendingChain(next: FAJob) extends ChainState
-  case class Delegated(deleg: IndexedSeq[FAJob], oldState: ChainState,
+  sealed abstract class State[+S <: FAJob]
+  sealed abstract class ChainState[+S <:FAJob] extends State[S]
+  case class Splitting[+S <: FAJob](j1: S, j2: S, next: FAJob) extends State[S]
+  case class Split[+S <: FAJob](j1: S, j2: S) extends State[S]
+  case class PendingChain(next: FAJob) extends ChainState[Nothing]
+  case class Delegated[+S <: FAJob](deleg: IndexedSeq[FAJob], oldState: ChainState[S],
                        then: () => Unit = null)
-  extends State with Observer {
+  extends State[S] with Observer {
   
     @volatile var doneInd: Int = 0
     @volatile var obs: Observer = null
@@ -382,8 +384,8 @@ object FAJob {
     }
   }
 
-  case object PendingFree extends ChainState
-  case object Done extends State
+  case object PendingFree extends ChainState[Nothing]
+  case object Done extends State[Nothing]
 
   sealed abstract class ObsStack extends Observer
   case class ObsEl(cur: Observer, n: ObsStack = ObsEmpty) extends ObsStack {

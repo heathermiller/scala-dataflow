@@ -10,6 +10,8 @@ private[array] class FADispatcherJob[A : ClassManifest] private (
   obs: FAJob.Observer
 ) extends FAJob(start, end, thr, obs) {
 
+  override protected type SubJob = FADispatcherJob[A]
+
   protected def subCopy(s: Int, e: Int) = 
     new FADispatcherJob(src, d, offset, s, e, thresh, this)
 

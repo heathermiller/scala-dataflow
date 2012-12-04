@@ -11,6 +11,8 @@ private[array] class FAFoldJob[A : ClassManifest, A1 >: A] private (
   obs: FAJob.Observer
 ) extends FAJob(start, end, thr, obs) {
 
+  override protected type SubJob = FAFoldJob[A,A1]
+
   protected def subCopy(s: Int, e: Int) = 
     new FAFoldJob(src, trg, z, f, s, e, thresh, this)
 

@@ -12,6 +12,8 @@ private[array] class FAFlatMapJob[A : ClassManifest, B : ClassManifest] private 
   obs: FAJob.Observer
 ) extends FAJob(start, end, thr, obs) {
 
+  override protected type SubJob = FAFlatMapJob[A,B]
+
   protected def subCopy(s: Int, e: Int) = 
     new FAFlatMapJob(src, dst, f, n, offset, s, e, thresh, this)
 

@@ -8,6 +8,8 @@ private[array] class FAAlignJob[A : ClassManifest] private (
   obs: FAJob.Observer
 ) extends FAJob(start, end, thr, obs) {
 
+  override protected type SubJob = FAAlignJob[A]
+
   protected def subCopy(s: Int, e: Int) =
     new FAAlignJob(src, s, e, thresh, this)
 

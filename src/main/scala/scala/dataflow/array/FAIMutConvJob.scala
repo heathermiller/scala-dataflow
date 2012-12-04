@@ -12,6 +12,8 @@ private[array] class FAIMutConvJob[A : ClassManifest] private (
   obs: FAJob.Observer
 ) extends FAJob(start, end, thr, obs) {
 
+  override protected type SubJob = FAIMutConvJob[A]
+
   protected def subCopy(s: Int, e: Int) = 
     new FAIMutConvJob(src, dst, f, cond, offset, s, e, thresh, this)
 

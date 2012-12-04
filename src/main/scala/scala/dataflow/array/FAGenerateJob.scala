@@ -9,6 +9,8 @@ private[array] class FAGenerateJob[A : ClassManifest] private (
   obs: FAJob.Observer
 ) extends FAJob(start, end, thr, obs) {
 
+  override protected type SubJob = FAGenerateJob[A]
+
   protected def subCopy(s: Int, e: Int) = 
     new FAGenerateJob(dst, f, s, e, thresh, this)
 
