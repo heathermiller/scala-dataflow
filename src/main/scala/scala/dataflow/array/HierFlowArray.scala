@@ -60,6 +60,14 @@ class HierFlowArray[A : ClassManifest](
     }
   }
 
+  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] = {
+    val fa = new FlatFlowArray(subData)
+    fa.generatedBy(this)
+    // Somehow we have to pass the implicit by hand in the second call.
+    // Compiler screws it up...
+    fa.map(_.flatten(n)).flatten(subSize*n)(flattenFaInFa[B], mf)
+  }
+
   override def blocking(isAbs: Boolean, msecs: Long): Array[A] = {
     block(isAbs, msecs)
 

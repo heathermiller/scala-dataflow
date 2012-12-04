@@ -58,6 +58,8 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
     slice(x * size / n, (x + 1) * size / n - 1)
   }
 
+  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B]
+
   /** Checks if this job is done */
   def done: Boolean
 
