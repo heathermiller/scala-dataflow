@@ -27,8 +27,7 @@ package object array {
       
       // Flatten result
       val res = new FlatFlowArray(new Array[A](fa.size))
-      // TODO: blocking is somewhat ok here, because we know we are done... but still :S
-      val g = FAMapJob(res, (x: FoldFuture[A]) => x.blocking)
+      val g = FAMapJob(res, (x: FoldFuture[A]) => x.get)
       val mjob = g(fa ,0, 0, fa.size)
       res.generatedBy(mjob)
       cjob.depending(cjob)

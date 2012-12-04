@@ -6,6 +6,7 @@ private[array] class FAFoldJob[A : ClassManifest, A1 >: A] private (
   val src: FlatFlowArray[A],
   val z: A1,
   val f: (A1, A1) => A1,
+  val g: A => A1,
   start: Int,
   end: Int,
   thr: Int,
@@ -17,12 +18,12 @@ private[array] class FAFoldJob[A : ClassManifest, A1 >: A] private (
   @volatile private var result: Option[A1] = None
 
   protected def subCopy(s: Int, e: Int) = 
-    new FAFoldJob(src, z, f, s, e, thresh, this)
+    new FAFoldJob(src, z, f, g, s, e, thresh, this)
 
   protected def doCompute() {
     var tmp = z
     for (i <- start to end) {
-      tmp = f(tmp, src.data(i))
+      tmp = f(tmp, g(src.data(i)))
     }
     result = Some(tmp)
   }
@@ -53,13 +54,23 @@ object FAFoldJob {
     srcOffset: Int,
     length: Int,
     z: A1,
-    f: (A1, A1) => A1
-  ) = {
-    val job = new FAFoldJob(src, z, f, srcOffset,
+    f: (A1, A1) => A1,
+    g: A => A1
+  ): FAFoldJob[A,A1] = {
+    val job = new FAFoldJob(src, z, f, g, srcOffset,
                             srcOffset + length - 1, FAJob.threshold(length), null)
     fut.setJob(job)
     job.addObserver(fut)
     job
   }
+
+  def apply[A : ClassManifest, A1 >: A](
+    src: FlatFlowArray[A],
+    fut: FoldFuture[A1],
+    srcOffset: Int,
+    length: Int,
+    z: A1,
+    f: (A1, A1) => A1
+  ): FAFoldJob[A,A1] = FAFoldJob(src, fut, srcOffset, length, z, f, (x: A) => x)
 
 }

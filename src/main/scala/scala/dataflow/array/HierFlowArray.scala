@@ -67,13 +67,28 @@ class HierFlowArray[A : ClassManifest](
     fa
   }
 
-  def fold[A1 >: A](from: Int, to: Int)(z: A1)(op: (A1, A1) => A1): Future[A1] = {
+  def fold[A1 >: A](from: Int, to: Int)(z: A1)(op: (A1, A1) => A1): FoldFuture[A1] = {
     val view = {
       if (from == 0 && to == size - 1) asFFA
       else asFFA.slice(from,to)
     }
-    // TODO this copies stuff once too much!
-    view.map(_.fold(z)(op)).flatten(1).fold(z)(op)
+
+    // Fold individual elements (emulate a map)
+    val folds = view.map(_.fold(z)(op))
+    
+    // Consolidate
+    val cjob = FAFoldConsolidateJob(folds, 0, folds.size)
+
+    folds.dispatch(cjob, 0, folds.size)
+    
+    // Spawn last fold job
+    val fut = new FoldFuture[A1]
+
+    val job = FAFoldJob(folds, fut, 0, folds.size, z, op, (x: FoldFuture[A1]) => x.get)
+
+    cjob.depends(job)
+
+    fut
   }
 
   def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] = {

@@ -1,7 +1,7 @@
 package scala.dataflow.array
 
 private[array] class FAFoldConsolidateJob[A : ClassManifest] private (
-  val src: FlatFlowArray[FoldFuture[A]],
+  val src: FlowArray[FoldFuture[A]],
   start: Int,
   end: Int,
   thr: Int,
@@ -15,8 +15,8 @@ private[array] class FAFoldConsolidateJob[A : ClassManifest] private (
 
   protected def doCompute() {
     val jobs = for {
-      ff <- src.data.slice(start,end)
-       j <- ff.getJob
+      i <- start to end
+      j <- src.unsafe(i).getJob
     } yield j
 
     delegate(jobs)
@@ -28,7 +28,7 @@ object FAFoldConsolidateJob {
 
   import FAJob.JobGen
 
-  def apply[A : ClassManifest](src: FlatFlowArray[FoldFuture[A]], srcOffset: Int, length: Int) = {
+  def apply[A : ClassManifest](src: FlowArray[FoldFuture[A]], srcOffset: Int, length: Int) = {
     new FAFoldConsolidateJob(src, srcOffset, srcOffset + length - 1,
                              FAJob.threshold(length), null)
   }
