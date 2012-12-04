@@ -44,11 +44,17 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
     setupDep(FAIMutConvJob(ret, it, cond), ret)
   }
 
-  def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): Future[A1] = {
+  def fold[A1 >: A](from: Int, to: Int)(z: A1)(op: (A1, A1) => A1): Future[A1]
+
+  def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): Future[A1] =
+    fold[A1](0, size - 1)(z)(op)
+/*
+ {
     val ret = new Future[A1]()
     val job = dispatch(FAFoldJob(ret, z, op))
     ret
   }
+*/
 
   def slice(start: Int, end: Int): FlowArray[A] =
     new FlowArraySliceView(this, start, end - start + 1)

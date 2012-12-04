@@ -1,6 +1,7 @@
 package scala.dataflow.array
 
 import scala.annotation.tailrec
+import scala.dataflow.Future
 
 class HierFlowArray[A : ClassManifest](
   private[array] val subData: Array[FlowArray[A]],
@@ -60,12 +61,25 @@ class HierFlowArray[A : ClassManifest](
     }
   }
 
-  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] = {
+  private lazy val asFFA = {
     val fa = new FlatFlowArray(subData)
     fa.generatedBy(this)
+    fa
+  }
+
+  def fold[A1 >: A](from: Int, to: Int)(z: A1)(op: (A1, A1) => A1): Future[A1] = {
+    val view = {
+      if (from == 0 && to == size - 1) asFFA
+      else asFFA.slice(from,to)
+    }
+    // TODO this copies stuff once too much!
+    view.map(_.fold(z)(op)).flatten(1).fold(z)(op)
+  }
+
+  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] = {
     // Somehow we have to pass the implicit by hand in the second call.
     // Compiler screws it up...
-    fa.map(_.flatten(n)).flatten(subSize*n)(flattenFaInFa[B], mf)
+    asFFA.map(_.flatten(n)).flatten(subSize*n)(flattenFaInFa[B], mf)
   }
 
   override def blocking(isAbs: Boolean, msecs: Long): Array[A] = {
