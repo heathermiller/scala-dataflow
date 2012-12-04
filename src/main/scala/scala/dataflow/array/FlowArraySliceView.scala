@@ -4,7 +4,7 @@ import scala.dataflow.Future
 import scala.annotation.tailrec
 
 class FlowArraySliceView[A : ClassManifest](
-  private val data: FlowArray[A],
+  private val data: ConcreteFlowArray[A],
   private val offset: Int,
   val size: Int
 ) extends FlowArray[A] with FAJob.Observer {
@@ -84,8 +84,11 @@ class FlowArraySliceView[A : ClassManifest](
     case Running(j) => j.done
   }
 
+  override def slice(start: Int, end: Int): FlowArray[A] =
+    new FlowArraySliceView(data, offset + start, end - start + 1)
+
   def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] =
-    new FlowArraySliceView(data.flatten(n), offset, size)
+    data.flatten(n).slice(offset, offset + size - 1)
 
   override def jobDone() {
     /*WRITE*/alignState = Done

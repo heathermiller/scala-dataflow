@@ -10,6 +10,9 @@ abstract class ConcreteFlowArray[A : ClassManifest] extends FlowArray[A] with FA
   // Calculation Information
   @volatile private var srcJob: FAJob = null
 
+  override def slice(start: Int, end: Int): FlowArray[A] =
+    new FlowArraySliceView(this, start, end - start + 1)
+
   private[array] def align(offset: Int, size: Int) =
     FAAlignJob(this, offset, size - 1 + offset)
 
