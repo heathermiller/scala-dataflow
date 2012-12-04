@@ -9,6 +9,7 @@ class FlowArraySliceView[A : ClassManifest](
   val size: Int
 ) extends FlowArray[A] with FAJob.Observer {
 
+  import FlowArray._
   import FlowArraySliceView._
 
   case class Running(job: FAAlignJob[A]) extends State
@@ -82,6 +83,9 @@ class FlowArraySliceView[A : ClassManifest](
     case Done => true
     case Running(j) => j.done
   }
+
+  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] =
+    new FlowArraySliceView(data.flatten(n), offset, size)
 
   override def jobDone() {
     /*WRITE*/alignState = Done
