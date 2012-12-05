@@ -50,27 +50,21 @@ object FAFoldJob {
 
   def apply[A : ClassManifest, A1](
     src: FlatFlowArray[A],
-    fut: FoldFuture[A1],
     srcOffset: Int,
     length: Int,
     z: A1,
     f: (A1, A1) => A1,
     g: A => A1
-  ): FAFoldJob[A,A1] = {
-    val job = new FAFoldJob(src, z, f, g, srcOffset,
-                            srcOffset + length - 1, FAJob.threshold(length), null)
-    fut.setJob(job)
-    job.addObserver(fut)
-    job
-  }
+  ): FAFoldJob[A,A1] =
+    new FAFoldJob(src, z, f, g, srcOffset,
+                  srcOffset + length - 1, FAJob.threshold(length), null)
 
   def apply[A : ClassManifest, A1 >: A](
     src: FlatFlowArray[A],
-    fut: FoldFuture[A1],
     srcOffset: Int,
     length: Int,
     z: A1,
     f: (A1, A1) => A1
-  ): FAFoldJob[A,A1] = FAFoldJob(src, fut, srcOffset, length, z, f, (x: A) => x)
+  ): FAFoldJob[A,A1] = FAFoldJob(src, srcOffset, length, z, f, (x: A) => x)
 
 }

@@ -2,9 +2,11 @@ package scala.dataflow.array
 
 import scala.dataflow.Future
 
-class FoldFuture[A] extends Future[A] with FAJob.Observer {
+class FoldFuture[A](j: FAFoldJob[_,A]) extends Future[A] with FAJob.Observer {
   
-  @volatile private var job: FAFoldJob[_,A] = null
+  j.addObserver(this)
+
+  @volatile private var job: FAFoldJob[_,A] = j
 
   override def getOption = {
     Option(job).map(_.getResult) orElse

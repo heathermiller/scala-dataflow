@@ -24,8 +24,9 @@ class FlatFlowArray[A : ClassManifest](
 
   def fold[A1 >: A](from: Int, to: Int)(z: A1)(op: (A1, A1) => A1): FoldFuture[A1] = {
     val fsize = to - from + 1
-    val fut = new FoldFuture[A1]
-    dispatch(FAFoldJob(this, fut, from, fsize, z, op), from, fsize)
+    val job = FAFoldJob(this, from, fsize, z, op)
+    val fut = new FoldFuture(job)
+    dispatch(job, from, fsize)
     fut
   }
 

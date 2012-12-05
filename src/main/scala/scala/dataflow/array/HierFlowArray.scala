@@ -82,11 +82,10 @@ class HierFlowArray[A : ClassManifest](
     folds.dispatch(cjob, 0, folds.size)
     
     // Spawn last fold job
-    val fut = new FoldFuture[A1]
+    val ajob = FAFoldJob(folds, 0, folds.size, z, op, (x: FoldFuture[A1]) => x.get)
+    val fut = new FoldFuture(ajob)
 
-    val job = FAFoldJob(folds, fut, 0, folds.size, z, op, (x: FoldFuture[A1]) => x.get)
-
-    cjob.depending(job)
+    cjob.depending(ajob)
 
     fut
   }
