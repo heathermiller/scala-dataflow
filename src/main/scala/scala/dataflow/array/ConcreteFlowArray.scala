@@ -34,7 +34,7 @@ abstract class ConcreteFlowArray[A : ClassManifest] extends FlowArray[A] with FA
         } yield (Vector(sj), false)
   }
 
-  protected final def dispatch(newJob: FAJob, srcOffset: Int, length: Int) {
+  private[array] final def dispatch(newJob: FAJob, srcOffset: Int, length: Int) {
     val curJob = /*READ*/srcJob
 
     if (curJob == null) {

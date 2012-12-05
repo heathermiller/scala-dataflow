@@ -19,15 +19,20 @@ package object array {
     def flatten(fa: FlatFlowArray[A], n: Int): FlowArray[B]
   }
 
-  implicit def flattenFutInFa[A : ClassManifest] = new CanFlatten[Future[A], A] {
-    def flatten(fa: FlatFlowArray[Future[A]], n: Int) = {
-      /*
-      val res = new HierFlowArray(fa.data, n)
-      res.generatedBy(fa)
+  implicit def flattenFutInFa[A : ClassManifest] = new CanFlatten[FoldFuture[A], A] {
+    def flatten(fa: FlatFlowArray[FoldFuture[A]], n: Int) = {
+      // Consolidate futures (wait for completion in chunks)
+      val cjob = FAFoldConsolidateJob(fa, 0, fa.size)
+      fa.dispatch(cjob, 0, fa.size)
+      
+      // Flatten result
+      val res = new FlatFlowArray(new Array[A](fa.size))
+      val g = FAMapJob(res, (x: FoldFuture[A]) => x.get)
+      val mjob = g(fa ,0, 0, fa.size)
+      res.generatedBy(mjob)
+      cjob.depending(cjob)
+
       res
-      */
-      // TODO
-      null
     }
   }
 

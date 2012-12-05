@@ -8,8 +8,12 @@ import scala.collection.mutable.MutableList
 
 class Future[T] {
 
-  private var res: Option[T] = None
+  @volatile private var res: Option[T] = None
   private var cbs: MutableList[T => Unit] = new MutableList()
+
+  /** up to you to check completion! */ 
+  def get = getOption.get
+  def getOption = res
 
   def blocking = {
     synchronized {

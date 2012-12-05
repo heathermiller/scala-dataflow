@@ -1,26 +1,26 @@
 package scala.dataflow.array
 
 import scala.dataflow.Future
-import scala.annotation.tailrec
 
-class FoldFuture[A](z: A, f: (A, A) => A) extends Future[A] with FAJob.Observer {
+class FoldFuture[A](j: FAFoldJob[_,A]) extends Future[A] with FAJob.Observer {
+  
+  j.addObserver(this)
 
-  @volatile private var result: A = z
+  @volatile private var job: FAFoldJob[_,A] = j
 
-  private val unsafe = getUnsafe()
-  private val OFFSET =
-    unsafe.objectFieldOffset(classOf[FoldFuture[_]].getDeclaredField("result"))
-  @inline private def CAS(ov: A, nv: A) =
-    unsafe.compareAndSwapObject(this, OFFSET, ov, nv)
-
-  @tailrec
-  private[array] final def acc(x: A) {
-    val ov = /*READ*/result
-    val nv = f(ov, x)
-    if (!CAS(ov, nv)) acc(x)
+  override def getOption = {
+    Option(job).map(_.getResult) orElse
+    super.getOption
   }
 
-  override def jobDone() { tryComplete(/*READ*/result) }
+  final def getJob: Option[FAJob] = Option(job)
+
+  final def setJob(j: FAFoldJob[_,A]) { job = j }
+
+  override def jobDone() {
+    if (job != null)
+      tryComplete(job.getResult)
+    job = null
+  }
 
 }
-

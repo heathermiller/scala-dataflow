@@ -1,5 +1,6 @@
 package scala.dataflow.array
 
+import scala.dataflow.Future
 import scala.annotation.tailrec
 
 class FlatFlowArray[A : ClassManifest](
@@ -19,6 +20,14 @@ class FlatFlowArray[A : ClassManifest](
 
   final private[array] def copyToArray(dst: Array[A], srcPos: Int, dstPos: Int, length: Int) {
     Array.copy(data, srcPos, dst, dstPos, length)
+  }
+
+  def fold[A1 >: A](from: Int, to: Int)(z: A1)(op: (A1, A1) => A1): FoldFuture[A1] = {
+    val fsize = to - from + 1
+    val job = FAFoldJob(this, from, fsize, z, op)
+    val fut = new FoldFuture(job)
+    dispatch(job, from, fsize)
+    fut
   }
 
   def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] =

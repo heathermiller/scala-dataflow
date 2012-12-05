@@ -1,6 +1,7 @@
 package scala.dataflow.array
 
 import scala.annotation.tailrec
+import scala.dataflow.Future
 
 class HierFlowArray[A : ClassManifest](
   private[array] val subData: Array[FlowArray[A]],
@@ -60,12 +61,39 @@ class HierFlowArray[A : ClassManifest](
     }
   }
 
-  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] = {
+  private lazy val asFFA = {
     val fa = new FlatFlowArray(subData)
     fa.generatedBy(this)
+    fa
+  }
+
+  def fold[A1 >: A](from: Int, to: Int)(z: A1)(op: (A1, A1) => A1): FoldFuture[A1] = {
+    val view = {
+      if (from == 0 && to == size - 1) asFFA
+      else asFFA.slice(from,to)
+    }
+
+    // Fold individual elements (emulate a map)
+    val folds = view.map(_.fold(z)(op))
+    
+    // Consolidate
+    val cjob = FAFoldConsolidateJob(folds, 0, folds.size)
+
+    folds.dispatch(cjob, 0, folds.size)
+    
+    // Spawn last fold job
+    val ajob = FAFoldJob(folds, 0, folds.size, z, op, (x: FoldFuture[A1]) => x.get)
+    val fut = new FoldFuture(ajob)
+
+    cjob.depending(ajob)
+
+    fut
+  }
+
+  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] = {
     // Somehow we have to pass the implicit by hand in the second call.
     // Compiler screws it up...
-    fa.map(_.flatten(n)).flatten(subSize*n)(flattenFaInFa[B], mf)
+    asFFA.map(_.flatten(n)).flatten(subSize*n)(flattenFaInFa[B], mf)
   }
 
   override def blocking(isAbs: Boolean, msecs: Long): Array[A] = {

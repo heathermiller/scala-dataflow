@@ -88,7 +88,11 @@ class FlowArraySliceView[A : ClassManifest](
     new FlowArraySliceView(data, offset + start, end - start + 1)
 
   def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] =
+    // TODO: This can be slower than necessary
     data.flatten(n).slice(offset, offset + size - 1)
+
+  def fold[A1 >: A](from: Int, to: Int)(z: A1)(op: (A1, A1) => A1): FoldFuture[A1] =
+    data.fold[A1](offset, offset + size - 1)(z)(op)
 
   override def jobDone() {
     /*WRITE*/alignState = Done
