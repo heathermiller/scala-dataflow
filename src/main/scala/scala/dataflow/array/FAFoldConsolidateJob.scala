@@ -1,6 +1,6 @@
 package scala.dataflow.array
 
-private[array] class FAFoldConsolidateJob[A : ClassManifest] private (
+private[array] class FAFoldConsolidateJob[A] private (
   val src: FlowArray[FoldFuture[A]],
   start: Int,
   end: Int,
@@ -28,7 +28,7 @@ object FAFoldConsolidateJob {
 
   import FAJob.JobGen
 
-  def apply[A : ClassManifest](src: FlowArray[FoldFuture[A]], srcOffset: Int, length: Int) = {
+  def apply[A](src: FlowArray[FoldFuture[A]], srcOffset: Int, length: Int) = {
     new FAFoldConsolidateJob(src, srcOffset, srcOffset + length - 1,
                              FAJob.threshold(length), null)
   }

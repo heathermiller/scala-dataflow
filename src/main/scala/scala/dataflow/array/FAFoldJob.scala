@@ -2,7 +2,7 @@ package scala.dataflow.array
 
 import scala.dataflow.Future
 
-private[array] class FAFoldJob[A : ClassManifest, A1 >: A] private (
+private[array] class FAFoldJob[A : ClassManifest, A1] private (
   val src: FlatFlowArray[A],
   val z: A1,
   val f: (A1, A1) => A1,
@@ -48,7 +48,7 @@ object FAFoldJob {
 
   import FAJob.JobGen
 
-  def apply[A : ClassManifest, A1 >: A](
+  def apply[A : ClassManifest, A1](
     src: FlatFlowArray[A],
     fut: FoldFuture[A1],
     srcOffset: Int,

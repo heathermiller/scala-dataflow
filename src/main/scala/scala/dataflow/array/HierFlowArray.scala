@@ -86,7 +86,7 @@ class HierFlowArray[A : ClassManifest](
 
     val job = FAFoldJob(folds, fut, 0, folds.size, z, op, (x: FoldFuture[A1]) => x.get)
 
-    cjob.depends(job)
+    cjob.depending(job)
 
     fut
   }
