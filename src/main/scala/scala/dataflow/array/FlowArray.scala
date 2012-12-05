@@ -125,4 +125,6 @@ object FlowArray {
     ret
   }
 
+  def apply[A : ClassManifest](xs: A*) = new FlatFlowArray(xs.toArray)
+
 }
