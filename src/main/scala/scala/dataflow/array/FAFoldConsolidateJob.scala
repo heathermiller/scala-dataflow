@@ -19,7 +19,9 @@ private[array] class FAFoldConsolidateJob[A] private (
       j <- src.unsafe(i).getJob
     } yield j
 
-    delegate(jobs)
+    if (!jobs.isEmpty) {
+      delegate(jobs)
+    }
   }
 
 }
