@@ -46,14 +46,14 @@ class FlatFlowArraySuite extends FunSuite with FATestHelper {
   test("fold on FlatFA") {
     val fa = nFA
     val fld = fa.fold(0)(_ + _)
-    assert(fld.blocking == (size-1)*size / 2)
+    assert(block(fld) == (size-1)*size / 2)
   }
 
   test("fold on FlatFA preserves order") {
     val chars = 'a' to 'z'
     val fa = FlowArray(chars.map(_.toString) :_*)
     val fld = fa.fold("")(_ + _)
-    assert(fld.blocking == chars.mkString)
+    assert(block(fld) == chars.mkString)
   }
 
   test("zipMap on two FlatFA") {

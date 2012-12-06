@@ -51,7 +51,7 @@ class FlowArraySliceViewSuite extends FunSuite with FATestHelper {
   test("partition of a FA") {
     val parts = 10
     val res = nFA.partition(parts)
-    faBlock(res).zipWithIndex.foreach { x =>
+    block(res).zipWithIndex.foreach { x =>
       verEls(x._1)(_ == _ + x._2 * size / parts)
     }
   }

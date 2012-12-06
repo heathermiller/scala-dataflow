@@ -18,7 +18,7 @@ class HierFlowArraySuite extends FunSuite with FATestHelper {
     val n = 500
     val bfa = nFA(n).flatMapN(n)(x => nFA(n))
     val fld = bfa.fold(0)(_ + _)
-    assert(fld.blocking == n * (n-1) * n / 2)
+    assert(block(fld) == n * (n-1) * n / 2)
   }
 
   test("fold on HierFA preserves order") {
@@ -30,7 +30,7 @@ class HierFlowArraySuite extends FunSuite with FATestHelper {
 
     // Normal version
     val should = chars.flatMap(x => chars.map(x.toString + _.toString)).mkString
-    assert(fld.blocking == should)
+    assert(block(fld) == should)
   }
 
   test("zipMap on HierFA and FlatFA") {
