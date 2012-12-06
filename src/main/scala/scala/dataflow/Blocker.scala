@@ -1,4 +1,4 @@
-package scala.dataflow.array
+package scala.dataflow
 
 import scala.annotation.tailrec
 import java.util.Date

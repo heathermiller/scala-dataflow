@@ -1,5 +1,6 @@
 package scala.dataflow.array
 
+import scala.dataflow.Blocker
 import scala.dataflow.Future
 import scala.annotation.tailrec
 
