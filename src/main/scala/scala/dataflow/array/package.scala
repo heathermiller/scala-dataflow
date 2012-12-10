@@ -21,6 +21,8 @@ package object array {
 
   implicit def flattenFutInFa[A : ClassManifest] = new CanFlatten[FoldFuture[A], A] {
     def flatten(fa: FlatFlowArray[FoldFuture[A]], n: Int) = {
+      require(n == 1)
+
       // Consolidate futures (wait for completion in chunks)
       val cjob = FAFoldConsolidateJob(fa, 0, fa.size)
       fa.dispatch(cjob, 0, fa.size)
@@ -30,7 +32,7 @@ package object array {
       val g = FAMapJob(res, (x: FoldFuture[A]) => x.get)
       val mjob = g(fa ,0, 0, fa.size)
       res.generatedBy(mjob)
-      cjob.depending(cjob)
+      cjob.depending(mjob)
 
       res
     }

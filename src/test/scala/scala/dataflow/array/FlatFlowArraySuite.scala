@@ -56,12 +56,12 @@ class FlatFlowArraySuite extends FunSuite with FATestHelper {
   test("flatten on FlatFA of FoldFuture") {
     val n = 500
     val fa = nFA(n)
-    val mfa = fa.map(x => FlowArray.tabulate(n)(_ * x))
+    val mfa = fa.map(x => FlowArray.tabulate(n)(x => x))
     val fofa = mfa.map(_.fold(0)(_ + _))
     val ffa = fofa.flatten(1)(flattenFutInFa[Int], manifest[Int])
 
     verEls(ffa) { (x,i) =>
-      (n + 1) * n / 2 * (i / n) == x
+      (n - 1) * n / 2 == x
     }
   }
 
