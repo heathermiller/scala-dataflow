@@ -118,7 +118,7 @@ object FlowArray {
 
   type SliceDep = Option[(IndexedSeq[FAJob], Boolean)]
 
-  def tabulate[A : ClassManifest](n: Int)(f: Int => A) = {
+  def tabulate[A : ClassManifest](n: Int)(f: Int => A): FlowArray[A] = {
     val ret = new FlatFlowArray(new Array[A](n))
     val job = FAGenerateJob(ret, f)
     ret.generatedBy(job)
