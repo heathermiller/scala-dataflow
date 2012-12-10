@@ -18,9 +18,12 @@ class FoldFuture[A](j: FAFoldJob[_,A]) extends Future[A] with FAJob.Observer {
   final def setJob(j: FAFoldJob[_,A]) { job = j }
 
   override def jobDone() {
-    if (job != null)
-      tryComplete(job.getResult)
-    job = null
+    val curj = job
+    // TODO, why is curj.done required here?
+    if (curj != null && curj.done) {
+      tryComplete(curj.getResult)
+      job = null
+    }
   }
 
 }

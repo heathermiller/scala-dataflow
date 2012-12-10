@@ -74,7 +74,7 @@ class HierFlowArray[A : ClassManifest](
     }
 
     // Fold individual elements (emulate a map)
-    val folds = view.map(_.fold(z)(op))
+    val folds = view.mapToFFA(_.fold(z)(op))
     
     // Consolidate
     val cjob = FAFoldConsolidateJob(folds, 0, folds.size)
