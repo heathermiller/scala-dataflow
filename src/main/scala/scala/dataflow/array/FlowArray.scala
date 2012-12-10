@@ -15,12 +15,7 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
   def size: Int
   def length = size
 
-  // TODO how to expose this properly
-  def map[B : ClassManifest](f: A => B): FlatFlowArray[B] = {
-    val ret = newFA[B]
-    setupDep(FAMapJob(ret, f), ret)
-    ret
-  }
+  def map[B : ClassManifest](f: A => B): FlowArray[B] = mapToFFA(f)
 
   def zip[B : ClassManifest](that: FlowArray[B]) = zipMap(that)((_,_))
 
@@ -95,6 +90,12 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
 
   private[array] final def addObserver(obs: FAJob.Observer) {
     if (!tryAddObserver(obs)) obs.jobDone()
+  }
+
+  private[array] def mapToFFA[B : ClassManifest](f: A => B): FlatFlowArray[B] = {
+    val ret = newFA[B]
+    setupDep(FAMapJob(ret, f), ret)
+    ret
   }
 
   ///// Private utility functions /////
