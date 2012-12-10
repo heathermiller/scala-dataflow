@@ -28,7 +28,7 @@ class FlowArraySliceViewSuite extends FunSuite with FATestHelper {
   test("fold on slice") {
     val fa1 = nSL
     val res = fa1.fold(0)(_ + _)
-    val v = res.blocking
+    val v = block(res)
     assert(v == (slEnd + 1) * slEnd / 2 - (slStart - 1) * slStart / 2)
   }
 
