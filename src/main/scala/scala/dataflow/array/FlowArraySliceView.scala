@@ -12,17 +12,15 @@ class FlowArraySliceView[A : ClassManifest](
   import FlowArray._
   import FlowArraySliceView._
 
-  case class Running(job: FAAlignJob[A]) extends State
-  
   /// Internals ///
   
   private val unsafe = getUnsafe()
   private val OFFSET =
     unsafe.objectFieldOffset(classOf[FlowArraySliceView[_]].getDeclaredField("alignState"))
-  @inline private def CAS(ov: State, nv: State) =
+  @inline private def CAS(ov: State[A], nv: State[A]) =
     unsafe.compareAndSwapObject(this, OFFSET, ov, nv)
 
-  @volatile private var alignState: State = Unknown
+  @volatile private var alignState: State[A] = Unknown
 
   @inline
   final private def tryStartAlign() {
@@ -112,8 +110,9 @@ class FlowArraySliceView[A : ClassManifest](
 
 object FlowArraySliceView {
 
-  abstract class State
-  case object Unknown extends State
-  case object Done extends State
+  abstract class State[+A]
+  case object Unknown extends State[Nothing]
+  case object Done extends State[Nothing]
+  case class Running[A](job: FAAlignJob[A]) extends State[A]
 
 }
