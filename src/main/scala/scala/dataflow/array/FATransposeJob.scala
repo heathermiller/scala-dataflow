@@ -16,19 +16,33 @@ private[array] class FATransposeJob[A : ClassManifest] private (
 
   override protected type SubJob = FATransposeJob[A]
 
+  @inline private def ci(i: Int) =
+    (i / step) + (i % step) * step
+
   protected def subCopy(s: Int, e: Int) = 
     new FATransposeJob(src, dst, step, srcOffset, dstOffset, s, e, thresh, this)
 
   protected def doCompute() {
     for (i <- start to end) {
-      val oind = i - srcOffset
-      val nind = (oind / step) + (oind % step) * step
-      dst.data(nind + dstOffset) = src.data(i)
+      val nind = ci(i - srcOffset) + dstOffset
+      dst.data(nind) = src.data(i)
     }
   }
 
   /** this thing does not really cover any range */
   protected override def covers(from: Int, to: Int) = false
+
+  def destSliceJobs(from: Int, to: Int): Vector[FATransposeJob[A]] = {
+    if (isSplit) {
+      val (j1,j2) = subTasks
+      j1.destSliceJobs(from, to) ++ j2.destSliceJobs(from, to)
+    } else if (!done) {
+      val myr = start to end
+      val inds = (from to to).map(i => ci(i - dstOffset))
+      if (inds.exists(myr.contains _)) Vector(this)
+      else Vector()
+    } else { Vector() }
+  }
 
 }
 
