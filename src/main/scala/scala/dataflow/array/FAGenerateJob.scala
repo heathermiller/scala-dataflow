@@ -7,7 +7,7 @@ private[array] class FAGenerateJob[A : ClassManifest] private (
   end: Int,
   thr: Int,
   obs: FAJob.Observer
-) extends FAJob(start, end, thr, obs) {
+) extends DestFAJob[A](0, start, end, thr, obs) {
 
   override protected type SubJob = FAGenerateJob[A]
 

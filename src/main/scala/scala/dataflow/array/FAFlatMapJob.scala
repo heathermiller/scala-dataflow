@@ -5,12 +5,12 @@ private[array] class FAFlatMapJob[A : ClassManifest, B : ClassManifest] private 
   val dst: HierFlowArray[B],
   val f: A => FlowArray[B],
   val n: Int,
-  val offset: Int,
+  of: Int,
   start: Int,
   end: Int,
   thr: Int,
   obs: FAJob.Observer
-) extends FAJob(start, end, thr, obs) {
+) extends DestFAJob[B](of, start, end, thr, obs) {
 
   override protected type SubJob = FAFlatMapJob[A,B]
 
@@ -27,7 +27,8 @@ private[array] class FAFlatMapJob[A : ClassManifest, B : ClassManifest] private 
 
   override protected def covers(from: Int, to: Int) = {
     val is = dst.subSize
-    super.covers(from/is, to/is)
+    (from - offset) / is >= start &&
+    (to   - offset) / is <= end
   }
 
 }

@@ -5,12 +5,12 @@ private[array] class FAIMutConvJob[A : ClassManifest] private (
   val dst: FlatFlowArray[A],
   val f: A => A,
   val cond: A => Boolean,
-  val offset: Int,
+  offset: Int,
   start: Int,
   end: Int,
   thr: Int,
   obs: FAJob.Observer
-) extends FAJob(start, end, thr, obs) {
+) extends DestFAJob[A](offset, start, end, thr, obs) {
 
   override protected type SubJob = FAIMutConvJob[A]
 

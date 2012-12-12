@@ -4,12 +4,12 @@ private[array] class FAMapJob[A : ClassManifest, B : ClassManifest] private (
   val src: FlatFlowArray[A],
   val dst: FlatFlowArray[B],
   val f: A => B,
-  val offset: Int,
+  offset: Int,
   start: Int,
   end: Int,
   thr: Int,
   obs: FAJob.Observer
-) extends FAJob(start, end, thr, obs) {
+) extends DestFAJob[B](offset, start, end, thr, obs) {
 
   override protected type SubJob = FAMapJob[A,B]
 

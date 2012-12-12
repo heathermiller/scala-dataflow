@@ -13,7 +13,7 @@ private[array] class FAZipMapJob[A : ClassManifest,
   end: Int,
   thr: Int,
   obs: FAJob.Observer
-) extends FAJob(start, end, thr, obs) {
+) extends DestFAJob[C](dstOffset, start, end, thr, obs) {
 
   override protected type SubJob = FAZipMapJob[A,B,C]
 
