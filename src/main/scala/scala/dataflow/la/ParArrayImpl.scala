@@ -32,10 +32,10 @@ trait ParArrayImpl extends ArrayImpl {
     classManifest[Array[_]].asInstanceOf[ClassManifest[Array[A]]]
 
   implicit def flatFutInA[A : ClassManifest] = (x: A) => List(x)
-  implicit def flatAInA[A : ClassManifest]   =
-    // TODO This is ugly as hell!!!! Why does ParArray need a TraversableOnce and not a 
-    // GenTraversableOnce???
-    (x: Array[A]) => genericWrapArray(x.toArray(classManifest[A])).toIterable
+  implicit def flatAInA[A : ClassManifest] = (x: Array[A]) =>
+    new Traversable[A] {
+      def foreach[U](f: (A) => U) = x.foreach(f)
+    }
 
   def tabulate[A : ClassManifest](n: Int)(f: Int => A) = ParArray.tabulate(n)(f)
 
