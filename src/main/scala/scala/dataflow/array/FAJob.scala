@@ -327,7 +327,6 @@ private[array] abstract class FAJob(
 
   /**
    * whether this job entirely covers the given slice
-   * TODO verify interoperability with offset
    */
   protected def covers(from: Int, to: Int) =
     from >= start && to <= end

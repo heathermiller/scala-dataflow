@@ -46,13 +46,6 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
 
   def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): FoldFuture[A1] =
     fold[A1](0, size - 1)(z)(op)
-/*
- {
-    val ret = new Future[A1]()
-    val job = dispatch(FAFoldJob(ret, z, op))
-    ret
-  }
-*/
 
   def slice(start: Int, end: Int): FlowArray[A]
 
@@ -62,6 +55,8 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
   }
 
   def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B]
+
+  //def transpose(step: Int): FlowArray[A]
 
   /** Checks if this job is done */
   def done: Boolean
