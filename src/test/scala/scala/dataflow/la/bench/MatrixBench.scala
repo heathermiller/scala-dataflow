@@ -3,7 +3,8 @@ package scala.dataflow.la.bench
 import scala.dataflow.Utils
 import scala.dataflow.la._
 
-object FAMatrixBench extends testing.Benchmark with Utils.Props with ArrayLA with FlowArrayImpl { 
+trait MatrixBench extends testing.Benchmark with Utils.Props {
+  this: LAImpl =>
 
   def run {
     val m = this.ones(size,size)

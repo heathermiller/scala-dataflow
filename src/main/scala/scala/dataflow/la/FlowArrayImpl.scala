@@ -26,10 +26,11 @@ trait FlowArrayImpl extends ArrayImpl {
     def blocking = fr.blocking
   }
 
+  // These are super ugly hacks... But they seem to work.
   implicit def frManifest[A : ClassManifest] =
-    manifest[FoldResult[_]].asInstanceOf[ClassManifest[FoldResult[A]]]
+    classManifest[FoldResult[_]].asInstanceOf[ClassManifest[FoldResult[A]]]
   implicit def arManifest[A : ClassManifest] =
-    manifest[Array[_]].asInstanceOf[ClassManifest[Array[A]]]
+    classManifest[Array[_]].asInstanceOf[ClassManifest[Array[A]]]
 
   implicit def flatFutInA[A : ClassManifest] = flattenFutInFa
   implicit def flatAInA[A : ClassManifest]   = flattenFaInFa

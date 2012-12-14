@@ -14,9 +14,9 @@ trait ArrayLA extends LAImpl {
   def ones (dim: Int) = new Vector(tabulate(dim)(x => 1.0))
   def zeros(dim: Int) = new Vector(tabulate(dim)(x => 0.0))
 
-  implicit def scalar2View(r: FoldResult[Double]) = new BoxedScalar(r)
+  implicit def scalar2View(r: Scalar) = new BoxedScalar(r)
   class BoxedScalar(r: FoldResult[Double]) extends AbstractScalar {
-    def blocking = r.blocking
+    def blocking = foldResult2View(r).blocking
   }
  
   class Matrix(
