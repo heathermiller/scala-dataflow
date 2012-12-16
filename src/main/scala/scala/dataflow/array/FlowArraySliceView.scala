@@ -49,8 +49,8 @@ class FlowArraySliceView[A : ClassManifest](
     case Done =>
       None
     case Running(j) =>
-      val js = j.destSliceJob(from, to)
-      Some(Vector(js), false)
+      val js = j.destSliceJobs(from, to)
+      Some(js, false)
   }
 
   /**

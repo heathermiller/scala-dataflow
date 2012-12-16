@@ -308,10 +308,10 @@ private[array] abstract class FAJob(
   }
 
   /**
-   * Returns the job responsible for this particular slice in
-   * destination FA indices. Uses 
+   * Returns the smallest job responsible for this particular slice in
+   * destination FA indices. Uses covers in sub-class.
    */ 
-  def destSliceJob(from: Int, to: Int) = {
+  final protected def destSliceJob(from: Int, to: Int) = {
     @tailrec
     def dsj0(cur: FAJob): FAJob = /*READ*/cur.state match {
       case _: Splitting[_] =>
@@ -324,6 +324,12 @@ private[array] abstract class FAJob(
     }
     dsj0(this)
   }
+
+  /**
+   * Returns the set of smallest jobs responsible for this particular
+   * slice. Should be overriden by jobs where destSliceJob does not make sense.
+   */
+  def destSliceJobs(from: Int, to: Int) = Vector(destSliceJob(from, to))
 
   /**
    * whether this job entirely covers the given slice
@@ -361,9 +367,11 @@ object FAJob {
   case class Splitting[+S <: FAJob](j1: S, j2: S, next: FAJob) extends State[S]
   case class Split[+S <: FAJob](j1: S, j2: S) extends State[S]
   case class PendingChain(next: FAJob) extends ChainState[Nothing]
-  case class Delegated[+S <: FAJob](deleg: IndexedSeq[FAJob], oldState: ChainState[S],
-                       then: () => Unit = null)
-  extends State[S] with Observer {
+  case class Delegated[+S <: FAJob](
+      deleg: IndexedSeq[FAJob],
+      oldState: ChainState[S],
+      then: () => Unit = null)
+    extends State[S] with Observer {
   
     @volatile var doneInd: Int = 0
     @volatile var obs: Observer = null

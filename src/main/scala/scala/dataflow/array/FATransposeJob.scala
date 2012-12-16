@@ -32,7 +32,7 @@ private[array] class FATransposeJob[A : ClassManifest] private (
   /** this thing does not really cover any range */
   protected override def covers(from: Int, to: Int) = false
 
-  def destSliceJobs(from: Int, to: Int): Vector[FATransposeJob[A]] = {
+  override def destSliceJobs(from: Int, to: Int): Vector[FATransposeJob[A]] = {
     if (isSplit) {
       val (j1,j2) = subTasks
       j1.destSliceJobs(from, to) ++ j2.destSliceJobs(from, to)

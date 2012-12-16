@@ -29,9 +29,9 @@ abstract class ConcreteFlowArray[A : ClassManifest] extends FlowArray[A] with FA
 
   // Slice-wise dependencies
   private[array] override def sliceJobs(from: Int, to: Int): SliceDep = {
-    for { j  <- Option(/*READ*/srcJob)
-          sj <- Some(j.destSliceJob(from, to)) if !sj.done
-        } yield (Vector(sj), false)
+    for {  j <- Option(/*READ*/srcJob)
+          js <- Some(j.destSliceJobs(from, to).filterNot(_.done)) if !js.isEmpty
+        } yield (js, false)
   }
 
   private[array] final def dispatch(newJob: FAJob, srcOffset: Int, length: Int) {
