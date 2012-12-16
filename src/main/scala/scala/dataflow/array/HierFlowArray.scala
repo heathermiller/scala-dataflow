@@ -9,6 +9,7 @@ class HierFlowArray[A : ClassManifest](
 ) extends ConcreteFlowArray[A] {
 
   import FlowArray._
+  import SlicedJob._
 
   // Fields
   private[array] val outerSize = subData.length

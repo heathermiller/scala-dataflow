@@ -7,6 +7,7 @@ import scala.annotation.tailrec
 abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer with SlicedJob {
 
   import FlowArray._
+  import SlicedJob._
 
   type JobGen = FAJob.JobGen[A]
 

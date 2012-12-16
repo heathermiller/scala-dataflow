@@ -24,6 +24,28 @@ private[array] class FADispatcherJob[A : ClassManifest] private (
     delegate(sJobs)
   }
 
+  override def sliceJobs(from: Int, to: Int) = {
+    if (!d.needDeepJobSearch) {
+      super.sliceJobs(from, to)
+    } else if (isSplit) {
+      val (j1, j2) = subTasks
+      SlicedJob.mergeDeps(
+        j1.sliceJobs(from, to),
+        j2.sliceJobs(from, to)
+      )
+    } else if (isDelegated) {
+      delegates map { d =>
+        SlicedJob.mergeDeps(d.map(_.sliceJobs(from, to)) :_*)
+      } getOrElse None
+    } else if (done) {
+      // We are fully done already
+      None
+    } else {
+      // Nothing started yet. Wait for this job.
+      Some(Vector(this), true)
+    }
+  }
+
 }
 
 object FADispatcherJob {

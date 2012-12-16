@@ -11,6 +11,7 @@ class FlowArraySliceView[A : ClassManifest](
 
   import FlowArray._
   import FlowArraySliceView._
+  import SlicedJob._
 
   /// Internals ///
   

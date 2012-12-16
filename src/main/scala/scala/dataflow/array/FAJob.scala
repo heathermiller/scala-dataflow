@@ -87,8 +87,8 @@ private[array] abstract class FAJob(
   }
 
   final protected def delegates = /*READ*/state match {
-    case Delegated(delegs, _, _) => delegs
-    case _ => throw new IllegalStateException("not delegated!")
+    case Delegated(delegs, _, _) => Some(delegs)
+    case _ => None
   }
 
   /***************************/
@@ -332,7 +332,7 @@ private[array] abstract class FAJob(
   def destSliceJobs(from: Int, to: Int) = Vector(destSliceJob(from, to))
 
   /** adapter for extended interface (with repeat information) */
-  private[array] def sliceJobs(from: Int, to: Int) = {
+  def sliceJobs(from: Int, to: Int) = {
     val js = destSliceJobs(from, to).filterNot(_.done)
     if (js.isEmpty) None
     else Some(js, false)
@@ -431,6 +431,16 @@ object FAJob {
   )
 
   trait JobGen[A] extends Function4[FlatFlowArray[A], Int, Int, Int, FAJob] {
+    /**
+     * If this returns true, FADispatcher jobs will not suppose that jobs will
+     * generate results restricted to their own range. This influences the behavior of
+     * the sliceJobs method.
+     */
+    def needDeepJobSearch: Boolean = false
+ 
+    /**
+     * creates a job with given source, offsets and lengths
+     */
     def apply(src: FlatFlowArray[A], dstOffset: Int, srcOffset: Int, length: Int): FAJob
   }
 

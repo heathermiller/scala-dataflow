@@ -6,6 +6,7 @@ import scala.annotation.tailrec
 abstract class ConcreteFlowArray[A : ClassManifest] extends FlowArray[A] with FAJob.Observer {
 
   import FlowArray._
+  import SlicedJob._
 
   // Calculation Information
   @volatile private var srcJob: FAJob = null
