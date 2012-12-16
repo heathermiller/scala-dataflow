@@ -101,4 +101,15 @@ class FlatFlowArraySuite extends FunSuite with FATestHelper {
     verEls(res)((x,i) => x == i + (i % isize))
   }
 
+  test("transpose FlatFA") {
+    val n = 1000
+    val step = 100
+    val bs = n / step
+
+    val fa = nFA(n)
+    val tfa = fa.transpose(step)
+
+    verEls(tfa)((x,i) => x == (i / bs) + (i % bs) * step)
+  }
+
 }

@@ -332,8 +332,11 @@ private[array] abstract class FAJob(
   def destSliceJobs(from: Int, to: Int) = Vector(destSliceJob(from, to))
 
   /** adapter for extended interface (with repeat information) */
-  private[array] def sliceJobs(from: Int, to: Int) =
-    Some(destSliceJobs(from, to), false)
+  private[array] def sliceJobs(from: Int, to: Int) = {
+    val js = destSliceJobs(from, to).filterNot(_.done)
+    if (js.isEmpty) None
+    else Some(js, false)
+  }
 
   /**
    * whether this job entirely covers the given slice

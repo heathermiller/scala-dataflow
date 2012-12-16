@@ -6,6 +6,7 @@ private[array] class FATransposeJob[A : ClassManifest] private (
   val src: FlatFlowArray[A],
   val dst: FlatFlowArray[A],
   val step: Int,
+  val origSize: Int,
   val srcOffset: Int,
   val dstOffset: Int,
   start: Int,
@@ -16,16 +17,28 @@ private[array] class FATransposeJob[A : ClassManifest] private (
 
   override protected type SubJob = FATransposeJob[A]
 
-  @inline private def ci(i: Int) =
-    (i / step) + (i % step) * step
+  val blSize = origSize / step
+
+  /** target index */
+  @inline
+  private def ti(iS: Int) = {
+    val i = iS - srcOffset
+    (i / step) + (i % step) * blSize + dstOffset
+  }
+
+  /** source index */
+  @inline
+  private def si(iT: Int) = {
+    val i = iT - dstOffset
+    (i / blSize) + (i % blSize) * step + srcOffset
+  }
 
   protected def subCopy(s: Int, e: Int) = 
-    new FATransposeJob(src, dst, step, srcOffset, dstOffset, s, e, thresh, this)
+    new FATransposeJob(src, dst, step, origSize, srcOffset, dstOffset, s, e, thresh, this)
 
   protected def doCompute() {
     for (i <- start to end) {
-      val nind = ci(i - srcOffset) + dstOffset
-      dst.data(nind) = src.data(i)
+      dst.data(ti(i)) = src.data(i)
     }
   }
 
@@ -38,7 +51,7 @@ private[array] class FATransposeJob[A : ClassManifest] private (
       j1.destSliceJobs(from, to) ++ j2.destSliceJobs(from, to)
     } else if (!done) {
       val myr = start to end
-      val inds = (from to to).map(i => ci(i - dstOffset))
+      val inds = (from to to).map(i => si(i) - srcOffset)
       if (inds.exists(myr.contains _)) Vector(this)
       else Vector()
     } else { Vector() }
@@ -56,7 +69,7 @@ object FATransposeJob {
   ) = new JobGen[A] {
     def apply(src: FlatFlowArray[A], dstOffset: Int, srcOffset: Int, length: Int) =
       // TODO have a better size threshold
-      new FATransposeJob(src, dst, step, srcOffset, dstOffset, srcOffset,
+      new FATransposeJob(src, dst, step, length, srcOffset, dstOffset, srcOffset,
                          srcOffset + length - 1, FAJob.threshold(length), null)
   }
 

@@ -48,6 +48,8 @@ class FlowArraySliceView[A : ClassManifest](
       Some(js, false)
   }
 
+  def transpose(from: Int, to: Int)(step: Int) = null // TODO
+
   /**
    * Dispatch the jobs
    *

@@ -96,6 +96,8 @@ class HierFlowArray[A : ClassManifest](
     asFFA.map(_.flatten(n)).flatten(subSize*n)(flattenFaInFa[B], mf)
   }
 
+  def transpose(from: Int, to: Int)(step: Int) = null // TODO
+
   override def blocking(isAbs: Boolean, msecs: Long): Array[A] = {
     block(isAbs, msecs)
 
