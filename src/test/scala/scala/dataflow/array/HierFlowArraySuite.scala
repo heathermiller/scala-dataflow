@@ -59,4 +59,21 @@ class HierFlowArraySuite extends FunSuite with FATestHelper {
     verEls(sl)((x,i) => x == ((i + of) % n) * 2)
   }
 
+  test("transpose HierFA (of FlatFA)") {
+    val in = 20
+
+    val n = in * in
+    val step = 100
+    val bs = n / step
+
+    val fa = nHFA(in)
+    val tfa = fa.transpose(step)
+
+    verEls(tfa) { (x,i) =>
+      val oi = (i / bs) + (i % bs) * step
+      val shld = oi % in
+      x == shld
+    }
+  }
+
 }

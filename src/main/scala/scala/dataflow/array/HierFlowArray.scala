@@ -97,7 +97,20 @@ class HierFlowArray[A : ClassManifest](
     asFFA.map(_.flatten(n)).flatten(subSize*n)(flattenFaInFa[B], mf)
   }
 
-  def transpose(from: Int, to: Int)(step: Int) = null // TODO
+  def transpose(from: Int, to: Int)(step: Int) = {
+    val len = to - from + 1
+    val ret = new FlatFlowArray(new Array[A](len))
+
+    val tjobg = FATransposeJob(ret, step, from, len)
+
+    val tjob = dispatch(tjobg, 0, from, len)
+
+    val ajob = FAAlignJob(tjob, 0, len)
+    FAJob.schedule(ajob)
+
+    ret.generatedBy(ajob)
+    ret
+  }
 
   override def blocking(isAbs: Boolean, msecs: Long): Array[A] = {
     block(isAbs, msecs)

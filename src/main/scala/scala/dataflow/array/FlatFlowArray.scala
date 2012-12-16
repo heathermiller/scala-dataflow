@@ -34,7 +34,7 @@ class FlatFlowArray[A : ClassManifest](
     val len = to - from + 1
     val ret = new FlatFlowArray(new Array[A](len))
 
-    val tjob = FATransposeJob(ret, step)(classManifest[A])(this, 0, from, len)
+    val tjob = FATransposeJob(ret, step, from, len)(classManifest[A])(this, 0, from, len)
     dispatch(tjob, from, len)
 
     val ajob = FAAlignJob(tjob, 0, len)
