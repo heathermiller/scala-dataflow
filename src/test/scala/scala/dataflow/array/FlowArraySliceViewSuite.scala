@@ -56,4 +56,16 @@ class FlowArraySliceViewSuite extends FunSuite with FATestHelper {
     }
   }
 
+  test("transpose of slice") {
+    val n = 1200
+    val of = 100
+    val sl = nFA.slice(of, 1099)
+
+    val step = 100
+    val bs = sl.size / step
+    val res = sl.transpose(step)
+
+    verEls(res)((x,i) => x == (i / bs) + (i % bs) * step + of)
+  }
+
 }
