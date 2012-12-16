@@ -13,6 +13,7 @@ abstract class ConcreteFlowArray[A : ClassManifest] extends FlowArray[A] with FA
   override def slice(start: Int, end: Int): FlowArray[A] =
     new FlowArraySliceView(this, start, end - start + 1)
 
+  /** returns a job that aligns on this FlowArray with given offset and size */
   private[array] def align(offset: Int, size: Int) =
     FAAlignJob(this, offset, size - 1 + offset)
 

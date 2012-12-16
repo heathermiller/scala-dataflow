@@ -24,17 +24,12 @@ class FlowArraySliceView[A : ClassManifest](
 
   @inline
   final private def tryStartAlign() {
-    val job = align(0, size)
+    val job = data.align(this.offset + offset, size)
     if (CAS(Unknown, Running(job))) {
       // We made THE job
       job.addObserver(this)
       FAJob.schedule(job)
     }
-  }
-
-  private[array] def align(offset: Int, size: Int) = {
-    assert(offset + size <= this.size)
-    data.align(this.offset + offset, size)
   }
 
   private[array] def copyToArray(dst: Array[A], srcPos: Int, dstPos: Int, length: Int) {

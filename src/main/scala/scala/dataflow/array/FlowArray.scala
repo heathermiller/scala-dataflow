@@ -78,9 +78,6 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
   private[array] def dispatch(gen: JobGen): FAJob = dispatch(gen, 0, 0, size)
   private[array] def dispatch(gen: JobGen, dstOffset: Int, srcOffset: Int, length: Int): FAJob
 
-  /** returns a job that aligns on this FlowArray with given offset and size */
-  private[array] def align(offset: Int, size: Int): FAAlignJob[A]
-
   private[array] def tryAddObserver(obs: FAJob.Observer): Boolean
 
   private[array] final def addObserver(obs: FAJob.Observer) {
