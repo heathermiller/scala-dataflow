@@ -57,7 +57,7 @@ class HierFlowArray[A : ClassManifest](
     val li = srcPos / subSize
     val ld = srcPos % subSize
     for ((i, l, u) <- subSlices(srcPos, srcPos + length - 1)) {
-      subData(i).copyToArray(dst, l, dstPos + (i - li)*subSize - ld, u - l + 1)
+      subData(i).copyToArray(dst, l, dstPos + (i - li)*subSize - ld + l, u - l + 1)
     }
   }
 
