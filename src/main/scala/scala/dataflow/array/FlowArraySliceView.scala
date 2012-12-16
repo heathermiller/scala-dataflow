@@ -48,7 +48,6 @@ class FlowArraySliceView[A : ClassManifest](
       Some(js, false)
   }
 
-  def transpose(from: Int, to: Int)(step: Int) = null // TODO
 
   /**
    * Dispatch the jobs
@@ -87,7 +86,10 @@ class FlowArraySliceView[A : ClassManifest](
     data.flatten(n).slice(offset, offset + size - 1)
 
   def fold[A1 >: A](from: Int, to: Int)(z: A1)(op: (A1, A1) => A1): FoldFuture[A1] =
-    data.fold[A1](offset, offset + size - 1)(z)(op)
+    data.fold[A1](offset + from, offset + to)(z)(op)
+
+  def transpose(from: Int, to: Int)(step: Int) =
+    data.transpose(offset + from, offset + to)(step)
 
   override def jobDone() {
     /*WRITE*/alignState = Done
