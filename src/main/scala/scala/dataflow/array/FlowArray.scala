@@ -58,7 +58,7 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
   def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B]
 
   def transpose(step: Int): FlowArray[A] = transpose(0, size - 1)(step)
-  def transpose(from: Int, to: Int)(step: Int): FlowArray[A]
+  private[array] def transpose(from: Int, to: Int)(step: Int): FlowArray[A]
 
   /** Checks if this job is done */
   def done: Boolean

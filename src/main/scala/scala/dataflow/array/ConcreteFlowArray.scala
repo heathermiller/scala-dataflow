@@ -14,6 +14,19 @@ abstract class ConcreteFlowArray[A : ClassManifest] extends FlowArray[A] with FA
   override def slice(start: Int, end: Int): FlowArray[A] =
     new FlowArraySliceView(this, start, end - start + 1)
 
+  private[array] def transpose(from: Int, to: Int)(step: Int) = {
+    val len = to - from + 1
+    val ret = new FlatFlowArray(new Array[A](len))
+
+    val tjob = dispatch(FATransposeJob(ret, step, from, len), 0, from, len)
+
+    val ajob = FAAlignJob(tjob, 0, len)
+    FAJob.schedule(ajob)
+
+    ret.generatedBy(ajob)
+    ret
+  }
+
   /** returns a job that aligns on this FlowArray with given offset and size */
   private[array] def align(offset: Int, size: Int) =
     FAAlignJob(this, offset, size - 1 + offset)

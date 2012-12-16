@@ -30,20 +30,6 @@ class FlatFlowArray[A : ClassManifest](
     fut
   }
 
-  def transpose(from: Int, to: Int)(step: Int): FlatFlowArray[A] = {
-    val len = to - from + 1
-    val ret = new FlatFlowArray(new Array[A](len))
-
-    val tjob = FATransposeJob(ret, step, from, len)(classManifest[A])(this, 0, from, len)
-    dispatch(tjob, from, len)
-
-    val ajob = FAAlignJob(tjob, 0, len)
-    FAJob.schedule(ajob)
-
-    ret.generatedBy(ajob)
-    ret
-  }
-
   def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] =
     flat.flatten(this, n)
 
