@@ -108,9 +108,14 @@ class HierFlowArray[A : ClassManifest](
 
   @tailrec
   override final def jobDone() {
+    // Sets flatMapJob to null
     setDone()
+
     if (done)
       freeBlocked()
+
+    // It is OK to read doneInd here, since the first time this is called is when
+    // the flatMap job (src) completes. Hence all FAs in subData are created.
     else if (!subData(doneInd).tryAddObserver(this))
       jobDone()
   }
