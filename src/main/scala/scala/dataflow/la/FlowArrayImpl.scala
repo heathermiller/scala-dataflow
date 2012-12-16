@@ -12,12 +12,14 @@ trait FlowArrayImpl extends ArrayImpl {
   class BoxedArray[A : ClassManifest](fa: FlowArray[A]) extends AbstractArray[A] {
     def size = fa.size
     def map[B : ClassManifest](f: A => B) = fa.map(f)
+    def flatMapN[B : ClassManifest](n: Int)(f: A => Array[B]) = fa.flatMapN(n)(f)
     def zipMap[B : ClassManifest, C : ClassManifest](that: Array[B])(f: (A,B) => C) =
       (this.fa zipMap that)(f)
     def flatten[B](n: Int)(implicit flat: CanFlat[A,B], mf: ClassManifest[B]) =
       this.fa.flatten(n)
     def partition(n: Int) = fa.partition(n)
     def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): FoldResult[A1] = fa.fold(z)(op)
+    def transpose(step: Int) = fa.transpose(step)
     def blocking: scala.Array[A] = fa.blocking
   }
 

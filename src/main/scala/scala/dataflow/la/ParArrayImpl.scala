@@ -12,12 +12,14 @@ trait ParArrayImpl extends ArrayImpl {
   class BoxedArray[A : ClassManifest](pa: ParArray[A]) extends AbstractArray[A] {
     def size = pa.size
     def map[B : ClassManifest](f: A => B) = pa.map(f)
+    def flatMapN[B : ClassManifest](n: Int)(f: A => Array[B]) = pa.flatMap(f)
     def zipMap[B : ClassManifest, C : ClassManifest](that: Array[B])(f: (A,B) => C) =
       pa.zip(that).map(f.tupled)
     def flatten[B](n: Int)(implicit flat: CanFlat[A,B], mf: ClassManifest[B]) = pa.flatten
     def partition(n: Int) =
       ParArray.tabulate(n)(x => x).map(i => pa.slice(i * size / n, (i+1) * size / n - 1))
     def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): FoldResult[A1] = pa.fold(z)(op)
+    def transpose(step: Int) = partition(size / step).transpose(flatAInA).flatten
     def blocking: scala.Array[A] = pa.toArray
   }
 

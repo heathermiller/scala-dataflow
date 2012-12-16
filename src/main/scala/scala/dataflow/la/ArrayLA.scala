@@ -27,6 +27,8 @@ trait ArrayLA extends LAImpl {
 
     require(rows * cols == data.size)
 
+    def t = new Matrix(cols, rows, this.data.transpose(cols))
+
     def +(that: Matrix) = {
       require(this.rows == that.rows &&
               this.cols == that.cols)
@@ -44,22 +46,18 @@ trait ArrayLA extends LAImpl {
       new Vector(res)
     }
 
-  /*
-   * TODO finish implementing
-  def *(that: Matrix): Matrix = {
-    require(this.m == that.n)
-    if (that.m != 1)
-      throw new UnsupportedOperationException()
+    def *(that: Matrix)(implicit i1: DummyImplicit): Matrix = {
+      require(this.cols == that.rows)
 
-    val res = data.partition(n).map(x => (x zipMap that.data)(_ * _).fold(0.0)(_ + _)).flatten(1)
+      val mX = data.partition(this.rows)
+      val mY = that.t.data.partition(that.cols)
 
-    new Matrix(this.n, that.m, res)
-  }
+      val res = mX.flatMapN(that.cols) { vX =>
+        mY.map(vY => (vX zipMap vY)(_ * _).fold(0.0)(_ + _)).flatten(1)
+      }
 
-  def apply(x: Int)(y: Int) = {
-    data.blocking(x + y * m)
-  }
-  */
+      new Matrix(this.rows, that.cols, res)
+    }
 
     def toVector: Vector = {
       if (cols == 1)

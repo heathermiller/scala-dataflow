@@ -22,8 +22,10 @@ trait LAImpl {
     def rows: Int
     def cols: Int
     def data: Data
+    def t: Matrix
     def +(that: Matrix): Matrix
     def *(that: Vector): Vector
+    def *(that: Matrix)(implicit i1: DummyImplicit): Matrix
     def toVector: Vector
   }
 
