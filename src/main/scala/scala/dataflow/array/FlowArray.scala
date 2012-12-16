@@ -4,7 +4,7 @@ import scala.dataflow.Blocker
 import scala.dataflow.Future
 import scala.annotation.tailrec
 
-abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer {
+abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer with SlicedJob {
 
   import FlowArray._
 
@@ -107,8 +107,6 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
 }
 
 object FlowArray {
-
-  type SliceDep = Option[(IndexedSeq[FAJob], Boolean)]
 
   def tabulate[A : ClassManifest](n: Int)(f: Int => A): FlowArray[A] = {
     val ret = new FlatFlowArray(new Array[A](n))

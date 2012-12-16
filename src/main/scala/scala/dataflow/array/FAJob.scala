@@ -8,7 +8,7 @@ private[array] abstract class FAJob(
   val end:    Int,
   val thresh: Int,
   observer: FAJob.Observer
-) extends RecursiveAction with FAJob.Observer {
+) extends RecursiveAction with FAJob.Observer with SlicedJob {
 
   import FAJob._
 
@@ -330,6 +330,10 @@ private[array] abstract class FAJob(
    * slice. Should be overriden by jobs where destSliceJob does not make sense.
    */
   def destSliceJobs(from: Int, to: Int) = Vector(destSliceJob(from, to))
+
+  /** adapter for extended interface (with repeat information) */
+  private[array] def sliceJobs(from: Int, to: Int) =
+    Some(destSliceJobs(from, to), false)
 
   /**
    * whether this job entirely covers the given slice
