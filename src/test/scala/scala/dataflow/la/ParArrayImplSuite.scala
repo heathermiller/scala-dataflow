@@ -19,4 +19,9 @@ class ParArrayImplSuite extends FunSuite with ParArrayImpl {
     }
   }
 
+  test("transpose on array") {
+    val step = 100
+    val res = array2View(nPA)(manifest[Int]).transpose(step)
+  }
+
 }
