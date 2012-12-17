@@ -12,6 +12,9 @@ private[array] abstract class FAJob(
 
   import FAJob._
 
+  /// Record stats ///
+  statNewJob(this.getClass)
+
   /// FAJob internals ///
 
   /** observers of this FAJob */
@@ -21,13 +24,8 @@ private[array] abstract class FAJob(
   /** state of this FAJob (done/pending/split/chained) */
   @volatile private var state: State[SubJob] = PendingFree
 
-  private val unsafe = getUnsafe()
-  private val STATE_OFFSET =
-    unsafe.objectFieldOffset(classOf[FAJob].getDeclaredField("state"))
   @inline private def CAS_ST(ov: State[_], nv: State[SubJob]) =
     unsafe.compareAndSwapObject(this, STATE_OFFSET, ov, nv)
-  private val OBS_OFFSET =
-    unsafe.objectFieldOffset(classOf[FAJob].getDeclaredField("observers"))
   @inline private def CAS_OB(ov: ObsStack, nv: ObsStack) =
     unsafe.compareAndSwapObject(this, OBS_OFFSET, ov, nv)
 
@@ -349,9 +347,25 @@ private[array] abstract class FAJob(
 object FAJob {
 
   import java.util.concurrent.atomic.AtomicInteger
+  import java.util.concurrent.ConcurrentHashMap
+
+  private val unsafe = getUnsafe()
+  private val STATE_OFFSET =
+    unsafe.objectFieldOffset(classOf[FAJob].getDeclaredField("state"))
+  private val OBS_OFFSET =
+    unsafe.objectFieldOffset(classOf[FAJob].getDeclaredField("observers"))
 
   val statCount    = new AtomicInteger(0)
   val statCumSize  = new AtomicInteger(0)
+  val statJobTypes = new ConcurrentHashMap[String, AtomicInteger]()
+
+  private def statNewJob(clazz: Class[_]) {
+    val n = clazz.getName
+    Option(statJobTypes.get(n)) map { ai => ai.incrementAndGet() } orElse {
+      val nai = new AtomicInteger(1)
+      Option(statJobTypes.putIfAbsent(n, nai)) map { ai => ai.incrementAndGet() }
+    }
+  }
 
   private def statRecLen(size: Int) {
     statCount.incrementAndGet()
@@ -359,14 +373,21 @@ object FAJob {
   }
 
   def printStats() = {
+    import scala.collection.JavaConversions._
+
     val count = statCount.get
     val len   = statCumSize.get.toDouble / count
     println("Computed %d jobs with %.2f average length".format(count, len))
+
+    statJobTypes.entrySet.foreach { e =>
+      println("%-43s %6d instances".format(e.getKey, e.getValue.get))
+    }
   }
 
   def resetStats() {
     statCount.set(0)
     statCumSize.set(0)
+    statJobTypes.clear()
   }
 
   sealed abstract class State[+S <: FAJob]
@@ -446,7 +467,7 @@ object FAJob {
 
   trait Observer {
     /**
-     * called at least once when the observed job is done.
+pp     * called at least once when the observed job is done.
      * MUST be idempotent!
      */
     def jobDone() {}
