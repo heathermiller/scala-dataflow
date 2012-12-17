@@ -357,6 +357,8 @@ object FAJob {
 
   val statCount    = new AtomicInteger(0)
   val statCumSize  = new AtomicInteger(0)
+  val statMinSize  = new AtomicInteger(Integer.MAX_VALUE)
+  val statMaxSize  = new AtomicInteger(0)
   val statJobTypes = new ConcurrentHashMap[String, AtomicInteger]()
 
   private def statNewJob(clazz: Class[_]) {
@@ -367,9 +369,27 @@ object FAJob {
     }
   }
 
+  @tailrec
+  private def updateMinSize(i: Int) {
+    val tmp = statMinSize.get
+    if (i < tmp)
+      if (!statMinSize.compareAndSet(tmp, i))
+        updateMinSize(i)
+  }
+
+  @tailrec
+  private def updateMaxSize(i: Int) {
+    val tmp = statMaxSize.get
+    if (i > tmp)
+      if (!statMaxSize.compareAndSet(tmp, i))
+        updateMaxSize(i)
+  }
+
   private def statRecLen(size: Int) {
     statCount.incrementAndGet()
     statCumSize.addAndGet(size)
+    updateMinSize(size)
+    updateMaxSize(size)
   }
 
   def printStats() = {
@@ -377,7 +397,12 @@ object FAJob {
 
     val count = statCount.get
     val len   = statCumSize.get.toDouble / count
-    println("Computed %d jobs with %.2f average length".format(count, len))
+    val max   = statMaxSize.get
+    val min   = statMinSize.get
+    println("Computed %d jobs with ".format(count))
+    println("  average: %8.2f".format(len))
+    println("  max:     %5d".format(max))
+    println("  min:     %5d".format(min))
 
     statJobTypes.entrySet.foreach { e =>
       println("%-43s %6d instances".format(e.getKey, e.getValue.get))
@@ -387,6 +412,8 @@ object FAJob {
   def resetStats() {
     statCount.set(0)
     statCumSize.set(0)
+    statMinSize.set(Integer.MAX_VALUE)
+    statMaxSize.set(0)
     statJobTypes.clear()
   }
 
@@ -445,7 +472,7 @@ object FAJob {
   }
 
   def threshold(size: Int) = (
-    math.max(256,
+    math.max(512,
       scala.collection.parallel.thresholdFromSize(
       size, scala.collection.parallel.availableProcessors
     ))
@@ -467,7 +494,7 @@ object FAJob {
 
   trait Observer {
     /**
-pp     * called at least once when the observed job is done.
+     * called at least once when the observed job is done.
      * MUST be idempotent!
      */
     def jobDone() {}

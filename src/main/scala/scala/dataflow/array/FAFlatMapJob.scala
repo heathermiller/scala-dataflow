@@ -45,6 +45,8 @@ object FAFlatMapJob {
     def apply(src: FlatFlowArray[A], dstOffset: Int, srcOffset: Int, length: Int) =
       new FAFlatMapJob(src, dst, f, n, dstOffset, srcOffset,
                        srcOffset + length - 1, FAJob.threshold(length), null)
+    // might this be a better choice (or something the like?)
+    // FAJob.threshold(length * dst.subSize) / dst.subSize, null)
   }
 
 }
