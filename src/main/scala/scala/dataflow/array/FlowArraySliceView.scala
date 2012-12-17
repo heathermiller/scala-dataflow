@@ -76,7 +76,7 @@ class FlowArraySliceView[A : ClassManifest](
   }
 
   override def slice(start: Int, end: Int): FlowArray[A] =
-    new FlowArraySliceView(data, offset + start, end - start + 1)
+    new FlowArraySliceView(data, offset + start, end - start)
 
   def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] =
     // TODO: This can be slower than necessary

@@ -10,7 +10,7 @@ class FlowArraySliceViewSuite extends FunSuite with FATestHelper {
 
   val slStart = size / 9
   val slEnd   = 8 * size / 9
-  val slSize  = slEnd - slStart + 1
+  val slSize  = slEnd - slStart
 
   def nSL = nFA.slice(slStart, slEnd)
 
@@ -29,7 +29,7 @@ class FlowArraySliceViewSuite extends FunSuite with FATestHelper {
     val fa1 = nSL
     val res = fa1.fold(0)(_ + _)
     val v = block(res)
-    assert(v == (slEnd + 1) * slEnd / 2 - (slStart - 1) * slStart / 2)
+    assert(v == (slEnd - 1) * slEnd / 2 - (slStart - 1) * slStart / 2)
   }
 
   test("zipMap on FASliceView and FlatFA") {
@@ -60,7 +60,7 @@ class FlowArraySliceViewSuite extends FunSuite with FATestHelper {
   test("transpose of slice") {
     val n = 1200
     val of = 100
-    val sl = nFA.slice(of, 1099)
+    val sl = nFA.slice(of, 1100)
 
     val step = 100
     val bs = sl.size / step

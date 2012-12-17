@@ -52,7 +52,7 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
 
   /** partitions this FA into n chunks */
   def partition(n: Int): FlowArray[FlowArray[A]] = tabulate(n) { x =>
-    slice(x * size / n, (x + 1) * size / n - 1)
+    slice(x * size / n, (x + 1) * size / n)
   }
 
   def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B]

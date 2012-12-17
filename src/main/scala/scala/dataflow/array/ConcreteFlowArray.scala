@@ -12,7 +12,7 @@ abstract class ConcreteFlowArray[A : ClassManifest] extends FlowArray[A] with FA
   @volatile private var srcJob: FAJob = null
 
   override def slice(start: Int, end: Int): FlowArray[A] =
-    new FlowArraySliceView(this, start, end - start + 1)
+    new FlowArraySliceView(this, start, end - start)
 
   private[array] def transpose(from: Int, to: Int)(step: Int) = {
     val len = to - from + 1
