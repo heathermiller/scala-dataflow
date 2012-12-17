@@ -53,7 +53,7 @@ trait ArrayLA extends LAImpl {
       val mY = that.t.data.partition(that.cols)
 
       val res = mX.flatMapN(that.cols) { vX =>
-        mY.map(vY => (vX zipMap vY)(_ * _).fold(0.0)(_ + _)).flatten(1)
+        mY.map(vY => (vX zipMapFold vY)(_ * _)(0.0)(_ + _)).flatten(1)
       }
 
       new Matrix(this.rows, that.cols, res)

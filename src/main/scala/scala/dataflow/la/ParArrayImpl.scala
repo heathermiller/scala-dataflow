@@ -15,6 +15,8 @@ trait ParArrayImpl extends ArrayImpl {
     def flatMapN[B : ClassManifest](n: Int)(f: A => Array[B]) = pa.flatMap(f)
     def zipMap[B : ClassManifest, C : ClassManifest](that: Array[B])(f: (A,B) => C) =
       pa.zip(that).map(f.tupled)
+    def zipMapFold[B : ClassManifest, C](that: Array[B])(f: (A,B) => C)(z: C)(op: (C,C) => C) =
+      pa.zip(that).map(f.tupled).fold(z)(op)
     def flatten[B](n: Int)(implicit flat: CanFlat[A,B], mf: ClassManifest[B]) = pa.flatten
     def partition(n: Int) =
       ParArray.tabulate(n)(x => x).map(i => pa.slice(i * size / n, (i+1) * size / n - 1))

@@ -15,6 +15,8 @@ trait FlowArrayImpl extends ArrayImpl {
     def flatMapN[B : ClassManifest](n: Int)(f: A => Array[B]) = fa.flatMapN(n)(f)
     def zipMap[B : ClassManifest, C : ClassManifest](that: Array[B])(f: (A,B) => C) =
       (this.fa zipMap that)(f)
+    def zipMapFold[B : ClassManifest, C](that: Array[B])(f: (A,B) => C)(z: C)(op: (C,C) => C) =
+      fa.zipMapFold(that)(f)(z)(op)
     def flatten[B](n: Int)(implicit flat: CanFlat[A,B], mf: ClassManifest[B]) =
       this.fa.flatten(n)
     def partition(n: Int) = fa.partition(n)

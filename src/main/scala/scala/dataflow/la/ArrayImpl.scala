@@ -22,6 +22,8 @@ trait ArrayImpl {
     def map[B : ClassManifest](f: A => B): Array[B]
     def flatMapN[B : ClassManifest](n: Int)(f: A => Array[B]): Array[B]
     def zipMap[B : ClassManifest, C : ClassManifest](that: Array[B])(f: (A,B) => C): Array[C]
+    def zipMapFold[B : ClassManifest, C](that: Array[B])(f: (A,B) => C)
+                                        (z: C)(op: (C,C) => C): FoldResult[C]
     def flatten[B](n: Int)(implicit flat: CanFlat[A,B], mf: ClassManifest[B]): Array[B]
     def partition(n: Int): Array[Array[A]]
     def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): FoldResult[A1]

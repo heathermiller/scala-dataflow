@@ -60,6 +60,12 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
   def transpose(step: Int): FlowArray[A] = transpose(0, size - 1)(step)
   private[array] def transpose(from: Int, to: Int)(step: Int): FlowArray[A]
 
+  def zipMapFold[B : ClassManifest, C](that: FlowArray[B])
+                                      (f: (A,B) => C)
+                                      (z: C)
+                                      (op: (C,C) => C): FoldFuture[C] =
+                                        zipMapFold(0, size - 1)(that)(f)(z)(op)
+
   def zipMapFold[B : ClassManifest, C](from: Int, to: Int)
                                       (that: FlowArray[B])
                                       (f: (A,B) => C)
