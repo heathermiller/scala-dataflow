@@ -11,11 +11,9 @@ private[array] class FAFoldJob[A : ClassManifest, A1] private (
   end: Int,
   thr: Int,
   obs: FAJob.Observer
-) extends FAJob(start, end, thr, obs) {
+) extends FAResultJob[A1](start, end, thr, obs) {
 
   override protected type SubJob = FAFoldJob[A,A1]
-
-  @volatile private var result: Option[A1] = None
 
   protected def subCopy(s: Int, e: Int) = 
     new FAFoldJob(src, z, f, g, s, e, thresh, this)
@@ -25,22 +23,10 @@ private[array] class FAFoldJob[A : ClassManifest, A1] private (
     for (i <- start to end) {
       tmp = f(tmp, g(src.data(i)))
     }
-    result = Some(tmp)
+    setResult(tmp)
   }
 
-  final def getResult = result.get
-
-  override def done = !result.isEmpty && super.done
-
-  override def jobDone() {
-    if (super.done && isSplit) {
-      val (j1, j2) = subTasks
-      result = Some(f(j1.result.get, j2.result.get))
-    }
-    super.jobDone()
-  }
-
-  protected override def covers(from: Int, to: Int) = false
+  protected override def combineResults(x: A1, y: A1) = f(x,y)
 
 }
 

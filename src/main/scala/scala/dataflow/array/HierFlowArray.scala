@@ -68,14 +68,15 @@ class HierFlowArray[A : ClassManifest](
     fa
   }
 
-  def fold[A1 >: A](from: Int, to: Int)(z: A1)(op: (A1, A1) => A1): FoldFuture[A1] = {
+  @inline
+  private def encFoldLike[B](from: Int, to: Int)(z: B)(op: (B,B) => B)(inner: FlowArray[A] => FoldFuture[B]) = {
     val view = {
       if (from == 0 && to == size - 1) asFFA
       else asFFA.slice(from,to)
     }
 
     // Fold individual elements (emulate a map)
-    val folds = view.mapToFFA(_.fold(z)(op))
+    val folds = view.mapToFFA(inner)
     
     // Consolidate
     val cjob = FAFoldConsolidateJob(folds, 0, folds.size)
@@ -83,13 +84,18 @@ class HierFlowArray[A : ClassManifest](
     folds.dispatch(cjob, 0, folds.size)
     
     // Spawn last fold job
-    val ajob = FAFoldJob(folds, 0, folds.size, z, op, (x: FoldFuture[A1]) => x.get)
+    val ajob = FAFoldJob(folds, 0, folds.size, z, op, (x: FoldFuture[B]) => x.get)
     val fut = new FoldFuture(ajob)
 
     cjob.depending(ajob)
 
     fut
   }
+
+  def fold[A1 >: A](from: Int, to: Int)(z: A1)(op: (A1, A1) => A1): FoldFuture[A1] =
+    encFoldLike(from, to)(z)(op)(_.fold(z)(op))
+
+  def zipMapFold[B : ClassManifest, C](from: Int, to: Int)(that: FlowArray[B])(f: (A,B) => C)(z: C)(op: (C,C) => C) = sys.error("not implemented yet") // TODO implement
 
   def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] = {
     // Somehow we have to pass the implicit by hand in the second call.

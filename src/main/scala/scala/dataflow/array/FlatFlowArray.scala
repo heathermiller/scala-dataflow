@@ -33,6 +33,14 @@ class FlatFlowArray[A : ClassManifest](
   def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] =
     flat.flatten(this, n)
 
+  def zipMapFold[B : ClassManifest, C](from: Int, to: Int)(that: FlowArray[B])(f: (A,B) => C)(z: C)(op: (C,C) => C) = {
+    val fsize = to - from + 1
+    val job = FAZipMapFoldJob(this, that, f, z, op, from, 0, fsize)
+    val fut = new FoldFuture(job)
+    dispatch(job, from, fsize)
+    fut
+  }
+
   override def jobDone() {
     setDone()
     freeBlocked()

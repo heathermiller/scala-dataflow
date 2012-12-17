@@ -88,6 +88,8 @@ class FlowArraySliceView[A : ClassManifest](
   override def transpose(from: Int, to: Int)(step: Int) =
     data.transpose(offset + from, offset + to)(step)
 
+  def zipMapFold[B : ClassManifest, C](from: Int, to: Int)(that: FlowArray[B])(f: (A,B) => C)(z: C)(op: (C,C) => C) = data.zipMapFold(offset + from, offset + to)(that)(f)(z)(op)
+
   override def jobDone() {
     /*WRITE*/alignState = Done
     freeBlocked()
