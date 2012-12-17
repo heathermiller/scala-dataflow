@@ -19,7 +19,7 @@ trait ParArrayImpl extends ArrayImpl {
       pa.zip(that).map(f.tupled).fold(z)(op)
     def flatten[B](n: Int)(implicit flat: CanFlat[A,B], mf: ClassManifest[B]) = pa.flatten
     def partition(n: Int) =
-      ParArray.tabulate(n)(x => x).map(i => pa.slice(i * size / n, (i+1) * size / n - 1))
+      ParArray.tabulate(n)(x => pa.slice(x * size / n, (x + 1) * size / n))
     def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): FoldResult[A1] = pa.fold(z)(op)
     def transpose(step: Int) = partition(size / step).transpose(flatAInA).flatten
     def blocking: scala.Array[A] = pa.toArray
