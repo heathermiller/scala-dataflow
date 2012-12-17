@@ -14,8 +14,6 @@ abstract class Blocker {
   @volatile private var waiting: WaitList = Empty
 
   // Unsafe stuff
-  private val unsafe = getUnsafe()
-  private val OFFSET = unsafe.objectFieldOffset(classOf[Blocker].getDeclaredField("waiting"))
   @inline private def CAS(ov: WaitList, nv: WaitList) =
     unsafe.compareAndSwapObject(this, OFFSET, ov, nv)
 
@@ -76,6 +74,9 @@ abstract class Blocker {
 }
 
 object Blocker {
+  private val unsafe = getUnsafe()
+  private val OFFSET = unsafe.objectFieldOffset(classOf[Blocker].getDeclaredField("waiting"))
+
   sealed abstract class WaitList
   case object Empty    extends WaitList
   case object Complete extends WaitList

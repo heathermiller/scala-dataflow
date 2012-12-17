@@ -14,12 +14,8 @@ class FlowArraySliceView[A : ClassManifest](
   import SlicedJob._
 
   /// Internals ///
-  
-  private val unsafe = getUnsafe()
-  private val OFFSET =
-    unsafe.objectFieldOffset(classOf[FlowArraySliceView[_]].getDeclaredField("alignState"))
   @inline private def CAS(ov: State, nv: State) =
-    unsafe.compareAndSwapObject(this, OFFSET, ov, nv)
+    FlowArraySliceView.unsafe.compareAndSwapObject(this, OFFSET, ov, nv)
 
   @volatile private var alignState: State = Unknown
 
@@ -109,6 +105,10 @@ class FlowArraySliceView[A : ClassManifest](
 }
 
 object FlowArraySliceView {
+
+  private val unsafe = getUnsafe()
+  private val OFFSET =
+    unsafe.objectFieldOffset(classOf[FlowArraySliceView[_]].getDeclaredField("alignState"))
 
   abstract class State
   case object Unknown extends State

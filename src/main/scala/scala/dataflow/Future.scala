@@ -7,9 +7,6 @@ class Future[T] extends Blocker {
 
   import Future._
 
-  private val unsafe = getUnsafe()
-  private val OFFSET =
-    unsafe.objectFieldOffset(classOf[Future[_]].getDeclaredField("state"))
   @inline private def CAS(ov: State[T,T], nv: State[T,T]) =
     unsafe.compareAndSwapObject(this, OFFSET, ov, nv)
 
@@ -93,6 +90,11 @@ class Future[T] extends Blocker {
 }
 
 object Future {
+
+  private val unsafe = getUnsafe()
+  private val OFFSET =
+    unsafe.objectFieldOffset(classOf[Future[_]].getDeclaredField("state"))
+
   abstract class State[+S,-T]
   abstract class CBList[-T] extends State[Nothing,T]
   case class CBElem[-T](f: T => Unit, n: CBList[T]) extends CBList[T]
