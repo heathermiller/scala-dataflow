@@ -36,10 +36,7 @@ trait ParArrayImpl extends ArrayImpl {
     classManifest[Array[_]].asInstanceOf[ClassManifest[Array[A]]]
 
   implicit def flatFutInA[A : ClassManifest] = (x: A) => List(x)
-  implicit def flatAInA[A : ClassManifest] = (x: Array[A]) =>
-    new Traversable[A] {
-      def foreach[U](f: (A) => U) = x.foreach(f)
-    }
+  implicit def flatAInA[A : ClassManifest] = (x: Array[A]) => x.toIndexedSeq
 
   def tabulate[A : ClassManifest](n: Int)(f: Int => A) = ParArray.tabulate(n)(f)
 
