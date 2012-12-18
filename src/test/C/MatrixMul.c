@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#define SIZE 1000
+#define SIZE 500
 
 void mmul(double const * const a,
           double const * const b,

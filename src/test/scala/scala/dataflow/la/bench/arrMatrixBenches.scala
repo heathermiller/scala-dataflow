@@ -11,3 +11,4 @@ object FAMatrixBench extends MatrixBench with ArrayLA with FlowArrayImpl {
 }
 object PAMatrixBench extends MatrixBench with ArrayLA with ParArrayImpl
 object VAMatrixBench extends MatrixBench with ArrayLA with VanillaArrayImpl
+object LAMatrixBench extends MatrixBench with BreezeLA
