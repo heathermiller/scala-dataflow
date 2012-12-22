@@ -1,10 +1,11 @@
 package scala.dataflow.la
 
 import scala.collection.parallel.mutable.ParArray
+import scala.collection.GenTraversableOnce
 
 trait ParArrayImpl extends ArrayImpl {
 
-  type CanFlat[A,B] = (A) => TraversableOnce[B]
+  type CanFlat[A,B] = (A) => GenTraversableOnce[B]
   type Array[A] = ParArray[A]
   type FoldResult[A] = A
 
@@ -21,7 +22,7 @@ trait ParArrayImpl extends ArrayImpl {
     def partition(n: Int) =
       ParArray.tabulate(n)(x => pa.slice(x * size / n, (x + 1) * size / n))
     def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): FoldResult[A1] = pa.fold(z)(op)
-    def transpose(step: Int) = partition(size / step).transpose(flatAInA).flatten
+    def transpose(step: Int) = partition(size / step).transpose(flatAInA).flatten(flatAInA)
     def blocking: scala.Array[A] = pa.toArray
   }
 

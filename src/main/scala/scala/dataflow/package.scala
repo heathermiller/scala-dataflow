@@ -22,7 +22,7 @@ package object dataflow {
       fld.setAccessible(true)
       return fld.get(this.getClass).asInstanceOf[Unsafe]
     } catch {
-      case e => throw new RuntimeException("Could not obtain access to sun.misc.Unsafe", e)
+      case e: Exception => throw new RuntimeException("Could not obtain access to sun.misc.Unsafe", e)
     }
   }
 

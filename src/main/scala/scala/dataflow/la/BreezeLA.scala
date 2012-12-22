@@ -44,7 +44,7 @@ trait BreezeLA extends LAImpl {
     def dim = v.length
     def +(that: Vector) = v + that
     def *(that: Vector) = v dot that
-    def toMatrix = new DenseMatrix(dim, data)
+    def toMatrix = new DenseMatrix(dim, data, 0)
     def data = v.data
   }
 

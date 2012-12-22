@@ -147,10 +147,10 @@ private[array] abstract class FAJob(
     @tailrec
     def done0(): Unit = /*READ*/state match {
       // We are notified by a delegate
-      case ov@Delegated(_, cs, then) if ov.done =>
+      case ov@Delegated(_, cs, thn) if ov.done =>
         if (!CAS_ST(ov, cs)) done0()
         else {
-          if (then != null) { then() }
+          if (thn != null) { thn() }
           // Work down the dependency chain, and notify observers
           finalizeCompute()
         }
@@ -253,11 +253,11 @@ private[array] abstract class FAJob(
   final protected def delegate(deleg: IndexedSeq[FAJob]) = delegateThen(deleg)(null)
 
   @tailrec
-  final protected def delegateThen(deleg: IndexedSeq[FAJob])(then: () => Unit) {
+  final protected def delegateThen(deleg: IndexedSeq[FAJob])(thn: () => Unit) {
     /*READ*/state match {
       case ov: ChainState[_] =>
-        if (!CAS_ST(ov, Delegated(deleg, ov, then)))
-          delegateThen(deleg)(then)
+        if (!CAS_ST(ov, Delegated(deleg, ov, thn)))
+          delegateThen(deleg)(thn)
       case _ => throw new IllegalStateException("Delegate called while not executing.")
     }
   }
@@ -277,8 +277,8 @@ private[array] abstract class FAJob(
           dep0(cur, newJob)
         case Delegated(_, PendingChain(next), _) =>
           dep0(next, newJob)
-        case ov@Delegated(delegs, PendingFree, then) =>
-          if (!CAS_ST(ov, Delegated(delegs, PendingChain(newJob), then)))
+        case ov@Delegated(delegs, PendingFree, thn) =>
+          if (!CAS_ST(ov, Delegated(delegs, PendingChain(newJob), thn)))
             dep0(cur, newJob)
           else
             None
@@ -425,7 +425,7 @@ object FAJob {
   case class Delegated[+S <: FAJob](
       deleg: IndexedSeq[FAJob],
       oldState: ChainState[S],
-      then: () => Unit = null)
+      thn: () => Unit = null)
     extends State[S] with Observer {
   
     @volatile var doneInd: Int = 0

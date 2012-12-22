@@ -137,7 +137,7 @@ final class MultiLaneBuilder[T](
             case gpr: Proposition =>
               if (gpr ne p) Right(false)
               else {
-                val nv = SealTag(p, cbs)
+                val nv = SealTag(p, cbs.asInstanceOf[CallbackList[T]])
                 if (cnt > p.size) Right(false)
                 else if (CAS(curblock, pos, ov, nv)) Left(cnt)
                 else sealTag(p, bli, curblock, pos)

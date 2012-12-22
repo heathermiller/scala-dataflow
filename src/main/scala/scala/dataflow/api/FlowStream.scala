@@ -12,7 +12,7 @@ trait FlowStreamLike[T, Async[X]] extends FlowLike[T] {
   
   def async: FlowStream[T] = null
   
-  def onReady[U](body: FlowStream.Blocking[T] => U): Unit = null
+  def onReady[U](body: FlowStream.Blocking[T] => U) {}
   
   def <<(elem: T): this.type
   
@@ -51,7 +51,7 @@ class Head[T]() extends FlowStream[T] {
   
   def <<(elem: T) = null
   
-  def onBind[U](body: T => U) = null
+  def onBind[U](body: T => U) {}
   
   def reader = null
   
@@ -67,7 +67,7 @@ class <<[T](val head: T) extends FlowStream[T] {
   
   def <<(elem: T) = null
   
-  def onBind[U](body: T => U) = null
+  def onBind[U](body: T => U) {}
   
   def reader = null
   

@@ -6,7 +6,8 @@ import scala.collection._
 object PCReduceBench extends testing.Benchmark with Utils.Props {
   import Utils._
   
-  collection.parallel.ForkJoinTasks.defaultForkJoinPool.setParallelism(par)
+  // FIXME how to set parallelism level?
+  // collection.parallel.ForkJoinTasks.defaultForkJoinPool.setParallelism(par)
   
   override def run() {
     val pr = (0 until size).par
