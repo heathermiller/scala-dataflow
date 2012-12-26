@@ -2,8 +2,9 @@ package scala.dataflow.array
 
 import scala.dataflow.Future
 import scala.annotation.tailrec
+import scala.reflect.ClassTag
 
-abstract class ConcreteFlowArray[A : ClassManifest] extends FlowArray[A] with FAJob.Observer {
+abstract class ConcreteFlowArray[A : ClassTag] extends FlowArray[A] with FAJob.Observer {
 
   import FlowArray._
   import SlicedJob._

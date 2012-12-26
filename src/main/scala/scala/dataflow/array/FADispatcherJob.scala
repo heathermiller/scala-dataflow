@@ -1,6 +1,8 @@
 package scala.dataflow.array
 
-private[array] class FADispatcherJob[A : ClassManifest] private (
+import scala.reflect.ClassTag
+
+private[array] class FADispatcherJob[A : ClassTag] private (
   val src: HierFlowArray[A],
   val d: FAJob.JobGen[A],
   val offset: Int,
@@ -50,7 +52,7 @@ private[array] class FADispatcherJob[A : ClassManifest] private (
 
 object FADispatcherJob {
 
-  def apply[A : ClassManifest](
+  def apply[A : ClassTag](
     src: HierFlowArray[A],
     d: FAJob.JobGen[A],
     dstOffset: Int,

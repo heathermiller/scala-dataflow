@@ -1,6 +1,8 @@
 package scala.dataflow.array
 
-private[array] class FAGenerateJob[A : ClassManifest] private (
+import scala.reflect.ClassTag
+
+private[array] class FAGenerateJob[A : ClassTag] private (
   val dst: FlatFlowArray[A],
   val f: Int => A,
   start: Int,
@@ -24,7 +26,7 @@ private[array] class FAGenerateJob[A : ClassManifest] private (
 
 object FAGenerateJob {
 
-  def apply[A : ClassManifest](
+  def apply[A : ClassTag](
     dst: FlatFlowArray[A],
     f: Int => A) =
       new FAGenerateJob(dst, f, 0, dst.size - 1, FAJob.threshold(dst.size), dst)

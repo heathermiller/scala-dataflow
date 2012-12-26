@@ -1,6 +1,7 @@
 package scala.dataflow.array
 
 import scala.dataflow.Future
+import scala.reflect.ClassTag
 
 trait FATestHelper {
 
@@ -14,7 +15,7 @@ trait FATestHelper {
   def nFA: FlowArray[Int] = nFA(size)
   def nFA(s: Int): FlowArray[Int] = FlowArray.tabulate(s)(x => x)
 
-  def verEls[A : ClassManifest](fa: FlowArray[A])(ver: (A, Int) => Boolean) = {
+  def verEls[A : ClassTag](fa: FlowArray[A])(ver: (A, Int) => Boolean) = {
     assert(block(fa).zipWithIndex.forall(ver.tupled))
   }
 

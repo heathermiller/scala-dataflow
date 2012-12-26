@@ -1,8 +1,9 @@
 package scala.dataflow.array
 
 import scala.dataflow.Future
+import scala.reflect.ClassTag
 
-private[array] class FATransposeJob[A : ClassManifest] private (
+private[array] class FATransposeJob[A : ClassTag] private (
   val src: FlatFlowArray[A],
   val dst: FlatFlowArray[A],
   val step: Int,
@@ -62,7 +63,7 @@ object FATransposeJob {
 
   import FAJob.JobGen
 
-  def apply[A : ClassManifest](
+  def apply[A : ClassTag](
     dst: FlatFlowArray[A],
     step: Int,
     viewOffset: Int,

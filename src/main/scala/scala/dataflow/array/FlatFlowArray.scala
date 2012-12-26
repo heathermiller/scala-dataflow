@@ -2,8 +2,9 @@ package scala.dataflow.array
 
 import scala.dataflow.Future
 import scala.annotation.tailrec
+import scala.reflect.ClassTag
 
-class FlatFlowArray[A : ClassManifest](
+class FlatFlowArray[A : ClassTag](
   private[array] val data: Array[A]
 ) extends ConcreteFlowArray[A] {
 
@@ -30,10 +31,10 @@ class FlatFlowArray[A : ClassManifest](
     fut
   }
 
-  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] =
+  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassTag[B]): FlowArray[B] =
     flat.flatten(this, n)
 
-  def zipMapFold[B : ClassManifest, C](from: Int, to: Int)(that: FlowArray[B])(f: (A,B) => C)(z: C)(op: (C,C) => C) = {
+  def zipMapFold[B : ClassTag, C](from: Int, to: Int)(that: FlowArray[B])(f: (A,B) => C)(z: C)(op: (C,C) => C) = {
     val fsize = to - from + 1
     val job = FAZipMapFoldJob(this, that, f, z, op, from, 0, fsize)
     val fut = new FoldFuture(job)

@@ -2,8 +2,9 @@ package scala.dataflow.array
 
 import scala.annotation.tailrec
 import scala.dataflow.Future
+import scala.reflect.ClassTag
 
-class HierFlowArray[A : ClassManifest](
+class HierFlowArray[A : ClassTag](
   private[array] val subData: Array[FlowArray[A]],
   private[array] val subSize: Int
 ) extends ConcreteFlowArray[A] {
@@ -95,9 +96,9 @@ class HierFlowArray[A : ClassManifest](
   def fold[A1 >: A](from: Int, to: Int)(z: A1)(op: (A1, A1) => A1): FoldFuture[A1] =
     encFoldLike(from, to)(z)(op)(_.fold(z)(op))
 
-  def zipMapFold[B : ClassManifest, C](from: Int, to: Int)(that: FlowArray[B])(f: (A,B) => C)(z: C)(op: (C,C) => C) = sys.error("not implemented yet") // TODO implement
+  def zipMapFold[B : ClassTag, C](from: Int, to: Int)(that: FlowArray[B])(f: (A,B) => C)(z: C)(op: (C,C) => C) = sys.error("not implemented yet") // TODO implement
 
-  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] = {
+  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassTag[B]): FlowArray[B] = {
     // Somehow we have to pass the implicit by hand in the second call.
     // Compiler screws it up...
     asFFA.map(_.flatten(n)).flatten(subSize*n)(flattenFaInFa[B], mf)

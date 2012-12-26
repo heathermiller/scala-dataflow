@@ -1,6 +1,8 @@
 package scala.dataflow.array
 
-private[array] class FAZipMapFoldJob[A : ClassManifest, B : ClassManifest, C] private (
+import scala.reflect.ClassTag
+
+private[array] class FAZipMapFoldJob[A : ClassTag, B : ClassTag, C] private (
   val src: FlatFlowArray[A],
   val osrc: FlowArray[B],
   val f: (A, B) => C,
@@ -45,7 +47,7 @@ object FAZipMapFoldJob {
 
   import FAJob.JobGen
 
-  def apply[A : ClassManifest, B : ClassManifest, C](
+  def apply[A : ClassTag, B : ClassTag, C](
     src: FlatFlowArray[A],
     osrc: FlowArray[B],
     f: (A,B) => C,

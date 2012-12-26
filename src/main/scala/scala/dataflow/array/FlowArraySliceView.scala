@@ -2,8 +2,9 @@ package scala.dataflow.array
 
 import scala.dataflow.Future
 import scala.annotation.tailrec
+import scala.reflect.ClassTag
 
-class FlowArraySliceView[A : ClassManifest](
+class FlowArraySliceView[A : ClassTag](
   private val data: ConcreteFlowArray[A],
   private val offset: Int,
   val size: Int
@@ -78,7 +79,7 @@ class FlowArraySliceView[A : ClassManifest](
   override def slice(start: Int, end: Int): FlowArray[A] =
     new FlowArraySliceView(data, offset + start, end - start)
 
-  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B] =
+  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassTag[B]): FlowArray[B] =
     // TODO: This can be slower than necessary
     data.flatten(n).slice(offset, offset + size - 1)
 
@@ -88,7 +89,7 @@ class FlowArraySliceView[A : ClassManifest](
   override def transpose(from: Int, to: Int)(step: Int) =
     data.transpose(offset + from, offset + to)(step)
 
-  def zipMapFold[B : ClassManifest, C](from: Int, to: Int)(that: FlowArray[B])(f: (A,B) => C)(z: C)(op: (C,C) => C) = data.zipMapFold(offset + from, offset + to)(that)(f)(z)(op)
+  def zipMapFold[B : ClassTag, C](from: Int, to: Int)(that: FlowArray[B])(f: (A,B) => C)(z: C)(op: (C,C) => C) = data.zipMapFold(offset + from, offset + to)(that)(f)(z)(op)
 
   override def jobDone() {
     /*WRITE*/alignState = Done

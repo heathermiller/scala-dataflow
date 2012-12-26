@@ -1,6 +1,8 @@
 package scala.dataflow.array
 
-private[array] class FAMutConvJob[A : ClassManifest] private (
+import scala.reflect.ClassTag
+
+private[array] class FAMutConvJob[A : ClassTag] private (
   val src: FlatFlowArray[A],
   val dst: FlatFlowArray[A],
   val f: A => Unit,
@@ -31,7 +33,7 @@ object FAMutConvJob {
 
   import FAJob.JobGen
 
-  def apply[A : ClassManifest](
+  def apply[A : ClassTag](
     dst: FlatFlowArray[A],
     f: A => Unit,
     cond: A => Boolean

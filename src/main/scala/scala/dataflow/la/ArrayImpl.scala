@@ -1,30 +1,32 @@
 package scala.dataflow.la
 
+import scala.reflect.ClassTag
+
 trait ArrayImpl {
 
   type Array[A]
   type CanFlat[A,B]
   type FoldResult[A]
   
-  def tabulate[A : ClassManifest](n: Int)(f: Int => A): Array[A]
+  def tabulate[A : ClassTag](n: Int)(f: Int => A): Array[A]
 
-  implicit def array2View[A : ClassManifest](v: Array[A]): AbstractArray[A]
-  implicit def foldResult2View[A : ClassManifest](v: FoldResult[A]): AbstractFoldResult[A]
+  implicit def array2View[A : ClassTag](v: Array[A]): AbstractArray[A]
+  implicit def foldResult2View[A : ClassTag](v: FoldResult[A]): AbstractFoldResult[A]
 
-  implicit def arManifest[A : ClassManifest]: ClassManifest[Array[A]]
-  implicit def frManifest[A : ClassManifest]: ClassManifest[FoldResult[A]]
+  implicit def arManifest[A : ClassTag]: ClassTag[Array[A]]
+  implicit def frManifest[A : ClassTag]: ClassTag[FoldResult[A]]
 
-  implicit def flatFutInA[A : ClassManifest]: CanFlat[FoldResult[A], A]
-  implicit def flatAInA[A : ClassManifest]: CanFlat[Array[A], A]
+  implicit def flatFutInA[A : ClassTag]: CanFlat[FoldResult[A], A]
+  implicit def flatAInA[A : ClassTag]: CanFlat[Array[A], A]
 
   trait AbstractArray[A] {
     def size: Int
-    def map[B : ClassManifest](f: A => B): Array[B]
-    def flatMapN[B : ClassManifest](n: Int)(f: A => Array[B]): Array[B]
-    def zipMap[B : ClassManifest, C : ClassManifest](that: Array[B])(f: (A,B) => C): Array[C]
-    def zipMapFold[B : ClassManifest, C](that: Array[B])(f: (A,B) => C)
+    def map[B : ClassTag](f: A => B): Array[B]
+    def flatMapN[B : ClassTag](n: Int)(f: A => Array[B]): Array[B]
+    def zipMap[B : ClassTag, C : ClassTag](that: Array[B])(f: (A,B) => C): Array[C]
+    def zipMapFold[B : ClassTag, C](that: Array[B])(f: (A,B) => C)
                                         (z: C)(op: (C,C) => C): FoldResult[C]
-    def flatten[B](n: Int)(implicit flat: CanFlat[A,B], mf: ClassManifest[B]): Array[B]
+    def flatten[B](n: Int)(implicit flat: CanFlat[A,B], mf: ClassTag[B]): Array[B]
     def partition(n: Int): Array[Array[A]]
     def fold[A1 >: A](z: A1)(op: (A1, A1) => A1): FoldResult[A1]
     def transpose(step: Int): Array[A]

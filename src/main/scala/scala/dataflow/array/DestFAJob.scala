@@ -1,6 +1,8 @@
 package scala.dataflow.array
 
-private[array] abstract class DestFAJob[A : ClassManifest](
+import scala.reflect.ClassTag
+
+private[array] abstract class DestFAJob[A : ClassTag](
   val offset: Int,
   start:  Int,
   end:    Int,

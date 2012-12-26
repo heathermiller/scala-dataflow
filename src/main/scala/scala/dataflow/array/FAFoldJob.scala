@@ -1,8 +1,9 @@
 package scala.dataflow.array
 
 import scala.dataflow.Future
+import scala.reflect.ClassTag
 
-private[array] class FAFoldJob[A : ClassManifest, A1] private (
+private[array] class FAFoldJob[A : ClassTag, A1] private (
   val src: FlatFlowArray[A],
   val z: A1,
   val f: (A1, A1) => A1,
@@ -34,7 +35,7 @@ object FAFoldJob {
 
   import FAJob.JobGen
 
-  def apply[A : ClassManifest, A1](
+  def apply[A : ClassTag, A1](
     src: FlatFlowArray[A],
     srcOffset: Int,
     length: Int,
@@ -45,7 +46,7 @@ object FAFoldJob {
     new FAFoldJob(src, z, f, g, srcOffset,
                   srcOffset + length - 1, FAJob.threshold(length), null)
 
-  def apply[A : ClassManifest, A1 >: A](
+  def apply[A : ClassTag, A1 >: A](
     src: FlatFlowArray[A],
     srcOffset: Int,
     length: Int,

@@ -1,6 +1,7 @@
 package scala.dataflow
 
 import sun.misc.Unsafe
+import scala.reflect.ClassTag
 
 package object array {
   def getUnsafe(): Unsafe = {
@@ -19,7 +20,7 @@ package object array {
     def flatten(fa: FlatFlowArray[A], n: Int): FlowArray[B]
   }
 
-  implicit def flattenFutInFa[A : ClassManifest] = new CanFlatten[FoldFuture[A], A] {
+  implicit def flattenFutInFa[A : ClassTag] = new CanFlatten[FoldFuture[A], A] {
     def flatten(fa: FlatFlowArray[FoldFuture[A]], n: Int) = {
       require(n == 1)
 
@@ -38,7 +39,7 @@ package object array {
     }
   }
 
-  implicit def flattenFaInFa[A : ClassManifest] = new CanFlatten[FlowArray[A], A] {
+  implicit def flattenFaInFa[A : ClassTag] = new CanFlatten[FlowArray[A], A] {
     def flatten(fa: FlatFlowArray[FlowArray[A]], n: Int) = {
       val res = new HierFlowArray(fa.data, n)
       res.generatedBy(fa)

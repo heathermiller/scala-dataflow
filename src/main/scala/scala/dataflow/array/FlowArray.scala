@@ -3,8 +3,9 @@ package scala.dataflow.array
 import scala.dataflow.Blocker
 import scala.dataflow.Future
 import scala.annotation.tailrec
+import scala.reflect.ClassTag
 
-abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer with SlicedJob {
+abstract class FlowArray[A : ClassTag] extends Blocker with FAJob.Observer with SlicedJob {
 
   import FlowArray._
   import SlicedJob._
@@ -16,11 +17,11 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
   def size: Int
   def length = size
 
-  def map[B : ClassManifest](f: A => B): FlowArray[B] = mapToFFA(f)
+  def map[B : ClassTag](f: A => B): FlowArray[B] = mapToFFA(f)
 
-  def zip[B : ClassManifest](that: FlowArray[B]) = zipMap(that)((_,_))
+  def zip[B : ClassTag](that: FlowArray[B]) = zipMap(that)((_,_))
 
-  def zipMap[B : ClassManifest, C : ClassManifest](
+  def zipMap[B : ClassTag, C : ClassTag](
     that: FlowArray[B])(f: (A,B) => C): FlowArray[C] = {
       
     require(size == that.size)
@@ -28,7 +29,7 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
     setupDep(FAZipMapJob(that, ret, f), ret)
   }
 
-  def flatMapN[B : ClassManifest](n: Int)(f: A => FlowArray[B]): FlowArray[B] = {
+  def flatMapN[B : ClassTag](n: Int)(f: A => FlowArray[B]): FlowArray[B] = {
     val ret = newFA[B](n)
     setupDep(FAFlatMapJob(ret, f, n), ret)
   }
@@ -55,18 +56,18 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
     slice(x * size / n, (x + 1) * size / n)
   }
 
-  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassManifest[B]): FlowArray[B]
+  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassTag[B]): FlowArray[B]
 
   def transpose(step: Int): FlowArray[A] = transpose(0, size - 1)(step)
   private[array] def transpose(from: Int, to: Int)(step: Int): FlowArray[A]
 
-  def zipMapFold[B : ClassManifest, C](that: FlowArray[B])
+  def zipMapFold[B : ClassTag, C](that: FlowArray[B])
                                       (f: (A,B) => C)
                                       (z: C)
                                       (op: (C,C) => C): FoldFuture[C] =
                                         zipMapFold(0, size - 1)(that)(f)(z)(op)
 
-  def zipMapFold[B : ClassManifest, C](from: Int, to: Int)
+  def zipMapFold[B : ClassTag, C](from: Int, to: Int)
                                       (that: FlowArray[B])
                                       (f: (A,B) => C)
                                       (z: C)
@@ -98,7 +99,7 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
     if (!tryAddObserver(obs)) obs.jobDone()
   }
 
-  private[array] def mapToFFA[B : ClassManifest](f: A => B): FlatFlowArray[B] = {
+  private[array] def mapToFFA[B : ClassTag](f: A => B): FlatFlowArray[B] = {
     val ret = newFA[B]
     setupDep(FAMapJob(ret, f), ret)
     ret
@@ -106,10 +107,10 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
 
   ///// Private utility functions /////
 
-  @inline private final def newFA[B : ClassManifest] = 
+  @inline private final def newFA[B : ClassTag] = 
     new FlatFlowArray(new Array[B](length))
 
-  @inline private final def newFA[B : ClassManifest](n: Int) = 
+  @inline private final def newFA[B : ClassTag](n: Int) = 
     new HierFlowArray(new Array[FlowArray[B]](size), n)
 
   @inline private final def setupDep[B](gen: JobGen, ret: ConcreteFlowArray[B]) = {
@@ -122,7 +123,7 @@ abstract class FlowArray[A : ClassManifest] extends Blocker with FAJob.Observer 
 
 object FlowArray {
 
-  def tabulate[A : ClassManifest](n: Int)(f: Int => A): FlowArray[A] = {
+  def tabulate[A : ClassTag](n: Int)(f: Int => A): FlowArray[A] = {
     val ret = new FlatFlowArray(new Array[A](n))
     val job = FAGenerateJob(ret, f)
     ret.generatedBy(job)
@@ -130,7 +131,7 @@ object FlowArray {
     ret
   }
 
-  def apply[A : ClassManifest](xs: A*) = new FlatFlowArray(xs.toArray)
+  def apply[A : ClassTag](xs: A*) = new FlatFlowArray(xs.toArray)
 
   def setPar(n: Int) = FAJob.setPar(n)
 

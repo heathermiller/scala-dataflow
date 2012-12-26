@@ -1,6 +1,8 @@
 package scala.dataflow.array
 
-private[array] class FAFlatMapJob[A : ClassManifest, B : ClassManifest] private (
+import scala.reflect.ClassTag
+
+private[array] class FAFlatMapJob[A : ClassTag, B : ClassTag] private (
   val src: FlatFlowArray[A],
   val dst: HierFlowArray[B],
   val f: A => FlowArray[B],
@@ -37,7 +39,7 @@ object FAFlatMapJob {
 
   import FAJob.JobGen
 
-  def apply[A : ClassManifest, B : ClassManifest](
+  def apply[A : ClassTag, B : ClassTag](
     dst: HierFlowArray[B],
     f: A => FlowArray[B],
     n: Int
