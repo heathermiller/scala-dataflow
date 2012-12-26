@@ -132,4 +132,6 @@ object FlowArray {
 
   def apply[A : ClassManifest](xs: A*) = new FlatFlowArray(xs.toArray)
 
+  def setPar(n: Int) = FAJob.setPar(n)
+
 }

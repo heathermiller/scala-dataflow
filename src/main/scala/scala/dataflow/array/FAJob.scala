@@ -462,7 +462,12 @@ object FAJob {
   case object ObsEmpty extends ObsStack
   case object ObsNotified extends ObsStack
 
-  val forkjoinpool = new ForkJoinPool
+  var parallelism: Int = scala.collection.parallel.availableProcessors
+  lazy val forkjoinpool = new ForkJoinPool(parallelism)
+
+  def setPar(n: Int) = {
+    parallelism = n
+  }
 
   def schedule(job: FAJob) = Thread.currentThread match {
     case fjw: ForkJoinWorkerThread =>
@@ -473,9 +478,8 @@ object FAJob {
 
   def threshold(size: Int) = (
     math.max(512,
-      scala.collection.parallel.thresholdFromSize(
-      size, scala.collection.parallel.availableProcessors
-    ))
+      scala.collection.parallel.thresholdFromSize(size, parallelism)
+           )
   )
 
   trait JobGen[A] extends Function4[FlatFlowArray[A], Int, Int, Int, FAJob] {
