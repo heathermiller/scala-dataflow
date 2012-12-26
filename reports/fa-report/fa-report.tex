@@ -1,0 +1,60 @@
+\documentclass[runningheads,a4paper,fleqn]{llncs}
+
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{alltt}
+\usepackage{lineno}
+\usepackage{graphicx}
+\usepackage[normalem]{ulem}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows,petri,topaths}
+\usepackage{tkz-berge}
+
+\begin{document}
+
+\title{Flow-Arrays: Barrier-Free Par-Arrays}
+\author{Tobias Schlatter\inst{1} \and Aleksandar Prokopec\inst{2} \and
+  Heather Miller\inst{2} \and Philipp Haller\inst{2} \and Martin
+  Odersky\inst{2}}
+
+\authorrunning{Tobias Schlatter}
+
+\institute{Student, EPFL \and Advisors, EPFL}
+
+\maketitle
+
+\begin{abstract}
+  In \cite{FP12} we proposed an unordered, barrier- and lock-free,
+  parallel datastructure, the FlowPools. The following attempts to
+  implement a bigger application using FlowPools, showed that the lack
+  of ordering is very limiting. The proposed FlowArrays do not have
+  this limitation: Having a very similar structure than ParArrays
+  \cite{collect11}, FlowArrays eliminate the need to block inbetween
+  monadic operations on ParArrays while exposing a very similar
+  interface to the programmer.
+  %% TODO write about performance
+\end{abstract}
+
+\section{Introduction}
+The goal of this section is to briefly remind the reader of the
+semantics and programming interface of a FlowPool and the basic ideas
+behind the implementation of SLFPs to allow for better understanding
+of the implementation of MLFPs.
+
+\section{Implementation}
+
+\section{Evaluation}
+
+\section{Conclusion}
+
+\bibliographystyle{abbrv}
+\bibliography{bib}
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
