@@ -6,6 +6,7 @@
 \usepackage{alltt}
 \usepackage{lineno}
 \usepackage{graphicx}
+\usepackage{subfigure}
 \usepackage[normalem]{ulem}
 
 \usepackage{tikz}
@@ -23,6 +24,8 @@
 
 \institute{Student, EPFL \and Advisors, EPFL}
 
+\graphicspath{{figs/}}
+
 \maketitle
 
 \begin{abstract}
@@ -38,14 +41,77 @@
 \end{abstract}
 
 \section{Introduction}
-The goal of this section is to briefly remind the reader of the
-semantics and programming interface of a FlowPool and the basic ideas
-behind the implementation of SLFPs to allow for better understanding
-of the implementation of MLFPs.
+In this section we'll first outline how FlowArrays try to improve on
+ParArrays from an abstract perspective. Then we'll show some of the
+difficulties that arise particularly with this aproach. The next
+section (c.f. page~\pageref{sec:implementation}) will explain in more
+detail, how FlowArrays are implemented.
+
+The evaluation section (c.f. page~\pageref{sec:evaluation}) will
+analyze the performance of FlowArrays.
+%% TODO write more
+
+\subsection{Barrier-Freedom}
+FlowArrays in comparison to ParArrays are barrier-free: We'll
+illustrate on the simplest example, a single \texttt{map} map
+operation, how these two datastructures differ.
+
+Let's consider the following code for ParArrays and
+FlowArrays. Fig.~\ref{fig:barrier-free} shows an schematic
+illustration of what's going on.
+
+\noindent
+\begin{minipage}[t]{.45\textwidth}
+\begin{alltt}
+{\scriptsize
+val pa1 = ParArray.tabulate(n)(x => x*x)
+val pa2 = pa1.map(_ * 2)
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[t]{.45\textwidth}
+\begin{alltt}
+{\scriptsize
+val fa1 = FlowArray.tabulate(n)(x => x*x)
+val fa2 = fa1.map(_ * 2)
+}
+\end{alltt}
+\end{minipage}
+
+In both cases, we first create a Par/FlowArray using a tabulate. Both
+Par- and FlowArrays will use exponential task splitting
+\cite{collect11,cong08} to distribute the workload of calculating the
+individual elements. The crucial difference between ParArrays and
+FlowArrays starts here: With ParArrays, the call to \texttt{tabulate}
+(and any other function for that matter) will only return, once every
+element has been calculated. In contrast, the call to
+\texttt{tabulate} on FlowArrays will return immediately, yielding an
+array whose elements are specified, but not yet calculated.
+
+When calling \texttt{map} on the first Par/FlowArray, this difference
+becomes even clearer: ParArrays will do the same thing as for
+\texttt{tabulate}: Split up the task of calculation and start right
+away. FlowArrays however, will align the task blocks and start
+calculating the elements, once the elements the result depends on have
+been calculated (in our case the result of the \texttt{tabulate}). So
+contrary to ParArrays, FlowArrays are able to start subsequent
+calculations partially, even if not all the elements of the original
+array have been calculated.
+
+\begin{figure}
+  \centering
+  \subfigure[ParArray] {\includegraphics{barrier-free-pa}}
+  \qquad
+  \subfigure[FlowArray]{\includegraphics{barrier-free-fa}}
+  \caption{Illustration of barrier-freedom of FlowArrays}
+  \label{fig:barrier-free}
+\end{figure}
 
 \section{Implementation}
+\label{sec:implementation}
 
 \section{Evaluation}
+\label{sec:evaluation}
 
 \section{Conclusion}
 
