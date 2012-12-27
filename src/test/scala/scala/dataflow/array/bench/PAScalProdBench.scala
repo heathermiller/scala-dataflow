@@ -13,7 +13,7 @@ object PAScalProdBench extends testing.Benchmark with Utils.Props {
     
     val res = p.fold(0)(_ + _)
 
-    println(res)
+    res
   }
 
 }

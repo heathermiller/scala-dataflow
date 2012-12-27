@@ -14,9 +14,9 @@ libraryDependencies += "junit" % "junit" % "4.10" % "test"
 
 libraryDependencies  += "org.scalanlp" % "breeze-math_2.9.2" % "0.1"
 
-resolvers += "Sonatype OSS Snapshots" at
-  "https://oss.sonatype.org/content/repositories/snapshots"
+//resolvers += "Sonatype OSS Snapshots" at
+//  "https://oss.sonatype.org/content/repositories/snapshots"
 
-libraryDependencies += "com.github.axel22" %% "scalameter" % "0.2"
+//libraryDependencies += "com.github.axel22" %% "scalameter" % "0.2"
 
-testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework")
+//testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework")
