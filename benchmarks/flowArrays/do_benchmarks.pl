@@ -20,7 +20,7 @@ my $gconf = {
         FAScalProdBenchZM  => { par => $def_par,   size => $def_chara_size },
         FAScalProdBenchZMF => { par => $def_par,   size => $def_chara_size },
         PAScalProdBench    => { par => $def_par,   size => $def_chara_size }
-    }
+    },
     eos =>  {
         FAScalProdBench    => { par => $def_par,   size => $def_eos_size },
         FAScalProdBenchZM  => { par => $def_par,   size => $def_eos_size },
