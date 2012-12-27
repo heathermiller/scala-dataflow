@@ -12,8 +12,15 @@ my $N = 20;
 
 my $def_par       = [ 1, 2, 4, 8 ];
 my $def_eos_size  = [ 6000000, 12000000, 24000000 ];
+my $def_chara_size  = [ 5000000, 10000000, 15000000, 20000000, 25000000, 30000000 ];
 
 my $gconf = {
+    chara => {
+        FAScalProdBench    => { par => $def_par,   size => $def_chara_size },
+        FAScalProdBenchZM  => { par => $def_par,   size => $def_chara_size },
+        FAScalProdBenchZMF => { par => $def_par,   size => $def_chara_size },
+        PAScalProdBench    => { par => $def_par,   size => $def_chara_size }
+    }
     eos =>  {
         FAScalProdBench    => { par => $def_par,   size => $def_eos_size },
         FAScalProdBenchZM  => { par => $def_par,   size => $def_eos_size },
