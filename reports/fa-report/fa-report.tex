@@ -41,6 +41,10 @@
 \end{abstract}
 
 \section{Introduction}
+%% This is the usual blah about nothing but which is required...
+
+
+\section{Overview}
 In this section we'll first outline how FlowArrays try to improve on
 ParArrays from an abstract perspective. Then we'll show some of the
 difficulties that arise particularly with this aproach. The next
@@ -61,7 +65,7 @@ FlowArrays. Fig.~\ref{fig:barrier-free} shows an schematic
 illustration of what's going on.
 
 \noindent
-\begin{minipage}[t]{.45\textwidth}
+\begin{minipage}[t]{.5\textwidth}
 \begin{alltt}
 {\scriptsize
 val pa1 = ParArray.tabulate(n)(x => x*x)
@@ -69,7 +73,7 @@ val pa2 = pa1.map(_ * 2)
 }
 \end{alltt}
 \end{minipage}
-\begin{minipage}[t]{.45\textwidth}
+\begin{minipage}[t]{.5\textwidth}
 \begin{alltt}
 {\scriptsize
 val fa1 = FlowArray.tabulate(n)(x => x*x)
@@ -108,6 +112,49 @@ array have been calculated.
 \end{figure}
 
 \subsection{Dependency Tracking}
+We'll now describe in detail what happens, when a \texttt{map} is
+called on a FlowArray depending on the different possible states of
+its blocks. Fig~\ref{fig:dep-track} illustrates the different
+scenarios that may happen. In the figure, the circles represent jobs:
+grey if executing or submitted to the execution queue, white if
+waiting in an internal queue of another job (indicated by the dashed
+arrow). The rectangles represent data blocks of a FlowArray: white if
+(partially) empty, grey if fully calcuated.
+
+When a \texttt{map} is called on a FlowArray, each block chain will
+start in one of the three first states and then propagate to the right
+until both blocks are fully calculated. The cases are the following:
+
+\begin{figure}
+  \centering
+  \includegraphics{dependency-tracking}
+  \caption{Illustration of the dependency tracking in FlowArrays}
+  \label{fig:dep-track}
+\end{figure}
+
+
+\begin{enumerate}
+\item Both blocks are not yet calculated and the job for the first
+  block still depends on some other job: The second job is added to
+  the first job's dependency queue.
+\item The job for the first block is scheduled for execution but not
+  yet finished: The second job is added to the first job's dependency
+  queue.
+\item Calculation of the first block is already completed: The second
+  job is scheduled for execution immediately.
+\item Both blocks are completely calculated.
+\end{enumerate}
+
+\subsection{Operations}
+We have seen how dataflow with dependency tracking can be used in
+monadic operations on the example of a \texttt{map}. In this section
+we'll describe the caveats of other common monadic operations on
+arrays.
+
+\subsubsection{Fold}
+When doing out of order folding, each block has first to be reduced to
+a single element, then these results have to be combined to the final
+result. 
 
 
 \section{Implementation}
