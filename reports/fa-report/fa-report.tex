@@ -178,6 +178,24 @@ requires the accumulation function to be associative, not
 commutative.
 
 \subsubsection{FlatMap}
+When calling flatMap on a FlowArray, the size of the resulting
+FlowArray is not known until the inner FlowArrays are created and
+hence their size can be read. However, since this happens
+asynchronously, the size of the resulting FlowArray would not be known
+at its creation. This poses several challenges:
+
+\begin{itemize}
+\item The interface of FlowArrays becomes more complex
+\item Increased difficulty in memory allocation
+\item Increased difficulty in scheduling of subsequent calls
+\end{itemize}
+
+Instead of deferring the size calculation, FlowArrays require to pass
+the size of the resulting FlowArrays of a \texttt{flatMap} operation
+when calling it. This greatly facilitates further handling --
+especially scheduling -- of the resulting FlowArray.
+
+
 %% Issue N
 %% Issue Hierarchy
 
