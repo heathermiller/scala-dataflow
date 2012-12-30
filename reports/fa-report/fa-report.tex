@@ -178,6 +178,7 @@ requires the accumulation function to be associative, not
 commutative.
 
 \subsubsection{FlatMap}
+
 When calling flatMap on a FlowArray, the size of the resulting
 FlowArray is not known until the inner FlowArrays are created and
 hence their size can be read. However, since this happens
@@ -195,12 +196,46 @@ the size of the resulting FlowArrays of a \texttt{flatMap} operation
 when calling it. This greatly facilitates further handling --
 especially scheduling -- of the resulting FlowArray.
 
+Further, the FlowArray now needs to keep track of dependencies twice:
+Once, whether a sub-FlowArray has already been created, second,
+whether a given one of its blocks is already calculated. Refer to
+fig~\ref{fig:flatMap-dependency} for an illustration. This tracking
+requires the outer FlowArray to keep references to all the created
+ones. In order to avoid unnecessary copying of data, the FlowArray
+remains in this hierarchical structure instead of being truly
+flattened.
 
-%% Issue N
-%% Issue Hierarchy
+\begin{figure}
+  \centering
+  \includegraphics{flatMap-dependency}
+  \caption{Illustration of depenceny-tracking requirements in a
+    Hierarchical FlowArray resulting from a \texttt{flatMap}}
+  \label{fig:flatMap-dependency}
+\end{figure}
+
+When a \texttt{map} is called on one of these \emph{Hierarchical
+  FlowArrays} individual \texttt{maps} are called for each sub array
+and only then the resulting data is written in a flat array. This
+allows to ``flatten out'' those hierarchical structures without
+additional computation costs. Note that this scheme does require the
+blocks to be re-aligned at a later point in time to remove the
+arbitrary splitting imposed by the hierarchy introduced by the
+\texttt{flatMap}. For details how block splitting is propagated
+through dependencies, please refer to
+section~\ref{sec:implementation}.
 
 \subsubsection{Zip}
-%% Issue from flatMap
+When zipping, again we impose a restriction on the size: the size of
+the two FlowArrays which are being zipped need to be of the same
+size. This is again to ease scheduling and implementation. However, in
+this case, minor changes in the implementation could easily remove
+this limitation (unlike \texttt{flatMap}, where the interface would
+need to undergo a fundamental change).
+
+Further, the splitting of the two FlowArrays which are being zipped
+may be totally different, e.g. due to a preceding \texttt{flatMap} on
+one of them. Hence -- again -- re-alignment of blocks is required,
+before the zipped tuples can be created.
 
 \section{Implementation}
 \label{sec:implementation}
