@@ -16,8 +16,8 @@ my $def_eos_size  = [ 6000000, 12000000, 24000000 ];
 
 my $chara_def_par  = [ 8 ];
 my $chara_pars     = [ 1, 2, 4, 8 ];
-my $chara_def_size = [ 6000000 ];
-my $chara_sizes    = [ 5000000, 6000000, 7000000, 8000000, 9000000, 10000000 ];
+my $chara_def_size = [ 5000000 ];
+my $chara_sizes    = [ 2000000, 3000000, 4000000, 5000000, 6000000, 7000000 ];
 
 my $chara_fa_def_bench = [ { par => $chara_def_par, size => $chara_sizes },
 			   { par => $chara_pars,    size => $chara_def_size } ];
