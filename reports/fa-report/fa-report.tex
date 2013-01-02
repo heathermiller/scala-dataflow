@@ -246,7 +246,121 @@ different speed at runtime.
 \section{Implementation}
 \label{sec:implementation}
 
+This section describes in some more detail, how the requirements
+explained in section~\ref{sec:overview} are implemented. Note that
+this is a simplified view and some interfaces may not be described
+with all methods or all arguments of the methods. Further, methods may
+be simplified (e.g. not tail-recursive for easier
+understanding). Please refer to scaladoc for an API documentation.
+
 \subsection{FlowArray Jobs}
+The class \texttt{FAJob} is the heart-piece of the whole FlowArray
+implementation: It handles computation, task splitting and dependency
+tracking. An \texttt{FAJob} has a range it operates on
+(\texttt{start,end}) and an abstract method that does the computation
+(\texttt{doCompute}). Further, the following methods are supported for
+dependency tracking, splitting and scheduling:
+
+\begin{description}
+  \item[\texttt{depending(newJob: FAJob): Unit}] Submits another \texttt{FAJob} as being
+    dependent on this \texttt{FAJob}. This will schedule the submitted
+    \texttt{FAJob}, once this \texttt{FAJob} is completed.
+  \item[\texttt{split(): Unit}] Splits this job into two
+    subjobs. Forces dependent tasks to be split too and hands off
+    dependency (see next section for details on splitting). This
+    method is called when computation of a \texttt{FAJob} starts and
+    its size is above the threshold for exponential splitting.
+  \item[\texttt{done: Boolean}] Checks whether this \texttt{FAJob} is
+    done. Queries subjobs if this \texttt{FAJob} is split.
+  \item[\texttt{sliceJobs(from: Int, to: Int): Option[(Seq[FAJob],
+      Boolean)]}] Returns the jobs which are responsible for
+    calculating a given slice. May require the caller to check again,
+    once the jobs are completed (indicated by the boolean flag). If
+    the slice is completed, \texttt{None} is returned.
+  \item[\texttt{delegateThen(d: Seq[FAJob])(thn: () => Unit): Unit}]
+    This method may be called from inside the \texttt{doCompute}
+    method only. It halts calculation of this \texttt{FAJob}, until
+    all jobs in \texttt{d} are completed. It then (optionally)
+    executes the closure \texttt{thn}.
+\end{description}
+
+\subsubsection{Splitting}
+First
+When calling \texttt{split} on a \texttt{FAJob}, two things have to be
+done:
+\begin{enumerate}
+\item Split the job in two smaller subjobs of (more or less) equal
+  size.
+\item Split the dependent jobs and delegate the dependency to the
+  subjobs: We would like to have dependency tracking on the lowest
+  level that calculation is done in order to start new jobs as soon as
+  possible (otherwise we'll be back at ParArrays).
+\end{enumerate}
+
+The first is easy: Divide the range of the \texttt{FAJob} into two
+(more or less) equal ranges and create two new \texttt{FAJobs} with
+those ranges.
+
+The second is a bit more tricky. Please refer to fig~\ref{fig:split-ill}
+for an illustration of how this is done. You find pesudocode in
+fig~\ref{fig:split-code}. The idea is the following: First, create the
+two subjobs and set the state of this \texttt{FAJob} to
+\texttt{Splitting}. It is now ``locked'' for any other operation. I.e. any
+other operation must help the splitting first (as the implementation
+is lock-free). Next, the dependent job must be split
+(recursively). Once this is done, the dependants of the subjobs may be
+set to these newly created subjobs. Finally the state of this
+\texttt{FAJob} may be set to \texttt{Split}.
+
+\begin{figure}
+  \centering
+  \includegraphics{split}
+  \caption{Step-by-step illustration of splitting with dependencies}
+  \label{fig:split-ill}
+\end{figure}
+
+\begin{figure}
+\begin{minipage}[t]{7cm}
+\begin{alltt}
+{\scriptsize
+def split(): (FAJob, FAJob) = state match \{
+  case os@PendingFree =>
+    val sj = newSubJobs
+    if (CAS(state, os, Split(sj))) sj
+    else split()
+  case os@PendingChain(nextJob) =>
+    val sj = newSubJobs
+    CAS(state, os, Splitting(sj, nextJob))
+    split()
+  case os@Splitting(j1, j2, nextJob) =>
+    val (nj1, nj2) = nextJob.split()
+    j1.setNext(nj1); j2.setNext(nj2)
+    CAS(state, os, Split(j1, j2))
+    (j1, j2)
+  case Split(j1, j2) => (j1, j2)
+  case _ => error("Job already started")
+\}
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[t]{4cm}
+\begin{alltt}
+{\scriptsize
+def compute() \{
+  if (needSplit) \{
+    val (j1, j2) = split()
+    invokeAll(j1, j2)
+  \} else \{
+    doCompute()
+  \}
+\}
+}
+\end{alltt}
+\end{minipage}
+\caption{Pseudo-code for splitting and how splitting is invoked upon
+  computation}
+\label{fig:split-code}
+\end{figure}
 
 \subsection{Slice Views}
 
