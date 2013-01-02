@@ -45,6 +45,7 @@
 
 
 \section{Overview}
+\label{sec:overview}
 In this section we'll first outline how FlowArrays try to improve on
 ParArrays from an abstract perspective. Then we'll show some of the
 difficulties that arise particularly with this aproach. The next
@@ -61,7 +62,7 @@ illustrate on the simplest example, a single \texttt{map} map
 operation, how these two datastructures differ.
 
 Let's consider the following code for ParArrays and
-FlowArrays. Fig.~\ref{fig:barrier-free} shows an schematic
+FlowArrays. Fig.~\ref{fig:barrier-free} shows a schematic
 illustration of what's going on.
 
 \noindent
@@ -154,13 +155,212 @@ arrays.
 \subsubsection{Fold}
 When doing out of order folding, each block has first to be reduced to
 a single element, then these results have to be combined to the final
-result. 
+result. During splitting of the jobs, one can create a binary tree of
+blocks along which one can later accumulate the elements;
+fig~\ref{fig:fa-fold} illustrates this approach.
 
+\begin{figure}
+  \centering
+  \includegraphics{fa-fold}
+  \caption{Illustration of \texttt{fold} on a FlowArray}
+  \label{fig:fa-fold}
+\end{figure}
+
+In order to keep the number of jobs (and hence the burden of managing
+them) minimal, rather then spawning a single job for each accumulation
+step in the tree, the job which finishes second on each node is
+responsible to calculate its accumulated value. Using this scheme, the
+same number of jobs are spawned as for a \texttt{map}.
+
+Note that this approach is preferable to a single element where
+completed elements aren accumulated using a CAS since the former
+does preserve the order in which elements are accumulated. I.e. it
+requires the accumulation function to be associative, not
+commutative.
+
+\subsubsection{FlatMap}
+
+When calling flatMap on a FlowArray, the size of the resulting
+FlowArray is not known until the inner FlowArrays are created and
+hence their size can be read. However, since this happens
+asynchronously, the size of the resulting FlowArray would not be known
+at its creation. This poses several challenges:
+
+\begin{itemize}
+\item The interface of FlowArrays becomes more complex
+\item Increased difficulty in memory allocation
+\item Increased difficulty in scheduling of subsequent calls
+\end{itemize}
+
+Instead of deferring the size calculation, FlowArrays require to pass
+the size of the resulting FlowArrays of a \texttt{flatMap} operation
+when calling it (therefore the name \texttt{flatMapN}). This greatly 
+facilitates further handling -- especially scheduling -- of the
+resulting FlowArray.
+
+Further, the FlowArray now needs to keep track of dependencies twice:
+Once, whether a sub-FlowArray has already been created, second,
+whether a given one of its blocks is already calculated. Refer to
+fig~\ref{fig:flatMap-dependency} for an illustration. This tracking
+requires the outer FlowArray to keep references to all the created
+ones. In order to avoid unnecessary copying of data, the FlowArray
+remains in this hierarchical structure instead of being truly
+flattened.
+
+\begin{figure}
+  \centering
+  \includegraphics{flatMap-dependency}
+  \caption{Illustration of depenceny-tracking requirements in a
+    Hierarchical FlowArray resulting from a \texttt{flatMap}}
+  \label{fig:flatMap-dependency}
+\end{figure}
+
+When a \texttt{map} is called on one of these \emph{Hierarchical
+  FlowArrays} individual \texttt{maps} are called for each sub array
+and only then the resulting data is written in a flat array. This
+allows to ``flatten out'' those hierarchical structures without
+additional computation costs. Note that this scheme does require the
+blocks to be re-aligned at a later point in time to remove the
+arbitrary splitting imposed by the hierarchy introduced by the
+\texttt{flatMap}. For details how block splitting is propagated
+through dependencies, please refer to
+section~\ref{sec:implementation}.
+
+\subsubsection{Zip}
+When zipping, again we impose a restriction on the size: the size of
+the two FlowArrays which are being zipped need to be of the same
+size. This is again to ease scheduling and implementation. However, in
+this case, minor changes in the implementation could easily remove
+this limitation (unlike \texttt{flatMap}, where the interface would
+need to undergo a fundamental change).
+
+Further, the splitting of the two FlowArrays which are being zipped
+may be totally different, e.g. due to a preceding \texttt{flatMap} on
+one of them. Hence -- again -- re-alignment of blocks is required,
+before the zipped tuples can be created. It is important to realize,
+that this may inherently lead to non-symmetric scheduling behaviour:
+Depending on which FlowArray is on the ``left'' of the \texttt{zip}
+call, the resulting splitting may be different, which may lead to
+different speed at runtime. 
 
 \section{Implementation}
 \label{sec:implementation}
 
+This section describes in some more detail, how the requirements
+explained in section~\ref{sec:overview} are implemented. Note that
+this is a simplified view and some interfaces may not be described
+with all methods or all arguments of the methods. Further, methods may
+be simplified (e.g. not tail-recursive for easier
+understanding). Please refer to scaladoc for an API documentation.
+
 \subsection{FlowArray Jobs}
+The class \texttt{FAJob} is the heart-piece of the whole FlowArray
+implementation: It handles computation, task splitting and dependency
+tracking. An \texttt{FAJob} has a range it operates on
+(\texttt{start,end}) and an abstract method that does the computation
+(\texttt{doCompute}). Further, the following methods are supported for
+dependency tracking, splitting and scheduling:
+
+\begin{description}
+  \item[\texttt{depending(newJob: FAJob): Unit}] Submits another \texttt{FAJob} as being
+    dependent on this \texttt{FAJob}. This will schedule the submitted
+    \texttt{FAJob}, once this \texttt{FAJob} is completed.
+  \item[\texttt{split(): Unit}] Splits this job into two
+    subjobs. Forces dependent tasks to be split too and hands off
+    dependency (see next section for details on splitting). This
+    method is called when computation of a \texttt{FAJob} starts and
+    its size is above the threshold for exponential splitting.
+  \item[\texttt{done: Boolean}] Checks whether this \texttt{FAJob} is
+    done. Queries subjobs if this \texttt{FAJob} is split.
+  \item[\texttt{sliceJobs(from: Int, to: Int): Option[(Seq[FAJob],
+      Boolean)]}] Returns the jobs which are responsible for
+    calculating a given slice. May require the caller to check again,
+    once the jobs are completed (indicated by the boolean flag). If
+    the slice is completed, \texttt{None} is returned.
+  \item[\texttt{delegateThen(d: Seq[FAJob])(thn: () => Unit): Unit}]
+    This method may be called from inside the \texttt{doCompute}
+    method only. It halts calculation of this \texttt{FAJob}, until
+    all jobs in \texttt{d} are completed. It then (optionally)
+    executes the closure \texttt{thn}.
+\end{description}
+
+\subsubsection{Splitting}
+First
+When calling \texttt{split} on a \texttt{FAJob}, two things have to be
+done:
+\begin{enumerate}
+\item Split the job in two smaller subjobs of (more or less) equal
+  size.
+\item Split the dependent jobs and delegate the dependency to the
+  subjobs: We would like to have dependency tracking on the lowest
+  level that calculation is done in order to start new jobs as soon as
+  possible (otherwise we'll be back at ParArrays).
+\end{enumerate}
+
+The first is easy: Divide the range of the \texttt{FAJob} into two
+(more or less) equal ranges and create two new \texttt{FAJobs} with
+those ranges.
+
+The second is a bit more tricky. Please refer to fig~\ref{fig:split-ill}
+for an illustration of how this is done. You find pesudocode in
+fig~\ref{fig:split-code}. The idea is the following: First, create the
+two subjobs and set the state of this \texttt{FAJob} to
+\texttt{Splitting}. It is now ``locked'' for any other operation. I.e. any
+other operation must help the splitting first (as the implementation
+is lock-free). Next, the dependent job must be split
+(recursively). Once this is done, the dependants of the subjobs may be
+set to these newly created subjobs. Finally the state of this
+\texttt{FAJob} may be set to \texttt{Split}.
+
+\begin{figure}
+  \centering
+  \includegraphics{split}
+  \caption{Step-by-step illustration of splitting with dependencies}
+  \label{fig:split-ill}
+\end{figure}
+
+\begin{figure}
+\begin{minipage}[t]{7cm}
+\begin{alltt}
+{\scriptsize
+def split(): (FAJob, FAJob) = state match \{
+  case os@PendingFree =>
+    val sj = newSubJobs
+    if (CAS(state, os, Split(sj))) sj
+    else split()
+  case os@PendingChain(nextJob) =>
+    val sj = newSubJobs
+    CAS(state, os, Splitting(sj, nextJob))
+    split()
+  case os@Splitting(j1, j2, nextJob) =>
+    val (nj1, nj2) = nextJob.split()
+    j1.setNext(nj1); j2.setNext(nj2)
+    CAS(state, os, Split(j1, j2))
+    (j1, j2)
+  case Split(j1, j2) => (j1, j2)
+  case _ => error("Job already started")
+\}
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[t]{4cm}
+\begin{alltt}
+{\scriptsize
+def compute() \{
+  if (needSplit) \{
+    val (j1, j2) = split()
+    invokeAll(j1, j2)
+  \} else \{
+    doCompute()
+  \}
+\}
+}
+\end{alltt}
+\end{minipage}
+\caption{Pseudo-code for splitting and how splitting is invoked upon
+  computation}
+\label{fig:split-code}
+\end{figure}
 
 \subsection{Slice Views}
 
