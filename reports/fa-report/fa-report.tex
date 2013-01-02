@@ -45,6 +45,7 @@
 
 
 \section{Overview}
+\label{sec:overview}
 In this section we'll first outline how FlowArrays try to improve on
 ParArrays from an abstract perspective. Then we'll show some of the
 difficulties that arise particularly with this aproach. The next
@@ -193,8 +194,9 @@ at its creation. This poses several challenges:
 
 Instead of deferring the size calculation, FlowArrays require to pass
 the size of the resulting FlowArrays of a \texttt{flatMap} operation
-when calling it. This greatly facilitates further handling --
-especially scheduling -- of the resulting FlowArray.
+when calling it (therefore the name \texttt{flatMapN}). This greatly 
+facilitates further handling -- especially scheduling -- of the
+resulting FlowArray.
 
 Further, the FlowArray now needs to keep track of dependencies twice:
 Once, whether a sub-FlowArray has already been created, second,
@@ -235,7 +237,11 @@ need to undergo a fundamental change).
 Further, the splitting of the two FlowArrays which are being zipped
 may be totally different, e.g. due to a preceding \texttt{flatMap} on
 one of them. Hence -- again -- re-alignment of blocks is required,
-before the zipped tuples can be created.
+before the zipped tuples can be created. It is important to realize,
+that this may inherently lead to non-symmetric scheduling behaviour:
+Depending on which FlowArray is on the ``left'' of the \texttt{zip}
+call, the resulting splitting may be different, which may lead to
+different speed at runtime. 
 
 \section{Implementation}
 \label{sec:implementation}
