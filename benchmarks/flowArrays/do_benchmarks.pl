@@ -10,9 +10,10 @@ use POSIX qw(strftime);
 my $version = "v2";
 my $N = 20;
 
-my $def_par       = [ 1, 2, 4, 8 ];
-my $def_eos_size  = [ 6000000, 12000000, 24000000 ];
-
+my $eos_def_par  = [ 4 ];
+my $eos_pars     = [ 1, 2, 3, 4 ];
+my $eos_def_size = [ 5000000 ];
+my $eos_sizes    = [ 2000000, 3000000, 4000000, 5000000, 6000000, 7000000 ];
 
 my $chara_def_par  = [ 8 ];
 my $chara_pars     = [ 1, 2, 4, 8 ];
@@ -21,6 +22,9 @@ my $chara_sizes    = [ 2000000, 3000000, 4000000, 5000000, 6000000, 7000000 ];
 
 my $chara_fa_def_bench = [ { par => $chara_def_par, size => $chara_sizes },
 			   { par => $chara_pars,    size => $chara_def_size } ];
+
+my $eos_fa_def_bench = [ { par => $eos_def_par, size => $eos_sizes },
+			   { par => $eos_pars,    size => $eos_def_size } ];
     
 my $gconf = {
     chara => {
@@ -30,10 +34,10 @@ my $gconf = {
         PAScalProdBench    => [ { par => $chara_def_par, size => $chara_sizes }]
     },
     eos =>  {
-        FAScalProdBench    => [{ par => $def_par,   size => $def_eos_size }],
-        FAScalProdBenchZM  => [{ par => $def_par,   size => $def_eos_size }],
-        FAScalProdBenchZMF => [{ par => $def_par,   size => $def_eos_size }],
-        PAScalProdBench    => [{ par => $def_par,   size => $def_eos_size }]
+        FAScalProdBench    => $eos_fa_def_bench,
+        FAScalProdBenchZM  => $eos_fa_def_bench,
+        FAScalProdBenchZMF => $eos_fa_def_bench,
+        PAScalProdBench    => [ { par => $eos_def_par, size => $eos_sizes }]
     }
 };
 
