@@ -179,6 +179,7 @@ requires the accumulation function to be associative, not
 commutative.
 
 \subsubsection{FlatMap}
+\label{sssec:flatMapN}
 
 When calling flatMap on a FlowArray, the size of the resulting
 FlowArray is not known until the inner FlowArrays are created and
@@ -224,7 +225,7 @@ blocks to be re-aligned at a later point in time to remove the
 arbitrary splitting imposed by the hierarchy introduced by the
 \texttt{flatMap}. For details how block splitting is propagated
 through dependencies, please refer to
-section~\ref{sec:implementation}.
+section~\ref{sssec:imp-hier-fas}.
 
 \subsubsection{Zip}
 When zipping, again we impose a restriction on the size: the size of
@@ -362,9 +363,137 @@ def compute() \{
 \label{fig:split-code}
 \end{figure}
 
-\subsection{Slice Views}
+\subsection{FlowArray}
+FlowArrays are the trait exposed to the API user. They (currently)
+support the following common monadic operations \texttt{map},
+\texttt{fold}, \texttt{flatMapN}\footnote{See
+  section~\ref{sssec:flatMapN} on why the \texttt{N} in
+  \texttt{flatMapN}}, \texttt{zip}, \texttt{slice}, \texttt{flatten}
+and the generator \texttt{tabulate}.
 
-\subsection{Hierarchical FlowArrays}
+Further, the a bit strange operation \texttt{transpose} is supported
+to allow for matrix multiplication. For a more detailed view on
+certain operations, have a look at
+section~\ref{ssec:imp-operations}. Throughout the following sections,
+the operation \texttt{map} is used as an example.
+
+Internally two major types exist: \texttt{ConcreteFlowArrays} and
+Views. \texttt{ConcreteFlowArrays} store actual data -- the most
+trivial being the \texttt{FlatFlowArray}, which just wraps around an
+Array. Views on the other hand expose data from
+\texttt{ConcreteFlowArrays} under a different form -- currently the
+only supported view is the \texttt{FlowArraySliceView} which exposes
+only a part of another \texttt{FlowArray}. These internal types will
+be described later on.
+
+\subsubsection{Job Dispatch}
+Job creation for monadic operations is handled through the abstract
+method \texttt{dispatch}, which allows to dispatch a job specified by
+a closure -- a \texttt{JobGen} -- to operate on a given range of the
+FlowArray and returns the job which handles the block dependency
+management for this calculation. Fig~\ref{fig:dispatch-code} shows the
+signatures for \texttt{dispatch} and \texttt{JobGen} and how dispatch
+can be used to implement the monadic operation \texttt{map}.
+
+\begin{figure}
+\begin{minipage}[t]{6cm}
+\begin{alltt}
+{\scriptsize
+def dispatch(
+  gen: JobGen[A],
+  dstOffset: Int,
+  srcOffset: Int,
+  length: Int
+): FAJob
+
+def map[B](f: A => B): FlowArray[B] = \{
+    val ret = newFlowArray[B](this.size)
+    val job = this.dispatch(FAMapJob(ret, f))
+    ret.generatedBy(job)
+    ret
+\}
+}
+\end{alltt}
+\end{minipage}
+\begin{minipage}[t]{7cm}
+\begin{alltt}
+{\scriptsize
+trait JobGen[A] \{
+  def apply(
+    src: FlatFlowArray[A],
+    dstOffset: Int,
+    srcOffset: Int,
+    length: Int
+  ): FAJob
+\}
+}
+\end{alltt}
+\end{minipage}
+\caption{Signatures for \texttt{dispatch} and \texttt{JobGen}, example
+  usage of \texttt{dispatch} with \texttt{map}.}
+\label{fig:dispatch-code}
+\end{figure}
+
+It is important to note that when dispatching, the target of the
+operation is only referenced by the \texttt{JobGen}: In the example of
+\texttt{map}, the statement \texttt{FAMapJob(ret, f)} creates a
+\texttt{JobGen} which writes to \texttt{ret} using transformation
+function \texttt{f}). We therefore see, that dispatching FlowArray
+does not know the target of the operation (and does not need to
+know). This allows us to use the same construct for more complex
+operations.
+
+\subsubsection{Blocking}
+FlowArrays also support blocking to actually retrieve the data that
+has been (or will be) calculated. The operation \texttt{blocking} on
+the FlowArray suspends execution of the calling thread until all
+calculation is done and then returns the data as Array. This may
+require copying or consolidation of data (for example when
+\texttt{blocking} is called on a view).
+
+\subsubsection{FlatFlowArray}
+The most easy case of a FlowArray: Just a wrapper around a simple
+Array which handles the completion and the dependency tracking. The
+\texttt{dispatch} method calls the \texttt{JobGen} directly (as its
+signature suggests), the \texttt{blocking} method waits for the
+assigned job to complete and then just returns a reference to the
+internal Array.
+
+\subsubsection{Slice Views}
+\texttt{FlowArraySliceViews} wrap around a \texttt{ConcreteFlowArray}
+and expose a given part of it. The \texttt{dispatch} method adjusts 
+offset and length and proxies to \texttt{dispatch} of the inner
+\texttt{ConcreteFlowArray}. The \texttt{blocking} method waits for the
+smallest covering subjob of the inner \texttt{ConcreteFlowArray} and
+then copies the required elements to a new Array.
+
+\subsubsection{Hierarchical FlowArrays}
+\texttt{HierFlowArrays} are the result of \texttt{flatMapN} operations
+(see section~\ref{sssec:flatMapN} for the big picture). This is by far
+the most complex concrete implementation of a FlowArray. The
+\texttt{dispatch} method needs to dispatch a job for each inner
+FlowArray of the \texttt{HierFlowArrays}. However, since the number of
+inner FlowArrays is big (otherwise no FlowArray would have been used),
+this needs to be done asynchronously. Further, the multiple dispatched
+jobs need then to be waited on and regrouped by the outer job in order
+to fullfill the whole dependency tracking requirement (remember
+fig~\ref{fig:flatMap-dependency} on
+page~\ref{fig:flatMap-dependency} for an illustration on the
+double dependency tracking that is required).
+
+The \texttt{blocking} method needs to flatten the hierarchical
+structure into a single array by copying the data from the inner
+FlowArrays. This copying is slow and somewhat unnecessary which 
+was the reason for the creation of Hierarchical FlowArrays in the
+first place. One might improve on this by providing indexed access to
+elements only in FlowArrays.
+
+\subsection{Operations}
+\label{ssec:imp-operations}
+
+\subsubsection{Flatten}
+
+\subsubsection{Transpose?}
 
 \section{Evaluation}
 \label{sec:evaluation}
