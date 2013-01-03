@@ -11,9 +11,9 @@ my $version = "v2";
 my $N = 20;
 
 my $eos_def_par  = [ 4 ];
-my $eos_pars     = [ 1, 2, 3, 4 ];
-my $eos_def_size = [ 5000000 ];
-my $eos_sizes    = [ 2000000, 3000000, 4000000, 5000000, 6000000, 7000000 ];
+my $eos_pars     = [ 1, 2, 4 ];
+my $eos_def_size = [ 10000000 ];
+my $eos_sizes    = [ 8000000, 9000000, 10000000, 11000000, 12000000, 13000000 ];
 
 my $chara_def_par  = [ 8 ];
 my $chara_pars     = [ 1, 2, 4, 8 ];
