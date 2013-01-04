@@ -67,17 +67,30 @@ sub exec_bench {
     my ($bench,$par,$size) = @_;
     my $sbtcommand = "sbt";
     my $arglen = @ARGV;
+
+    my @gctimes = (0.0) x $N;
+    my $benchi = 0;
+
     if ($arglen > 0) {
       $sbtcommand = $ARGV[0];
     }
     open(BENCH,
          $sbtcommand . " 'bench -Dsize=$size -Dpar=$par scala.dataflow.array.bench.$bench $N' |");
     while (<BENCH>) {
+        $gctimes[$benchi] += $1 * 1000 if (/^\[GC \[PSYoungGen: [^]]+\] [^]]+, ([0-9.]+) secs]/);
+        $benchi++ if (/^\[Full GC \(System\) /);
+        
         if (/^scala.dataflow.array.bench/) {
+            chomp;
+            $" = "\t";
             print LOG "$host\t$version\t$bench\t$par\t$size\t";
             print LOG $_;
+            print LOG "\t@gctimes\n";
             print "$host\t$version\t$bench\t$par\t$size\t";
-	    print $_;
+            print $_;
+            print "\t@gctimes\n";
+            $benchi = 0;
+            @gctimes = (0.0) x $N;
         }
     }
     close(BENCH);
