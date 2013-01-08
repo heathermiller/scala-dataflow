@@ -1,81 +1,74 @@
 ## Read log files
 # Read file list
-files <- list.files(path = 'data', pattern = 'eos_2013-01-03T.*\\.log')
+## files <- list.files(path = 'data', pattern = ' eos_2013-01-04T18.57.37_bench.log');
 
-# Initialize data frame
-draw <- data.frame()
+## # Initialize data frame
+## draw <- data.frame()
 
-# Read all log files
-for (f in files) {
-  tmp <- read.csv(paste('data',f, sep="/"),
-                  sep="\t",
-                  header=FALSE,
-                  col.names = c(
-                    "machine",
-                    "version",
-                    "bench",
-                    "par",
-                    "size",
-                    "class",
-                    paste("x", 1:20, sep=".")))
-  draw <- rbind(draw, tmp)
-  rm(tmp)
-}
+## # Read all log files
+## for (f in files) {
+##   tmp <- read.csv(paste('data',f, sep="/"),
+##                   sep="\t",
+##                   header=FALSE,
+##                   col.names = c(
+##                     "machine",
+##                     "version",
+##                     "bench",
+##                     "par",
+##                     "size",
+##                     "class",
+##                     paste("x", 1:20, sep=".")))
+##   draw <- rbind(draw, tmp)
+##   rm(tmp)
+## }
+
+draw <- read.csv('data/eos_2013-01-04T18.57.37_bench.log',
+                 sep="\t",
+                 header=FALSE,
+                 col.names = c(
+                   "machine",
+                   "version",
+                   "bench",
+                   "par",
+                   "size",
+                   "class",
+                   c(paste("x",  1:20, sep="."),
+                     paste("gc", 1:20, sep="."))
+                   )
+                 )
 
 # Reshape to long format and drop first 5 measures
 dat <- reshape(draw,
-               varying = list(paste("x", 6:20, sep=".")),
-               v.names = "time",
+               varying = list(
+                 paste("x", 6:20, sep="."),
+                 paste("gc", 6:20, sep=".")
+                 ),
+               v.names = c("time", "gctime"),
                direction = "long",
-               drop = c("class",paste("x", 1:5, sep=".")))
+               drop = c("class",paste(c("x", "gc"), rep(1:5, each = 2), sep=".")))
 
 
-## Classify benchmarks
 
-# Benchmark Types
-## btypes = list(
-##   Insert = "Insert",
-##   Hist = "Histogram",
-##   Reduce = "Reduce",
-##   Comm = "Comm",
-##   Map = "Map")
-## dat$btype = ""
-## for (n in names(btypes))
-##   dat[grep(n, dat$bench, fixed = TRUE),"btype"] = btypes[[n]]
-## dat$btype = factor(dat$btype)
 
-# Implementation Types
-## imptypes = list(
-##   CLQ = "ConcurrentLinkedQueue",
-##   SLFP = "Single-Lane FlowPool",
-##   MLFP = "Multi-Lane FlowPool",
-##   LTQ = "LinkedTransferQueue")
-## dat$imptype = ""
-## for (n in names(imptypes))
-##   dat[grep(n, dat$bench, fixed = TRUE),"imptype"] = imptypes[[n]]
-## dat$imptype = factor(dat$imptype)
 
-# Add architecture
-## archs = list(
-##   wolf = "32-core Xeon",
-##   maglite = "UltraSPARC T2",
-##   lampmac14 = "4-core i7"
-##   )
-## dat$arch = ""
-## for (n in names(archs))
-##   dat[dat$machine == n,"arch"] = archs[[n]]
-## dat$arch = factor(dat$arch)
+## Normalize time
+dat$ntime <- dat$time - dat$gctime
+
+## library(reshape)
+
+## ## Reshape to even longer format
+## ldat <- melt(dat,
+##              measure.vars = c("time", "gctime", "ntime")
+##              )
+
+## lmdat <- aggregate(value ~ version + machine + bench + par + size + variable,
+##                    data = ldat, FUN = median)
+             
 
 ## Aggregate to medians
-attach(dat)
-mdat <- aggregate(time,
-                  list(version = version,
-                       machine = machine,
-                       bench = bench,
-                       par = par,
-                       size = size),
-                  median)
-mdat$time <- mdat$x
-detach(dat)
+mdat <- aggregate(cbind(time, gctime, ntime) ~
+                  version + machine + bench + par + size,
+                  data = dat, FUN = median)
 
-mdat$x <- NULL
+mpardat <- mdat[mdat$size == 10000000,]
+mszedat <- mdat[mdat$par  == 4,]
