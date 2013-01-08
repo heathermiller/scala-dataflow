@@ -492,10 +492,31 @@ elements only in FlowArrays.
 
 \subsection{Operations}
 \label{ssec:imp-operations}
+This section describes some operations which do not fit entirely into
+the \texttt{FAJob} framework or require some extensions to it.
 
 \subsubsection{Flatten}
+For the same reasons as \texttt{flatMapN} requires the size of the
+inner arrays, the \texttt{flatten} operation on FlowArrays requires
+the size of the inner FlowArray to be given. Thanks to hierarchical
+FlowArrays, the implementation of \texttt{flatten} is easy:
 
-\subsubsection{Transpose?}
+\texttt{FlatFlowArrays} are simply converted into hierarchical
+FlowArrays with the same data array (and the inner size given in the
+argument).
+
+Slice views currently flatten the underlying concrete array and return
+a new view on it. This behaviour should and can easily be improved in
+the future.
+
+\texttt{HierFlowArrays} push the flatten call down to their inner
+arrays (which might in turn push it down), until they reach a
+\texttt{FlatFlowArray}, which will then be converted into a
+\texttt{HierFlowArray}.
+
+\subsubsection{Transpose}
+TODO write this. (what it does, how it does it). Describe deep job
+search.
 
 \section{Evaluation}
 \label{sec:evaluation}
