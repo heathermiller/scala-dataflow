@@ -36,15 +36,15 @@
   implement a bigger application using FlowPools, showed that the lack
   of ordering is very limiting. The proposed FlowArrays do not have
   this limitation: Having a very similar structure than ParArrays
-  \cite{collect11}, FlowArrays eliminate the need to block inbetween
+  \cite{collect11}, FlowArrays eliminate the need to block in between
   monadic operations on ParArrays while exposing a very similar
   interface to the programmer.
 
   Benchmarks on operations for linear algebra have shown that the
-  current basic storage model of FlowArrays severly impacts
+  current basic storage model of FlowArrays severely impacts
   performance and that the adaptions proposed later on in this report
   do significantly speed up the calculation but still need to be
-  properly generalized.
+  properly generalised.
 \end{abstract}
 
 \section{Introduction}
@@ -56,7 +56,7 @@ We'll first give an overview of the general idea behind FlowArrays and
 how they try to improve on ParArrays. In next section
 (c.f. page~\pageref{sec:implementation}) we'll explain in more detail,
 how FlowArrays are implemented. The evaluation section
-(c.f. page~\pageref{sec:evaluation}) will analyze the performance of
+(c.f. page~\pageref{sec:evaluation}) will analyse the performance of
 FlowArrays using vector scalar products as benchmark. In the
 conclusion (c.f. page~\pageref{sec:conclusion}), we'll propose
 improvements and future work.
@@ -66,7 +66,7 @@ improvements and future work.
 
 In this section we'll first outline how FlowArrays try to improve on
 ParArrays from an abstract perspective. Then we'll show some of the
-difficulties that arise particularly with this aproach.
+difficulties that arise particularly with this approach.
 
 \subsection{Barrier-Freedom}
 FlowArrays in comparison to ParArrays are barrier-free: We'll
@@ -132,7 +132,7 @@ scenarios that may happen. In the figure, the circles represent jobs:
 grey if executing or submitted to the execution queue, white if
 waiting in an internal queue of another job (indicated by the dashed
 arrow). The rectangles represent data blocks of a FlowArray: white if
-(partially) empty, grey if fully calcuated.
+(partially) empty, grey if fully calculated.
 
 When a \texttt{map} is called on a FlowArray, each block chain will
 start in one of the three first states and then propagate to the right
@@ -185,7 +185,7 @@ responsible to calculate its accumulated value. Using this scheme, the
 same number of jobs are spawned as for a \texttt{map}.
 
 Note that this approach is preferable to a single element where
-completed elements aren accumulated using a CAS since the former
+completed elements are accumulated using a CAS since the former
 does preserve the order in which elements are accumulated. I.e. it
 requires the accumulation function to be associative, not
 commutative.
@@ -223,7 +223,7 @@ flattened.
 \begin{figure}
   \centering
   \includegraphics{flatMap-dependency}
-  \caption{Illustration of depenceny-tracking requirements in a
+  \caption{Illustration of dependency-tracking requirements in a
     Hierarchical FlowArray resulting from a \texttt{flatMap}}
   \label{fig:flatMap-dependency}
 \end{figure}
@@ -250,7 +250,7 @@ need to undergo a fundamental change).
 Further, the splitting of the two FlowArrays which are being zipped
 may be totally different, e.g. due to a preceding \texttt{flatMap} on
 one of them. Hence -- again -- re-alignment of blocks is required,
-before the zipped tuples can be created. It is important to realize,
+before the zipped tuples can be created. It is important to realise,
 that this may inherently lead to non-symmetric scheduling behaviour:
 Depending on which FlowArray is on the ``left'' of the \texttt{zip}
 call, the resulting splitting may be different, which may lead to
@@ -279,16 +279,16 @@ dependency tracking, splitting and scheduling:
     dependent on this \texttt{FAJob}. This will schedule the submitted
     \texttt{FAJob}, once this \texttt{FAJob} is completed.
   \item[\texttt{split(): Unit}] Splits this job into two
-    subjobs. Forces dependent tasks to be split too and hands off
+    sub jobs. Forces dependent tasks to be split too and hands off
     dependency (see next section for details on splitting). This
     method is called when computation of a \texttt{FAJob} starts and
     its size is above the threshold for exponential splitting.
   \item[\texttt{done: Boolean}] Checks whether this \texttt{FAJob} is
-    done. Queries subjobs if this \texttt{FAJob} is split.
+    done. Queries sub jobs if this \texttt{FAJob} is split.
   \item[\texttt{sliceJobs(from: Int, to: Int): Option[(Seq[FAJob],
       Boolean)]}] Returns the jobs which are responsible for
     calculating a given slice. May require the caller to check again,
-    once the jobs are completed (indicated by the boolean flag). If
+    once the jobs are completed (indicated by the Boolean flag). If
     the slice is completed, \texttt{None} is returned.
   \item[\texttt{delegateThen(d: Seq[FAJob])(thn: () => Unit): Unit}]
     This method may be called from inside the \texttt{doCompute}
@@ -302,10 +302,10 @@ First
 When calling \texttt{split} on a \texttt{FAJob}, two things have to be
 done:
 \begin{enumerate}
-\item Split the job in two smaller subjobs of (more or less) equal
+\item Split the job in two smaller sub jobs of (more or less) equal
   size.
 \item Split the dependent jobs and delegate the dependency to the
-  subjobs: We would like to have dependency tracking on the lowest
+  sub jobs: We would like to have dependency tracking on the lowest
   level that calculation is done in order to start new jobs as soon as
   possible (otherwise we'll be back at ParArrays).
 \end{enumerate}
@@ -315,14 +315,14 @@ The first is easy: Divide the range of the \texttt{FAJob} into two
 those ranges.
 
 The second is a bit more tricky. Please refer to fig~\ref{fig:split-ill}
-for an illustration of how this is done. You find pesudocode in
+for an illustration of how this is done. You find pseudocode in
 fig~\ref{fig:split-code}. The idea is the following: First, create the
-two subjobs and set the state of this \texttt{FAJob} to
+two sub jobs and set the state of this \texttt{FAJob} to
 \texttt{Splitting}. It is now ``locked'' for any other operation. I.e. any
 other operation must help the splitting first (as the implementation
 is lock-free). Next, the dependent job must be split
-(recursively). Once this is done, the dependants of the subjobs may be
-set to these newly created subjobs. Finally the state of this
+(recursively). Once this is done, the dependants of the sub jobs may be
+set to these newly created sub jobs. Finally the state of this
 \texttt{FAJob} may be set to \texttt{Split}.
 
 \begin{figure}
@@ -422,7 +422,7 @@ def map[B](f: A => B): FlowArray[B] = \{
     val ret = newFlowArray[B](this.size)
     val job = this.dispatch(FAMapJob(ret, f))
     ret.generatedBy(job)
-  p  ret
+    ret
 \}
 }
 \end{alltt}
@@ -476,7 +476,7 @@ internal Array.
 and expose a given part of it. The \texttt{dispatch} method adjusts 
 offset and length and proxies to \texttt{dispatch} of the inner
 \texttt{ConcreteFlowArray}. The \texttt{blocking} method waits for the
-smallest covering subjob of the inner \texttt{ConcreteFlowArray} and
+smallest covering sub job of the inner \texttt{ConcreteFlowArray} and
 then copies the required elements to a new Array.
 
 \subsubsection{Hierarchical FlowArrays}
@@ -488,7 +488,7 @@ FlowArray of the \texttt{HierFlowArrays}. However, since the number of
 inner FlowArrays is big (otherwise no FlowArray would have been used),
 this needs to be done asynchronously. Further, the multiple dispatched
 jobs need then to be waited on and regrouped by the outer job in order
-to fullfill the whole dependency tracking requirement (remember
+to fulfil the whole dependency tracking requirement (remember
 fig~\ref{fig:flatMap-dependency} on
 page~\ref{fig:flatMap-dependency} for an illustration on the
 double dependency tracking that is required).
@@ -577,15 +577,15 @@ mixed mode).
 Please refer to figs~\ref{fig:par-bench},\ref{fig:size-bench} for the
 results of the benchmarks. In both figures, we show the total
 execution time, the time spent in garbage collection and the
-``normalized execution time'', i.e. the total time minus the time
+``normalised execution time'', i.e. the total time minus the time
 spent in garbage collection. Please note that the GC time is an
-approximation and hence the ``normalized execution time'' may become
+approximation and hence the ``normalised execution time'' may become
 negative.
 
 \begin{figure}
 \subfigure[Execution Time]{\plot{par-time}}
 \subfigure[GC Time]{\plot{par-gctime}}
-\subfigure[Normalized Time]{\plot{par-ntime}}
+\subfigure[Normalised Time]{\plot{par-ntime}}
 TODO Legend here. Red: Vanilla
     FlowArrays, Green: ZipMap FlowArrays, Blue: ZipMapFoldFlowArrays,
     Violet: ParArrays
@@ -596,7 +596,7 @@ TODO Legend here. Red: Vanilla
 \begin{figure}
 \subfigure[Execution Time]{\plot{size-time}}
 \subfigure[GC Time]{\plot{size-gctime}}
-\subfigure[Normalized Time]{\plot{size-ntime}}
+\subfigure[Normalised Time]{\plot{size-ntime}}
 \caption{Size benchmarks of scalar product}
 \label{fig:size-bench}
 \end{figure}
@@ -626,7 +626,7 @@ greatly increased performance.
 \label{sec:conclusion}
 TODO write properly
 \begin{enumerate}
-\item We have implemented fixed-size flowarrays and handled most
+\item We have implemented fixed-size FlowArrays and handled most
   challenges.
 \item Benchmarks suggest garbage collection due to full intermediate
   result storage is a performance issue
