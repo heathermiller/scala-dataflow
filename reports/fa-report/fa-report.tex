@@ -39,24 +39,34 @@
   \cite{collect11}, FlowArrays eliminate the need to block inbetween
   monadic operations on ParArrays while exposing a very similar
   interface to the programmer.
-  %% TODO write about performance
+
+  Benchmarks on operations for linear algebra have shown that the
+  current basic storage model of FlowArrays severly impacts
+  performance and that the adaptions proposed later on in this report
+  do significantly speed up the calculation but still need to be
+  properly generalized.
 \end{abstract}
 
 \section{Introduction}
-%% This is the usual blah about nothing but which is required...
+TODO This is the usual blah about nothing but which is
+required... Parallel architectures are more and more important and the
+need to have languages... 
 
+We'll first give an overview of the general idea behind FlowArrays and
+how they try to improve on ParArrays. In next section
+(c.f. page~\pageref{sec:implementation}) we'll explain in more detail,
+how FlowArrays are implemented. The evaluation section
+(c.f. page~\pageref{sec:evaluation}) will analyze the performance of
+FlowArrays using vector scalar products as benchmark. In the
+conclusion (c.f. page~\pageref{sec:conclusion}), we'll propose
+improvements and future work.
 
 \section{Overview}
 \label{sec:overview}
+
 In this section we'll first outline how FlowArrays try to improve on
 ParArrays from an abstract perspective. Then we'll show some of the
-difficulties that arise particularly with this aproach. The next
-section (c.f. page~\pageref{sec:implementation}) will explain in more
-detail, how FlowArrays are implemented.
-
-The evaluation section (c.f. page~\pageref{sec:evaluation}) will
-analyze the performance of FlowArrays.
-%% TODO write more
+difficulties that arise particularly with this aproach.
 
 \subsection{Barrier-Freedom}
 FlowArrays in comparison to ParArrays are barrier-free: We'll
@@ -613,6 +623,7 @@ intermediate storage steps might need to be considered such as the
 greatly increased performance.
 
 \section{Conclusion}
+\label{sec:conclusion}
 TODO write properly
 \begin{enumerate}
 \item We have implemented fixed-size flowarrays and handled most
@@ -621,6 +632,8 @@ TODO write properly
   result storage is a performance issue
 \item Consolidated operations such as \texttt{zipMap} /
   \texttt{zipMapFold} can greatly improve performance.
+\item A way to automate the conversion / reduction zip, map $\to$
+  zipMap would be great.
 \end{enumerate}
 
 \bibliographystyle{abbrv}
