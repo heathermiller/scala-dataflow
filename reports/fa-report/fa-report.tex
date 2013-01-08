@@ -26,6 +26,8 @@
 
 \graphicspath{{figs/}}
 
+\newcommand{\plot}[1]{\input{../../benchmarks/flowArrays/plots/#1}}
+
 \maketitle
 
 \begin{abstract}
@@ -225,7 +227,7 @@ blocks to be re-aligned at a later point in time to remove the
 arbitrary splitting imposed by the hierarchy introduced by the
 \texttt{flatMap}. For details how block splitting is propagated
 through dependencies, please refer to
-section~\ref{sssec:imp-hier-fas}.
+section~\ref{sec:implementation}.
 
 \subsubsection{Zip}
 When zipping, again we impose a restriction on the size: the size of
@@ -410,7 +412,7 @@ def map[B](f: A => B): FlowArray[B] = \{
     val ret = newFlowArray[B](this.size)
     val job = this.dispatch(FAMapJob(ret, f))
     ret.generatedBy(job)
-    ret
+  p  ret
 \}
 }
 \end{alltt}
@@ -498,7 +500,107 @@ elements only in FlowArrays.
 \section{Evaluation}
 \label{sec:evaluation}
 
+\subsection{Setup}
+
+We have tested the performance of FlowArrays in comparison with
+ParArrays by calculating the scalar product of two vectors. Refer to
+fig~\ref{fig:scalar-product} for the implementation of the
+benchmark. You'll notice the operations \texttt{zipMap} and
+\texttt{zipMapFold}: These are consolidated operations that use the
+\texttt{FAJob} structure but do not store intermediate results. As we
+will see they greatly increase performance.
+
+\begin{figure}
+\begin{minipage}[t]{6cm}
+\begin{alltt}
+{\scriptsize
+val x = FlowArray.tabulate(size)(x => x*x)
+val y = FlowArray.tabulate(size)(x => x*x)
+
+(x zip y).map(x => x._1 * x._2).fold(0)(_ + _).blocking
+// OR
+(x zipMap y)(_ * _).fold(0)(_ + _).blocking
+// OR
+(x zipMapFold y)(_ * _)(0)(_ + _).blocking
+}
+\end{alltt}
+\end{minipage}
+\caption{Implementation of scalar product with FlowArrays}
+\label{fig:scalar-product}
+\end{figure}
+
+We have varied the size of the two vectors from $8 \cdot 10^6$ to $13
+\cdot 10^6$ elements with full parallelization. Further, we have
+tested the scalability by setting the parallelism level to $1,2$ and
+$4$ for FlowArrays (ParArrays have only been measured with full
+parallelism). The metrics we collected were the execution time and the
+garbage collection time.
+
+The benchmarks have been executed on a Intel i7-2620M with a java
+version 1.7.0\_04, Java(TM) SE Runtime Environment (build
+1.7.0\_04-b20), Java HotSpot(TM) 64-Bit Server VM (build 23.0-b21,
+mixed mode).
+
+\subsection{Results}
+
+Please refer to figs~\ref{fig:par-bench},\ref{fig:size-bench} for the
+results of the benchmarks. In both figures, we show the total
+execution time, the time spent in garbage collection and the
+``normalized execution time'', i.e. the total time minus the time
+spent in garbage collection. Please note that the GC time is an
+approximation and hence the ``normalized execution time'' may become
+negative.
+
+\begin{figure}
+\subfigure[Execution Time]{\plot{par-time}}
+\subfigure[GC Time]{\plot{par-gctime}}
+\subfigure[Normalized Time]{\plot{par-ntime}}
+TODO Legend here. Red: Vanilla
+    FlowArrays, Green: ZipMap FlowArrays, Blue: ZipMapFoldFlowArrays,
+    Violet: ParArrays
+\caption{Parallelization benchmarks of scalar product}
+\label{fig:par-bench}
+\end{figure}
+
+\begin{figure}
+\subfigure[Execution Time]{\plot{size-time}}
+\subfigure[GC Time]{\plot{size-gctime}}
+\subfigure[Normalized Time]{\plot{size-ntime}}
+\caption{Size benchmarks of scalar product}
+\label{fig:size-bench}
+\end{figure}
+
+\subsection{Interpretation}
+First of all we must notice the huge overhead that garbage collection
+brings, especially for the benchmark using the simple \texttt{zip},
+\texttt{map} and \texttt{fold} operations, against which --
+unfortunately -- the actual calculation time becomes negligible. Note
+that octave \cite{octave} takes around $290 ms$ for the same
+calculation on the same machine, we can hence say the execution times
+(when disregarding garbage collection) are comparable.
+
+Other benchmarks for matrix multiplication that have been mostly
+written but not yet been brought to a conclusion have already
+indicated that garbage collection might take a big amount of time
+during calculation.
+
+We must come to the unfortunate conclusion, that allocating and
+storing small intermediate steps seems to be a severe performance
+killer. When continuing in the flow approach, means of reducing
+intermediate storage steps might need to be considered such as the
+\texttt{zipMap} and the \texttt{zipMapFold} operations that have
+greatly increased performance.
+
 \section{Conclusion}
+TODO write properly
+\begin{enumerate}
+\item We have implemented fixed-size flowarrays and handled most
+  challenges.
+\item Benchmarks suggest garbage collection due to full intermediate
+  result storage is a performance issue
+\item Consolidated operations such as \texttt{zipMap} /
+  \texttt{zipMapFold} can greatly improve performance.
+\end{enumerate}
 
 \bibliographystyle{abbrv}
 \bibliography{bib}
