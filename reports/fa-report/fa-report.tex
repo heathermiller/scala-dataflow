@@ -34,22 +34,23 @@
   In \cite{FP12} we proposed an unordered, barrier- and lock-free,
   parallel datastructure, the FlowPools. The following attempts to
   implement a bigger application using FlowPools, showed that the lack
-  of ordering is very limiting. The proposed FlowArrays do not have
-  this limitation: Having a very similar structure than ParArrays
-  \cite{collect11}, FlowArrays eliminate the need to block in between
-  monadic operations on ParArrays while exposing a very similar
+  of ordering is very limiting. FlowArrays -- proposed by this report
+  -- do not have this limitation: Having a very similar structure than
+  ParArrays \cite{collect11}, FlowArrays eliminate the need to block
+  in between two monadic operations while exposing a very similar
   interface to the programmer.
 
   Benchmarks on operations for linear algebra have shown that the
-  current basic storage model of FlowArrays severely impacts
-  performance and that the adaptions proposed later on in this report
-  do significantly speed up the calculation but still need to be
-  properly generalized and implemented.
+  current implementation of FlowArrays performs comparable to
+  ParArrays. However, the current storage model of FlowArrays severely
+  impacts performance, but we can show that the adaptions proposed
+  later on in this report do significantly speed up the calculation
+  and will lead to higher performance than ParArrays.
 \end{abstract}
 
 \section{Introduction}
 % Stolen from \cite{FP12}
-Multicore architectures have become ubiquitous-- even most mobile devices now
+Multicore architectures have become ubiquitous -- even most mobile devices now
 ship with multiple core processors. Yet parallel programming has yet to enter
 the daily workflow of the mainstream developer. One significant obstacle is an
 undesirable choice programmers must often face when solving a problem that
@@ -130,15 +131,15 @@ val fa2 = fa1.map(_ * 2)
 \end{alltt}
 \end{minipage}
 
-In both cases, we first create a Par/FlowArray using a tabulate. Both
-Par- and FlowArrays will use exponential task splitting
-\cite{collect11,cong08} to distribute the workload of calculating the
-individual elements. The crucial difference between ParArrays and
-FlowArrays starts here: With ParArrays, the call to \texttt{tabulate}
-(and any other function for that matter) will only return, once every
-element has been calculated. In contrast, the call to
-\texttt{tabulate} on FlowArrays will return immediately, yielding an
-array whose elements are specified, but not yet calculated.
+In both cases, we first create a Par/FlowArray using a
+\texttt{tabulate}. Both Par- and FlowArrays will use exponential task
+splitting \cite{collect11,cong08} to distribute the workload of
+calculating the individual elements. The crucial difference between
+ParArrays and FlowArrays starts here: With ParArrays, the call to
+\texttt{tabulate} (and any other function for that matter) will only
+return, once every element has been calculated. In contrast, the call
+to \texttt{tabulate} on FlowArrays will return immediately, yielding
+an array whose elements are specified, but not yet calculated.
 
 When calling \texttt{map} on the first Par/FlowArray, this difference
 becomes even clearer: ParArrays will do the same thing as for
@@ -265,7 +266,7 @@ flattened.
 
 When a \texttt{map} is called on one of these \emph{Hierarchical
   FlowArrays} individual \texttt{maps} are called for each sub array
-and only then the resulting data is written in a flat array. This
+and only then the resulting data is written into a flat array. This
 allows to ``flatten out'' those hierarchical structures without
 additional computation costs. Note that this scheme does require the
 blocks to be re-aligned at a later point in time to remove the
@@ -329,11 +330,11 @@ dependency tracking, splitting and scheduling:
     This method may be called from inside the \texttt{doCompute}
     method only. It halts calculation of this \texttt{FAJob}, until
     all jobs in \texttt{d} are completed. It then (optionally)
-    executes the closure \texttt{thn}.
+    executes the closure \texttt{thn}. This is implemented using an
+    observer pattern on the \texttt{FAJobs} in \texttt{d}.
 \end{description}
 
 \subsubsection{Splitting}
-First
 When calling \texttt{split} on a \texttt{FAJob}, two things have to be
 done:
 \begin{enumerate}
@@ -424,7 +425,7 @@ certain operations, have a look at
 section~\ref{ssec:imp-operations}. Throughout the following sections,
 the operation \texttt{map} is used as an example.
 
-Internally two major types exist: \texttt{ConcreteFlowArrays} and
+Internally, two major types exist: \texttt{ConcreteFlowArrays} and
 Views. \texttt{ConcreteFlowArrays} store actual data -- the most
 trivial being the \texttt{FlatFlowArray}, which just wraps around an
 Array. Views on the other hand expose data from
