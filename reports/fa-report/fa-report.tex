@@ -44,22 +44,57 @@
   current basic storage model of FlowArrays severely impacts
   performance and that the adaptions proposed later on in this report
   do significantly speed up the calculation but still need to be
-  properly generalised.
+  properly generalised and implemented.
 \end{abstract}
 
 \section{Introduction}
-TODO This is the usual blah about nothing but which is
-required... Parallel architectures are more and more important and the
-need to have languages... 
+% Stolen from \cite{FP12}
+Multicore architectures have become ubiquitous-- even most mobile devices now
+ship with multiple core processors. Yet parallel programming has yet to enter
+the daily workflow of the mainstream developer. One significant obstacle is an
+undesirable choice programmers must often face when solving a problem that
+could greatly benefit from leveraging available parallelism. Either choose a
+non-deterministic, but performant, data structure or programming model, or
+sacrifice performance for the sake of clarity and correctness.
 
-We'll first give an overview of the general idea behind FlowArrays and
-how they try to improve on ParArrays. In next section
-(c.f. page~\pageref{sec:implementation}) we'll explain in more detail,
-how FlowArrays are implemented. The evaluation section
-(c.f. page~\pageref{sec:evaluation}) will analyse the performance of
-FlowArrays using vector scalar products as benchmark. In the
-conclusion (c.f. page~\pageref{sec:conclusion}), we'll propose
+Programming models based on \emph{dataflow} \cite{Arvind89,CnC10} have the
+potential to simplify parallel programming, since the resulting programs are
+deterministic. Moreover, dataflow programs can be expressed more declaratively
+than programs based on mainstream concurrency constructs, such as shared-memory 
+threads and locks, as programmers are only required to specify data and
+control dependencies. This allows one to reason sequentially about the
+intended behavior of their program, meanwhile enabling the underlying
+framework to effectively extract parallelism.
+
+In an earlier paper \cite{FP12} we proposed FlowPools, a
+deterministic, dataflow abstraction. Being unordered, FlowPools have
+shown to be somewhat limiting to implement concrete applications. This
+report presents FlowArrays a dataflow structure very much like arrays
+with monadic operations. Contrary to normal arrays (or ParArrays
+\cite{collect11}), FlowArrays do not block in between monadic
+operations and hence have dataflow character.
+
+The dataflow in this programming model is implicit: The programmer can
+use the known abstractions from functional programming and only has to
+make a special call when retreiving concrete results.
+
+An overview of the general idea behind FlowArrays and how exactly they
+try to improve on ParArrays is given first. The section outlines the
+basic concepts of how task splitting in FlowArrays is done. The next
+section describes in detail, how FlowArrays are implemented. The
+evaluation section analyses the performance of FlowArrays using vector
+scalar products as benchmark. In the conclusion, we'll propose
 improvements and future work.
+
+Our contributions are the following:
+\begin{enumerate}
+\item The design and Scala~\cite{Odersky10} implementetion of ParArray
+  like, but nonblocking datastructure.
+\item Benchmarks comparing FlowArrays to ParArrays with a focus on
+  garbage collection overhead.
+\item A proposition for significant speed increase due to reduced GC
+  overhead.
+\end{enumerate}
 
 \section{Overview}
 \label{sec:overview}
@@ -632,7 +667,7 @@ First of all we must notice the huge overhead that garbage collection
 brings, especially for the benchmark using the simple \texttt{zip},
 \texttt{map} and \texttt{fold} operations, against which --
 unfortunately -- the actual calculation time becomes negligible. Note
-that octave \cite{octave} takes around $290 ms$ for the same
+that octave \cite{eaton1997gnu} takes around $290 ms$ for the same
 calculation on the same machine, we can hence say the execution times
 (when disregarding garbage collection) are comparable.
 
@@ -650,17 +685,28 @@ greatly increased performance.
 
 \section{Conclusion}
 \label{sec:conclusion}
-TODO write properly
-\begin{enumerate}
-\item We have implemented fixed-size FlowArrays and handled most
-  challenges.
-\item Benchmarks suggest garbage collection due to full intermediate
-  result storage is a performance issue
-\item Consolidated operations such as \texttt{zipMap} /
-  \texttt{zipMapFold} can greatly improve performance.
-\item A way to automate the conversion / reduction zip, map $\to$
-  zipMap would be great.
-\end{enumerate}
+
+We have designed and implemented a fixed-size version of a non-blocking
+ParArray like datastructure, the FlowArray and succeeded in
+implementing all operations necessary to represent matrix
+multiplication in the programming model.
+
+Our benchmarks suggest that garbage collectuion due to full
+intermediate result creation (especially for operations like
+\texttt{zip}) greatly impact performance negatively and that having
+consolidated operations (such as \texttt{zipMap}) removes a lot of
+this overhead.
+
+The data hence shows that removing intermediate elements in a dataflow
+significantly speeds up the whole calculation due to the fewer
+allocated memory and hence the reduced garbage collection time.
+
+It is hence our proposition, to go into further research about how
+such kind of reductions can be done automatically, before the
+calculation is started. This is again something for which a FlowArray
+is required: A ParArray is unable to consolidate calculation steps, as
+it is required to finish calculation, until the result is completed
+and hence no lazily calculated objects may exist.
 
 \bibliographystyle{abbrv}
 \bibliography{bib}
