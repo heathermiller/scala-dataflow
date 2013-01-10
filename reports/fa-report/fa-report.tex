@@ -542,6 +542,21 @@ order of the elements in a FlowArray.
 \label{fig:transpose}
 \end{figure}
 
+Since this operation changes the order of the elements, the basic
+dependency tracking does not work anymore: As you can see in
+fig~\ref{fig:transpose}, the leftmost elements depend on elements from
+all over the source array. To track these dependencies correctly, the
+implementation of \texttt{sliceDep} is fundamentally changed. In the
+basic case, it returns the jobs that spans all the requested
+elements. However, in the \texttt{transpose} case, this would (almost)
+always be the root job, and hence slicing would be useless. Therefore,
+in the \texttt{tranpose} case, the \texttt{sliceDep} method returns a
+list of the not-split jobs (i.e. actually executing jobs) that
+calculate the given elements.
+
+For this strategy to have any benefit, the splitting must be smaller
+than usual and depend on the step size.
+
 \section{Evaluation}
 \label{sec:evaluation}
 
