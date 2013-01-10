@@ -44,7 +44,7 @@
   current basic storage model of FlowArrays severely impacts
   performance and that the adaptions proposed later on in this report
   do significantly speed up the calculation but still need to be
-  properly generalised and implemented.
+  properly generalized and implemented.
 \end{abstract}
 
 \section{Introduction}
@@ -76,20 +76,20 @@ operations and hence have dataflow character.
 
 The dataflow in this programming model is implicit: The programmer can
 use the known abstractions from functional programming and only has to
-make a special call when retreiving concrete results.
+make a special call when retrieving concrete results.
 
 An overview of the general idea behind FlowArrays and how exactly they
 try to improve on ParArrays is given first. The section outlines the
 basic concepts of how task splitting in FlowArrays is done. The next
 section describes in detail, how FlowArrays are implemented. The
-evaluation section analyses the performance of FlowArrays using vector
+evaluation section analyzes the performance of FlowArrays using vector
 scalar products as benchmark. In the conclusion, we'll propose
 improvements and future work.
 
 Our contributions are the following:
 \begin{enumerate}
-\item The design and Scala~\cite{Odersky10} implementetion of ParArray
-  like, but nonblocking datastructure.
+\item The design and Scala~\cite{Odersky10} implementation of ParArray
+  like, but non-blocking datastructure.
 \item Benchmarks comparing FlowArrays to ParArrays with a focus on
   garbage collection overhead.
 \item A proposition for significant speed increase due to reduced GC
@@ -105,7 +105,7 @@ difficulties that arise particularly with this approach.
 
 \subsection{Barrier-Freedom}
 FlowArrays in comparison to ParArrays are barrier-free: We'll
-illustrate on the simplest example, a single \texttt{map} map
+illustrate on the simplest example, a single \texttt{map}
 operation, how these two datastructures differ.
 
 Let's consider the following code for ParArrays and
@@ -164,10 +164,10 @@ We'll now describe in detail what happens, when a \texttt{map} is
 called on a FlowArray depending on the different possible states of
 its blocks. Fig~\ref{fig:dep-track} illustrates the different
 scenarios that may happen. In the figure, the circles represent jobs:
-grey if executing or submitted to the execution queue, white if
+gray if executing or submitted to the execution queue, white if
 waiting in an internal queue of another job (indicated by the dashed
 arrow). The rectangles represent data blocks of a FlowArray: white if
-(partially) empty, grey if fully calculated.
+(partially) empty, gray if fully calculated.
 
 When a \texttt{map} is called on a FlowArray, each block chain will
 start in one of the three first states and then propagate to the right
@@ -285,8 +285,8 @@ need to undergo a fundamental change).
 Further, the splitting of the two FlowArrays which are being zipped
 may be totally different, e.g. due to a preceding \texttt{flatMap} on
 one of them. Hence -- again -- re-alignment of blocks is required,
-before the zipped tuples can be created. It is important to realise,
-that this may inherently lead to non-symmetric scheduling behaviour:
+before the zipped tuples can be created. It is important to realize,
+that this may inherently lead to non-symmetric scheduling behavior:
 Depending on which FlowArray is on the ``left'' of the \texttt{zip}
 call, the resulting splitting may be different, which may lead to
 different speed at runtime. 
@@ -350,7 +350,7 @@ The first is easy: Divide the range of the \texttt{FAJob} into two
 those ranges.
 
 The second is a bit more tricky. Please refer to fig~\ref{fig:split-ill}
-for an illustration of how this is done. You find pseudocode in
+for an illustration of how this is done. You find pseudo code in
 fig~\ref{fig:split-code}. The idea is the following: First, create the
 two sub jobs and set the state of this \texttt{FAJob} to
 \texttt{Splitting}. It is now ``locked'' for any other operation. I.e. any
@@ -523,7 +523,7 @@ FlowArray of the \texttt{HierFlowArrays}. However, since the number of
 inner FlowArrays is big (otherwise no FlowArray would have been used),
 this needs to be done asynchronously. Further, the multiple dispatched
 jobs need then to be waited on and regrouped by the outer job in order
-to fulfil the whole dependency tracking requirement (remember
+to fulfill the whole dependency tracking requirement (remember
 fig~\ref{fig:flatMap-dependency} on
 page~\ref{fig:flatMap-dependency} for an illustration on the
 double dependency tracking that is required).
@@ -551,7 +551,7 @@ FlowArrays with the same data array (and the inner size given in the
 argument).
 
 Slice views currently flatten the underlying concrete array and return
-a new view on it. This behaviour should and can easily be improved in
+a new view on it. This behavior should and can easily be improved in
 the future.
 
 \texttt{HierFlowArrays} push the flatten call down to their inner
@@ -563,10 +563,10 @@ arrays (which might in turn push it down), until they reach a
 This operation has specifically been written to implement matrix
 multiplication with FlowArrays. It interprets the array as a
 two-dimensional array, given a step size (i.e. one dimension of the
-array) and transposes it. The indices are therefore altered as
+array) and transposes it. The indexes are therefore altered as
 follows (see fig~\ref{fig:transpose} for an illustration):
 \[ i_n = \lfloor i_o / d_1 \rfloor + (i \bmod d_1) * d_2 \]
-where $i_o,\ i_n$ are the old and new indices, $d_1,\ d_2$ are the two
+where $i_o,\ i_n$ are the old and new indexes, $d_1,\ d_2$ are the two
 dimensions. This is currently the only operation that changes the
 order of the elements in a FlowArray.
 
@@ -647,15 +647,15 @@ mixed mode).
 Please refer to figs~\ref{fig:par-bench},\ref{fig:size-bench} for the
 results of the benchmarks. In both figures, we show the total
 execution time, the time spent in garbage collection and the
-``normalised execution time'', i.e. the total time minus the time
+``normalized execution time'', i.e. the total time minus the time
 spent in garbage collection. Please note that the GC time is an
-approximation and hence the ``normalised execution time'' may become
+approximation and hence the ``normalized execution time'' may become
 negative.
 
 \begin{figure}
 \subfigure[Execution Time]{\plot{par-time}}
 \subfigure[GC Time]{\plot{par-gctime}}
-\subfigure[Normalised Time]{\plot{par-ntime}}
+\subfigure[Normalized Time]{\plot{par-ntime}}
 \caption{Parallelization benchmarks of scalar product}
 \label{fig:par-bench}
 \end{figure}
@@ -663,7 +663,7 @@ negative.
 \begin{figure}
 \subfigure[Execution Time]{\plot{size-time}}
 \subfigure[GC Time]{\plot{size-gctime}}
-\subfigure[Normalised Time]{\plot{size-ntime}}
+\subfigure[Normalized Time]{\plot{size-ntime}}
 \caption{Size benchmarks of scalar product}
 \label{fig:size-bench}
 \end{figure}
@@ -697,7 +697,7 @@ ParArray like datastructure, the FlowArray and succeeded in
 implementing all operations necessary to represent matrix
 multiplication in the programming model.
 
-Our benchmarks suggest that garbage collectuion due to full
+Our benchmarks suggest that garbage collection due to full
 intermediate result creation (especially for operations like
 \texttt{zip}) greatly impact performance negatively and that having
 consolidated operations (such as \texttt{zipMap}) removes a lot of
