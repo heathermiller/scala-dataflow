@@ -26,18 +26,21 @@ tickfct <- function(x) {
 
 geoms <- function(p) {
   p <- p + geom_point(size = 2.5)
-  #p <- p + geom_line()
-  p <- p + geom_path()
+  p <- p + geom_line()
   p
 }
 
-settheme <- function(p) {
+settheme <- function(p, lpos) {
   p <- p + theme_bw()
-  p <- p + theme(legend.position = "none")
+  p <- p + theme(legend.position = lpos)
   p <- p + theme(axis.title.x = element_text(size=9),
                  axis.title.y = element_text(size=9),
                  axis.text.x  = element_text(size=7),
-                 axis.text.y  = element_text(size=7))
+                 axis.text.y  = element_text(size=7),
+                 legend.text  = element_text(size=8),
+                 legend.background = element_rect(fill="transparent", color = NA))
+  g <- guide_legend(title = NULL, keywidth = .8, keyheight = .8)
+  p <- p + guides(color = g, shape = g)
   p
 }
 
@@ -45,6 +48,13 @@ logyscale <- function(p, name) {
   p <- p + scale_y_log10(name = name,
                          breaks = tickfct)
   p + coord_cartesian(ylim = c(30,8000))
+}
+
+benchscale <- function(p) {
+  labs <- c("FlowArray","FA (zipMap)","FA (zipMapFold)","ParArray")
+  p <- p + scale_color_discrete(labels = labs)
+  p <- p + scale_shape_discrete(labels = labs)
+  p
 }
 
 ## Parallelization plots
@@ -56,8 +66,8 @@ p <- ggplot(mpardat, aes(x = factor(par),
                          shape = bench))
 p <- geoms(p)
 p <- logyscale(p, name = "time [ms]") + xlab("parallelization level")
-p <- p + theme(legend.position = "none")
-p <- settheme(p)
+p <- benchscale(p)
+p <- settheme(p, lpos = c(0.33, 0.15))
 
 outh('par-time',p)
 
@@ -68,7 +78,8 @@ p <- ggplot(mpardat, aes(x = factor(par),
                          shape = bench))
 p <- geoms(p)
 p <- logyscale(p, name = "time [ms]") + xlab("parallelization level")
-p <- settheme(p)
+p <- benchscale(p)
+p <- settheme(p, lpos = c(0.33, 0.4))
 
 outh('par-gctime',p)
 
@@ -79,7 +90,8 @@ p <- ggplot(mpardat, aes(x = factor(par),
                          shape = bench))
 p <- geoms(p)
 p <- p + ylab("time [ms]") + xlab("parallelization level")
-p <- settheme(p)
+p <- benchscale(p)
+p <- settheme(p, lpos = c(0.33, 0.15))
 
 outh('par-ntime',p)
 
@@ -93,7 +105,8 @@ p <- ggplot(mszedat, aes(x = factor(size),
                          shape = bench))
 p <- geoms(p)
 p <- logyscale(p, name = "time [ms]") + xlab("vector size")
-p <- settheme(p)
+p <- benchscale(p)
+p <- settheme(p, lpos = c(0.14, 0.15))
 
 outw('size-time', p)
 
@@ -104,7 +117,8 @@ p <- ggplot(mszedat, aes(x = factor(size),
                          shape = bench))
 p <- geoms(p)
 p <- logyscale(p, name = "time [ms]") + xlab("vector size")
-p <- settheme(p)
+p <- benchscale(p)
+p <- settheme(p, lpos = c(0.14, 0.45))
 
 outw('size-gctime', p)
 
@@ -115,34 +129,8 @@ p <- ggplot(mszedat, aes(x = factor(size),
                          shape = bench))
 p <- geoms(p)
 p <- p + ylab("time [ms]") + xlab("vector size")
-p <- settheme(p)
+p <- benchscale(p)
 p <- p + coord_cartesian(ylim = c(-400, 700))
+p <- settheme(p, lpos = c(0.87, 0.15))
 
 outw('size-ntime', p)
-
-
-
-##   geom_point(size = 2.5) +
-##   geom_line() +
-##   scale_y_log10(name = "execution time",
-##                 breaks = tickfct, limits = c(30, 8000), expand = c(0,0))
-
-## ggplot(mszedat, aes(x = factor(size),
-##                     y = gctime,
-##                     group = bench,
-##                     color = bench)
-##        ) +
-##   geom_point() +
-##   geom_line() +
-##   scale_y_log10(name = "garbage collection time",
-##                 breaks = tickfct, limits = c(30, 8000), expand = c(0,0))
-
-## ggplot(mszedat, aes(x = factor(size),
-##                     y = ntime,
-##                     group = bench,
-##                     color = bench)
-##        ) +
-##   ylim(c(-350, 600)) +
-##   geom_point() +
-##   geom_line()
-## 
