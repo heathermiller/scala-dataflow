@@ -12,7 +12,7 @@ outh <- function(fn, p) {
 }
 
 outw <- function(fn, p) {
-  tikz(paste('plots/', fn, '.tex', sep = ''), width = 5, height = 3)
+  tikz(paste('plots/', fn, '.tex', sep = ''), width = 5, height = 2.5)
   print(p)
   dev.off()
 }
@@ -106,7 +106,7 @@ p <- ggplot(mszedat, aes(x = factor(size),
 p <- geoms(p)
 p <- logyscale(p, name = "time [ms]") + xlab("vector size")
 p <- benchscale(p)
-p <- settheme(p, lpos = c(0.14, 0.15))
+p <- settheme(p, lpos = c(0.14, 0.2))
 
 outw('size-time', p)
 
@@ -131,6 +131,6 @@ p <- geoms(p)
 p <- p + ylab("time [ms]") + xlab("vector size")
 p <- benchscale(p)
 p <- p + coord_cartesian(ylim = c(-400, 700))
-p <- settheme(p, lpos = c(0.87, 0.15))
+p <- settheme(p, lpos = c(0.87, 0.2))
 
 outw('size-ntime', p)
