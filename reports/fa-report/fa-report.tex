@@ -589,8 +589,14 @@ in the \texttt{tranpose} case, the \texttt{sliceDep} method returns a
 list of the not-split jobs (i.e. actually executing jobs) that
 calculate the given elements.
 
-For this strategy to have any benefit, the splitting must be smaller
-than usual and depend on the step size.
+It seems obvious, that the how the splitting is done has a tremendous
+impact on ``how non-blocking'' this operation will end up to be. The
+current implementation only tracks dependencies, but does not try to
+optimize splitting depending on the exact transpose operation that
+should be carried out. Further, it might be an advantage to expose the
+transpose operation as a view rather than copying the data. This would
+require something like a ``dependency mapper'' to convert dependency
+tracking between the view and the underlying structure.
 
 \section{Evaluation}
 \label{sec:evaluation}
