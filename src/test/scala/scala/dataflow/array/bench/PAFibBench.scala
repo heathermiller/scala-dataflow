@@ -1,11 +1,9 @@
-package scala.dataflow
+package scala.dataflow.array.bench
 
+import scala.dataflow.Utils
 import scala.collection.parallel.mutable.ParArray
 
-
-object PAFibBench extends testing.Benchmark {
-
-  val pa1 = ParArray.tabulate(40)(x => x)
+object PAFibBench extends testing.Benchmark with Utils.Props {
 
   // Stupid fib implementation to have value dependent task time
   def fib(i: Int): Int =
@@ -14,10 +12,9 @@ object PAFibBench extends testing.Benchmark {
     else fib(i-1) + fib(i-2)
 
   def run {
+    val pa1 = ParArray.tabulate(size)(x => x)
     val pa2 = pa1.map(x => (x,fib(x)))
-    val pa3 = pa2.map(x => fib(40 - x._1))
-
-    println(pa3(30))
+    val pa3 = pa2.map(x => fib(size - x._1))
   }
 
 }
