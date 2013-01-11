@@ -431,14 +431,14 @@ certain operations, have a look at
 section~\ref{ssec:imp-operations}. Throughout the following sections,
 the operation \texttt{map} is used as an example.
 
-Internally, two major types exist: \texttt{ConcreteFlowArrays} and
-Views. \texttt{ConcreteFlowArrays} store actual data -- the most
+Internally, two major types exist: \emph{Concrete FlowArrays} and
+\emph{Views}. Concrete FlowArrays store actual data -- the most
 trivial being the \texttt{FlatFlowArray}, which just wraps around an
-Array. Views on the other hand expose data from
-\texttt{ConcreteFlowArrays} under a different form -- currently the
+array. Views on the other hand expose data from
+concrete FlowArrays under a different form -- currently the
 only supported view is the \texttt{FlowArraySliceView} which exposes
-only a part of another \texttt{FlowArray}. These internal types will
-be described later on.
+only a slice of another FlowArray. These internal types will be
+described later on.
 
 \subsubsection{Job Dispatch}
 Job creation for monadic operations is handled through the abstract
@@ -446,7 +446,8 @@ method \texttt{dispatch}, which allows to dispatch a job specified by
 a closure -- a \texttt{JobGen} -- to operate on a given range of the
 FlowArray and returns the job which handles the block dependency
 management for this calculation. Fig~\ref{fig:dispatch-code} shows the
-signatures for \texttt{dispatch} and \texttt{JobGen} and how dispatch
+signatures for \texttt{dispatch} and
+\texttt{JobGen}. Fig~\ref{fig:dispatch-example} shows how dispatch
 can be used to implement the monadic operation \texttt{map}.
 
 \begin{figure}
@@ -459,13 +460,6 @@ def dispatch(
   srcOffset: Int,
   length: Int
 ): FAJob
-
-def map[B](f: A => B): FlowArray[B] = \{
-    val ret = newFlowArray[B](this.size)
-    val job = this.dispatch(FAMapJob(ret, f))
-    ret.generatedBy(job)
-    ret
-\}
 }
 \end{alltt}
 \end{minipage}
@@ -483,43 +477,65 @@ trait JobGen[A] \{
 }
 \end{alltt}
 \end{minipage}
-\caption{Signatures for \texttt{dispatch} and \texttt{JobGen}, example
-  usage of \texttt{dispatch} with \texttt{map}.}
+\caption{Signatures for \texttt{dispatch} and \texttt{JobGen}, }
 \label{fig:dispatch-code}
 \end{figure}
 
-It is important to note that when dispatching, the target of the
-operation is only referenced by the \texttt{JobGen}: In the example of
+\begin{figure}
+\begin{alltt}
+{\scriptsize
+def map[B](f: A => B): FlowArray[B] = \{
+    val ret = newFlowArray[B](this.size)
+    val job = this.dispatch(FAMapJob(ret, f))
+    ret.generatedBy(job)
+    ret
+\}
+}
+\end{alltt}
+\caption{Example usage of \texttt{dispatch} in the implementation of
+  \texttt{map}. \texttt{FAMapJob(ret, f)} returns a
+  \texttt{JobGen[B]}}
+\label{fig:dispatch-example}
+\end{figure}
+
+It is important to note, that when dispatching, the target of the
+operation -- this may be another FlowArray as in the case of
+\texttt{map}, or a future in case of a \texttt{fold} -- is only
+referenced by the \texttt{JobGen}: In the example of 
 \texttt{map}, the statement \texttt{FAMapJob(ret, f)} creates a
 \texttt{JobGen} which writes to \texttt{ret} using transformation
-function \texttt{f}). We therefore see, that dispatching FlowArray
+function \texttt{f}. We therefore see, that the dispatching FlowArray
 does not know the target of the operation (and does not need to
-know). This allows us to use the same construct for more complex
-operations.
+know). This allows us to use the same dispatch construct for more
+complex operations (such as \texttt{flatMap}).
 
 \subsubsection{Blocking}
 FlowArrays also support blocking to actually retrieve the data that
 has been (or will be) calculated. The operation \texttt{blocking} on
 the FlowArray suspends execution of the calling thread until all
-calculation is done and then returns the data as Array. This may
+calculation is done and then returns the data as array. This may
 require copying or consolidation of data (for example when
 \texttt{blocking} is called on a view).
 
 \subsubsection{FlatFlowArray}
-The most easy case of a FlowArray: Just a wrapper around a simple
-Array which handles the completion and the dependency tracking. The
-\texttt{dispatch} method calls the \texttt{JobGen} directly (as its
-signature suggests), the \texttt{blocking} method waits for the
-assigned job to complete and then just returns a reference to the
-internal Array.
+The most easy case of a concrete implementation of a FlowArray: Just a
+wrapper around a simple array which handles the completion and the
+dependency tracking. The \texttt{dispatch} method calls the
+\texttt{JobGen} directly (as its signature suggests), the
+\texttt{blocking} method waits for the assigned job to complete and
+then just returns a reference to the internal array.
 
 \subsubsection{Slice Views}
 \texttt{FlowArraySliceViews} wrap around a \texttt{ConcreteFlowArray}
+(i.e. a \texttt{FlatFlowArray} or a \texttt{HierFlowArray})
 and expose a given part of it. The \texttt{dispatch} method adjusts 
-offset and length and proxies to \texttt{dispatch} of the inner
+offset and length and proxies the call to the \texttt{dispatch} method
+of the inner
 \texttt{ConcreteFlowArray}. The \texttt{blocking} method waits for the
 smallest covering sub job of the inner \texttt{ConcreteFlowArray} and
-then copies the required elements to a new Array.
+then copies the required elements to a new array. Note that this
+behavior might cause a calling thread to block for longer than
+actually required.
 
 \subsubsection{Hierarchical FlowArrays}
 \texttt{HierFlowArrays} are the result of \texttt{flatMapN} operations
@@ -527,7 +543,8 @@ then copies the required elements to a new Array.
 the most complex concrete implementation of a FlowArray. The
 \texttt{dispatch} method needs to dispatch a job for each inner
 FlowArray of the \texttt{HierFlowArrays}. However, since the number of
-inner FlowArrays is big (otherwise no FlowArray would have been used),
+inner FlowArrays is big (otherwise something else than a FlowArray
+should have been used), 
 this needs to be done asynchronously. Further, the multiple dispatched
 jobs need then to be waited on and regrouped by the outer job in order
 to fulfill the whole dependency tracking requirement (remember
@@ -537,10 +554,13 @@ double dependency tracking that is required).
 
 The \texttt{blocking} method needs to flatten the hierarchical
 structure into a single array by copying the data from the inner
-FlowArrays. This copying is slow and somewhat unnecessary which 
+FlowArrays. This copying is somewhat unnecessary -- which 
 was the reason for the creation of Hierarchical FlowArrays in the
-first place. One might improve on this by providing indexed access to
-elements only in FlowArrays.
+first place: Currently, flatMapped data has to be copied only when
+retreiving results, not in a calculation flow. Nevertheless, one might
+further improve on this by providing indexed access to elements only
+in FlowArrays instead requiring to return a reference to a full
+array.
 
 \subsection{Operations}
 \label{ssec:imp-operations}
@@ -550,32 +570,39 @@ the \texttt{FAJob} framework or require some extensions to it.
 \subsubsection{Flatten}
 For the same reasons as \texttt{flatMapN} requires the size of the
 inner arrays, the \texttt{flatten} operation on FlowArrays requires
-the size of the inner FlowArray to be given. Thanks to hierarchical
+the size of the inner FlowArray to be given (and all inner FlowArrays
+to have the same size for that matter). Thanks to hierarchical
 FlowArrays, the implementation of \texttt{flatten} is easy:
 
-\texttt{FlatFlowArrays} are simply converted into hierarchical
-FlowArrays with the same data array (and the inner size given in the
-argument).
+\begin{description}
+\item[\texttt{FlatFlowArrays}] are simply converted into hierarchical
+  FlowArrays with the same data array (and the inner size given in the
+  argument).
+\item[\texttt{FlowArraySliceViews}] currently flatten the underlying
+  concrete array and return a new view on it. This behavior should and
+  can easily be improved in the future.
+\item[\texttt{HierFlowArrays}] push the flatten call down to their
+  inner arrays (which might in turn push it down to their inner
+  arrays), until they reach a \texttt{FlatFlowArray}, which will then
+  be converted into a \texttt{HierFlowArray}.
+\end{description}
 
-Slice views currently flatten the underlying concrete array and return
-a new view on it. This behavior should and can easily be improved in
-the future.
-
-\texttt{HierFlowArrays} push the flatten call down to their inner
-arrays (which might in turn push it down), until they reach a
-\texttt{FlatFlowArray}, which will then be converted into a
-\texttt{HierFlowArray}.
+To retain evidences about the types inside the current FlowArray when
+flatting, implicit arguments are used together with the
+\texttt{CanFlatten} type. The reader is refered to the scaladoc and
+the code for details.
 
 \subsubsection{Transpose}
 This operation has specifically been written to implement matrix
 multiplication with FlowArrays. It interprets the array as a
-two-dimensional array, given a step size (i.e. one dimension of the
+two-dimensional array given a step size (i.e. one dimension of the
 array) and transposes it. The indexes are therefore altered as
 follows (see fig~\ref{fig:transpose} for an illustration):
-\[ i_n = \lfloor i_o / d_1 \rfloor + (i \bmod d_1) * d_2 \]
+\[ i_n = \lfloor i_o / d_1 \rfloor + (i \bmod d_1) * d_2 \qquad (d_1
+\cdot d_2 = n)\]
 where $i_o,\ i_n$ are the old and new indexes, $d_1,\ d_2$ are the two
-dimensions. This is currently the only operation that changes the
-order of the elements in a FlowArray.
+dimensions, $n$ the size of the FlowArray. This is currently the only
+operation that changes the order of the elements in a FlowArray.
 
 \begin{figure}
 \centering
@@ -588,15 +615,17 @@ Since this operation changes the order of the elements, the basic
 dependency tracking does not work anymore: As you can see in
 fig~\ref{fig:transpose}, the leftmost elements depend on elements from
 all over the source array. To track these dependencies correctly, the
-implementation of \texttt{sliceDep} is fundamentally changed. In the
-basic case, it returns the jobs that spans all the requested
-elements. However, in the \texttt{transpose} case, this would (almost)
-always be the root job, and hence slicing would be useless. Therefore,
+implementation of \texttt{sliceDep} in \texttt{FAJob} is fundamentally
+changed. In the 
+basic case, it returns the smallest job that still spans all the
+requested elements. However, in the \texttt{transpose} case, this
+would (almost)
+always be the root job, and hence splitting would be useless. Therefore,
 in the \texttt{tranpose} case, the \texttt{sliceDep} method returns a
 list of the not-split jobs (i.e. actually executing jobs) that
 calculate the given elements.
 
-It seems obvious, that the how the splitting is done has a tremendous
+It seems obvious, that how the splitting is done has a tremendous
 impact on ``how non-blocking'' this operation will end up to be. The
 current implementation only tracks dependencies, but does not try to
 optimize splitting depending on the exact transpose operation that
@@ -616,7 +645,7 @@ fig~\ref{fig:scalar-product} for the implementation of the
 benchmark. You'll notice the operations \texttt{zipMap} and
 \texttt{zipMapFold}: These are consolidated operations that use the
 \texttt{FAJob} structure but do not store intermediate results. As we
-will see they greatly increase performance.
+will see, they greatly improve performance.
 
 \begin{figure}
 \begin{minipage}[t]{6cm}
@@ -642,7 +671,7 @@ We have varied the size of the two vectors from $8 \cdot 10^6$ to $13
 tested the scalability by setting the parallelism level to $1,2$ and
 $4$ for FlowArrays (ParArrays have only been measured with full
 parallelism). The metrics we collected were the execution time and the
-garbage collection time.
+garbage collection time (sum of all non-final GC runtimes).
 
 The benchmarks have been executed on a Intel i7-2620M with a java
 version 1.7.0\_04, Java(TM) SE Runtime Environment (build
@@ -678,48 +707,57 @@ negative.
 \subsection{Interpretation}
 First of all we must notice the huge overhead that garbage collection
 brings, especially for the benchmark using the simple \texttt{zip},
-\texttt{map} and \texttt{fold} operations, against which --
-unfortunately -- the actual calculation time becomes negligible. Note
-that octave \cite{eaton1997gnu} takes around $290 ms$ for the same
-calculation on the same machine, we can hence say the execution times
-(when disregarding garbage collection) are comparable.
+\texttt{map} and \texttt{fold} operations, against which the actual
+calculation time becomes negligible. This 
+is already strong evidence, that intermediate results should be
+avoided (as is done in \texttt{zipMap} and \texttt{zipMapFold}).
 
-Other benchmarks for matrix multiplication that have been mostly
-written but not yet been brought to a conclusion have already
-indicated that garbage collection might take a big amount of time
-during calculation.
+Further note that octave \cite{eaton1997gnu} takes around $290 ms$ for
+the same calculation on the same machine, we can hence say the
+execution times (when disregarding garbage collection) are
+comparable.
 
-We must come to the unfortunate conclusion, that allocating and
-storing small intermediate steps seems to be a severe performance
+Other benchmarks for matrix multiplication have been written but not
+yet been thoroughly run, have already indicated that garbage
+collection might take a big amount of time during calculation.
+
+We come to conclusion, that allocating memory for and
+storing results of small, intermediate steps seems to be a severe
+performance 
 killer. When continuing in the flow approach, means of reducing
-intermediate storage steps might need to be considered such as the
-\texttt{zipMap} and the \texttt{zipMapFold} operations that have
-greatly increased performance.
+intermediate storage steps (such as the
+\texttt{zipMap} and the \texttt{zipMapFold} operations) will need to
+be considered as they greatly increased performance. If the FlowArray
+framework is able to do conversions like (\texttt{zip}, \texttt{map}
+$\to$ \texttt{zipMap}) automatically, huge performance may be gained
+transparently.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
 We have designed and implemented a fixed-size version of a non-blocking
-ParArray like datastructure, the FlowArray and succeeded in
+ParArray like datastructure -- the FlowArray -- and succeeded in
 implementing all operations necessary to represent matrix
 multiplication in the programming model.
 
 Our benchmarks suggest that garbage collection due to full
 intermediate result creation (especially for operations like
-\texttt{zip}) greatly impact performance negatively and that having
+\texttt{zip}) impact performance negatively and that having
 consolidated operations (such as \texttt{zipMap}) removes a lot of
 this overhead.
 
-The data hence shows that removing intermediate elements in a dataflow
-significantly speeds up the whole calculation due to the fewer
+The data hence shows that avoiding storage of intermediate elements in
+a dataflow graph significantly speeds up the whole calculation due to the fewer
 allocated memory and hence the reduced garbage collection time.
 
-It is hence our proposition, to go into further research about how
-such kind of reductions can be done automatically, before the
-calculation is started. This is again something for which a FlowArray
-is required: A ParArray is unable to consolidate calculation steps, as
-it is required to finish calculation, until the result is completed
-and hence no lazily calculated objects may exist.
+Therefore, it is our proposition, to extend FlowArrays to such
+reductions automatically, before the calculation is started. This
+approach still requires a flow based programming model: A ParArray (or
+any other imperative, blocking structure) is
+unable to consolidate calculation steps, as 
+it is required to finish calculation, before the call may be returned
+and hence no lazily calculated objects may exist, which in turn
+entirely prevents reduction of calculation steps.
 
 \bibliographystyle{abbrv}
 \bibliography{bib}
