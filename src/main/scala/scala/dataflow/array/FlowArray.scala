@@ -156,7 +156,7 @@ abstract class FlowArray[A : ClassTag] extends Blocker with FAJob.Observer with 
    * calculated elements.
    *
    * the semantics of `isAbs` and `msecs` is the same as for
-   * `sum.misc.Unsafe.park`
+   * `sun.misc.Unsafe.park`
    */
   def blocking(isAbs: Boolean, msecs: Long): Array[A]
 
@@ -170,35 +170,99 @@ abstract class FlowArray[A : ClassTag] extends Blocker with FAJob.Observer with 
 
   ///// FlowArray package private API /////
 
+  /**
+   * access an element in this FA
+   * 
+   * returns the element at index `i` in this FA. *Does not check for
+   * completion* of this FA
+   */
   private[array] def unsafe(i: Int): A
 
+  /**
+   * copy elements from this FA
+   *
+   * copy a slice of this FA into an array. *Does not check for
+   * completion* of this FA
+   * @param dst array to copy to
+   * @param srcPos position in this FA to start copying
+   * @param dstPos position in this FA to store first element
+   * @param length number of elements to copy
+   */
   private[array] def copyToArray(dst: Array[A], srcPos: Int, dstPos: Int, length: Int): Unit
 
-  // Slice-wise dependencies
+  /**
+   * slice-wise dependencies
+   *
+   * calculates the jobs responsible for the given slice. See
+   * `SliceDep` for documentation of the return type.
+   */
   private[array] def sliceJobs(from: Int, to: Int): SliceDep
 
-  // Dispatcher
-  private[array] def dispatch(gen: JobGen): FAJob = dispatch(gen, 0, 0, size)
+  /**
+   * dispatch a job (or multiple ones) on this FA
+   *
+   * Calls JobGen an adequate number of times to generate jobs for
+   * this whole FA. Then schedules all these jobs and return the job
+   * responsible for dependency tracking of the all the jobs
+   */
+  private[array] final def dispatch(gen: JobGen): FAJob =
+    dispatch(gen, 0, 0, size)
+
+  /**
+   * dispatch a job (or multiple ones) on this FA
+   *
+   * Calls JobGen an adequate number of times to generate jobs for the 
+   * given slice of this FA. Then schedules all these jobs and return
+   * the job responsible for dependency tracking of the all the jobs
+   */
   private[array] def dispatch(gen: JobGen, dstOffset: Int, srcOffset: Int, length: Int): FAJob
 
+  /**
+   * Add observer to this FA.
+   *
+   * Add an observer to this FA which is notified once it completes or
+   * return false, if this FA is already completed.
+   *
+   * This method is required to avoid unnecessary stack growth, where
+   * tail recursion could have been used
+   * 
+   * @param obs Observer to add
+   * @return true if the observer could be added, false if this FA is
+   * completed
+   */
   private[array] def tryAddObserver(obs: FAJob.Observer): Boolean
 
+  /**
+   * Add observer to this FA
+   *
+   * Add an observer which is notified once this FA completes
+   */
   private[array] final def addObserver(obs: FAJob.Observer) {
     if (!tryAddObserver(obs)) obs.jobDone()
   }
 
+  /**
+   * the same as `map`, but returns a qualified FlatFlowArray instead
+   * of a FlowArray only. This is purely here for nice typing.
+   */
   private[array] def mapToFFA[B : ClassTag](f: A => B): FlatFlowArray[B] = {
     val ret = newFA[B]
     setupDep(FAMapJob(ret, f), ret)
     ret
   }
 
-  private[array] def fold[A1 >: A](from: Int, to: Int)(z: A1)(op: (A1,
-  A1) => A1): FoldFuture[A1]
+  /** folds a slice of this FA. Same rules as for normal fold */
+  private[array] def fold[A1 >: A](from: Int, to: Int)
+                                  (z: A1)
+                                  (op: (A1, A1) => A1): FoldFuture[A1]
 
-  private[array] def transpose(from: Int, to: Int)(step: Int):
-  FlowArray[A]
+  /** transpose a slice of this FA. Same rules as for normal transpose */
+  private[array] def transpose(from: Int, to: Int)(step: Int): FlowArray[A]
 
+  /**
+   * zipMapFold a slice of this FA. Same rules as for normal
+   * zipMapFold hold
+   */
   private[array] def zipMapFold[B : ClassTag, C](from: Int, to: Int)
                                       (that: FlowArray[B])
                                       (f: (A,B) => C)
@@ -208,13 +272,29 @@ abstract class FlowArray[A : ClassTag] extends Blocker with FAJob.Observer with 
 
   ///// Private utility functions /////
 
-  @inline private final def newFA[B : ClassTag] = 
+  /** create new FA with same size as this one */
+  @inline
+  private final def newFA[B : ClassTag] = 
     new FlatFlowArray(new Array[B](length))
 
-  @inline private final def newFA[B : ClassTag](n: Int) = 
+  /**
+   * create new HFA having the same number of inner FAs as the size of
+   * this FA.
+   * @param n size of inner FAs
+   */
+  @inline
+  private final def newFA[B : ClassTag](n: Int) = 
     new HierFlowArray(new Array[FlowArray[B]](size), n)
 
-  @inline private final def setupDep[B](gen: JobGen, ret: ConcreteFlowArray[B]) = {
+  /**
+   * setup dependencies between a CFA and a JobGen that generates it
+   *
+   * dispatches the JobGen on this FA and sets the resulting job as
+   * generator to `ret`.
+   * @return ret
+   */
+  @inline
+  private final def setupDep[B](gen: JobGen, ret: ConcreteFlowArray[B]) = {
     val job = dispatch(gen)
     ret.generatedBy(job)
     ret
@@ -224,6 +304,12 @@ abstract class FlowArray[A : ClassTag] extends Blocker with FAJob.Observer with 
 
 object FlowArray {
 
+  /**
+   * create a FA of size `n`
+   *
+   * creates an FA of size `n` by calling `f` with the index of each
+   * element to be created.
+   */
   def tabulate[A : ClassTag](n: Int)(f: Int => A): FlowArray[A] = {
     val ret = new FlatFlowArray(new Array[A](n))
     val job = FAGenerateJob(ret, f)
@@ -232,8 +318,14 @@ object FlowArray {
     ret
   }
 
+  /** create a FA with the given elements */
   def apply[A : ClassTag](xs: A*) = new FlatFlowArray(xs.toArray)
 
+  /**
+   * set parallelism level of the FA implementation.
+   *
+   * Needs to be called before any other operation in order to work.
+   */
   def setPar(n: Int) = FAJob.setPar(n)
 
 }
