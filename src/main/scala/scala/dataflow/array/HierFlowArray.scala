@@ -4,21 +4,51 @@ import scala.annotation.tailrec
 import scala.dataflow.Future
 import scala.reflect.ClassTag
 
+/**
+ * Hierarchical FlowArray
+ *
+ * This FlowArray holds an array of sub-FlowArrays and exposes it 
+ * to the user as if it were flattened. Operations on HFAs produce 
+ * truly flattened (i.e. FlatFlowArrays) FlowArrays again. HFAs are
+ * used as the result of calls to flatMapN and flatten
+ */
 class HierFlowArray[A : ClassTag](
+  /** the sub-FlowArrays of this HFA */
   private[array] val subData: Array[FlowArray[A]],
+  /** the size of each individual sub-FlowArray */
   private[array] val subSize: Int
 ) extends ConcreteFlowArray[A] {
 
   import FlowArray._
   import SlicedJob._
 
-  // Fields
+  /** number of sub-FlowArrays, this HFA contains */
   private[array] val outerSize = subData.length
-  val size = subData.length * subSize
 
-  @volatile var doneInd: Int = 0
+  override val size = subData.length * subSize
 
-  final private[array] def subSlices(from: Int, to: Int) = {
+  /**
+   * index of smallest indexed sub-FlowArray which has not yet seen
+   * to be done
+   */
+  @volatile
+  private var doneInd: Int = 0
+
+  /**
+   * Calculate sub-slices for sub-FlowArrays that are required to
+   * compose a bigger slice.
+   *
+   * Example:
+   *   The HFA has the following structure:
+   *     0 1 2 | 3 4 5 | 5 6 8 | 9 10 11
+   *   Suppose the requested slice is (4, 9):
+   *               4 5 | 5 6 8 | 9
+   *   SubSlices will return:
+   *     (1, 1, 2), (2, 0, 2), (4, 0, 0)
+   *   where the first element is the index of the sub-FlowArray, and
+   *   the last two the slice in the sub-FlowArray
+   */
+  private[array] final def subSlices(from: Int, to: Int) = {
     val lbound = from/ subSize
     val ubound = to  / subSize
     for (i <- lbound to ubound)
@@ -28,15 +58,21 @@ class HierFlowArray[A : ClassTag](
            )
   }
 
-  // Slice-wise dependencies
   private[array] override def sliceJobs(from: Int, to: Int): SliceDep = {
 
+    /**
+     * queries jobs of all sub-FlowArrays that are required for the
+     * given slice
+     */
     def rawSubFAJobs = {
       for { (i,l,u) <- subSlices(from, to)
-             job <- subData(i).sliceJobs(l,u)
+                job <- subData(i).sliceJobs(l,u)
           } yield job
     }
 
+    /**
+     * reshape the rawSubFAJobs to meet SliceDep format
+     */
     def subFAJobs = {
       val (js, redo) = rawSubFAJobs.unzip
       val fjs = js.flatten
@@ -49,13 +85,21 @@ class HierFlowArray[A : ClassTag](
     super.sliceJobs(from, to).map(x => (x._1, true)) orElse subFAJobs
   }
 
-  final private[array] def dispatch(gen: JobGen, dstOffset: Int, srcOffset: Int, length: Int) = {
+  override private[array] final def dispatch(
+      gen: JobGen,
+      dstOffset: Int,
+      srcOffset: Int,
+      length: Int) = {
     val job = FADispatcherJob(this, gen, dstOffset, srcOffset, length)
     dispatch(job, srcOffset, length)
     job
   }
 
-  final private[array] def copyToArray(dst: Array[A], srcPos: Int, dstPos: Int, length: Int) {
+  override private[array] final def copyToArray(
+      dst: Array[A],
+      srcPos: Int,
+      dstPos: Int,
+      length: Int) {
     val li = srcPos / subSize
     val ld = srcPos % subSize
     for ((i, l, u) <- subSlices(srcPos, srcPos + length - 1)) {

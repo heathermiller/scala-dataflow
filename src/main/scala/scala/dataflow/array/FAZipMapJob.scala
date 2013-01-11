@@ -45,7 +45,7 @@ object FAZipMapJob {
 
   import FAJob.JobGen
 
-  def apply[A : ClassTag, B : ClassTag, C : ClassManifest](
+  def apply[A : ClassTag, B : ClassTag, C : ClassTag](
     osrc: FlowArray[B],
     dst: FlatFlowArray[C],
     f: (A,B) => C
