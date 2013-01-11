@@ -107,14 +107,33 @@ class HierFlowArray[A : ClassTag](
     }
   }
 
-  private lazy val asFFA = {
+  /**
+   * this HFA represented as a FFA.
+   *
+   * a FFA containing FAs, using the same data array and generation
+   * job as this HFA
+   */
+  private lazy val asFFA: FlatFlowArray[FlowArray[A]] = {
     val fa = new FlatFlowArray(subData)
     fa.generatedBy(this)
     fa
   }
 
+  /**
+   * encapsulate and dispatch a fold-like job on this HFA
+   *
+   * @param from start of slice to operate on
+   * @param to end of slice to operate on
+   * @param z neutral element of accumulation
+   * @param op associative accumulator
+   * @param inner closure to map each internal FlowArray to a Future
+   * which is to accumulate
+   */
   @inline
-  private def encFoldLike[B](from: Int, to: Int)(z: B)(op: (B,B) => B)(inner: FlowArray[A] => FoldFuture[B]) = {
+  private def encFoldLike[B](from: Int, to: Int)
+                            (z: B)
+                            (op: (B,B) => B)
+                            (inner: FlowArray[A] => FoldFuture[B]) = {
     val view = {
       if (from == 0 && to == size - 1) asFFA
       else asFFA.slice(from,to)
@@ -129,7 +148,8 @@ class HierFlowArray[A : ClassTag](
     folds.dispatch(cjob, 0, folds.size)
     
     // Spawn last fold job
-    val ajob = FAFoldJob(folds, 0, folds.size, z, op, (x: FoldFuture[B]) => x.get)
+    val ajob = FAFoldJob(folds, 0, folds.size, z, op,
+                         (x: FoldFuture[B]) => x.get)
     val fut = new FoldFuture(ajob)
 
     cjob.depending(ajob)
@@ -137,12 +157,23 @@ class HierFlowArray[A : ClassTag](
     fut
   }
 
-  def fold[A1 >: A](from: Int, to: Int)(z: A1)(op: (A1, A1) => A1): FoldFuture[A1] =
+  override def fold[A1 >: A](from: Int, to: Int)
+                            (z: A1)
+                            (op: (A1, A1) => A1): FoldFuture[A1] = 
     encFoldLike(from, to)(z)(op)(_.fold(z)(op))
 
-  def zipMapFold[B : ClassTag, C](from: Int, to: Int)(that: FlowArray[B])(f: (A,B) => C)(z: C)(op: (C,C) => C) = sys.error("not implemented yet") // TODO implement
+  override def zipMapFold[B : ClassTag, C](from: Int, to: Int)
+                                          (that: FlowArray[B])
+                                          (f: (A,B) => C)
+                                          (z: C)
+                                          (op: (C,C) => C) =
+    // TODO implement
+    sys.error("not implemented yet")
 
-  def flatten[B](n: Int)(implicit flat: CanFlatten[A,B], mf: ClassTag[B]): FlowArray[B] = {
+  override def flatten[B](n: Int)
+                         (implicit flat: CanFlatten[A,B],
+                          mf: ClassTag[B]
+                         ): FlowArray[B] = {
     // Somehow we have to pass the implicit by hand in the second call.
     // Compiler screws it up...
     asFFA.map(_.flatten(n)).flatten(subSize*n)(flattenFaInFa[B], mf)
@@ -156,7 +187,8 @@ class HierFlowArray[A : ClassTag](
     ret
   }
 
-  final def unsafe(i: Int) = subData(i / subSize).unsafe(i % subSize) 
+  override final def unsafe(i: Int) =
+    subData(i / subSize).unsafe(i % subSize) 
 
   @tailrec
   override final def jobDone() {
@@ -177,6 +209,11 @@ class HierFlowArray[A : ClassTag](
     di >= subData.length
   }
 
+  /**
+   * try to advance index of smallest indexed sub-FlowArray which has
+   * not yet seen to be done.
+   * @return index that has been seen to be not yet done
+   */
   private def advDone() = {
     var i = /*READ*/doneInd
     while (i < subData.length && subData(i).done) { i += 1 }
