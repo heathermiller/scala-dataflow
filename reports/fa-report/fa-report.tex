@@ -209,15 +209,21 @@ fig~\ref{fig:fa-fold} illustrates this approach.
 
 \begin{figure}
   \centering
-  \includegraphics{fa-fold}
+  \subfigure[Job hierarchy]{%
+    \includegraphics{fa-fold}%
+    \label{fig:fa-fold}}
+  \qquad
+  \subfigure[Calculation]{%
+    \includegraphics{fa-fold-calc}%
+    \label{fig:fa-fold-calc}}
   \caption{Illustration of \texttt{fold} on a FlowArray}
-  \label{fig:fa-fold}
 \end{figure}
 
 In order to keep the number of jobs (and hence the burden of managing
 them) minimal, rather then spawning a single job for each accumulation
 step in the tree, the job which finishes second on each node is
-responsible to calculate its accumulated value. Using this scheme, the
+responsible to calculate its accumulated value (see
+fig~\ref{fig:fa-fold-calc}). Using this scheme, the 
 same number of jobs are spawned as for a \texttt{map}.
 
 Note that this approach is preferable to a single element where
