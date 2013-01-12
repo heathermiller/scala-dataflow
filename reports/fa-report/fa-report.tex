@@ -42,10 +42,11 @@
 
   Benchmarks on operations for linear algebra have shown that the
   current implementation of FlowArrays performs comparable to
-  ParArrays. However, the current storage model of FlowArrays severely
-  impacts performance, but we can show that the adaptions proposed
-  later on in this report do significantly speed up the calculation
-  and will lead to higher performance than ParArrays.
+  ParArrays. Further, we'll find that the current storage model of
+  FlowArrays takes up most the calculation time. We can show that
+  the adaptions proposed later on in this report do significantly
+  speed up the calculation and will lead to higher performance than
+  ParArrays.
 \end{abstract}
 
 \section{Introduction}
@@ -163,16 +164,26 @@ array have been calculated.
 \subsection{Dependency Tracking}
 We'll now describe in detail what happens, when a \texttt{map} is
 called on a FlowArray depending on the different possible states of
-its blocks. Fig~\ref{fig:dep-track} illustrates the different
-scenarios that may happen. In the figure, the circles represent jobs:
-gray if executing or submitted to the execution queue, white if
-waiting in an internal queue of another job (indicated by the dashed
-arrow). The rectangles represent data blocks of a FlowArray: white if
-(partially) empty, gray if fully calculated.
+its blocks.  It is important to understand, that dependency tracking
+happens for each block individually and hence the calculation in one
+part of the FlowArray may advance without waiting for another
+part. Fig~\ref{fig:dep-track} illustrates the different scenarios that
+may happen on a single-block level.
 
-When a \texttt{map} is called on a FlowArray, each block chain will
-start in one of the three first states and then propagate to the right
-until both blocks are fully calculated. The cases are the following:
+In the figure, the circles represent jobs: Gray circles are jobs which 
+are executing or submitted to the execution queue, meaning that all 
+data required to start calculation of this job is available. White
+circles are in an internal queue of another job (indicated by the dashed
+arrow), meaning that this calculation cannot be started yet, as some
+required data is still being calculated.
+
+The rectangles represent the data blocks of a FlowArray (i.e. a range
+of indexes): White blocks are (partially) empty, i.e. not all elements
+are calculated and a job to calculate them is still running or pending
+for execution. Gray blocks are fully calculated, i.e. all elements
+have their correct value and all references to calculating jobs may be
+freed, since no dependency tracking has to be done for this block
+anymore.
 
 \begin{figure}
   \centering
@@ -181,6 +192,10 @@ until both blocks are fully calculated. The cases are the following:
   \label{fig:dep-track}
 \end{figure}
 
+When a \texttt{map} is called on a FlowArray, each block chain will
+start in one of the three first states (as indicated in the figure)
+and then propagate to the right until both blocks are fully
+calculated. The states are the following (from left to right):
 
 \begin{enumerate}
 \item Both blocks are not yet calculated and the job for the first
@@ -198,7 +213,8 @@ until both blocks are fully calculated. The cases are the following:
 We have seen how dataflow with dependency tracking can be used in
 monadic operations on the example of a \texttt{map}. In this section
 we'll describe the caveats of other common monadic operations on
-arrays.
+arrays. For a complete description of what operations FlowArrays
+support, please refer to section~\ref{ssec:flowarray}.
 
 \subsubsection{Fold}
 When doing out of order folding, each block has first to be reduced to
@@ -274,11 +290,18 @@ When a \texttt{map} is called on one of these \emph{Hierarchical
   FlowArrays} individual \texttt{maps} are called for each sub array
 and only then the resulting data is written into a flat array. This
 allows to ``flatten out'' those hierarchical structures without
-additional computation costs. Note that this scheme does require the
-blocks to be re-aligned at a later point in time to remove the
-arbitrary splitting imposed by the hierarchy introduced by the
-\texttt{flatMap}. For details how block splitting is propagated
-through dependencies, please refer to
+additional computation costs.
+
+Note that currently, this scheme does only split in terms of the outer
+blocks, i.e. individual elements of inner FlowArrays are always
+assigned to the same calculation blocks. This is OK as long as the
+number of inner FlowArrays is (relatively) high.
+
+There is currently no interface to launch re-alignment of the blocks
+in order to remove the arbitrary splitting imposed by the hierarchy
+introduced by the \texttt{flatMap}. This is an interface issue; the
+implementation is trivial. For details how block splitting is
+propagated through dependencies, please refer to
 section~\ref{sec:implementation}.
 
 \subsubsection{Zip}
@@ -291,7 +314,7 @@ need to undergo a fundamental change).
 
 Further, the splitting of the two FlowArrays which are being zipped
 may be totally different, e.g. due to a preceding \texttt{flatMap} on
-one of them. Hence -- again -- re-alignment of blocks is required,
+one of them. Hence re-alignment of blocks is required,
 before the zipped tuples can be created. It is important to realize,
 that this may inherently lead to non-symmetric scheduling behavior:
 Depending on which FlowArray is on the ``left'' of the \texttt{zip}
@@ -418,6 +441,7 @@ def compute() \{
 \end{figure}
 
 \subsection{FlowArray}
+\label{ssec:flowarray}
 FlowArrays are the trait exposed to the API user. They (currently)
 support the following common monadic operations \texttt{map},
 \texttt{fold}, \texttt{flatMapN}\footnote{See
@@ -550,7 +574,8 @@ jobs need then to be waited on and regrouped by the outer job in order
 to fulfill the whole dependency tracking requirement (remember
 fig~\ref{fig:flatMap-dependency} on
 page~\ref{fig:flatMap-dependency} for an illustration on the
-double dependency tracking that is required).
+double dependency tracking that is required). All this is handled by a 
+special job, the \texttt{FADispatchJob}.
 
 The \texttt{blocking} method needs to flatten the hierarchical
 structure into a single array by copying the data from the inner
@@ -559,13 +584,14 @@ was the reason for the creation of Hierarchical FlowArrays in the
 first place: Currently, flatMapped data has to be copied only when
 retreiving results, not in a calculation flow. Nevertheless, one might
 further improve on this by providing indexed access to elements only
-in FlowArrays instead requiring to return a reference to a full
+in FlowArrays instead of requiring to return a reference to a full
 array.
 
 \subsection{Operations}
 \label{ssec:imp-operations}
-This section describes some operations which do not fit entirely into
-the \texttt{FAJob} framework or require some extensions to it.
+This section describes some operations on FlowArrays which do not fit
+entirely into the \texttt{FAJob} framework or require some extensions
+to it.
 
 \subsubsection{Flatten}
 For the same reasons as \texttt{flatMapN} requires the size of the
@@ -625,7 +651,8 @@ in the \texttt{tranpose} case, the \texttt{sliceDep} method returns a
 list of the not-split jobs (i.e. actually executing jobs) that
 calculate the given elements.
 
-It seems obvious, that how the splitting is done has a tremendous
+It seems obvious, that how exactly the splitting is done has a
+tremendous 
 impact on ``how non-blocking'' this operation will end up to be. The
 current implementation only tracks dependencies, but does not try to
 optimize splitting depending on the exact transpose operation that
@@ -639,7 +666,7 @@ tracking between the view and the underlying structure.
 
 \subsection{Setup}
 
-We have tested the performance of FlowArrays in comparison with
+We have tested the performance of FlowArrays in comparison to
 ParArrays by calculating the scalar product of two vectors. Refer to
 fig~\ref{fig:scalar-product} for the implementation of the
 benchmark. You'll notice the operations \texttt{zipMap} and
@@ -673,7 +700,7 @@ $4$ for FlowArrays (ParArrays have only been measured with full
 parallelism). The metrics we collected were the execution time and the
 garbage collection time (sum of all non-final GC runtimes).
 
-The benchmarks have been executed on a Intel i7-2620M with a java
+The benchmarks have been executed on a Intel i7-2620M with java
 version 1.7.0\_04, Java(TM) SE Runtime Environment (build
 1.7.0\_04-b20), Java HotSpot(TM) 64-Bit Server VM (build 23.0-b21,
 mixed mode).
@@ -717,20 +744,21 @@ the same calculation on the same machine, we can hence say the
 execution times (when disregarding garbage collection) are
 comparable.
 
-Other benchmarks for matrix multiplication have been written but not
+Other benchmarks for matrix multiplication that have been written but
+not 
 yet been thoroughly run, have already indicated that garbage
 collection might take a big amount of time during calculation.
 
-We come to conclusion, that allocating memory for and
+We come to the conclusion, that allocating memory for and
 storing results of small, intermediate steps seems to be a severe
 performance 
 killer. When continuing in the flow approach, means of reducing
 intermediate storage steps (such as the
 \texttt{zipMap} and the \texttt{zipMapFold} operations) will need to
-be considered as they greatly increased performance. If the FlowArray
-framework is able to do conversions like (\texttt{zip}, \texttt{map}
-$\to$ \texttt{zipMap}) automatically, huge performance may be gained
-transparently.
+be considered as they greatly increase performance. If the FlowArray
+framework is able to do conversions like \texttt{zip}, \texttt{map}
+$\to$ \texttt{zipMap} automatically, huge performance may be gained
+without any additional effort from the programmer using the FlowArrays.
 
 \section{Conclusion}
 \label{sec:conclusion}
@@ -750,9 +778,9 @@ The data hence shows that avoiding storage of intermediate elements in
 a dataflow graph significantly speeds up the whole calculation due to the fewer
 allocated memory and hence the reduced garbage collection time.
 
-Therefore, it is our proposition, to extend FlowArrays to such
+Therefore, it is our proposition, to extend FlowArrays to do such
 reductions automatically, before the calculation is started. This
-approach still requires a flow based programming model: A ParArray (or
+approach requires a flow based programming model: A ParArray (or
 any other imperative, blocking structure) is
 unable to consolidate calculation steps, as 
 it is required to finish calculation, before the call may be returned
