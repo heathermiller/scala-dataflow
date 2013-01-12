@@ -2,6 +2,10 @@ package scala.dataflow.array
 
 import scala.reflect.ClassTag
 
+/**
+ * Iterate over a mutable value until a condition is met for each
+ * element of an FA.
+ */
 private[array] class FAMutConvJob[A : ClassTag, B, C : ClassTag] private (
   val src: FlatFlowArray[A],
   val dst: FlatFlowArray[C],
@@ -18,10 +22,10 @@ private[array] class FAMutConvJob[A : ClassTag, B, C : ClassTag] private (
 
   override protected type SubJob = FAMutConvJob[A,B,C]
 
-  protected def subCopy(s: Int, e: Int) = 
+  override protected def subCopy(s: Int, e: Int) = 
     new FAMutConvJob(src, dst, toMut, toIMut, f, cond, offset, s, e, thresh, this)
 
-  protected def doCompute() {
+  override protected def doCompute() {
     for (i <- start to end) {
       var x = toMut(src.data(i))
       while (!cond(x)) { f(x) }
@@ -35,6 +39,7 @@ private[array] object FAMutConvJob {
 
   import FAJob.JobGen
 
+  /** creates a JobGen that creates MutConvJobs */
   def apply[A : ClassTag, B, C : ClassTag](
     dst: FlatFlowArray[C],
     toMut: A => B,
