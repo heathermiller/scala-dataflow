@@ -67,12 +67,17 @@ abstract class FlowArray[A : ClassTag] extends Blocker with FAJob.Observer with 
    * mutably converge to a value
    *
    * applies `it` to each element until `cond` is met. Returns new value
+   * @param toMut how to create mutable element out of this FAs elems
+   * @param toIMut how to create immutable element for final result
    * @param cond condition of convergance
    * @param it iteration step
    */
-  def mutConverge(cond: A => Boolean)(it: A => Unit): FlowArray[A] = {
-    val ret = newFA[A]
-    setupDep(FAMutConvJob(ret, it, cond), ret)
+  def mutConverge[B, C : ClassTag](toMut:  A => B)
+                                  (toIMut: B => C)
+                                  (cond: B => Boolean)
+                                  (it: B => Unit): FlowArray[C] = {
+    val ret = newFA[C]
+    setupDep(FAMutConvJob(ret, toMut, toIMut, it, cond), ret)
   }
 
   /**
