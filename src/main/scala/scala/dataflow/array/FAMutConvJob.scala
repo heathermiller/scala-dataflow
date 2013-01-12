@@ -29,7 +29,7 @@ private[array] class FAMutConvJob[A : ClassTag] private (
 
 }
 
-object FAMutConvJob {
+private[array] object FAMutConvJob {
 
   import FAJob.JobGen
 

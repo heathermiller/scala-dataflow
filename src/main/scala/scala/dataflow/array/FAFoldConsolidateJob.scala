@@ -1,5 +1,9 @@
 package scala.dataflow.array
 
+/**
+ * waits on all FoldFutures in a FlowArray[FoldFuture[A]] only then
+ * continues in dependency chain
+ */
 private[array] class FAFoldConsolidateJob[A] private (
   val src: FlowArray[FoldFuture[A]],
   start: Int,
@@ -10,10 +14,10 @@ private[array] class FAFoldConsolidateJob[A] private (
 
   override protected type SubJob = FAFoldConsolidateJob[A]
 
-  protected def subCopy(s: Int, e: Int) = 
+  override protected def subCopy(s: Int, e: Int) = 
     new FAFoldConsolidateJob(src, s, e, thresh, this)
 
-  protected def doCompute() {
+  override protected def doCompute() {
     val jobs = for {
       i <- start to end
       j <- src.unsafe(i).getJob
@@ -26,10 +30,11 @@ private[array] class FAFoldConsolidateJob[A] private (
 
 }
 
-object FAFoldConsolidateJob {
+private[array] object FAFoldConsolidateJob {
 
   import FAJob.JobGen
 
+  /** creates a new FAFoldConsolidateJob */
   def apply[A](src: FlowArray[FoldFuture[A]], srcOffset: Int, length: Int) = {
     new FAFoldConsolidateJob(src, srcOffset, srcOffset + length - 1,
                              FAJob.threshold(length), null)

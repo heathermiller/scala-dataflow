@@ -1,5 +1,11 @@
 package scala.dataflow.array
 
+/**
+ * Re-align indices on a given `SlicedJob`. This job should not be
+ * scheduled through the `dispatch` framework but launched
+ * directly. It will wait on its dependants itself (which is the only
+ * thing it does)
+ */
 private[array] class FAAlignJob private (
   val srcJob: SlicedJob,
   start: Int,
@@ -10,10 +16,10 @@ private[array] class FAAlignJob private (
 
   override protected type SubJob = FAAlignJob
 
-  protected def subCopy(s: Int, e: Int) =
+  override protected def subCopy(s: Int, e: Int) =
     new FAAlignJob(srcJob, s, e, thresh, this)
 
-  protected def doCompute() {
+  override protected def doCompute() {
     srcJob.sliceJobs(start, end) match {
       // No need to retry after
       case Some((j, false)) => delegate(j)
@@ -28,6 +34,7 @@ private[array] class FAAlignJob private (
 
 private[array] object FAAlignJob {
 
+  /** create new FAAlignJob */
   def apply(src: SlicedJob, start: Int, end: Int) =
     new FAAlignJob(src, start, end, FAJob.threshold(end - start + 1), null)
 

@@ -2,6 +2,10 @@ package scala.dataflow.array
 
 import scala.reflect.ClassTag
 
+/**
+ * Dispatches jobs (using a JobGen) on each individual element of a
+ * HFA and re-consolidates dependency tracking.
+ */
 private[array] class FADispatcherJob[A : ClassTag] private (
   val src: HierFlowArray[A],
   val d: FAJob.JobGen[A],
@@ -26,6 +30,10 @@ private[array] class FADispatcherJob[A : ClassTag] private (
     delegate(sJobs)
   }
 
+  /**
+   * overriden to handle jobs which do not map 1-to-1 in dependency
+   * (i.e. TransposeJob)
+   */
   override def sliceJobs(from: Int, to: Int) = {
     if (!d.needDeepJobSearch) {
       super.sliceJobs(from, to)
@@ -50,8 +58,9 @@ private[array] class FADispatcherJob[A : ClassTag] private (
 
 }
 
-object FADispatcherJob {
+private[array] object FADispatcherJob {
 
+  /** create a new dispatcher job */
   def apply[A : ClassTag](
     src: HierFlowArray[A],
     d: FAJob.JobGen[A],

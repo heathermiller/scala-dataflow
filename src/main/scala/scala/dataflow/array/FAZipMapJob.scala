@@ -2,6 +2,9 @@ package scala.dataflow.array
 
 import scala.reflect.ClassTag
 
+/**
+ * zips, maps in one shot to avoid intermediate element storage
+ */
 private[array] class FAZipMapJob[A : ClassTag,
                                  B : ClassTag,
                                  C : ClassTag] private (
@@ -19,10 +22,10 @@ private[array] class FAZipMapJob[A : ClassTag,
 
   override protected type SubJob = FAZipMapJob[A,B,C]
 
-  protected def subCopy(s: Int, e: Int) = 
+  override protected def subCopy(s: Int, e: Int) = 
     new FAZipMapJob(src, osrc, dst, f, dstOffset, oSrcOffset, s, e, thresh, this)
 
-  protected def doCompute() {
+  override protected def doCompute() {
     osrc.sliceJobs(oSrcOffset + start, oSrcOffset + end) match {
       // no need to call sliceJobs again after completion
       case Some((j, false)) => delegateThen(j) { calculate _ }
@@ -41,10 +44,11 @@ private[array] class FAZipMapJob[A : ClassTag,
 
 }
 
-object FAZipMapJob {
+private[array] object FAZipMapJob {
 
   import FAJob.JobGen
 
+  /** create a JobGen that creates a ZipMapJob */
   def apply[A : ClassTag, B : ClassTag, C : ClassTag](
     osrc: FlowArray[B],
     dst: FlatFlowArray[C],

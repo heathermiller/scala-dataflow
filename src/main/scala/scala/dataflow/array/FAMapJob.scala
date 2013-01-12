@@ -2,6 +2,9 @@ package scala.dataflow.array
 
 import scala.reflect.ClassTag
 
+/**
+ * calculate a simple element-to-element transformation on an FA
+ */
 private[array] class FAMapJob[A : ClassTag, B : ClassTag] private (
   val src: FlatFlowArray[A],
   val dst: FlatFlowArray[B],
@@ -15,10 +18,10 @@ private[array] class FAMapJob[A : ClassTag, B : ClassTag] private (
 
   override protected type SubJob = FAMapJob[A,B]
 
-  protected def subCopy(s: Int, e: Int) = 
+  override protected def subCopy(s: Int, e: Int) = 
     new FAMapJob(src, dst, f, offset, s, e, thresh, this)
 
-  protected def doCompute() {
+  override protected def doCompute() {
     for (i <- start to end) {
       dst.data(i + offset) = f(src.data(i))
     }
@@ -26,10 +29,11 @@ private[array] class FAMapJob[A : ClassTag, B : ClassTag] private (
 
 }
 
-object FAMapJob {
+private[array] object FAMapJob {
 
   import FAJob.JobGen
 
+  /** create a new JobGen that creates MapJobs */
   def apply[A : ClassTag, B : ClassTag](
     dst: FlatFlowArray[B],
     f: A => B

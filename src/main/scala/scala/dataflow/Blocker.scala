@@ -3,6 +3,10 @@ package scala.dataflow
 import scala.annotation.tailrec
 import java.util.Date
 
+/**
+ * Abstract class that provides blocking. Should be trait, but does
+ * not work because of CASs
+ */
 abstract class Blocker {
 
   import Blocker._
@@ -38,6 +42,9 @@ abstract class Blocker {
 
   private final def mnow = (new Date()).getTime
 
+  /**
+   * block calling thread until `freeBlocked` is called
+   */
   final protected def block(isAbs: Boolean = false, msecs: Long = 0) {
 
     val isTimed  = isAbs || msecs > 0

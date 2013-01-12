@@ -2,6 +2,10 @@ package scala.dataflow.array
 
 import scala.reflect.ClassTag
 
+/**
+ * Generates values in an FA based on some function (used for
+ * tabulate)
+ */
 private[array] class FAGenerateJob[A : ClassTag] private (
   val dst: FlatFlowArray[A],
   val f: Int => A,
@@ -13,10 +17,10 @@ private[array] class FAGenerateJob[A : ClassTag] private (
 
   override protected type SubJob = FAGenerateJob[A]
 
-  protected def subCopy(s: Int, e: Int) = 
+  override protected def subCopy(s: Int, e: Int) = 
     new FAGenerateJob(dst, f, s, e, thresh, this)
 
-  protected def doCompute() {
+  override protected def doCompute() {
     for (i <- start to end) {
       dst.data(i) = f(i)
     }
@@ -24,8 +28,9 @@ private[array] class FAGenerateJob[A : ClassTag] private (
 
 }
 
-object FAGenerateJob {
+private[array] object FAGenerateJob {
 
+  /** create a new generate job */
   def apply[A : ClassTag](
     dst: FlatFlowArray[A],
     f: Int => A) =

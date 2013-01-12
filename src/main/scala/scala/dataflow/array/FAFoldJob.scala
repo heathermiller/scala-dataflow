@@ -3,6 +3,12 @@ package scala.dataflow.array
 import scala.dataflow.Future
 import scala.reflect.ClassTag
 
+/**
+ * out-of-order folding job on a FA. Optionally supports a map before
+ * reduction.
+ *
+ * Result combination after completion is done by superclass.
+ */
 private[array] class FAFoldJob[A : ClassTag, A1] private (
   val src: FlatFlowArray[A],
   val z: A1,
@@ -16,10 +22,10 @@ private[array] class FAFoldJob[A : ClassTag, A1] private (
 
   override protected type SubJob = FAFoldJob[A,A1]
 
-  protected def subCopy(s: Int, e: Int) = 
+  override protected def subCopy(s: Int, e: Int) = 
     new FAFoldJob(src, z, f, g, s, e, thresh, this)
 
-  protected def doCompute() {
+  override protected def doCompute() {
     var tmp = z
     for (i <- start to end) {
       tmp = f(tmp, g(src.data(i)))
@@ -27,14 +33,15 @@ private[array] class FAFoldJob[A : ClassTag, A1] private (
     setResult(tmp)
   }
 
-  protected override def combineResults(x: A1, y: A1) = f(x,y)
+  override protected def combineResults(x: A1, y: A1) = f(x,y)
 
 }
 
-object FAFoldJob {
+private[array] object FAFoldJob {
 
   import FAJob.JobGen
 
+  /** create a new FAFoldJob with map-phase */
   def apply[A : ClassTag, A1](
     src: FlatFlowArray[A],
     srcOffset: Int,
@@ -46,6 +53,7 @@ object FAFoldJob {
     new FAFoldJob(src, z, f, g, srcOffset,
                   srcOffset + length - 1, FAJob.threshold(length), null)
 
+  /** create a new FAFoldJob without map-phase */
   def apply[A : ClassTag, A1 >: A](
     src: FlatFlowArray[A],
     srcOffset: Int,

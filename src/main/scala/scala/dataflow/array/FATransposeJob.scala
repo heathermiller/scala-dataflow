@@ -3,12 +3,21 @@ package scala.dataflow.array
 import scala.dataflow.Future
 import scala.reflect.ClassTag
 
+/**
+ * Transposes a FA
+ */
 private[array] class FATransposeJob[A : ClassTag] private (
+  /** source of data */
   val src: FlatFlowArray[A],
+  /** destination of data */
   val dst: FlatFlowArray[A],
+  /** step in between source blocks, interpret as one dimension */
   val step: Int,
+  /** offset of the view that requested transpose */
   val viewOffset: Int,
+  /** size of the view that requested transpose */
   val viewSize: Int,
+  /** offset in destination for writing */
   val dstOffset: Int,
   start: Int,
   end: Int,
@@ -18,25 +27,27 @@ private[array] class FATransposeJob[A : ClassTag] private (
 
   override protected type SubJob = FATransposeJob[A]
 
+  /** size of destination blocks, interpret as other dimension */
   val blSize = viewSize / step
 
-  /** target index */
+  /** source -> target index */
   @inline
   private def ti(iS: Int) = {
     val i = iS - viewOffset + dstOffset
     (i / step) + (i % step) * blSize
   }
 
-  /** source index */
+  /** target -> source index */
   @inline
   private def si(iT: Int) = {
     (iT / blSize) + (iT % blSize) * step + viewOffset - dstOffset
   }
 
-  protected def subCopy(s: Int, e: Int) = 
-    new FATransposeJob(src, dst, step, viewOffset, viewSize, dstOffset, s, e, thresh, this)
+  override protected def subCopy(s: Int, e: Int) = 
+    new FATransposeJob(src, dst, step, viewOffset, viewSize,
+                       dstOffset, s, e, thresh, this)
 
-  protected def doCompute() {
+  override protected def doCompute() {
     for (i <- start to end) {
       dst.data(ti(i)) = src.data(i)
     }
@@ -45,6 +56,7 @@ private[array] class FATransposeJob[A : ClassTag] private (
   /** this thing does not really cover any range */
   protected override def covers(from: Int, to: Int) = false
 
+  /** deeply inspect the job tree to find true dependencies. */
   override def destSliceJobs(from: Int, to: Int): Vector[FATransposeJob[A]] = {
     if (isSplit) {
       val (j1,j2) = subTasks
@@ -59,10 +71,11 @@ private[array] class FATransposeJob[A : ClassTag] private (
 
 }
 
-object FATransposeJob {
+private[array] object FATransposeJob {
 
   import FAJob.JobGen
 
+  /** create new JobGen that creates transpose jobs */
   def apply[A : ClassTag](
     dst: FlatFlowArray[A],
     step: Int,

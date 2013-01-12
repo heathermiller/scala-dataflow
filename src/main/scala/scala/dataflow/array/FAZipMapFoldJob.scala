@@ -2,6 +2,12 @@ package scala.dataflow.array
 
 import scala.reflect.ClassTag
 
+/**
+ * zip, map and fold in one shot to prevent intermediate result
+ * storage. 
+ *
+ * Result combination after completion is done by superclass.
+ */
 private[array] class FAZipMapFoldJob[A : ClassTag, B : ClassTag, C] private (
   val src: FlatFlowArray[A],
   val osrc: FlowArray[B],
@@ -17,10 +23,10 @@ private[array] class FAZipMapFoldJob[A : ClassTag, B : ClassTag, C] private (
 
   override protected type SubJob = FAZipMapFoldJob[A,B,C]
 
-  protected def subCopy(s: Int, e: Int) = 
+  override protected def subCopy(s: Int, e: Int) = 
     new FAZipMapFoldJob(src, osrc, f, z, g, oSrcOffset, s, e, thresh, this)
 
-  protected def doCompute() {
+  override protected def doCompute() {
     osrc.sliceJobs(oSrcOffset + start, oSrcOffset + end) match {
       // no need to call sliceJobs again after completion
       case Some((j, false)) => delegateThen(j) { calculate _ }
@@ -39,14 +45,15 @@ private[array] class FAZipMapFoldJob[A : ClassTag, B : ClassTag, C] private (
     setResult(tmp)
   }
 
-  protected override def combineResults(x: C, y: C) = g(x,y)
+  override protected def combineResults(x: C, y: C) = g(x,y)
 
 }
 
-object FAZipMapFoldJob {
+private[array] object FAZipMapFoldJob {
 
   import FAJob.JobGen
 
+  /** create a new ZipMapFoldJob */
   def apply[A : ClassTag, B : ClassTag, C](
     src: FlatFlowArray[A],
     osrc: FlowArray[B],

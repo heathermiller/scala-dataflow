@@ -2,6 +2,10 @@ package scala.dataflow.array
 
 import scala.reflect.ClassTag
 
+/**
+ * Immutable convergance job. Iterates over a function until a given
+ * condition is met. A special case of a map.
+ */
 private[array] class FAIMutConvJob[A : ClassTag] private (
   val src: FlatFlowArray[A],
   val dst: FlatFlowArray[A],
@@ -16,10 +20,10 @@ private[array] class FAIMutConvJob[A : ClassTag] private (
 
   override protected type SubJob = FAIMutConvJob[A]
 
-  protected def subCopy(s: Int, e: Int) = 
+  override protected def subCopy(s: Int, e: Int) = 
     new FAIMutConvJob(src, dst, f, cond, offset, s, e, thresh, this)
 
-  protected def doCompute() {
+  override protected def doCompute() {
     for (i <- start to end) {
       var x = src.data(i)
       while (!cond(x)) {
@@ -31,10 +35,11 @@ private[array] class FAIMutConvJob[A : ClassTag] private (
 
 }
 
-object FAIMutConvJob {
+private[array] object FAIMutConvJob {
 
   import FAJob.JobGen
 
+  /** create an new JobGen that creates FAIMutConvJobs */
   def apply[A : ClassTag](
     dst: FlatFlowArray[A],
     f: A => A,

@@ -2,6 +2,9 @@ package scala.dataflow.array
 
 import scala.dataflow.Future
 
+/**
+ * A future which is the result of a Fold of an FA
+ */
 class FoldFuture[A](j: FAResultJob[A]) extends Future[A] with FAJob.Observer {
   
   j.addObserver(this)

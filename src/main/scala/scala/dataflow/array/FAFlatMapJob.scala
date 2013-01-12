@@ -2,6 +2,9 @@ package scala.dataflow.array
 
 import scala.reflect.ClassTag
 
+/**
+ * calculates a flatMap
+ */
 private[array] class FAFlatMapJob[A : ClassTag, B : ClassTag] private (
   val src: FlatFlowArray[A],
   val dst: HierFlowArray[B],
@@ -16,10 +19,10 @@ private[array] class FAFlatMapJob[A : ClassTag, B : ClassTag] private (
 
   override protected type SubJob = FAFlatMapJob[A,B]
 
-  protected def subCopy(s: Int, e: Int) = 
+  override protected def subCopy(s: Int, e: Int) = 
     new FAFlatMapJob(src, dst, f, n, offset, s, e, thresh, this)
 
-  protected def doCompute() {
+  override protected def doCompute() {
     for (i <- start to end) {
       val sub = f(src.data(i))
       assert(n == sub.size)
@@ -35,10 +38,13 @@ private[array] class FAFlatMapJob[A : ClassTag, B : ClassTag] private (
 
 }
 
-object FAFlatMapJob {
+private[array] object FAFlatMapJob {
 
   import FAJob.JobGen
 
+  /**
+   * creates a new JobGen that creates FlatMapJobs
+   */
   def apply[A : ClassTag, B : ClassTag](
     dst: HierFlowArray[B],
     f: A => FlowArray[B],

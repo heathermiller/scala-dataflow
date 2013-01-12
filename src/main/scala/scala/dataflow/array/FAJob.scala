@@ -518,24 +518,24 @@ object FAJob {
   }
 
   /** state of an FAJob */
-  sealed abstract class State[+S <: FAJob]
+  private sealed abstract class State[+S <: FAJob]
   /**
    * any state that indicates that FAJob is pending and might have a
    * successor
    */
-  sealed abstract class ChainState[+S <:FAJob] extends State[S]
+  private sealed abstract class ChainState[+S <:FAJob] extends State[S]
   /** FAJob is being split */
-  case class Splitting[+S <: FAJob](j1: S, j2: S, next: FAJob) extends State[S]
+  private case class Splitting[+S <: FAJob](j1: S, j2: S, next: FAJob) extends State[S]
   /** FAJob is split */
-  case class Split[+S <: FAJob](j1: S, j2: S) extends State[S]
+  private case class Split[+S <: FAJob](j1: S, j2: S) extends State[S]
   /** FAJob is not yet calculated, has successor */
-  case class PendingChain(next: FAJob) extends ChainState[Nothing]
+  private case class PendingChain(next: FAJob) extends ChainState[Nothing]
   /**
    * FAJob is delegated to some other jobs
    *
    * see `FAJob.delegate` and `FAJob.delegateThen`
    */ 
-  case class Delegated[+S <: FAJob](
+  private case class Delegated[+S <: FAJob](
       deleg: IndexedSeq[FAJob],
       oldState: ChainState[S],
       thn: () => Unit = null)
@@ -570,30 +570,30 @@ object FAJob {
   }
 
   /** FAJob is pending, no successor */
-  case object PendingFree extends ChainState[Nothing]
+  private case object PendingFree extends ChainState[Nothing]
   /** FAJob has finished calculating */
-  case object Done extends State[Nothing]
+  private case object Done extends State[Nothing]
 
   /** Observer stack for FAJob */
-  sealed abstract class ObsStack extends Observer
+  private sealed abstract class ObsStack extends Observer
   /** An Observer in the stack */
-  case class ObsEl(cur: Observer, n: ObsStack = ObsEmpty) extends ObsStack {
+  private case class ObsEl(cur: Observer, n: ObsStack = ObsEmpty) extends ObsStack {
     override final def jobDone() { cur.jobDone(); n.jobDone() }
   }
   /** No observer yet in this end of stack */
-  case object ObsEmpty extends ObsStack
+  private case object ObsEmpty extends ObsStack
   /** All observers have been notified. Do not add new elements */
-  case object ObsNotified extends ObsStack
+  private case object ObsNotified extends ObsStack
 
-  var parallelism: Int = scala.collection.parallel.availableProcessors
-  lazy val forkjoinpool = new ForkJoinPool(parallelism)
+  private var parallelism: Int = scala.collection.parallel.availableProcessors
+  private lazy val forkjoinpool = new ForkJoinPool(parallelism)
 
-  def setPar(n: Int) = {
+  private[array] def setPar(n: Int) = {
     parallelism = n
   }
 
   /** schedule a FAJob for execution (unconditionally) */
-  def schedule(job: FAJob) = Thread.currentThread match {
+  private[array] def schedule(job: FAJob) = Thread.currentThread match {
     case fjw: ForkJoinWorkerThread =>
       job.fork()
     case _ =>
@@ -601,7 +601,7 @@ object FAJob {
   }
 
   /** split threshold for a given original size */
-  def threshold(size: Int) = (
+  private[array] def threshold(size: Int) = (
     math.max(512,
       scala.collection.parallel.thresholdFromSize(size, parallelism)
            )
@@ -610,7 +610,7 @@ object FAJob {
   /**
    * FAJob generator. Used in FA dispatch framework.
    */
-  trait JobGen[A] extends Function4[FlatFlowArray[A], Int, Int, Int, FAJob] {
+  private[array] trait JobGen[A] extends Function4[FlatFlowArray[A], Int, Int, Int, FAJob] {
     /**
      * If this returns true, FADispatcher jobs will not suppose that jobs will
      * generate results restricted to their own range. This influences the behavior of
