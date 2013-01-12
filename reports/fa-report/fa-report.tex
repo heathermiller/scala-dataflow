@@ -582,7 +582,7 @@ structure into a single array by copying the data from the inner
 FlowArrays. This copying is somewhat unnecessary -- which 
 was the reason for the creation of Hierarchical FlowArrays in the
 first place: Currently, flatMapped data has to be copied only when
-retreiving results, not in a calculation flow. Nevertheless, one might
+retrieving results, not in a calculation flow. Nevertheless, one might
 further improve on this by providing indexed access to elements only
 in FlowArrays instead of requiring to return a reference to a full
 array.
@@ -615,7 +615,7 @@ FlowArrays, the implementation of \texttt{flatten} is easy:
 
 To retain evidences about the types inside the current FlowArray when
 flatting, implicit arguments are used together with the
-\texttt{CanFlatten} type. The reader is refered to the scaladoc and
+\texttt{CanFlatten} type. The reader is referred to the scaladoc and
 the code for details.
 
 \subsubsection{Transpose}
