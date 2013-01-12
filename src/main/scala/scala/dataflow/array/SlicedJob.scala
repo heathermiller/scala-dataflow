@@ -4,6 +4,12 @@ private[array] trait SlicedJob {
 
   import SlicedJob._
 
+  /**
+   * slice-wise dependencies
+   *
+   * calculates the jobs responsible for the given slice. See
+   * `SliceDep` for documentation of the return type.
+   */
   private[array] def sliceJobs(from: Int, to: Int): SliceDep
 
 }

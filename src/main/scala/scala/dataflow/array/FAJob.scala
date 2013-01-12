@@ -3,9 +3,19 @@ package scala.dataflow.array
 import scala.annotation.tailrec
 import jsr166y._
 
+/**
+ * Abstract superclass of all Jobs used for splitting and dependency
+ * tracking.
+ *
+ * FAJobs are automatically split, until their size is below the
+ * threshold.
+ */
 private[array] abstract class FAJob(
+  /** start of the slice this FAJob works on */
   val start:  Int,
+  /** end (incl) of the slice this FAJob works on */
   val end:    Int,
+  /** splitting threshold */
   val thresh: Int,
   observer: FAJob.Observer
 ) extends RecursiveAction with FAJob.Observer with SlicedJob {
@@ -18,45 +28,70 @@ private[array] abstract class FAJob(
   /// FAJob internals ///
 
   /** observers of this FAJob */
-  @volatile private var observers: ObsStack = 
+  @volatile
+  private var observers: ObsStack = 
     if (observer == null) ObsEmpty else ObsEl(observer)
 
   /** state of this FAJob (done/pending/split/chained) */
-  @volatile private var state: State[SubJob] = PendingFree
+  @volatile
+  private var state: State[SubJob] = PendingFree
 
-  @inline private def CAS_ST(ov: State[_], nv: State[SubJob]) =
+  /** convenience method to CAS state */
+  @inline
+  private def CAS_ST(ov: State[_], nv: State[SubJob]) =
     unsafe.compareAndSwapObject(this, STATE_OFFSET, ov, nv)
-  @inline private def CAS_OB(ov: ObsStack, nv: ObsStack) =
+  /** convenience method to CAS observer stack */
+  @inline
+  private def CAS_OB(ov: ObsStack, nv: ObsStack) =
     unsafe.compareAndSwapObject(this, OBS_OFFSET, ov, nv)
 
-  /** set the next job of this FAJob
-   *
+  /** 
+   * set the next job of this FAJob
+   * 
    * used while splitting dependent tasks
+   * @param next the next job in the dependency queue
    */
-  @inline private def setNext(next: FAJob): Unit =
+  @inline
+  private def setNext(next: FAJob): Unit =
     CAS_ST(PendingFree, PendingChain(next))
 
   /***************************/
   /* Abstract Members        */
   /***************************/
 
+  /** type of job this FAJob generates when splitting */
   protected type SubJob <: FAJob
 
+  /**
+   * returns a copy of this type of FAJob, working on the given range
+   */
   protected def subCopy(start: Int, end: Int): SubJob
 
-  protected def subJobs: (SubJob, SubJob) = {
-    val ((s1, e1), (s2, e2)) = splitInds
-    
-    (subCopy(s1, e1), subCopy(s2, e2))
-  }
-
+  /** actual computation of this job */
   protected def doCompute(): Unit
 
   /***************************/
   /* Helpers                 */
   /***************************/
 
-  /** indices to handle after split */ 
+  /**
+   * returns two sub jobs of this job
+   *
+   * uses `subCopy`, used when splitting
+   * @return tuple with two jobs
+   */
+  protected def subJobs: (SubJob, SubJob) = {
+    val ((s1, e1), (s2, e2)) = splitInds
+    
+    (subCopy(s1, e1), subCopy(s2, e2))
+  }
+
+  /**
+   * calculate indices to handle after split
+   *
+   * separates the current range in two ranges that cover it.
+   * @return tuple of two ranges
+   */ 
   @inline protected final def splitInds = {
     val mid = start + size / 2
     ((start, mid - 1),(mid, end))
@@ -66,24 +101,36 @@ private[array] abstract class FAJob(
   val size = end - start + 1
 
   /** checks if this job still needs splitting */
-  @inline final def needSplit = size > thresh
+  @inline
+  final def needSplit = size > thresh
 
-  /** returns both subtasks (exception if not split) */
+  /** returns both subtasks (exception if this FAJob is not split) */
   final protected def subTasks = state match {
     case Split(j1, j2) => (j1, j2)
     case _ => throw new IllegalStateException("not split!")
   }
 
+  /** checks if this FAJob is split */
   final protected def isSplit = /*READ*/state match {
     case Split(_, _) => true
     case _ => false
   }
 
+  /**
+   * checks if this FAJob is delegated, i.e if calculation is halted
+   * until some other jobs complete
+   */
   final protected def isDelegated = /*READ*/state match {
     case Delegated(_, _, _) => true
     case _ => false
   }
 
+  /**
+   * optionally fetches the delegates of this FAJob.
+   *
+   * @return `Some(delegs)` if this FAJob is delegated, `None`
+   *         otherwise
+   */
   final protected def delegates = /*READ*/state match {
     case Delegated(delegs, _, _) => Some(delegs)
     case _ => None
@@ -93,7 +140,12 @@ private[array] abstract class FAJob(
   /* ForkJoinTask internals  */
   /***************************/
 
-  final protected def compute() {
+  /**
+   * compute method of the ForkJoinTask.
+   *
+   * Splits this job if it is too big, launches computation otherwise
+   */
+  override protected final def compute() {
     try {
       if (needSplit) {
         val (j1, j2) = split()
@@ -117,8 +169,14 @@ private[array] abstract class FAJob(
     }
   }
 
+  /**
+   * finalizes computation of this FAJob.
+   *
+   * called at the end of the doCompute method, but also each time
+   * when `delegateThen` callbacks are invoked.
+   */
   @tailrec
-  final private def finalizeCompute(): Unit = /*READ*/state match {
+  private final def finalizeCompute(): Unit = /*READ*/state match {
     case d@Delegated(delegs, _, _) =>
       d.setObs(this)
       // Prevent races
@@ -143,6 +201,17 @@ private[array] abstract class FAJob(
   /***************************/
   /* Done signaling          */
   /***************************/
+
+  /**
+   * called when a watched job is done.
+   *
+   * if this FAJob is delegated, this method pops the delegate and
+   * executes the associated callback (if available). Then tries to
+   * finalize again.
+   *
+   * if this FAJob is split, checks if observers need to be notified
+   * (i.e. if other job is done already, too).
+   */
   override def jobDone() {
     @tailrec
     def done0(): Unit = /*READ*/state match {
@@ -163,15 +232,32 @@ private[array] abstract class FAJob(
     done0()
   }
 
+  /**
+   * notifies all observers and sets internal state to notified
+   */
   @tailrec
-  final private def notifyObservers() {
+  private final def notifyObservers() {
     val ov = /*READ*/observers
     if (CAS_OB(ov, ObsNotified))
+      // Whatever was there in ov, this is fine (might do nothing)
       ov.jobDone()
     else
       notifyObservers()
   }
 
+  /**
+   * Add observer to this FAJob.
+   *
+   * Add an observer to this FAJob which is notified once it completes
+   * or return false, if this FAJob is already completed.
+   *
+   * This method is required to avoid unnecessary stack growth, where
+   * tail recursion could have been used
+   * 
+   * @param obs Observer to add
+   * @return true if the observer could be added, false if this FAJob
+   *              is completed
+   */
   @tailrec
   final def tryAddObserver(obs: Observer): Boolean = /*READ*/observers match {
     case ObsNotified => false
@@ -183,6 +269,7 @@ private[array] abstract class FAJob(
         true
   }
 
+  /** Add observer to this FAJob */
   final def addObserver(obs: Observer) {
     if (!tryAddObserver(obs)) obs.jobDone()
   }
@@ -238,22 +325,34 @@ private[array] abstract class FAJob(
   }
 
   /**
-   * Delegates this job some other jobs. MUST NOT be called elsewhere than
-   * in the doCompute body of a concrete subclass. Delegating has the
-   * following effects: 
+   * Delegates this job to some other jobs. MUST NOT be called
+   * elsewhere than in the doCompute body of a concrete
+   * subclass. Delegating has the following effects: 
    * 1) This job's dependency list is kept but delayed until all
    *    delegated jobs complete.
-   * 2) Future calls to done are proxied to the delegates
-   *    (done in pattern matching in done method)
-   * 3) This job's observers are only notified, once the delegates
+   * 2) This job's observers are only notified, once the delegates
    *    completes. (done in finalizeCompute)
    * 
    * Note that this method does *not* schedule the delegates.
    */
-  final protected def delegate(deleg: IndexedSeq[FAJob]) = delegateThen(deleg)(null)
+  protected final def delegate(deleg: IndexedSeq[FAJob]) = delegateThen(deleg)(null)
 
+  /**
+   * Delegates this job to some other jobs and executes a callback
+   * once the delegates complete. MUST NOT be called elsewhere than
+   * in the doCompute body of a concrete subclass. Delegating has the
+   * following effects: 
+   * 1) This job's dependency list is kept.
+   * 2) When the delegates complete, the `thn` callback continues
+   *    execution of the doCompute method. I.e. delegateThen may be
+   *    called again.
+   * 3) When then `thn` callback completes and it as not delegated again,
+   *    This job's observers are notified. (done in finalizeCompute)
+   * 
+   * Note that this method does *not* schedule the delegates.
+   */
   @tailrec
-  final protected def delegateThen(deleg: IndexedSeq[FAJob])(thn: () => Unit) {
+  protected final def delegateThen(deleg: IndexedSeq[FAJob])(thn: () => Unit) {
     /*READ*/state match {
       case ov: ChainState[_] =>
         if (!CAS_ST(ov, Delegated(deleg, ov, thn)))
@@ -265,8 +364,6 @@ private[array] abstract class FAJob(
   /**
    * Submits a depending task for execution: Schedules if this one is done, chains if this
    * one hasn't yet finished.
-   * 
-   * @return true on success, false otherwise
    */
   final def depending(newJob: FAJob) {
     @tailrec
@@ -309,7 +406,7 @@ private[array] abstract class FAJob(
    * Returns the smallest job responsible for this particular slice in
    * destination FA indices. Uses covers in sub-class.
    */ 
-  final protected def destSliceJob(from: Int, to: Int) = {
+  protected final def destSliceJob(from: Int, to: Int) = {
     @tailrec
     def dsj0(cur: FAJob): FAJob = /*READ*/cur.state match {
       case _: Splitting[_] =>
@@ -329,8 +426,7 @@ private[array] abstract class FAJob(
    */
   def destSliceJobs(from: Int, to: Int) = Vector(destSliceJob(from, to))
 
-  /** adapter for extended interface (with repeat information) */
-  def sliceJobs(from: Int, to: Int) = {
+  override private[array] def sliceJobs(from: Int, to: Int) = {
     val js = destSliceJobs(from, to).filterNot(_.done)
     if (js.isEmpty) None
     else Some(js, false)
@@ -355,12 +451,15 @@ object FAJob {
   private val OBS_OFFSET =
     unsafe.objectFieldOffset(classOf[FAJob].getDeclaredField("observers"))
 
+  /// Statistics ///
+
   val statCount    = new AtomicInteger(0)
   val statCumSize  = new AtomicInteger(0)
   val statMinSize  = new AtomicInteger(Integer.MAX_VALUE)
   val statMaxSize  = new AtomicInteger(0)
   val statJobTypes = new ConcurrentHashMap[String, AtomicInteger]()
 
+  /** record statistics when a new FAJob is created */
   private def statNewJob(clazz: Class[_]) {
     val n = clazz.getName
     Option(statJobTypes.get(n)) map { ai => ai.incrementAndGet() } orElse {
@@ -385,6 +484,7 @@ object FAJob {
         updateMaxSize(i)
   }
 
+  /** record statistics when a FAJob executes */
   private def statRecLen(size: Int) {
     statCount.incrementAndGet()
     statCumSize.addAndGet(size)
@@ -417,25 +517,41 @@ object FAJob {
     statJobTypes.clear()
   }
 
+  /** state of an FAJob */
   sealed abstract class State[+S <: FAJob]
+  /**
+   * any state that indicates that FAJob is pending and might have a
+   * successor
+   */
   sealed abstract class ChainState[+S <:FAJob] extends State[S]
+  /** FAJob is being split */
   case class Splitting[+S <: FAJob](j1: S, j2: S, next: FAJob) extends State[S]
+  /** FAJob is split */
   case class Split[+S <: FAJob](j1: S, j2: S) extends State[S]
+  /** FAJob is not yet calculated, has successor */
   case class PendingChain(next: FAJob) extends ChainState[Nothing]
+  /**
+   * FAJob is delegated to some other jobs
+   *
+   * see `FAJob.delegate` and `FAJob.delegateThen`
+   */ 
   case class Delegated[+S <: FAJob](
       deleg: IndexedSeq[FAJob],
       oldState: ChainState[S],
       thn: () => Unit = null)
     extends State[S] with Observer {
-  
-    @volatile var doneInd: Int = 0
-    @volatile var obs: Observer = null
+
+    @volatile
+    var doneInd: Int = 0
+    @volatile
+    var obs: Observer = null
 
     final def setObs(o: Observer) {
       obs = o
       deleg(0).addObserver(this)
     }
     final def done = advDone() >= deleg.size
+
     @tailrec
     final override def jobDone() {
       if (done) { 
@@ -444,6 +560,7 @@ object FAJob {
       } else if (!deleg(doneInd).tryAddObserver(this))
         jobDone()
     }
+
     private def advDone() = {
       var i = /*READ*/doneInd
       while (i < deleg.size && deleg(i).done) { i += 1 }
@@ -452,14 +569,20 @@ object FAJob {
     }
   }
 
+  /** FAJob is pending, no successor */
   case object PendingFree extends ChainState[Nothing]
+  /** FAJob has finished calculating */
   case object Done extends State[Nothing]
 
+  /** Observer stack for FAJob */
   sealed abstract class ObsStack extends Observer
+  /** An Observer in the stack */
   case class ObsEl(cur: Observer, n: ObsStack = ObsEmpty) extends ObsStack {
     override final def jobDone() { cur.jobDone(); n.jobDone() }
   }
+  /** No observer yet in this end of stack */
   case object ObsEmpty extends ObsStack
+  /** All observers have been notified. Do not add new elements */
   case object ObsNotified extends ObsStack
 
   var parallelism: Int = scala.collection.parallel.availableProcessors
@@ -469,6 +592,7 @@ object FAJob {
     parallelism = n
   }
 
+  /** schedule a FAJob for execution (unconditionally) */
   def schedule(job: FAJob) = Thread.currentThread match {
     case fjw: ForkJoinWorkerThread =>
       job.fork()
@@ -476,12 +600,16 @@ object FAJob {
       forkjoinpool.execute(job)
   }
 
+  /** split threshold for a given original size */
   def threshold(size: Int) = (
     math.max(512,
       scala.collection.parallel.thresholdFromSize(size, parallelism)
            )
   )
 
+  /**
+   * FAJob generator. Used in FA dispatch framework.
+   */
   trait JobGen[A] extends Function4[FlatFlowArray[A], Int, Int, Int, FAJob] {
     /**
      * If this returns true, FADispatcher jobs will not suppose that jobs will

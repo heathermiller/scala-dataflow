@@ -26,7 +26,7 @@ private[array] class FAAlignJob private (
 
 }
 
-object FAAlignJob {
+private[array] object FAAlignJob {
 
   def apply(src: SlicedJob, start: Int, end: Int) =
     new FAAlignJob(src, start, end, FAJob.threshold(end - start + 1), null)

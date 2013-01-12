@@ -190,13 +190,7 @@ abstract class FlowArray[A : ClassTag] extends Blocker with FAJob.Observer with 
    */
   private[array] def copyToArray(dst: Array[A], srcPos: Int, dstPos: Int, length: Int): Unit
 
-  /**
-   * slice-wise dependencies
-   *
-   * calculates the jobs responsible for the given slice. See
-   * `SliceDep` for documentation of the return type.
-   */
-  private[array] def sliceJobs(from: Int, to: Int): SliceDep
+  override private[array] def sliceJobs(from: Int, to: Int): SliceDep
 
   /**
    * dispatch a job (or multiple ones) on this FA
