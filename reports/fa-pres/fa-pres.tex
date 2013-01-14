@@ -290,7 +290,7 @@
 
 \begin{frame}
   \frametitle{Benchmarks}
-  \framesubtitle{Scalar Product -- Scaling / Garbage Collection}
+  \framesubtitle{Scalar Product -- Parallelism / GC}
 
   %% Hack to use whole frame
   \begin{columns}[t]
@@ -306,13 +306,16 @@
 
 \begin{frame}
   \frametitle{Benchmarks}
-  \framesubtitle{Scalar Product -- Scaling / Garbage Collection}
+  \framesubtitle{Scalar Product -- Size / GC}
 
   %% Hack to use whole frame
-  \begin{columns}[c]
-    \column{\paperwidth}
-    \input{../../benchmarks/flowArrays/plots/size-time.tex}
-    %\input{../../benchmarks/flowArrays/plots/size-ntime.tex}
+  \begin{columns}[t]
+    \column{.33\paperwidth}
+    \input{../../benchmarks/flowArrays/plots/pres-size-time.tex}
+    \column{.32\paperwidth}
+    \input{../../benchmarks/flowArrays/plots/pres-size-gctime.tex}
+    \column{.35\paperwidth}
+    \input{../../benchmarks/flowArrays/plots/pres-size-ntime.tex}
   \end{columns}
 
 \end{frame}

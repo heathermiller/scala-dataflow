@@ -11,8 +11,8 @@ outh <- function(fn, p, w) {
   dev.off()
 }
 
-outw <- function(fn, p) {
-  tikz(paste('plots/', fn, '.tex', sep = ''), width = 5, height = 2.5)
+outw <- function(fn, p, h) {
+  tikz(paste('plots/', fn, '.tex', sep = ''), width = 5, height = h)
   print(p)
   dev.off()
 }
@@ -113,41 +113,54 @@ outh('pres-par-ntime',p , w = 1.8)
 
 ## Size plots
 
-
-p <- ggplot(mszedat, aes(x = factor(size),
+p <- ggplot(mszedat, aes(x = size,
                          y = time,
                          group = bench,
                          color = bench,
                          shape = bench))
 p <- geoms(p)
-p <- logyscale(p, name = "time [ms]") + xlab("vector size")
+p <- p + ggtitle("Execution Time")
+p <- logyscale(p, name = "time [ms]") +
+    scale_x_continuous(name = "vector size",
+                     breaks = c(8e6,1.3e7))
 p <- benchscale(p)
-p <- settheme(p, lpos = c(0.14, 0.2))
+p <- settheme(p, lpos = c(0.45, 0.15))
 
-outw('size-time', p)
+outh('pres-size-time', p, w = 1.8)
 
-p <- ggplot(mszedat, aes(x = factor(size),
+p <- ggplot(mszedat, aes(x = size,
                          y = gctime,
                          group = bench,
                          color = bench,
                          shape = bench))
 p <- geoms(p)
-p <- logyscale(p, name = "time [ms]") + xlab("vector size")
+p <- p + ggtitle("GC Time")
+p <- logyscale(p, name = "time [ms]") +
+  scale_x_continuous(name = "vector size",
+                     breaks = c(8e6,1.3e7))
 p <- benchscale(p)
 p <- settheme(p, lpos = c(0.14, 0.45))
+p <- p + theme(axis.title.y = element_blank(),
+               axis.text.y  = element_blank(),
+               legend.position = "none")
 
-outw('size-gctime', p)
+outh('pres-size-gctime', p, w = 1.6)
 
-p <- ggplot(mszedat, aes(x = factor(size),
+p <- ggplot(mszedat, aes(x = size,
                          y = ntime,
                          group = bench,
                          color = bench,
                          shape = bench))
 p <- geoms(p)
-p <- p + ylab("time [ms]") + xlab("vector size")
+p <- p + ggtitle("Normalized Time")
+p <- p + ylab("time [ms]") + 
+  scale_x_continuous(name = "vector size",
+                     breaks = c(8e6,1.3e7))
 p <- benchscale(p)
 p <- p + coord_cartesian(ylim = c(-400, 700))
 p <- settheme(p, lpos = c(0.87, 0.2))
+p <- p + theme(axis.title.y  = element_blank(),
+               legend.position = "none")
 
-outw('size-ntime', p)
+outh('pres-size-ntime', p, w = 1.8)
 
