@@ -27,6 +27,7 @@
 \newcommand{\sH}[1]{{\color{white} #1}}
 \newcommand{\sN}[1]{{\color{black} #1}}
 \newcommand{\sS}{\vspace{0.8mm}}
+\newcommand{\sEL}{\vspace{\baselineskip}}
 
 %% Define other commands
 \newcommand<>{\strike}[1]{\alt#2{\sout{#1}}{#1}}
@@ -134,7 +135,6 @@
       \end{block}
 
     \end{overprint}
-
   \end{columns}
 \end{frame}
 
@@ -145,21 +145,22 @@
   \begin{alltt} \small
     \sC{// Generation}\\
     \sK{def} \sF{tabulate}[\sT A](\sV n: \sT{Int})(\sV f: \sT{Int => A}): \sT{FlowArray[A]}\\
-    \\
+    \sEL
     \sC{// Monadic Ops}\\
     \sK{def} \sF{map}[\sT B](\sV f: \sT{A => B}): \sT{FlowArray[B]}\\
     \sK{def} \sF{zip}[\sT B](\sV{that}: \sT{FlowArray[B]}): \sT{FlowArray[(A,B)]}\\
     \sK{def} \sF{fold}[\sT{A1 >: A}](\sV z: \sT{A1})(\sV{op}: \sT{(A1, A1) => A1}): \sT{Future[A1]}\\
     \sK{def} \sF{flatMapN}[\sT B](\sV n: \sT{Int})(\sV f: \sT{A => FlowArray[B]}): \sT{FlowArray[B]}\\
     \sK{def} \sF{flatten}[\sT B](\sV n: \sT{Int}): \sT{FlowArray[B]}\\
-    \\
+    \sEL
     \sC{// Structure}\\
     \sK{def} \sF{slice}(\sV{start}: \sT{Int}, \sV{end}: \sT{Int}): \sT{FlowArray[A]}\\
     \sK{def} \sF{transpose}(\sV{dim}: \sT{Int}): \sT{FlowArray[A]}\\
-    \\
+    \sEL
     \sC{// Retrieval}\\
     \sK{def} \sF{blocking}: \sV{Array[A]}
   \end{alltt}
+
 \end{frame}
 
 \begin{frame}
@@ -202,7 +203,7 @@
       \begin{alltt} \small
         \sK{val} \sV u = FA.tabulate(n)(\_ * .9)\\
         \sK{val} \sV v = FA.tabulate(n)(\_ * .8)\\
-        \\
+        \sEL
         \uncover<2->{\sK{val} \sV t = u zip v}\\
         \uncover<3->{\sK{val} \sV p = t.map(\_ * \_)}\\
         \uncover<4->{\sK{val} \sV r = p.fold(0.0)(\_ + \_)}
@@ -224,7 +225,7 @@
   \begin{alltt} \small
     \sK{val} \sV{pa1} = ParArray.tabulate(100)(x => x * x)\\
     \uncover<1,11->{\sK{val} \sV{pa2} = pa1.map(\_ * 2)}\\
-    \uncover<1,14->{\sK{val} \sV{el}\phantom{xx}= pa2(35)}
+    \uncover<1,14->{\sK{val} \sV{el}\sH{xx}= pa2(35)}
   \end{alltt}
 
   \vspace{\stretch{1}}
