@@ -1,0 +1,321 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{alltt}
+\usepackage{xcolor}
+\usepackage[overlay,absolute]{textpos}
+\usepackage[normalem]{ulem}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows,petri,topaths}
+\usepackage{tkz-berge}
+
+%% Colors for source highlighting
+\definecolor{scKW}  {HTML}{AA37F2}
+\definecolor{scFct} {HTML}{1010FF}
+\definecolor{scType}{HTML}{228B22}
+\definecolor{scVar} {HTML}{A45936}
+\definecolor{scComm}{HTML}{B32525}
+
+%% Define _s_cala commands
+\newcommand{\sK}[1]{{\color{scKW} #1}}
+\newcommand{\sF}[1]{{\color{scFct} #1}}
+\newcommand{\sV}[1]{{\color{scVar} #1}}
+\newcommand{\sT}[1]{{\color{scType} #1}}
+\newcommand{\sC}[1]{{\color{scComm} #1}}
+\newcommand{\sH}[1]{{\color{white} #1}}
+\newcommand{\sN}[1]{{\color{black} #1}}
+\newcommand{\sS}{\vspace{0.8mm}}
+
+%% Define other commands
+\newcommand<>{\strike}[1]{\alt#2{\sout{#1}}{#1}}
+
+\setbeamercovered{transparent}
+\setbeamertemplate{navigation symbols}
+
+\setbeamertemplate{footline}{\makebox[0.98\paperwidth][r]{\large
+    \raisebox{1.2ex}{\insertframenumber}}}
+
+\graphicspath{{figs/}}
+
+\title{FlowArrays}
+\subtitle{Barrier-Free ParArrays}
+
+\author{Tobias Schlatter}
+\date{January 17, 2012}
+\institute{Advisors: Aleksandar Prokopec, Heather Miller, Philipp Haller and Martin Odersky}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\section{Introduction}
+
+\begin{frame}
+  \frametitle{Outline}
+  
+  \begin{block}{What is a FlowArray}\end{block}
+  \begin{block}{Task Scheduling}\end{block}
+  \begin{block}{Benchmarks}\end{block}
+
+\end{frame}
+
+\section{What is a FlowArray}
+
+\begin{frame}
+  \frametitle{What is a FlowArray}
+  \framesubtitle{Big Picture}
+
+  \begin{columns}[t]
+    \column{.5\textwidth}
+
+    FlowArray: Barrier-Free, single-assignment ParArray
+
+    \begin{block}{FlowArray Properties}
+      \begin{itemize}
+      \item<1> IndexedSeq semantics
+      \item<2,3> Asynchronous
+      \item<4> Deterministic
+      \item<5> Lock-Free
+      \end{itemize}
+    \end{block}
+
+    \column{.5\textwidth}
+
+    \begin{overprint}
+      \onslide<1>
+      \begin{block}{IndexedSeq semantics}
+        \begin{itemize}
+        \item Immutable
+        \item Ordered
+        \item Fixed size
+        \item Monadic operations\\
+          \texttt{map}, \texttt{fold}, \texttt{flatMap}, etc.
+        \end{itemize}
+      \end{block}
+
+      \onslide<2>
+      \includegraphics[page=1]{async}
+
+      \onslide<3>
+      \includegraphics[page=2]{async}
+
+      \onslide<4>
+      \begin{block}{Determinism}
+        Every execution of a given program with given input eventually
+        \begin{itemize}
+        \item Always reaches same state
+        \item[] \qquad or
+        \item Always fails
+        \end{itemize}
+      \end{block}
+
+      \onslide<5>
+      \begin{block}{Locking}
+        \begin{alltt}
+          \sK{synchronized} \{\\
+          \sH{xx}i = i + 1\\
+          \}
+        \end{alltt}
+      \end{block}
+
+      \begin{block}{Lock-Free}
+        \begin{alltt}
+          \sK{do} \{\\
+          \sH{xx}ov = READ(i)\\
+          \sH{xx}nv = ov + 1\\
+          \} \sK{while} (!CAS(i, ov, nv))
+        \end{alltt}
+      \end{block}
+
+    \end{overprint}
+
+  \end{columns}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{What is a FlowArray}
+  \framesubtitle{Programming Model -- ParArray}
+
+  \begin{alltt} \small
+    \sK{val} \sV{pa1} = ParArray.tabulate(100)(x => x * x)\\
+    \uncover<1,11->{\sK{val} \sV{pa2} = pa1.map(\_ * 2)}\\
+    \uncover<1,14->{\sK{val} \sV{el}\phantom{xx}= pa2(35)}
+  \end{alltt}
+
+  \vspace{\stretch{1}}
+
+  \begin{overprint}
+    \onslide<2>\includegraphics[page=1]{pa-map}
+    \onslide<3>\includegraphics[page=2]{pa-map}
+	\onslide<4>\includegraphics[page=3]{pa-map}
+	\onslide<5>\includegraphics[page=4]{pa-map}
+	\onslide<6>\includegraphics[page=5]{pa-map}
+	\onslide<7>\includegraphics[page=6]{pa-map}
+	\onslide<8>\includegraphics[page=7]{pa-map}
+	\onslide<9>\includegraphics[page=8]{pa-map}
+	\onslide<10>\includegraphics[page=9]{pa-map}
+	\onslide<11>\includegraphics[page=10]{pa-map}
+	\onslide<12>\includegraphics[page=11]{pa-map}
+	\onslide<13->\includegraphics[page=12]{pa-map}
+  \end{overprint}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{What is a FlowArray}
+  \framesubtitle{Programming Model -- FlowArray}
+
+  \begin{alltt} \small
+    \sK{val} \sV{fa1} = FlowArray.tabulate(100)(x => x * x)\\
+    \uncover<1,3->{\sK{val} \sV{fa2} = fa1.map(\_ * 2)}\\
+    \uncover<1,5->{\sK{val} \sV{el}\phantom{xx}= fa2.blocking(35)}
+  \end{alltt}
+
+  \vspace{\stretch{1}}
+
+  \begin{overprint}
+    \onslide<2,3>\includegraphics[page=1]{fa-map}
+    \onslide<4>\includegraphics[page=2]{fa-map}
+    \onslide<5>\includegraphics[page=3]{fa-map}
+    \onslide<6>\includegraphics[page=4]{fa-map}
+    \onslide<7>\includegraphics[page=5]{fa-map}
+    \onslide<8>\includegraphics[page=6]{fa-map}
+    \onslide<9>\includegraphics[page=7]{fa-map}
+    \onslide<10>\includegraphics[page=8]{fa-map}
+    \onslide<11>\includegraphics[page=9]{fa-map}
+    \onslide<12>\includegraphics[page=10]{fa-map}
+    \onslide<13>\includegraphics[page=11]{fa-map}
+    \onslide<14>\includegraphics[page=12]{fa-map}
+  \end{overprint}
+
+\end{frame}
+
+\section{Task Scheduling}
+
+\begin{frame}
+  \frametitle{Task Scheduling}
+
+\end{frame}
+
+\section{Benchmarks}
+
+\begin{frame}
+  \frametitle{Benchmarks}
+  \framesubtitle{CPU-Scaling}
+
+  %% Hack to use whole frame
+  \begin{columns}[c]
+    \begin{column}{\paperwidth}
+      \centering
+      %\includegraphics[trim = 35mm 0mm 36mm 0mm, clip, width=0.95\paperwidth]
+      %{../../benchmarks/pres_graphs/cpu-scaling-insert}
+      \par
+    \end{column}
+  \end{columns}
+
+\end{frame}
+
+\section{Conclusion}
+
+\begin{frame}
+  \frametitle{Conclusion}
+
+  {\Large FlowPools are \ldots}
+
+  \pause
+  \begin{block}{Basic Traits}
+    \begin{itemize}
+    \item Flow-Based Collection
+    \item Asynchronous
+    \item Deterministic
+    \end{itemize}
+  \end{block}
+      
+  \pause
+  \begin{block}{Performance \& Scalability}
+    \begin{itemize}
+    \item Speed comparable to Java standard Queues
+    \item Scalable
+    \item Unneeded Elements GC'd
+    \end{itemize}
+  \end{block}
+
+  \pause
+  \begin{block}{¿Questions?}
+  \end{block}
+
+\end{frame}
+
+\section{Appendix}
+
+\begin{frame}
+  \frametitle{Details about Benchmarks}
+
+  \begin{columns}[t]
+    \begin{column}{.5\textwidth}
+      \begin{block}{Insert / Reduce}
+        \begin{itemize}
+        \item $5\cdot10^6$ elements
+        \item 20 measurements
+        \end{itemize}
+      \end{block}
+
+      \begin{block}{Communication / GC}
+        \begin{itemize}
+        \item Parallelization level: 1
+        \item Measurements
+          \begin{itemize}
+          \item UltraSPARC T2: 2
+          \item 4-core i7: 10
+          \item 32-core Xeon: 3
+          \end{itemize}
+        \end{itemize}
+      \end{block}
+
+    \end{column}
+    \begin{column}{.5\textwidth}
+      \begin{block}{Java Command}
+        \small\texttt{-Xmx2048m -Xms2048m -XX:+UseCondCardMark
+          -verbose:gc -XX:+PrintGCDetails -server}.
+      \end{block}
+      \begin{block}{Java Version}
+        \begin{itemize}
+        \item Intel \small\texttt{
+            1.7.0\_04-ea-b15\\
+            HotSpot 64-Bit Server VM (build 23.0-b16, mixed mode)
+          }
+        \item SPARC \small\texttt{
+            1.7.0\_03-b04\\
+            HotSpot Server VM (build 22.1-b02, mixed mode)
+          }
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+    
+\end{frame}
+
+\begin{frame}
+  \frametitle{Details about Benchmarks}
+
+  \begin{block}{Architectures}
+    \begin{itemize}
+    \item octa-core 1.2GHz UltraSPARC T2 w/ 64 HW threads
+    \item quad-core 3.4 GHz i7-2600 (w/ HT)
+    \item 4x octa-core 2.27 GHz Intel Xeon x7560 (w/ HT)
+    \end{itemize}
+  \end{block}
+
+\end{frame}
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
