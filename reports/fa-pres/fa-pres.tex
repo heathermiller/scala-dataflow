@@ -136,12 +136,90 @@
     \end{overprint}
 
   \end{columns}
-
 \end{frame}
 
 \begin{frame}
   \frametitle{What is a FlowArray}
-  \framesubtitle{Programming Model -- ParArray}
+  \framesubtitle{Programming Model}
+
+  \begin{alltt} \small
+    \sC{// Generation}\\
+    \sK{def} \sF{tabulate}[\sT A](\sV n: \sT{Int})(\sV f: \sT{Int => A}): \sT{FlowArray[A]}\\
+    \\
+    \sC{// Monadic Ops}\\
+    \sK{def} \sF{map}[\sT B](\sV f: \sT{A => B}): \sT{FlowArray[B]}\\
+    \sK{def} \sF{zip}[\sT B](\sV{that}: \sT{FlowArray[B]}): \sT{FlowArray[(A,B)]}\\
+    \sK{def} \sF{fold}[\sT{A1 >: A}](\sV z: \sT{A1})(\sV{op}: \sT{(A1, A1) => A1}): \sT{Future[A1]}\\
+    \sK{def} \sF{flatMapN}[\sT B](\sV n: \sT{Int})(\sV f: \sT{A => FlowArray[B]}): \sT{FlowArray[B]}\\
+    \sK{def} \sF{flatten}[\sT B](\sV n: \sT{Int}): \sT{FlowArray[B]}\\
+    \\
+    \sC{// Structure}\\
+    \sK{def} \sF{slice}(\sV{start}: \sT{Int}, \sV{end}: \sT{Int}): \sT{FlowArray[A]}\\
+    \sK{def} \sF{transpose}(\sV{dim}: \sT{Int}): \sT{FlowArray[A]}\\
+    \\
+    \sC{// Retrieval}\\
+    \sK{def} \sF{blocking}: \sV{Array[A]}
+  \end{alltt}
+\end{frame}
+
+\begin{frame}
+  \frametitle{What is a FlowArray}
+  \framesubtitle{Flow Graph for Scalar Product}
+
+  \begin{columns}
+    \begin{column}{.45\textwidth}
+
+      \begin{tikzpicture}[ node distance = 2cm ]
+        \tikzset{EdgeStyle/.style={post}}       % directed edges
+
+        \Vertex[x = 0, y = 7, L = \texttt{u}]{U}
+        \Vertex[x = 4, y = 7, L = \texttt{v}]{V}
+
+        \uncover<2->{
+          \Vertex[x = 2, y = 5, L = \texttt{t}]{T}
+          \Edge[label = zip](U)(T)
+          \Edge[label = zip](V)(T)
+        }
+
+        \uncover<3->{
+          \Vertex[x = 2, y = 3, L = \texttt{p}]{P}
+          \Edge[label = map](T)(P)
+        }
+
+        \uncover<4->{
+          \Vertex[x = 2, y = 1, L = \texttt{r}]{R}
+          \Edge[label = fold](P)(R)
+        }
+
+        % \tikzset{EdgeStyle/.append style = {bend right}}
+
+      \end{tikzpicture}  
+
+    \end{column}
+
+    \begin{column}{.55\textwidth}
+      
+      \begin{alltt} \small
+        \sK{val} \sV u = FA.tabulate(n)(\_ * .9)\\
+        \sK{val} \sV v = FA.tabulate(n)(\_ * .8)\\
+        \\
+        \uncover<2->{\sK{val} \sV t = u zip v}\\
+        \uncover<3->{\sK{val} \sV p = t.map(\_ * \_)}\\
+        \uncover<4->{\sK{val} \sV r = p.fold(0.0)(\_ + \_)}
+      \end{alltt}
+
+    \end{column}
+
+  \end{columns}
+
+\end{frame}
+
+
+\section{Task Scheduling}
+
+\begin{frame}
+  \frametitle{Task Scheduling}
+  \framesubtitle{\texttt{map} -- ParArray}
 
   \begin{alltt} \small
     \sK{val} \sV{pa1} = ParArray.tabulate(100)(x => x * x)\\
@@ -168,9 +246,11 @@
 
 \end{frame}
 
+
+
 \begin{frame}
-  \frametitle{What is a FlowArray}
-  \framesubtitle{Programming Model -- FlowArray}
+  \frametitle{Task Scheduling}
+  \framesubtitle{\texttt{map} -- FlowArray}
 
   \begin{alltt} \small
     \sK{val} \sV{fa1} = FlowArray.tabulate(100)(x => x * x)\\
@@ -194,13 +274,6 @@
     \onslide<13>\includegraphics[page=11]{fa-map}
     \onslide<14>\includegraphics[page=12]{fa-map}
   \end{overprint}
-
-\end{frame}
-
-\section{Task Scheduling}
-
-\begin{frame}
-  \frametitle{Task Scheduling}
 
 \end{frame}
 
