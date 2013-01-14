@@ -158,7 +158,7 @@
     \sK{def} \sF{transpose}(\sV{dim}: \sT{Int}): \sT{FlowArray[A]}\\
     \sEL
     \sC{// Retrieval}\\
-    \sK{def} \sF{blocking}: \sV{Array[A]}
+    \sK{def} \sF{blocking}: \sT{Array[A]}
   \end{alltt}
 
 \end{frame}
@@ -290,16 +290,29 @@
 
 \begin{frame}
   \frametitle{Benchmarks}
-  \framesubtitle{CPU-Scaling}
+  \framesubtitle{Scalar Product -- Scaling / Garbage Collection}
+
+  %% Hack to use whole frame
+  \begin{columns}[t]
+    \column{.33\paperwidth}
+    \input{../../benchmarks/flowArrays/plots/pres-par-time.tex}
+    \column{.32\paperwidth}
+    \input{../../benchmarks/flowArrays/plots/pres-par-gctime.tex}
+    \column{.35\paperwidth}
+    \input{../../benchmarks/flowArrays/plots/pres-par-ntime.tex}
+  \end{columns}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Benchmarks}
+  \framesubtitle{Scalar Product -- Scaling / Garbage Collection}
 
   %% Hack to use whole frame
   \begin{columns}[c]
-    \begin{column}{\paperwidth}
-      \centering
-      %\includegraphics[trim = 35mm 0mm 36mm 0mm, clip, width=0.95\paperwidth]
-      %{../../benchmarks/pres_graphs/cpu-scaling-insert}
-      \par
-    \end{column}
+    \column{\paperwidth}
+    \input{../../benchmarks/flowArrays/plots/size-time.tex}
+    %\input{../../benchmarks/flowArrays/plots/size-ntime.tex}
   \end{columns}
 
 \end{frame}
