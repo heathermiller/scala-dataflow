@@ -168,7 +168,7 @@ called on a FlowArray depending on the different possible states of
 its blocks.  It is important to understand that dependency tracking
 happens for each block individually and hence the calculation in one
 part of the FlowArray may advance without waiting for another
-part. Fig~\ref{fig:dep-track} illustrates the different scenarios that
+part. Fig.~\ref{fig:dep-track} illustrates the different scenarios that
 may happen on a single-block level.
 
 In the figure, the circles represent jobs: Gray circles are jobs which 
@@ -222,7 +222,7 @@ When doing out of order folding, each block has first to be reduced to
 a single element, then these results have to be combined to the final
 result. During splitting of the jobs, one can create a binary tree of
 blocks along which one can later accumulate the elements;
-fig~\ref{fig:fa-fold} illustrates this approach.
+Fig.~\ref{fig:fa-fold} illustrates this approach.
 
 \begin{figure}
   \centering
@@ -240,7 +240,7 @@ In order to keep the number of jobs (and hence the burden of managing
 them) minimal, rather then spawning a single job for each accumulation
 step in the tree, the job which finishes second on each node is
 responsible to calculate its accumulated value (see
-fig~\ref{fig:fa-fold-calc}). Using this scheme, the 
+Fig.~\ref{fig:fa-fold-calc}). Using this scheme, the 
 same number of jobs are spawned as for a \texttt{map}.
 
 Note that this approach is preferable to a single element where
@@ -281,7 +281,7 @@ resulting FlowArray.
 Further, the FlowArray now needs to keep track of dependencies twice:
 Once, whether a sub-FlowArray has already been created, second,
 whether a given one of its blocks is already calculated. Refer to
-fig~\ref{fig:flatMap-dependency} for an illustration: the upper,
+Fig.~\ref{fig:flatMap-dependency} for an illustration: the upper,
 bigger, block holds references to the individual FlowArrays created by
 the closure call of the \texttt{flatMapN}. The first dependency
 tracking happens here: one has to check, whether the FlowArray for a
@@ -437,9 +437,9 @@ The first is easy: divide the range of the \texttt{FAJob} into two
 (more or less) equal ranges and create two new \texttt{FAJobs} with
 those ranges.
 
-The second is a bit more tricky. Please refer to fig~\ref{fig:split-ill}
+The second is a bit more tricky. Please refer to Fig.~\ref{fig:split-ill}
 for an illustration of how this is done. You can find pseudo code in
-fig~\ref{fig:split-code}. The idea is the following: First, create the
+Fig.~\ref{fig:split-code}. The idea is the following: First, create the
 two sub jobs and set the state of this \texttt{FAJob} to
 \texttt{Splitting}. It is now ``locked'' for any other operation,
 i.e. any
@@ -529,9 +529,9 @@ Job creation for monadic operations is handled through the abstract
 method \texttt{dispatch}, which allows to dispatch a job specified by
 a closure -- a \texttt{JobGen} -- to operate on a given range of the
 FlowArray and returns the job which handles the block dependency
-management for this calculation. Fig~\ref{fig:dispatch-code} shows the
+management for this calculation. Fig.~\ref{fig:dispatch-code} shows the
 signatures for \texttt{dispatch} and
-\texttt{JobGen}. Fig~\ref{fig:dispatch-example} shows how dispatch
+\texttt{JobGen}. Fig.~\ref{fig:dispatch-example} shows how dispatch
 can be used to implement the monadic operation \texttt{map}.
 
 \begin{figure}
@@ -632,7 +632,7 @@ should have been used),
 this needs to be done asynchronously. Further, the multiple dispatched
 jobs need then to be waited on and regrouped by the outer job in order
 to fulfill the whole dependency tracking requirement (remember
-fig~\ref{fig:flatMap-dependency} on
+Fig.~\ref{fig:flatMap-dependency} on
 page~\ref{fig:flatMap-dependency} for an illustration on the
 double dependency tracking that is required). All this is handled by a 
 special job, the \texttt{FADispatchJob}.
@@ -737,7 +737,7 @@ difficulties in integrating with the typing system.
 
 We have tested the performance of FlowArrays against
 ParArrays by calculating the scalar product of two vectors. Refer to
-fig~\ref{fig:scalar-product} for the implementation of the
+Fig.~\ref{fig:scalar-product} for the implementation of the
 benchmark. You'll notice the operations \texttt{zipMap} and
 \texttt{zipMapFold}: These are consolidated operations that use the
 \texttt{FAJob} structure but do not store intermediate results. As we
@@ -778,7 +778,8 @@ mixed mode). The exact java command used is \texttt{java -Xmx2048m
 
 \subsection{Results}
 
-Please refer to figs~\ref{fig:par-bench},\ref{fig:size-bench} for the
+Please refer to Fig.~\ref{fig:par-bench} and Fig.~\ref{fig:size-bench}
+for the 
 results of the benchmarks. In both figures, we show the total
 execution time, the time spent in garbage collection and the
 ``normalized execution time'', i.e. the total time minus the time
