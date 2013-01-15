@@ -769,7 +769,9 @@ garbage collection time (sum of all non-final GC runtimes).
 The benchmarks have been executed on a Intel i7-2620M with java
 version 1.7.0\_04, Java(TM) SE Runtime Environment (build
 1.7.0\_04-b20), Java HotSpot(TM) 64-Bit Server VM (build 23.0-b21,
-mixed mode).
+mixed mode). The exact java command used is \texttt{java -Xmx2048m
+  -Xms2048m -XX:+UseCondCardMark -verbose:gc -XX:+PrintGCDetails
+  -server <classname>}.
 
 \subsection{Results}
 
@@ -777,15 +779,19 @@ Please refer to figs~\ref{fig:par-bench},\ref{fig:size-bench} for the
 results of the benchmarks. In both figures, we show the total
 execution time, the time spent in garbage collection and the
 ``normalized execution time'', i.e. the total time minus the time
-spent in garbage collection. Please note that the GC time is an
-approximation and hence the ``normalized execution time'' may become
-negative.
+spent in garbage collection.
+
+The time in garbage collection is the sum of the runtimes of all minor
+GC cylces. No full GC cycles have been performed during the
+benchmarks. Please note that the GC time is an approximation (minor GC
+cycles can run in parallel) and hence the ``normalized execution
+time'' may become negative.
 
 \begin{figure}
 \subfigure[Execution Time]{\plot{par-time}}
 \subfigure[GC Time]{\plot{par-gctime}}
 \subfigure[Normalized Time]{\plot{par-ntime}}
-\caption{Parallelization benchmarks of scalar product}
+\caption{Parallelization benchmarks of scalar product ($size = 10^7$)}
 \label{fig:par-bench}
 \end{figure}
 
@@ -793,7 +799,7 @@ negative.
 \subfigure[Execution Time]{\plot{size-time}}
 \subfigure[GC Time]{\plot{size-gctime}}
 \subfigure[Normalized Time]{\plot{size-ntime}}
-\caption{Size benchmarks of scalar product}
+\caption{Size benchmarks of scalar product ($P = 4$)}
 \label{fig:size-bench}
 \end{figure}
 
