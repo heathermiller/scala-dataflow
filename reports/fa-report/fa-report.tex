@@ -836,13 +836,19 @@ a dataflow graph significantly speeds up the whole calculation due to the fewer
 allocated memory and hence the reduced garbage collection time.
 
 Therefore, it is our proposition, to extend FlowArrays to do such
-reductions automatically, before the calculation is started. This
-approach requires a flow based programming model: A ParArray (or
-any other imperative, blocking structure) is
-unable to consolidate calculation steps, as 
-it is required to finish calculation, before the call may be returned
-and hence no lazily calculated objects may exist, which in turn
-entirely prevents reduction of calculation steps.
+reductions (like \texttt{zip}, \texttt{map} $\to$ \texttt{zipMap})
+automatically, before the calculation is started. With automatically
+we mean either through static analysis -- which would also benefit
+datastructures of smaller size -- or dynamically at runtime using
+views and invoking calculation as necessary. Which approach is more
+promising needs to be evaluated using real-life code samples.
+
+It is however important to note, that the latter approach requires a
+flow based programming model: a ParArray (or any other imperative,
+blocking structure) is unable to consolidate calculation steps at
+runtime, as it is required to finish calculation before the call may
+be returned and hence no lazily calculated views may exist, which in
+turn entirely prevents reduction of calculation steps.
 
 \bibliographystyle{abbrv}
 \bibliography{bib}
