@@ -146,6 +146,7 @@
     \sC{// Generation}\\
     \sK{def} \sF{tabulate}[\sT A](\sV n: \sT{Int})(\sV f: \sT{Int => A}): \sT{FlowArray[A]}\\
     \sEL
+    \pause
     \sC{// Monadic Ops}\\
     \sK{def} \sF{map}[\sT B](\sV f: \sT{A => B}): \sT{FlowArray[B]}\\
     \sK{def} \sF{zip}[\sT B](\sV{that}: \sT{FlowArray[B]}): \sT{FlowArray[(A,B)]}\\
@@ -153,10 +154,12 @@
     \sK{def} \sF{flatMapN}[\sT B](\sV n: \sT{Int})(\sV f: \sT{A => FlowArray[B]}): \sT{FlowArray[B]}\\
     \sK{def} \sF{flatten}[\sT B](\sV n: \sT{Int}): \sT{FlowArray[B]}\\
     \sEL
+    \pause
     \sC{// Structure}\\
     \sK{def} \sF{slice}(\sV{start}: \sT{Int}, \sV{end}: \sT{Int}): \sT{FlowArray[A]}\\
     \sK{def} \sF{transpose}(\sV{dim}: \sT{Int}): \sT{FlowArray[A]}\\
     \sEL
+    \pause
     \sC{// Retrieval}\\
     \sK{def} \sF{blocking}: \sT{Array[A]}
   \end{alltt}
@@ -337,6 +340,10 @@
 \begin{frame}
   \frametitle{Conclusion}
 
+  \begin{block}{FlowArrays}
+    \begin{itemize}
+    \end{itemize}
+  \end{block}
   %% TODO
 
   \pause
