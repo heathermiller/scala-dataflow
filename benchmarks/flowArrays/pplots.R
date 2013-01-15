@@ -39,7 +39,9 @@ settheme <- function(p, lpos) {
                  axis.text.y  = element_text(size=6),
                  plot.title   = element_text(size=8),
                  legend.text  = element_text(size=7),
-                 legend.background = element_rect(fill="transparent", color = NA))
+                 legend.background = element_rect(fill="transparent", color = NA),
+                 panel.background  = element_rect(fill="transparent", color = NA),
+                 plot.background   = element_rect(fill="transparent", color = NA))
   g <- guide_legend(title = NULL, keywidth = .8, keyheight = .8)
   p <- p + guides(color = g, shape = g)
   p
