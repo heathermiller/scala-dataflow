@@ -325,25 +325,7 @@
 \begin{frame}
   \frametitle{Conclusion}
 
-  {\Large FlowPools are \ldots}
-
-  \pause
-  \begin{block}{Basic Traits}
-    \begin{itemize}
-    \item Flow-Based Collection
-    \item Asynchronous
-    \item Deterministic
-    \end{itemize}
-  \end{block}
-      
-  \pause
-  \begin{block}{Performance \& Scalability}
-    \begin{itemize}
-    \item Speed comparable to Java standard Queues
-    \item Scalable
-    \item Unneeded Elements GC'd
-    \end{itemize}
-  \end{block}
+  %% TODO
 
   \pause
   \begin{block}{¿Questions?}
@@ -358,22 +340,17 @@
 
   \begin{columns}[t]
     \begin{column}{.5\textwidth}
-      \begin{block}{Insert / Reduce}
+      \begin{block}{Scaling}
         \begin{itemize}
-        \item $5\cdot10^6$ elements
+        \item $10^7$ elements
         \item 20 measurements
         \end{itemize}
       \end{block}
 
-      \begin{block}{Communication / GC}
+      \begin{block}{Size}
         \begin{itemize}
-        \item Parallelization level: 1
-        \item Measurements
-          \begin{itemize}
-          \item UltraSPARC T2: 2
-          \item 4-core i7: 10
-          \item 32-core Xeon: 3
-          \end{itemize}
+        \item Parallelization level: 4
+        \item 20 measurements
         \end{itemize}
       \end{block}
 
@@ -383,34 +360,16 @@
         \small\texttt{-Xmx2048m -Xms2048m -XX:+UseCondCardMark
           -verbose:gc -XX:+PrintGCDetails -server}.
       \end{block}
-      \begin{block}{Java Version}
-        \begin{itemize}
-        \item Intel \small\texttt{
-            1.7.0\_04-ea-b15\\
-            HotSpot 64-Bit Server VM (build 23.0-b16, mixed mode)
-          }
-        \item SPARC \small\texttt{
-            1.7.0\_03-b04\\
-            HotSpot Server VM (build 22.1-b02, mixed mode)
-          }
-        \end{itemize}
+      \begin{block}{Arch, Java Version}
+        Intel i7-2620M\\
+        \small\texttt{
+          Java 1.7.0\_04-b20\\
+          HotSpot 64-Bit Server VM (build 23.0-b21, mixed mode)
+        }
       \end{block}
     \end{column}
   \end{columns}
     
-\end{frame}
-
-\begin{frame}
-  \frametitle{Details about Benchmarks}
-
-  \begin{block}{Architectures}
-    \begin{itemize}
-    \item octa-core 1.2GHz UltraSPARC T2 w/ 64 HW threads
-    \item quad-core 3.4 GHz i7-2600 (w/ HT)
-    \item 4x octa-core 2.27 GHz Intel Xeon x7560 (w/ HT)
-    \end{itemize}
-  \end{block}
-
 \end{frame}
 
 \end{document}
