@@ -671,8 +671,8 @@ This operation has specifically been written to implement matrix
 multiplication with FlowArrays. It interprets the array as a
 two-dimensional array given a step size (i.e. one dimension of the
 array) and transposes it. The indexes are therefore altered as
-follows (see fig~\ref{fig:transpose} for an illustration):
-\[ i_n = \lfloor i_o / d_1 \rfloor + (i \bmod d_1) * d_2 \qquad (d_1
+follows (see Fig.~\ref{fig:transpose} for an illustration):
+\[ i_n = \lfloor i_o / d_1 \rfloor + (i_o \bmod d_1) * d_2 \qquad (d_1
 \cdot d_2 = n)\]
 where $i_o,\ i_n$ are the old and new indexes, $d_1,\ d_2$ are the two
 dimensions, $n$ the size of the FlowArray. This is currently the only
@@ -687,17 +687,20 @@ operation that changes the order of the elements in a FlowArray.
 
 Since this operation changes the order of the elements, the basic
 dependency tracking does not work anymore: As you can see in
-fig~\ref{fig:transpose}, the leftmost elements depend on elements from
+Fig.~\ref{fig:transpose}, the leftmost elements depend on elements from
 all over the source array. To track these dependencies correctly, the
-implementation of \texttt{sliceDep} in \texttt{FAJob} is fundamentally
+implementation of \texttt{sliceJobs} in \texttt{FAJob} is fundamentally
 changed. In the 
-basic case, it returns the smallest job that still spans all the
-requested elements. However, in the \texttt{transpose} case, this
+basic case, it returns the smallest single job that still spans all
+the requested elements. However, in the \texttt{transpose} case, this
 would (almost)
-always be the root job, and hence splitting would be useless. Therefore,
-in the \texttt{tranpose} case, the \texttt{sliceDep} method returns a
-list of the not-split jobs (i.e. actually executing jobs) that
-calculate the given elements.
+always be the root job, and hence splitted dependency tracking would
+be useless. Therefore,
+in the \texttt{transpose} case, the \texttt{sliceJobs} method will
+return multiple jobs: it exhaustively searches through the job-tree
+and only returns the jobs at the bottom of the split-tree (i.e. jobs
+that actually calculate something) responsible for calculating the
+given elements.
 
 It seems obvious, that how exactly the splitting is done has a
 tremendous 
@@ -708,6 +711,12 @@ should be carried out. Further, it might be an advantage to expose the
 transpose operation as a view rather than copying the data. This would
 require something like a ``dependency mapper'' to convert dependency
 tracking between the view and the underlying structure.
+
+Another idea is to make the FlowArray structure inherently aware of
+the two dimensions and do the splitting in surfaces (or cubes for
+three dimensions) instead of intervals only. This could lead to better
+alignment but will certainly lead to a more complex implementation and
+difficulties in integrating with the typing system.
 
 \section{Evaluation}
 \label{sec:evaluation}
