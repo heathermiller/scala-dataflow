@@ -300,7 +300,7 @@ have been calculated.
 
 
 In other words: to access the element with index $n$ in
-such a hierarchichal structure, one has first to check whether the
+such a hierarchical structure, one has first to check whether the
 \texttt{FlowArray} responsible for this index is available (i.e. the \texttt{FlowArray}
 with index $\lfloor \frac nN \rfloor$) and then, whether
 the particular element of this \texttt{FlowArray} is already available
@@ -329,7 +329,7 @@ val fa2 = x.flatMapN(n)(...).flatMapN(n)(...)
 \end{alltt}
 In the calculation of \texttt{fa1}, we will end up with a hierarchy of
 three levels: the inner call to \texttt{flatMapN} is forced to return
-a hierarchical structure as it does not a-priori know what the closure
+a hierarchical structure as it does not a priori know what the closure
 will return. But so is the outer call: it cannot flatten the hierarchical
 structure from the inner call as it will only become available after
 some time.
@@ -340,7 +340,7 @@ hierarchy of two levels already. However, the second call will --
 similarly to a \texttt{map} -- flatten out a level and produce another
 one in return.
 
-Note that currently throughout this scheme, the spliting happens only
+Note that currently throughout this scheme, the splitting happens only
 in terms of the outer 
 blocks, i.e. individual elements of inner \texttt{FlowArrays} are always
 assigned to the same calculation blocks. This is acceptable as long as
@@ -641,7 +641,7 @@ The \texttt{blocking} method needs to flatten the hierarchical
 structure into a single array by copying the data from the inner
 \texttt{FlowArrays}. This copying is somewhat unnecessary -- which 
 was the reason for the creation of Hierarchical \texttt{FlowArrays} in the
-first place: currently, flatMapped data has to be copied only when
+first place: currently, \texttt{flatMapped} data has to be copied only when
 retrieving results, not in a calculation flow. Nevertheless, one might
 further improve on this by providing indexed access to elements only
 in \texttt{FlowArrays} instead of requiring to return a reference to a full
@@ -675,7 +675,7 @@ to have the same size for that matter). Thanks to hierarchical
 
 To retain evidences about the types inside the current \texttt{FlowArray} when
 flatting, implicit arguments are used together with the
-\texttt{CanFlatten} type. The reader is referred to the scaladoc and
+\texttt{CanFlatten} type. The reader is referred to the ScalaDoc and
 the code for details.
 
 \subsubsection{Transpose}
@@ -706,7 +706,7 @@ changed. In the
 basic case, it returns the smallest single job that still spans all
 the requested elements. However, in the \texttt{transpose} case, this
 would (almost)
-always be the root job, and hence splitted dependency tracking would
+always be the root job, and hence split dependency tracking would
 be useless. Therefore,
 in the \texttt{transpose} case, the \texttt{sliceJobs} method will
 return multiple jobs: it exhaustively searches through the job-tree
@@ -786,7 +786,7 @@ execution time, the time spent in garbage collection and the
 spent in garbage collection.
 
 The time in garbage collection is the sum of the runtimes of all minor
-GC cylces. No full GC cycles have been performed during the
+GC cycles. No full GC cycles have been performed during the
 benchmarks. Please note that the GC time is an approximation (minor GC
 cycles can run in parallel) and hence the ``normalized execution
 time'' may become negative.
