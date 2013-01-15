@@ -397,12 +397,21 @@ dependency tracking, splitting and scheduling:
     method is called when computation of a \texttt{FAJob} starts and
     its size is above the threshold for exponential splitting.
   \item[\texttt{done: Boolean}] Checks whether this \texttt{FAJob} is
-    done. Queries sub jobs if this \texttt{FAJob} is split.
+    done. Queries sub jobs if this \texttt{FAJob} is split. This
+    method is used for example in the final aggregation of a
+    \texttt{fold} (see Fig.~\ref{fig:fa-fold-calc} on
+    page~\pageref{fig:fa-fold-calc}) to check if the other job is
+    already completed.
   \item[\texttt{sliceJobs(from: Int, to: Int): Option[(Seq[FAJob],
       Boolean)]}] Returns the jobs which are responsible for
-    calculating a given slice. May require the caller to check again,
-    once the jobs are completed (indicated by the Boolean flag). If
-    the slice is completed, \texttt{None} is returned.
+    calculating a given slice. In some cases, all the jobs responsible
+    for the slice might not be known yet (for example when doing
+    double-dependency tracking after a \texttt{flatMapN}, see
+    section~\ref{sssec:flatMapN}). In this case, the Boolean flag
+    indicates that the caller has to call this method again, once all
+    the jobs returned from the current call are completed. If the
+    calculation of the queried slice is completed, the method returns
+    \texttt{None}.
   \item[\texttt{delegateThen(d: Seq[FAJob])(thn: () => Unit): Unit}]
     This method may be called from inside the \texttt{doCompute}
     method only. It halts calculation of this \texttt{FAJob}, until
