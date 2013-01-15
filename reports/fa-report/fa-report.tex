@@ -244,23 +244,31 @@ same number of jobs are spawned as for a \texttt{map}.
 
 Note that this approach is preferable to a single element where
 completed elements are accumulated using a CAS since the former
-does preserve the order in which elements are accumulated. I.e. it
-requires the accumulation function to be associative, not
-commutative.
+does preserve the order in which elements are accumulated, i.e. it
+does not require the accumulation function to be commutative, only
+associative.
 
 \subsubsection{FlatMap}
 \label{sssec:flatMapN}
 
-When calling flatMap on a FlowArray, the size of the resulting
-FlowArray is not known until the inner FlowArrays are created and
-hence their size can be read. However, since this happens
+When calling \texttt{flatMap} on a FlowArray, the size of the
+resulting FlowArray is not known until the inner FlowArrays are
+created and hence their size can be read. However, since this happens 
 asynchronously, the size of the resulting FlowArray would not be known
 at its creation. This poses several challenges:
 
 \begin{itemize}
-\item The interface of FlowArrays becomes more complex
-\item Increased difficulty in memory allocation
-\item Increased difficulty in scheduling of subsequent calls
+\item The interface of FlowArrays becomes more complex since the size
+  of a FlowArray would not always be known on creation and hence the
+  \texttt{size} field had to be turned into a future.
+\item Increased difficulty in memory allocation: since the size of a
+  FlowArray is not known in advance, memory allocation has to take
+  place either after a barrier on the size of the FlowArray -- which
+  we want to avoid -- or has to be done adaptively once the individual
+  sizes become known which does quickly turn into a scheduling
+  nightmare. 
+\item Increased difficulty in scheduling of subsequent calls for
+  similar reasons than memory allocation.
 \end{itemize}
 
 Instead of deferring the size calculation, FlowArrays require to pass
@@ -272,11 +280,14 @@ resulting FlowArray.
 Further, the FlowArray now needs to keep track of dependencies twice:
 Once, whether a sub-FlowArray has already been created, second,
 whether a given one of its blocks is already calculated. Refer to
-fig~\ref{fig:flatMap-dependency} for an illustration. This tracking
-requires the outer FlowArray to keep references to all the created
-ones. In order to avoid unnecessary copying of data, the FlowArray
-remains in this hierarchical structure instead of being truly
-flattened.
+fig~\ref{fig:flatMap-dependency} for an illustration: the upper,
+bigger, block holds references to the individual FlowArrays created by
+the closure call of the \texttt{flatMapN}. The first dependency
+tracking happens here: one has to check, whether the FlowArray for a
+given index already has been created. The lower, smaller blocks are
+the data blocks of the said FlowArrays. The second dependency tracking
+happens here: being FlowArrays, not all their elements might already
+have been calculated.
 
 \begin{figure}
   \centering
@@ -286,21 +297,58 @@ flattened.
   \label{fig:flatMap-dependency}
 \end{figure}
 
+
+In other words: to access the element with index $n$ in
+such a hierarchichal structure, one has first to check whether the
+FlowArray responsible for this index is available (i.e. the FlowArray
+with index $\lfloor \frac nN \rfloor$) and then, whether
+the particular element of this FlowArray is already available
+(i.e. element with index $n \bmod N$).
+
+Since this tracking requires the outer FlowArray to keep references to
+all the FlowArrays created by the closure call -- in order to avoid
+unnecessary copying of data -- the FlowArray remains in this
+hierarchical structure instead of being truly flattened.
+
 When a \texttt{map} is called on one of these \emph{Hierarchical
   FlowArrays} individual \texttt{maps} are called for each sub array
 and only then the resulting data is written into a flat array. This
 allows to ``flatten out'' those hierarchical structures without
-additional computation costs.
+additional computation costs. The same is true for \texttt{folds} on
+these structures.
 
-Note that currently, this scheme does only split in terms of the outer
+It becomes much more interesting, when we look at nested or subsequent
+calls to \texttt{flatMap}: have a look at the following two
+definitions.
+\begin{alltt}
+{\scriptsize
+val fa1 = x.flatMapN(n*n)(x => x.flatMapN(n)( ... ))
+val fa2 = x.flatMapN(n)(...).flatMapN(n)(...)
+}
+\end{alltt}
+In the calculation of \texttt{fa1}, we will end up with a hierarchy of
+three levels: the inner call to \texttt{flatMapN} is forced to return
+a hierarchical structure as it does not a-priori know what the closure
+will return. But so is the outer call: it cannot flatten the hierarchical
+structure from the inner call as it will only become available after
+some time.
+
+The calculation of \texttt{fa2}, will end up in a hierarchy of
+two levels only: the first call to \texttt{flatMapN} will produce a 
+hierarchy of two levels already. However, the second call will --
+similarly to a \texttt{map} -- flatten out a level and produce another
+one in return.
+
+Note that currently throughout this scheme, the spliting happens only
+in terms of the outer 
 blocks, i.e. individual elements of inner FlowArrays are always
-assigned to the same calculation blocks. This is OK as long as the
-number of inner FlowArrays is (relatively) high.
+assigned to the same calculation blocks. This is acceptable as long as
+the number of inner FlowArrays is relatively high.
 
 There is currently no interface to launch re-alignment of the blocks
 in order to remove the arbitrary splitting imposed by the hierarchy
-introduced by the \texttt{flatMap}. This is an interface issue; the
-implementation is trivial. For details how block splitting is
+introduced by the \texttt{flatMapN}. This is an interface issue; the
+implementation is trivial. For details on how the block splitting is
 propagated through dependencies, please refer to
 section~\ref{sec:implementation}.
 
