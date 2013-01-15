@@ -1,4 +1,4 @@
-\documentclass{beamer}
+\documentclass[fleqn]{beamer}
 
 \usepackage[utf8]{inputenc}
 
@@ -406,6 +406,48 @@
     \end{column}
   \end{columns}
     
+\end{frame}
+
+\begin{frame}
+  \frametitle{Dependency Tracking States}
+
+  \includegraphics[width=\textwidth]{../fa-report/figs/dependency-tracking}
+\end{frame}
+
+\begin{frame}
+  \frametitle{FlatMapN}
+
+  \includegraphics[width=\textwidth]{../fa-report/figs/flatMap-dependency}
+
+  \vspace{\stretch{1}}
+  
+  \pause
+  \begin{alltt}
+    \sK{val} \sV{fa1} = x.flatMapN(n*n)(x => x.flatMapN(n)( ... ))\\
+    \sK{val} \sV{fa2} = x.flatMapN(n)(...).flatMapN(n)(...)
+  \end{alltt}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Split Propagation}
+
+  \vspace{\stretch{.5}}
+
+  \includegraphics[width=\textwidth]{../fa-report/figs/split}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Transpose}
+
+  \[ i_n = \lfloor i_o / d_1 \rfloor + (i_o \bmod d_1) * d_2 \qquad (d_1
+  \cdot d_2 = n)\]
+
+  \vspace{\stretch{1}}
+
+  \centering
+  \includegraphics[width=.8\textwidth]{../fa-report/figs/transpose}
+
 \end{frame}
 
 \end{document}
