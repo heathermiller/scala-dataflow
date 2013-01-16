@@ -209,7 +209,9 @@
         \sEL
         \uncover<2->{\sK{val} \sV t = u zip v}\\
         \uncover<3->{\sK{val} \sV p = t.map(\_ * \_)}\\
-        \uncover<4->{\sK{val} \sV r = p.fold(0.0)(\_ + \_)}
+        \uncover<4->{\sK{val} \sV r = p.fold(0.0)(\_ + \_)}\\
+        \sEL
+        \uncover<5->{println(r.blocking)}
       \end{alltt}
 
     \end{column}
