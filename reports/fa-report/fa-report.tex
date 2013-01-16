@@ -165,7 +165,11 @@ array have been calculated.
 \subsection{Dependency Tracking}
 We'll now describe in detail what happens when a \texttt{map} is
 called on a \texttt{FlowArray} depending on the different possible states of
-its blocks.  It is important to understand that dependency tracking
+its blocks. A block is a chunk of the \texttt{FlowArray} internal
+data-array whose elements are calculated by a single worker-thread, after
+the splitting (as illustrated 
+in Fig.~\ref{fig:barrier-free}) has been done. It is important to
+understand that dependency tracking 
 happens for each block individually and hence the calculation in one
 part of the \texttt{FlowArray} may advance without waiting for another
 part. Fig.~\ref{fig:dep-track} illustrates the different scenarios that
@@ -186,6 +190,7 @@ have their correct value and all references to calculating jobs may be
 freed, since no dependency tracking has to be done for this block
 anymore.
 
+%% TODO block chain comment? Don't understand.
 \begin{figure}
   \centering
   \includegraphics{dependency-tracking}
@@ -194,8 +199,9 @@ anymore.
 \end{figure}
 
 When a \texttt{map} is called on a \texttt{FlowArray}, each block chain will
-start in one of the three first states (as indicated in the figure)
-and then propagate to the right until both blocks are fully
+start in one of the three first states (as indicated in
+Fig.~\ref{fig:dep-track}) 
+and then traverse each state to the right until both blocks are fully
 calculated. The states are the following (from left to right):
 
 \begin{enumerate}
