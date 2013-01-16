@@ -16,8 +16,8 @@
 \begin{document}
 
 \title{FlowArrays: Barrier-Free ParArrays}
-\author{Tobias Schlatter\inst{1} \and Aleksandar Prokopec\inst{2} \and
-  Heather Miller\inst{2} \and Philipp Haller\inst{2} \and Martin
+\author{Tobias Schlatter\inst{1} \and Heather Miller\inst{2} \and
+  Aleksandar Prokopec\inst{2} \and Philipp Haller\inst{2} \and Martin
   Odersky\inst{2}}
 
 \authorrunning{Tobias Schlatter}
@@ -32,21 +32,22 @@
 
 \begin{abstract}
   In \cite{FP12} we proposed an unordered, barrier- and lock-free,
-  parallel datastructure, the FlowPools. The following attempts to
-  implement a bigger application using FlowPools, showed that the lack
-  of ordering is very limiting. FlowArrays -- proposed by this report
-  -- do not have this limitation: Having a very similar structure than
-  ParArrays \cite{collect11}, FlowArrays eliminate the need to block
+  parallel datastructure, the \texttt{FlowPools}. Attempts to implement a
+  bigger application using \texttt{FlowPools}, showed that the lack of ordering
+  is very limiting. \texttt{FlowArrays}, proposed by this report, do not have
+  this limitation -- having a very similar structure than
+  \texttt{ParArrays} \cite{collect11}, \texttt{FlowArrays} eliminate the need to block
   in between two monadic operations while exposing a very similar
   interface to the programmer.
 
   Benchmarks on operations for linear algebra have shown that the
-  current implementation of FlowArrays performs comparable to
-  ParArrays. Further, we'll find that the current storage model of
-  FlowArrays takes up most the calculation time. We can show that
+  current implementation of \texttt{FlowArrays} performs comparable to
+  \texttt{ParArrays}. Further, we will find that with the current storage model
+  of \texttt{FlowArrays}, garbage collection takes considerably more time than
+  actual calculation. We can show that
   the adaptions proposed later on in this report do significantly
   speed up the calculation and will lead to higher performance than
-  ParArrays.
+  \texttt{ParArrays}.
 \end{abstract}
 
 \section{Introduction}
@@ -68,31 +69,31 @@ control dependencies. This allows one to reason sequentially about the
 intended behavior of their program, meanwhile enabling the underlying
 framework to effectively extract parallelism.
 
-In an earlier paper \cite{FP12} we proposed FlowPools, a
-deterministic, dataflow abstraction. Being unordered, FlowPools have
-shown to be somewhat limiting to implement concrete applications. This
-report presents FlowArrays a dataflow structure very much like arrays
-with monadic operations. Contrary to normal arrays (or ParArrays
-\cite{collect11}), FlowArrays do not block in between monadic
-operations and hence have dataflow character.
+In an earlier paper \cite{FP12} we proposed \texttt{FlowPools}, a
+deterministic, dataflow abstraction. Being unordered, \texttt{FlowPools} have
+shown to be somewhat limiting in implementing concrete applications. This
+report presents \texttt{FlowArrays}, a dataflow structure very much like arrays
+with monadic operations. Contrary to normal arrays (or \texttt{ParArrays}
+\cite{collect11}), \texttt{FlowArrays} do not block in between monadic
+operations and are hence asynchronous.
 
 The dataflow in this programming model is implicit: The programmer can
-use the known abstractions from functional programming and only has to
+use the known functional programming abstractions and only has to
 make a special call when retrieving concrete results.
 
-An overview of the general idea behind FlowArrays and how exactly they
-try to improve on ParArrays is given first. The section outlines the
-basic concepts of how task splitting in FlowArrays is done. The next
-section describes in detail, how FlowArrays are implemented. The
-evaluation section analyzes the performance of FlowArrays using vector
-scalar products as benchmark. In the conclusion, we'll propose
+First we give an overview of the general idea behind \texttt{FlowArrays} and
+how exactly they try to improve on \texttt{ParArrays}. The section outlines the
+basic concepts of how task splitting in \texttt{FlowArrays} is done. The next
+section describes how \texttt{FlowArrays} are implemented in detail. The
+evaluation section analyzes the performance of \texttt{FlowArrays} using vector
+scalar products as a benchmark. In the conclusion, we will propose
 improvements and future work.
 
 Our contributions are the following:
 \begin{enumerate}
-\item The design and Scala~\cite{Odersky10} implementation of ParArray
-  like, but non-blocking datastructure.
-\item Benchmarks comparing FlowArrays to ParArrays with a focus on
+\item The design and Scala~\cite{Odersky10} implementation of a
+  \texttt{ParArray}-like, but non-blocking datastructure.
+\item Benchmarks comparing \texttt{FlowArrays} to \texttt{ParArrays} with a focus on
   garbage collection overhead.
 \item A proposition for significant speed increase due to reduced GC
   overhead.
@@ -101,18 +102,18 @@ Our contributions are the following:
 \section{Overview}
 \label{sec:overview}
 
-In this section we'll first outline how FlowArrays try to improve on
-ParArrays from an abstract perspective. Then we'll show some of the
-difficulties that arise particularly with this approach.
+In this section we will first outline how \texttt{FlowArrays} strive to improve
+on \texttt{ParArrays} from an abstract perspective. Then we will show some of
+the difficulties that arise particularly with this approach.
 
 \subsection{Barrier-Freedom}
-FlowArrays in comparison to ParArrays are barrier-free: We'll
-illustrate on the simplest example, a single \texttt{map}
-operation, how these two datastructures differ.
+\texttt{FlowArrays} are, unlike \texttt{ParArrays}, barrier-free: We will use a simple
+example, a single \texttt{map} operation, to show how these two
+datastructures differ.
 
-Let's consider the following code for ParArrays and
-FlowArrays. Fig.~\ref{fig:barrier-free} shows a schematic
-illustration of what's going on.
+Let's consider the following code for \texttt{ParArrays} and
+\texttt{FlowArrays}. Fig.~\ref{fig:barrier-free} shows a schematic
+illustration of what is going on.
 
 \noindent
 \begin{minipage}[t]{.5\textwidth}
@@ -132,42 +133,42 @@ val fa2 = fa1.map(_ * 2)
 \end{alltt}
 \end{minipage}
 
-In both cases, we first create a Par/FlowArray using a
-\texttt{tabulate}. Both Par- and FlowArrays will use exponential task
+In both cases, we first create a \texttt{Par/FlowArray} using
+\texttt{tabulate}. Both Par- and \texttt{FlowArrays} will use exponential task
 splitting \cite{collect11,cong08} to distribute the workload of
 calculating the individual elements. The crucial difference between
-ParArrays and FlowArrays starts here: With ParArrays, the call to
+\texttt{ParArrays} and \texttt{FlowArrays} starts here: with \texttt{ParArrays}, the call to
 \texttt{tabulate} (and any other function for that matter) will only
-return, once every element has been calculated. In contrast, the call
-to \texttt{tabulate} on FlowArrays will return immediately, yielding
-an array whose elements are specified, but not yet calculated.
+return once every element has been calculated. In contrast, the call
+to \texttt{tabulate} on \texttt{FlowArrays} will return immediately, yielding
+an array whose elements are well-defined, but not yet calculated.
 
-When calling \texttt{map} on the first Par/FlowArray, this difference
-becomes even clearer: ParArrays will do the same thing as for
+When calling \texttt{map} on the first \texttt{Par/FlowArray}, this difference
+becomes even clearer: \texttt{ParArrays} will do the same thing as for
 \texttt{tabulate}: Split up the task of calculation and start right
-away. FlowArrays however, will align the task blocks and start
-calculating the elements, once the elements the result depends on have
-been calculated (in our case the result of the \texttt{tabulate}). So
-contrary to ParArrays, FlowArrays are able to start subsequent
+away. \texttt{FlowArrays} however, will align the task blocks and start
+calculating the elements once the elements on which the result depends have
+been calculated (in our case the result of the \texttt{tabulate}). So,
+contrary to \texttt{ParArrays}, \texttt{FlowArrays} are able to start subsequent
 calculations partially, even if not all the elements of the original
 array have been calculated.
 
 \begin{figure}
   \centering
-  \subfigure[ParArray] {\includegraphics{barrier-free-pa}}
+  \subfigure[\texttt{ParArray}] {\includegraphics{barrier-free-pa}}
   \qquad
-  \subfigure[FlowArray]{\includegraphics{barrier-free-fa}}
-  \caption{Illustration of barrier-freedom of FlowArrays}
+  \subfigure[\texttt{FlowArray}]{\includegraphics{barrier-free-fa}}
+  \caption{Illustration of barrier-freedom of \texttt{FlowArrays}}
   \label{fig:barrier-free}
 \end{figure}
 
 \subsection{Dependency Tracking}
-We'll now describe in detail what happens, when a \texttt{map} is
-called on a FlowArray depending on the different possible states of
-its blocks.  It is important to understand, that dependency tracking
+We'll now describe in detail what happens when a \texttt{map} is
+called on a \texttt{FlowArray} depending on the different possible states of
+its blocks.  It is important to understand that dependency tracking
 happens for each block individually and hence the calculation in one
-part of the FlowArray may advance without waiting for another
-part. Fig~\ref{fig:dep-track} illustrates the different scenarios that
+part of the \texttt{FlowArray} may advance without waiting for another
+part. Fig.~\ref{fig:dep-track} illustrates the different scenarios that
 may happen on a single-block level.
 
 In the figure, the circles represent jobs: Gray circles are jobs which 
@@ -177,7 +178,7 @@ circles are in an internal queue of another job (indicated by the dashed
 arrow), meaning that this calculation cannot be started yet, as some
 required data is still being calculated.
 
-The rectangles represent the data blocks of a FlowArray (i.e. a range
+The rectangles represent the data blocks of a \texttt{FlowArray} (i.e. a range
 of indexes): White blocks are (partially) empty, i.e. not all elements
 are calculated and a job to calculate them is still running or pending
 for execution. Gray blocks are fully calculated, i.e. all elements
@@ -188,11 +189,11 @@ anymore.
 \begin{figure}
   \centering
   \includegraphics{dependency-tracking}
-  \caption{Illustration of the dependency tracking in FlowArrays}
+  \caption{Illustration of the dependency tracking in \texttt{FlowArrays}}
   \label{fig:dep-track}
 \end{figure}
 
-When a \texttt{map} is called on a FlowArray, each block chain will
+When a \texttt{map} is called on a \texttt{FlowArray}, each block chain will
 start in one of the three first states (as indicated in the figure)
 and then propagate to the right until both blocks are fully
 calculated. The states are the following (from left to right):
@@ -212,8 +213,8 @@ calculated. The states are the following (from left to right):
 \subsection{Operations}
 We have seen how dataflow with dependency tracking can be used in
 monadic operations on the example of a \texttt{map}. In this section
-we'll describe the caveats of other common monadic operations on
-arrays. For a complete description of what operations FlowArrays
+we will describe the caveats of other common monadic operations on
+arrays. For a complete description of what operations \texttt{FlowArrays}
 support, please refer to section~\ref{ssec:flowarray}.
 
 \subsubsection{Fold}
@@ -221,7 +222,7 @@ When doing out of order folding, each block has first to be reduced to
 a single element, then these results have to be combined to the final
 result. During splitting of the jobs, one can create a binary tree of
 blocks along which one can later accumulate the elements;
-fig~\ref{fig:fa-fold} illustrates this approach.
+Fig.~\ref{fig:fa-fold} illustrates this approach.
 
 \begin{figure}
   \centering
@@ -232,92 +233,140 @@ fig~\ref{fig:fa-fold} illustrates this approach.
   \subfigure[Calculation]{%
     \includegraphics{fa-fold-calc}%
     \label{fig:fa-fold-calc}}
-  \caption{Illustration of \texttt{fold} on a FlowArray}
+  \caption{Illustration of \texttt{fold} on a \texttt{FlowArray}}
 \end{figure}
 
 In order to keep the number of jobs (and hence the burden of managing
 them) minimal, rather then spawning a single job for each accumulation
 step in the tree, the job which finishes second on each node is
 responsible to calculate its accumulated value (see
-fig~\ref{fig:fa-fold-calc}). Using this scheme, the 
+Fig.~\ref{fig:fa-fold-calc}). Using this scheme, the 
 same number of jobs are spawned as for a \texttt{map}.
 
 Note that this approach is preferable to a single element where
 completed elements are accumulated using a CAS since the former
-does preserve the order in which elements are accumulated. I.e. it
-requires the accumulation function to be associative, not
-commutative.
+does preserve the order in which elements are accumulated, i.e. it
+does not require the accumulation function to be commutative, only
+associative.
 
 \subsubsection{FlatMap}
 \label{sssec:flatMapN}
 
-When calling flatMap on a FlowArray, the size of the resulting
-FlowArray is not known until the inner FlowArrays are created and
-hence their size can be read. However, since this happens
-asynchronously, the size of the resulting FlowArray would not be known
+When calling \texttt{flatMap} on a \texttt{FlowArray}, the size of the
+resulting \texttt{FlowArray} is not known until the inner \texttt{FlowArrays} are
+created and hence their size can be read. However, since this happens 
+asynchronously, the size of the resulting \texttt{FlowArray} would not be known
 at its creation. This poses several challenges:
 
 \begin{itemize}
-\item The interface of FlowArrays becomes more complex
-\item Increased difficulty in memory allocation
-\item Increased difficulty in scheduling of subsequent calls
+\item The interface of \texttt{FlowArrays} becomes more complex since the size
+  of a \texttt{FlowArray} would not always be known on creation and hence the
+  \texttt{size} field had to be turned into a future.
+\item Increased difficulty in memory allocation: since the size of a
+  \texttt{FlowArray} is not known in advance, memory allocation has to take
+  place either after a barrier on the size of the \texttt{FlowArray} -- which
+  we want to avoid -- or has to be done adaptively once the individual
+  sizes become known which does quickly turn into a scheduling
+  nightmare. 
+\item Increased difficulty in scheduling of subsequent calls for
+  similar reasons than memory allocation.
 \end{itemize}
 
-Instead of deferring the size calculation, FlowArrays require to pass
-the size of the resulting FlowArrays of a \texttt{flatMap} operation
+Instead of deferring the size calculation, \texttt{FlowArrays} require to pass
+the size of the resulting \texttt{FlowArrays} of a \texttt{flatMap} operation
 when calling it (therefore the name \texttt{flatMapN}). This greatly 
 facilitates further handling -- especially scheduling -- of the
-resulting FlowArray.
+resulting \texttt{FlowArray}.
 
-Further, the FlowArray now needs to keep track of dependencies twice:
-Once, whether a sub-FlowArray has already been created, second,
+Further, the \texttt{FlowArray} now needs to keep track of dependencies twice:
+Once, whether a sub-\texttt{FlowArray} has already been created, second,
 whether a given one of its blocks is already calculated. Refer to
-fig~\ref{fig:flatMap-dependency} for an illustration. This tracking
-requires the outer FlowArray to keep references to all the created
-ones. In order to avoid unnecessary copying of data, the FlowArray
-remains in this hierarchical structure instead of being truly
-flattened.
+Fig.~\ref{fig:flatMap-dependency} for an illustration: the upper,
+bigger, block holds references to the individual \texttt{FlowArrays} created by
+the closure call of the \texttt{flatMapN}. The first dependency
+tracking happens here: one has to check, whether the \texttt{FlowArray} for a
+given index already has been created. The lower, smaller blocks are
+the data blocks of the said \texttt{FlowArrays}. The second dependency tracking
+happens here: being \texttt{FlowArrays}, not all their elements might already
+have been calculated.
 
 \begin{figure}
   \centering
   \includegraphics{flatMap-dependency}
   \caption{Illustration of dependency-tracking requirements in a
-    Hierarchical FlowArray resulting from a \texttt{flatMap}}
+    Hierarchical \texttt{FlowArray} resulting from a \texttt{flatMap}}
   \label{fig:flatMap-dependency}
 \end{figure}
+
+
+In other words: to access the element with index $n$ in
+such a hierarchical structure, one has to check first whether the
+\texttt{FlowArray} responsible for this index is available (i.e. the \texttt{FlowArray}
+with index $\lfloor \frac nN \rfloor$) and then, whether
+the particular element of this \texttt{FlowArray} is already available
+(i.e. element with index $n \bmod N$).
+
+Since this tracking requires the outer \texttt{FlowArray} to keep references to
+all the \texttt{FlowArrays} created by the closure call -- in order to avoid
+unnecessary copying of data -- the \texttt{FlowArray} remains in this
+hierarchical structure instead of being truly flattened.
 
 When a \texttt{map} is called on one of these \emph{Hierarchical
   FlowArrays} individual \texttt{maps} are called for each sub array
 and only then the resulting data is written into a flat array. This
 allows to ``flatten out'' those hierarchical structures without
-additional computation costs.
+additional computation costs. The same is true for \texttt{folds} on
+these structures.
 
-Note that currently, this scheme does only split in terms of the outer
-blocks, i.e. individual elements of inner FlowArrays are always
-assigned to the same calculation blocks. This is OK as long as the
-number of inner FlowArrays is (relatively) high.
+It becomes much more interesting, when we look at nested or subsequent
+calls to \texttt{flatMap}: have a look at the following two
+definitions.
+\begin{alltt}
+{\scriptsize
+val fa1 = x.flatMapN(n*n)(x => x.flatMapN(n)( ... ))
+val fa2 = x.flatMapN(n)(...).flatMapN(n)(...)
+}
+\end{alltt}
+In the calculation of \texttt{fa1}, we will end up with a hierarchy of
+three levels: the inner call to \texttt{flatMapN} is forced to return
+a hierarchical structure as it does not a priori know what the closure
+will return. But so is the outer call: it cannot flatten the hierarchical
+structure from the inner call as it will only become available after
+some time.
+
+The calculation of \texttt{fa2}, will end up in a hierarchy of
+two levels only: the first call to \texttt{flatMapN} will produce a 
+hierarchy of two levels already. However, the second call will --
+similarly to a \texttt{map} -- flatten out a level and produce another
+one in return.
+
+Note that currently throughout this scheme, the splitting happens only
+in terms of the outer 
+blocks, i.e. individual elements of inner \texttt{FlowArrays} are always
+assigned to the same calculation blocks. This is acceptable as long as
+the number of inner \texttt{FlowArrays} is relatively high.
 
 There is currently no interface to launch re-alignment of the blocks
 in order to remove the arbitrary splitting imposed by the hierarchy
-introduced by the \texttt{flatMap}. This is an interface issue; the
-implementation is trivial. For details how block splitting is
+introduced by the \texttt{flatMapN}. This is an interface issue; the
+implementation is trivial. For details on how the block splitting is
 propagated through dependencies, please refer to
 section~\ref{sec:implementation}.
 
 \subsubsection{Zip}
-When zipping, again we impose a restriction on the size: the size of
-the two FlowArrays which are being zipped need to be of the same
+When zipping, again we impose a restriction on the size: 
+the two \texttt{FlowArrays} which are being zipped need to be of the same
 size. This is again to ease scheduling and implementation. However, in
 this case, minor changes in the implementation could easily remove
 this limitation (unlike \texttt{flatMap}, where the interface would
 need to undergo a fundamental change).
 
-Further, the splitting of the two FlowArrays which are being zipped
+Further, the splitting of the two \texttt{FlowArrays} which are being zipped
 may be totally different, e.g. due to a preceding \texttt{flatMap} on
 one of them. Hence re-alignment of blocks is required,
 before the zipped tuples can be created. It is important to realize,
 that this may inherently lead to non-symmetric scheduling behavior:
-Depending on which FlowArray is on the ``left'' of the \texttt{zip}
+Depending on which \texttt{FlowArray} is on the ``left'' of the \texttt{zip}
 call, the resulting splitting may be different, which may lead to
 different speed at runtime. 
 
@@ -329,10 +378,10 @@ explained in section~\ref{sec:overview} are implemented. Note that
 this is a simplified view and some interfaces may not be described
 with all methods or all arguments of the methods. Further, methods may
 be simplified (e.g. not tail-recursive for easier
-understanding). Please refer to scaladoc for an API documentation.
+understanding). Please refer to ScalaDoc for an API documentation.
 
 \subsection{FlowArray Jobs}
-The class \texttt{FAJob} is the heart-piece of the whole FlowArray
+The class \texttt{FAJob} is the heart-piece of the whole \texttt{FlowArray}
 implementation: It handles computation, task splitting and dependency
 tracking. An \texttt{FAJob} has a range it operates on
 (\texttt{start,end}) and an abstract method that does the computation
@@ -341,8 +390,14 @@ dependency tracking, splitting and scheduling:
 
 \begin{description}
   \item[\texttt{depending(newJob: FAJob): Unit}] Submits another \texttt{FAJob} as being
-    dependent on this \texttt{FAJob}. This will schedule the submitted
-    \texttt{FAJob}, once this \texttt{FAJob} is completed.
+    dependent on this \texttt{FAJob}. This will schedule
+    \texttt{newJob}, once this \texttt{FAJob} is completed.
+
+    For example, suppose \texttt{j1: FAJob} is responsible to
+    calculate some data that \texttt{j2: FAJob} requires. One
+    could write \verb|j1.depending(j2)| which will execute a given
+    junk of \texttt{j2} only, once the corresponding junk of
+    \texttt{j1} is completed.
   \item[\texttt{split(): Unit}] Splits this job into two
     sub jobs. Forces dependent tasks to be split too and hands off
     dependency (see next section for details on splitting). This
@@ -350,11 +405,43 @@ dependency tracking, splitting and scheduling:
     its size is above the threshold for exponential splitting.
   \item[\texttt{done: Boolean}] Checks whether this \texttt{FAJob} is
     done. Queries sub jobs if this \texttt{FAJob} is split.
+
+    This method is used for example in the final aggregation of a 
+    \texttt{fold} (see Fig.~\ref{fig:fa-fold-calc} on
+    page~\pageref{fig:fa-fold-calc}) to check if the other job is
+    already completed. Please refer to Fig.~\ref{fig:fa-fold-code} for
+    pseudo code of this aggregation: the method \texttt{jobDone} is
+    called each time a sub job is completed. It checks if both jobs
+    are completed, fetches both results and combines them.
+
+\begin{figure}    
+\begin{alltt}
+{\scriptsize
+def jobDone() \{
+  val (sj1, sj2) = subTasks
+  if (sj1.done && sj2.done) \{
+    this.result = combine(sj1.result, sj2.result)
+  \}
+  
+  // Do other stuff (notification, finalization)
+\}
+}
+\end{alltt}
+\caption{Aggregation of results of different jobs during a
+  \texttt{fold}}
+\label{fig:fa-fold-code}
+\end{figure}
+
   \item[\texttt{sliceJobs(from: Int, to: Int): Option[(Seq[FAJob],
       Boolean)]}] Returns the jobs which are responsible for
-    calculating a given slice. May require the caller to check again,
-    once the jobs are completed (indicated by the Boolean flag). If
-    the slice is completed, \texttt{None} is returned.
+    calculating a given slice. In some cases, all the jobs responsible
+    for the slice might not be known yet (for example when doing
+    double-dependency tracking after a \texttt{flatMapN}, see
+    section~\ref{sssec:flatMapN}). In this case, the Boolean flag
+    indicates that the caller has to call this method again, once all
+    the jobs returned from the current call are completed. If the
+    calculation of the queried slice is completed, the method returns
+    \texttt{None}.
   \item[\texttt{delegateThen(d: Seq[FAJob])(thn: () => Unit): Unit}]
     This method may be called from inside the \texttt{doCompute}
     method only. It halts calculation of this \texttt{FAJob}, until
@@ -370,20 +457,21 @@ done:
 \item Split the job in two smaller sub jobs of (more or less) equal
   size.
 \item Split the dependent jobs and delegate the dependency to the
-  sub jobs: We would like to have dependency tracking on the lowest
+  sub jobs: we would like to have dependency tracking on the lowest
   level that calculation is done in order to start new jobs as soon as
-  possible (otherwise we'll be back at ParArrays).
+  possible (otherwise we'll be back at \texttt{ParArrays}).
 \end{enumerate}
 
-The first is easy: Divide the range of the \texttt{FAJob} into two
+The first is easy: divide the range of the \texttt{FAJob} into two
 (more or less) equal ranges and create two new \texttt{FAJobs} with
 those ranges.
 
-The second is a bit more tricky. Please refer to fig~\ref{fig:split-ill}
-for an illustration of how this is done. You find pseudo code in
-fig~\ref{fig:split-code}. The idea is the following: First, create the
+The second is a bit more tricky. Please refer to Fig.~\ref{fig:split-ill}
+for an illustration of how this is done. You can find pseudo code in
+Fig.~\ref{fig:split-code}. The idea is the following: First, create the
 two sub jobs and set the state of this \texttt{FAJob} to
-\texttt{Splitting}. It is now ``locked'' for any other operation. I.e. any
+\texttt{Splitting}. It is now ``locked'' for any other operation,
+i.e. any
 other operation must help the splitting first (as the implementation
 is lock-free). Next, the dependent job must be split
 (recursively). Once this is done, the dependants of the sub jobs may be
@@ -442,36 +530,37 @@ def compute() \{
 
 \subsection{FlowArray}
 \label{ssec:flowarray}
-FlowArrays are the trait exposed to the API user. They (currently)
+\texttt{FlowArrays} are the trait exposed to the API user. They (currently)
 support the following common monadic operations \texttt{map},
 \texttt{fold}, \texttt{flatMapN}\footnote{See
   section~\ref{sssec:flatMapN} on why the \texttt{N} in
   \texttt{flatMapN}}, \texttt{zip}, \texttt{slice}, \texttt{flatten}
 and the generator \texttt{tabulate}.
 
-Further, the a bit strange operation \texttt{transpose} is supported
+Further, the slightly strange operation \texttt{transpose} is
+supported
 to allow for matrix multiplication. For a more detailed view on
 certain operations, have a look at
 section~\ref{ssec:imp-operations}. Throughout the following sections,
 the operation \texttt{map} is used as an example.
 
 Internally, two major types exist: \emph{Concrete FlowArrays} and
-\emph{Views}. Concrete FlowArrays store actual data -- the most
+\emph{Views}. Concrete \texttt{FlowArrays} store actual data -- the most
 trivial being the \texttt{FlatFlowArray}, which just wraps around an
 array. Views on the other hand expose data from
-concrete FlowArrays under a different form -- currently the
+concrete \texttt{FlowArrays} under a different form -- currently the
 only supported view is the \texttt{FlowArraySliceView} which exposes
-only a slice of another FlowArray. These internal types will be
+only a slice of another \texttt{FlowArray}. These internal types will be
 described later on.
 
 \subsubsection{Job Dispatch}
 Job creation for monadic operations is handled through the abstract
 method \texttt{dispatch}, which allows to dispatch a job specified by
 a closure -- a \texttt{JobGen} -- to operate on a given range of the
-FlowArray and returns the job which handles the block dependency
-management for this calculation. Fig~\ref{fig:dispatch-code} shows the
+\texttt{FlowArray} and returns the job which handles the block dependency
+management for this calculation. Fig.~\ref{fig:dispatch-code} shows the
 signatures for \texttt{dispatch} and
-\texttt{JobGen}. Fig~\ref{fig:dispatch-example} shows how dispatch
+\texttt{JobGen}. Fig.~\ref{fig:dispatch-example} shows how dispatch
 can be used to implement the monadic operation \texttt{map}.
 
 \begin{figure}
@@ -480,10 +569,12 @@ can be used to implement the monadic operation \texttt{map}.
 {\scriptsize
 def dispatch(
   gen: JobGen[A],
-  dstOffset: Int,
-  srcOffset: Int,
-  length: Int
+  dstOffset: Int = 0,
+  srcOffset: Int = 0,
+  length: Int = this.size
 ): FAJob
+// operates on whole FlowArray when
+// called with default arguments
 }
 \end{alltt}
 \end{minipage}
@@ -514,35 +605,40 @@ def map[B](f: A => B): FlowArray[B] = \{
     ret.generatedBy(job)
     ret
 \}
+
+// Comments:
+//  FAMapJob(ret: FlowArray[B], f: A => B)
+//    returns a JobGen[A] that creates FAJobs writing to ret using f
+//  FlowArray.generatedBy(j: FAJob): Unit
+//    sets j as generating job on the given FlowArray
 }
 \end{alltt}
 \caption{Example usage of \texttt{dispatch} in the implementation of
-  \texttt{map}. \texttt{FAMapJob(ret, f)} returns a
-  \texttt{JobGen[B]}}
+  \texttt{map}.}
 \label{fig:dispatch-example}
 \end{figure}
 
-It is important to note, that when dispatching, the target of the
-operation -- this may be another FlowArray as in the case of
+When dispatching, it is important to note that the target of the
+operation, which may be another \texttt{FlowArray} as in the case of
 \texttt{map}, or a future in case of a \texttt{fold} -- is only
-referenced by the \texttt{JobGen}: In the example of 
-\texttt{map}, the statement \texttt{FAMapJob(ret, f)} creates a
-\texttt{JobGen} which writes to \texttt{ret} using transformation
-function \texttt{f}. We therefore see, that the dispatching FlowArray
+referenced by the \texttt{JobGen}: In the \texttt{map} example, the
+statement \texttt{FAMapJob(ret, f)} creates a
+\texttt{JobGen} which writes to \texttt{ret} using a transformation
+function \texttt{f}. We therefore see, that the dispatching \texttt{FlowArray}
 does not know the target of the operation (and does not need to
 know). This allows us to use the same dispatch construct for more
 complex operations (such as \texttt{flatMap}).
 
 \subsubsection{Blocking}
-FlowArrays also support blocking to actually retrieve the data that
+\texttt{FlowArrays} also support blocking to actually retrieve the data that
 has been (or will be) calculated. The operation \texttt{blocking} on
-the FlowArray suspends execution of the calling thread until all
+the \texttt{FlowArray} suspends execution of the calling thread until all
 calculation is done and then returns the data as array. This may
 require copying or consolidation of data (for example when
 \texttt{blocking} is called on a view).
 
 \subsubsection{FlatFlowArray}
-The most easy case of a concrete implementation of a FlowArray: Just a
+The most easy case of a concrete implementation of a \texttt{FlowArray}: Just a
 wrapper around a simple array which handles the completion and the
 dependency tracking. The \texttt{dispatch} method calls the
 \texttt{JobGen} directly (as its signature suggests), the
@@ -564,45 +660,45 @@ actually required.
 \subsubsection{Hierarchical FlowArrays}
 \texttt{HierFlowArrays} are the result of \texttt{flatMapN} operations
 (see section~\ref{sssec:flatMapN} for the big picture). This is by far
-the most complex concrete implementation of a FlowArray. The
+the most complex concrete implementation of a \texttt{FlowArray}. The
 \texttt{dispatch} method needs to dispatch a job for each inner
-FlowArray of the \texttt{HierFlowArrays}. However, since the number of
-inner FlowArrays is big (otherwise something else than a FlowArray
+\texttt{FlowArray} of the \texttt{HierFlowArrays}. However, since the number of
+inner \texttt{FlowArrays} is big (otherwise something different than a \texttt{FlowArray}
 should have been used), 
 this needs to be done asynchronously. Further, the multiple dispatched
 jobs need then to be waited on and regrouped by the outer job in order
 to fulfill the whole dependency tracking requirement (remember
-fig~\ref{fig:flatMap-dependency} on
+Fig.~\ref{fig:flatMap-dependency} on
 page~\ref{fig:flatMap-dependency} for an illustration on the
 double dependency tracking that is required). All this is handled by a 
 special job, the \texttt{FADispatchJob}.
 
 The \texttt{blocking} method needs to flatten the hierarchical
 structure into a single array by copying the data from the inner
-FlowArrays. This copying is somewhat unnecessary -- which 
-was the reason for the creation of Hierarchical FlowArrays in the
-first place: Currently, flatMapped data has to be copied only when
+\texttt{FlowArrays}. This copying is somewhat unnecessary -- which 
+was the reason for the creation of Hierarchical \texttt{FlowArrays} in the
+first place: currently, \texttt{flatMapped} data has to be copied only when
 retrieving results, not in a calculation flow. Nevertheless, one might
 further improve on this by providing indexed access to elements only
-in FlowArrays instead of requiring to return a reference to a full
+in \texttt{FlowArrays} instead of requiring to return a reference to a full
 array.
 
 \subsection{Operations}
 \label{ssec:imp-operations}
-This section describes some operations on FlowArrays which do not fit
+This section describes some operations on \texttt{FlowArrays} which do not fit
 entirely into the \texttt{FAJob} framework or require some extensions
 to it.
 
 \subsubsection{Flatten}
 For the same reasons as \texttt{flatMapN} requires the size of the
-inner arrays, the \texttt{flatten} operation on FlowArrays requires
-the size of the inner FlowArray to be given (and all inner FlowArrays
+inner arrays, the \texttt{flatten} operation on \texttt{FlowArrays} requires
+the size of the inner \texttt{FlowArray} to be given (and all inner \texttt{FlowArrays}
 to have the same size for that matter). Thanks to hierarchical
-FlowArrays, the implementation of \texttt{flatten} is easy:
+\texttt{FlowArrays}, the implementation of \texttt{flatten} is easy:
 
 \begin{description}
 \item[\texttt{FlatFlowArrays}] are simply converted into hierarchical
-  FlowArrays with the same data array (and the inner size given in the
+  \texttt{FlowArrays} with the same data array (and the inner size given in the
   argument).
 \item[\texttt{FlowArraySliceViews}] currently flatten the underlying
   concrete array and return a new view on it. This behavior should and
@@ -613,22 +709,22 @@ FlowArrays, the implementation of \texttt{flatten} is easy:
   be converted into a \texttt{HierFlowArray}.
 \end{description}
 
-To retain evidences about the types inside the current FlowArray when
+To retain evidences about the types inside the current \texttt{FlowArray} when
 flatting, implicit arguments are used together with the
-\texttt{CanFlatten} type. The reader is referred to the scaladoc and
+\texttt{CanFlatten} type. The reader is referred to the ScalaDoc and
 the code for details.
 
 \subsubsection{Transpose}
 This operation has specifically been written to implement matrix
-multiplication with FlowArrays. It interprets the array as a
+multiplication with \texttt{FlowArrays}. It interprets the array as a
 two-dimensional array given a step size (i.e. one dimension of the
 array) and transposes it. The indexes are therefore altered as
-follows (see fig~\ref{fig:transpose} for an illustration):
-\[ i_n = \lfloor i_o / d_1 \rfloor + (i \bmod d_1) * d_2 \qquad (d_1
+follows (see Fig.~\ref{fig:transpose} for an illustration):
+\[ i_n = \lfloor i_o / d_1 \rfloor + (i_o \bmod d_1) * d_2 \qquad (d_1
 \cdot d_2 = n)\]
 where $i_o,\ i_n$ are the old and new indexes, $d_1,\ d_2$ are the two
-dimensions, $n$ the size of the FlowArray. This is currently the only
-operation that changes the order of the elements in a FlowArray.
+dimensions, $n$ the size of the \texttt{FlowArray}. This is currently the only
+operation that changes the order of the elements in a \texttt{FlowArray}.
 
 \begin{figure}
 \centering
@@ -639,17 +735,20 @@ operation that changes the order of the elements in a FlowArray.
 
 Since this operation changes the order of the elements, the basic
 dependency tracking does not work anymore: As you can see in
-fig~\ref{fig:transpose}, the leftmost elements depend on elements from
+Fig.~\ref{fig:transpose}, the leftmost elements depend on elements from
 all over the source array. To track these dependencies correctly, the
-implementation of \texttt{sliceDep} in \texttt{FAJob} is fundamentally
+implementation of \texttt{sliceJobs} in \texttt{FAJob} is fundamentally
 changed. In the 
-basic case, it returns the smallest job that still spans all the
-requested elements. However, in the \texttt{transpose} case, this
+basic case, it returns the smallest single job that still spans all
+the requested elements. However, in the \texttt{transpose} case, this
 would (almost)
-always be the root job, and hence splitting would be useless. Therefore,
-in the \texttt{tranpose} case, the \texttt{sliceDep} method returns a
-list of the not-split jobs (i.e. actually executing jobs) that
-calculate the given elements.
+always be the root job, and hence split dependency tracking would
+be useless. Therefore,
+in the \texttt{transpose} case, the \texttt{sliceJobs} method will
+return multiple jobs: it exhaustively searches through the job-tree
+and only returns the jobs at the bottom of the split-tree (i.e. jobs
+that actually calculate something) responsible for calculating the
+given elements.
 
 It seems obvious, that how exactly the splitting is done has a
 tremendous 
@@ -661,14 +760,20 @@ transpose operation as a view rather than copying the data. This would
 require something like a ``dependency mapper'' to convert dependency
 tracking between the view and the underlying structure.
 
+Another idea is to make the \texttt{FlowArray} structure inherently aware of
+the two dimensions and do the splitting in surfaces (or cubes for
+three dimensions) instead of intervals only. This could lead to better
+alignment but will certainly lead to a more complex implementation and
+difficulties in integrating with the typing system.
+
 \section{Evaluation}
 \label{sec:evaluation}
 
 \subsection{Setup}
 
-We have tested the performance of FlowArrays in comparison to
-ParArrays by calculating the scalar product of two vectors. Refer to
-fig~\ref{fig:scalar-product} for the implementation of the
+We have tested the performance of \texttt{FlowArrays} against
+\texttt{ParArrays} by calculating the scalar product of two vectors. Refer to
+Fig.~\ref{fig:scalar-product} for the implementation of the
 benchmark. You'll notice the operations \texttt{zipMap} and
 \texttt{zipMapFold}: These are consolidated operations that use the
 \texttt{FAJob} structure but do not store intermediate results. As we
@@ -689,37 +794,44 @@ val y = FlowArray.tabulate(size)(x => x*x)
 }
 \end{alltt}
 \end{minipage}
-\caption{Implementation of scalar product with FlowArrays}
+\caption{Implementation of scalar product with \texttt{FlowArrays}}
 \label{fig:scalar-product}
 \end{figure}
 
 We have varied the size of the two vectors from $8 \cdot 10^6$ to $13
 \cdot 10^6$ elements with full parallelization. Further, we have
 tested the scalability by setting the parallelism level to $1,2$ and
-$4$ for FlowArrays (ParArrays have only been measured with full
+$4$ for \texttt{FlowArrays} (\texttt{ParArrays} have only been measured with full
 parallelism). The metrics we collected were the execution time and the
 garbage collection time (sum of all non-final GC runtimes).
 
 The benchmarks have been executed on a Intel i7-2620M with java
 version 1.7.0\_04, Java(TM) SE Runtime Environment (build
 1.7.0\_04-b20), Java HotSpot(TM) 64-Bit Server VM (build 23.0-b21,
-mixed mode).
+mixed mode). The exact java command used is \texttt{java -Xmx2048m
+  -Xms2048m -XX:+UseCondCardMark -verbose:gc -XX:+PrintGCDetails
+  -server <classname>}.
 
 \subsection{Results}
 
-Please refer to figs~\ref{fig:par-bench},\ref{fig:size-bench} for the
+Please refer to Fig.~\ref{fig:par-bench} and Fig.~\ref{fig:size-bench}
+for the 
 results of the benchmarks. In both figures, we show the total
 execution time, the time spent in garbage collection and the
 ``normalized execution time'', i.e. the total time minus the time
-spent in garbage collection. Please note that the GC time is an
-approximation and hence the ``normalized execution time'' may become
-negative.
+spent in garbage collection.
+
+The time in garbage collection is the sum of the runtimes of all minor
+GC cycles. No full GC cycles have been performed during the
+benchmarks. Please note that the GC time is an approximation (minor GC
+cycles can run in parallel) and hence the ``normalized execution
+time'' may become negative.
 
 \begin{figure}
 \subfigure[Execution Time]{\plot{par-time}}
 \subfigure[GC Time]{\plot{par-gctime}}
 \subfigure[Normalized Time]{\plot{par-ntime}}
-\caption{Parallelization benchmarks of scalar product}
+\caption{Parallelization benchmarks of scalar product ($size = 10^7$)}
 \label{fig:par-bench}
 \end{figure}
 
@@ -727,7 +839,7 @@ negative.
 \subfigure[Execution Time]{\plot{size-time}}
 \subfigure[GC Time]{\plot{size-gctime}}
 \subfigure[Normalized Time]{\plot{size-ntime}}
-\caption{Size benchmarks of scalar product}
+\caption{Size benchmarks of scalar product ($P = 4$)}
 \label{fig:size-bench}
 \end{figure}
 
@@ -755,16 +867,16 @@ performance
 killer. When continuing in the flow approach, means of reducing
 intermediate storage steps (such as the
 \texttt{zipMap} and the \texttt{zipMapFold} operations) will need to
-be considered as they greatly increase performance. If the FlowArray
+be considered as they greatly increase performance. If the \texttt{FlowArray}
 framework is able to do conversions like \texttt{zip}, \texttt{map}
 $\to$ \texttt{zipMap} automatically, huge performance may be gained
-without any additional effort from the programmer using the FlowArrays.
+without any additional effort from the programmer using the \texttt{FlowArrays}.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
 We have designed and implemented a fixed-size version of a non-blocking
-ParArray like datastructure -- the FlowArray -- and succeeded in
+\texttt{ParArray} like datastructure -- the \texttt{FlowArray} -- and succeeded in
 implementing all operations necessary to represent matrix
 multiplication in the programming model.
 
@@ -778,14 +890,20 @@ The data hence shows that avoiding storage of intermediate elements in
 a dataflow graph significantly speeds up the whole calculation due to the fewer
 allocated memory and hence the reduced garbage collection time.
 
-Therefore, it is our proposition, to extend FlowArrays to do such
-reductions automatically, before the calculation is started. This
-approach requires a flow based programming model: A ParArray (or
-any other imperative, blocking structure) is
-unable to consolidate calculation steps, as 
-it is required to finish calculation, before the call may be returned
-and hence no lazily calculated objects may exist, which in turn
-entirely prevents reduction of calculation steps.
+Therefore, it is our proposition, to extend \texttt{FlowArrays} to do such
+reductions (like \texttt{zip}, \texttt{map} $\to$ \texttt{zipMap})
+automatically, before the calculation is started. With automatically
+we mean either through static analysis -- which would also benefit
+datastructures of smaller size -- or dynamically at runtime using
+views and invoking calculation as necessary. Which approach is more
+promising needs to be evaluated using real-life code samples.
+
+It is however important to note, that the latter approach requires a
+flow based programming model: a \texttt{ParArray} (or any other imperative,
+blocking structure) is unable to consolidate calculation steps at
+runtime, as it is required to finish calculation before the call may
+be returned and hence no lazily calculated views may exist, which in
+turn entirely prevents reduction of calculation steps.
 
 \bibliographystyle{abbrv}
 \bibliography{bib}
