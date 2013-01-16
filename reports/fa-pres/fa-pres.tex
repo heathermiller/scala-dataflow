@@ -56,10 +56,18 @@
 \section{Introduction}
 
 \begin{frame}
+  \frametitle{Motivation}
+
+  %% TODO
+
+\end{frame}
+
+\begin{frame}
   \frametitle{Outline}
   
   \begin{block}{What is a FlowArray}\end{block}
   \begin{block}{Task Scheduling}\end{block}
+  \begin{block}{Implementation}\end{block}
   \begin{block}{Benchmarks}\end{block}
 
 \end{frame}
@@ -74,6 +82,7 @@
     \column{.5\textwidth}
 
     FlowArray: Barrier-Free, single-assignment ParArray
+    %% TODO: not single assignment
 
     \vspace{\baselineskip}
 
@@ -303,6 +312,10 @@
 
 \end{frame}
 
+\section{Implementation}
+%% TODO add slide about FAJobs / FlowArrays
+%% TODO add slide with map example including job structure.
+
 \section{Benchmarks}
 
 \begin{frame}
@@ -366,6 +379,9 @@
   \frametitle{Benchmarks}
   \framesubtitle{Scalar Product -- Size / Garbage Collection}
 
+  %% TODO find excuse for noise in ParArray bench
+  %% TODO remove ParArray in normalized time graph
+
   %% Hack to use whole frame
   \begin{columns}[t]
     \column{.33\paperwidth}
@@ -387,19 +403,21 @@
     \begin{itemize}
     \item Flow-Based, ordered collection
     \item Asynchronous
-    \item Deterministic
+    \item Scala collection like interface
     \end{itemize}
   \end{block}
 
   \pause
   \begin{block}{Performance}
     \begin{itemize}
-    \item Intermediate storage / GC slows down
+    \item Comparable to ParArrays with unskewed load
+    \item Faster with skewed load
     \end{itemize}
   \end{block}
 
   \pause
   \begin{block}{Automated Reduction?}
+    %% TODO better name
     \begin{itemize}
     \item \texttt{zip}, \texttt{map} $\to$ \texttt{zipMap}
     \item Statically / Dynamically?
