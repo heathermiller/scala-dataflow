@@ -569,10 +569,12 @@ can be used to implement the monadic operation \texttt{map}.
 {\scriptsize
 def dispatch(
   gen: JobGen[A],
-  dstOffset: Int,
-  srcOffset: Int,
-  length: Int
+  dstOffset: Int = 0,
+  srcOffset: Int = 0,
+  length: Int = this.size
 ): FAJob
+// operates on whole FlowArray when
+// called with default arguments
 }
 \end{alltt}
 \end{minipage}
@@ -603,11 +605,16 @@ def map[B](f: A => B): FlowArray[B] = \{
     ret.generatedBy(job)
     ret
 \}
+
+// Comments:
+//  FAMapJob(ret: FlowArray[B], f: A => B)
+//    returns a JobGen[A] that creates FAJobs writing to ret using f
+//  FlowArray.generatedBy(j: FAJob): Unit
+//    sets j as generating job on the given FlowArray
 }
 \end{alltt}
 \caption{Example usage of \texttt{dispatch} in the implementation of
-  \texttt{map}. \texttt{FAMapJob(ret, f)} returns a
-  \texttt{JobGen[B]}}
+  \texttt{map}.}
 \label{fig:dispatch-example}
 \end{figure}
 
