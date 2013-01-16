@@ -455,12 +455,28 @@ def jobDone() \{
     the jobs returned from the current call are completed. If the
     calculation of the queried slice is completed, the method returns
     \texttt{None}.
+
+    This method is for example used to re-align the splitting
+    patterns when two \texttt{FlowArrays} are zipped or when
+    operating on slices of a \texttt{FlowArray} (through
+    \texttt{FlowArraySliceViews}, see section~\ref{sssec:slice-views}
+    on page~\pageref{sssec:slice-views}).
   \item[\texttt{delegateThen(d: Seq[FAJob])(thn: () => Unit): Unit}]
     This method may be called from inside the \texttt{doCompute}
     method only. It halts calculation of this \texttt{FAJob}, until
     all jobs in \texttt{d} are completed. It then (optionally)
     executes the closure \texttt{thn}. This is implemented using an
     observer pattern on the \texttt{FAJobs} in \texttt{d}.
+
+    Delegation is often used in conjunction with \texttt{sliceJobs}
+    when re-aligning splittings, for example when calling \texttt{x
+      zip y}; the internal scheduling of \texttt{FAJobs} ensures 
+    that for a given chunk the corresponding values in \texttt{x} are
+    calculated. The \texttt{zipJob} then queries the job responsible
+    for calculating the elements in this chunk in \texttt{y} and
+    delegates to it. Finally -- using the \texttt{thn} closure -- it
+    actually creates the zipped tuple and stores it in the destination 
+    \texttt{FlowArray}.
 \end{description}
 
 \subsubsection{Splitting}
@@ -659,6 +675,7 @@ dependency tracking. The \texttt{dispatch} method calls the
 then just returns a reference to the internal array.
 
 \subsubsection{Slice Views}
+\label{sssec:slice-views}
 \texttt{FlowArraySliceViews} wrap around a \texttt{ConcreteFlowArray}
 (i.e. a \texttt{FlatFlowArray} or a \texttt{HierFlowArray})
 and expose a given part of it. The \texttt{dispatch} method adjusts 
