@@ -359,8 +359,38 @@
   
 \end{frame}
 
+\begin{frame}
+  \frametitle{Implementation}
+  \framesubtitle{Dependency Management}
 
-%% TODO add slide with map example including job structure.
+  \begin{alltt} \small
+    \sK{val} \sV{fa1} = FlowArray.tabulate(100)(x => x * x)\\
+    \uncover<1,3->{\sK{val} \sV{fa2} = fa1.map(\_ * 2)}\\
+    \uncover<1,5->{\sK{val} \sV{el}\phantom{xx}= fa2.blocking(35)}
+  \end{alltt}
+
+  \vspace{\stretch{1}}
+
+  \begin{overprint}
+    \onslide<2>\includegraphics[page=1]{fa-job-map}
+    \onslide<3>\includegraphics[page=2]{fa-job-map}
+    \onslide<4>\includegraphics[page=3]{fa-job-map}
+    \onslide<5>\includegraphics[page=4]{fa-job-map}
+    \onslide<6>\includegraphics[page=5]{fa-job-map}
+    \onslide<7>\includegraphics[page=6]{fa-job-map}
+    \onslide<8>\includegraphics[page=7]{fa-job-map}
+    \onslide<9>\includegraphics[page=8]{fa-job-map}
+    \onslide<10>\includegraphics[page=9]{fa-job-map}
+    \onslide<11>\includegraphics[page=10]{fa-job-map}
+    \onslide<12>\includegraphics[page=11]{fa-job-map}
+    \onslide<13>\includegraphics[page=12]{fa-job-map}
+    \onslide<14>\includegraphics[page=13]{fa-job-map}
+    \onslide<15>\includegraphics[page=14]{fa-job-map}
+  \end{overprint}
+
+  %% TODO this does not show the splitting
+  
+\end{frame}
 
 \section{Benchmarks}
 
