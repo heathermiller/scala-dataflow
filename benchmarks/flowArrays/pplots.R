@@ -148,11 +148,12 @@ p <- p + theme(axis.title.y = element_blank(),
 
 outh('pres-size-gctime', p, w = 1.6)
 
-p <- ggplot(mszedat, aes(x = size,
-                         y = ntime,
-                         group = bench,
-                         color = bench,
-                         shape = bench))
+p <- ggplot(mszedat[mszedat$bench != "PAScalProdBench",],
+            aes(x = size,
+                y = ntime,
+                group = bench,
+                color = bench,
+                shape = bench))
 p <- geoms(p)
 p <- p + ggtitle("Normalized Time")
 p <- p + ylab("time [ms]") + 
