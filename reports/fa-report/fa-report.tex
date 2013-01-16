@@ -133,7 +133,7 @@ val fa2 = fa1.map(_ * 2)
 \end{alltt}
 \end{minipage}
 
-In both cases, we first create a \texttt{Par/FlowArray} using a
+In both cases, we first create a \texttt{Par/FlowArray} using
 \texttt{tabulate}. Both Par- and \texttt{FlowArrays} will use exponential task
 splitting \cite{collect11,cong08} to distribute the workload of
 calculating the individual elements. The crucial difference between
@@ -141,14 +141,14 @@ calculating the individual elements. The crucial difference between
 \texttt{tabulate} (and any other function for that matter) will only
 return once every element has been calculated. In contrast, the call
 to \texttt{tabulate} on \texttt{FlowArrays} will return immediately, yielding
-an array whose elements are specified, but not yet calculated.
+an array whose elements are well-defined, but not yet calculated.
 
 When calling \texttt{map} on the first \texttt{Par/FlowArray}, this difference
 becomes even clearer: \texttt{ParArrays} will do the same thing as for
 \texttt{tabulate}: Split up the task of calculation and start right
 away. \texttt{FlowArrays} however, will align the task blocks and start
-calculating the elements, once the elements the result depends on have
-been calculated (in our case the result of the \texttt{tabulate}). So
+calculating the elements once the elements on which the result depends have
+been calculated (in our case the result of the \texttt{tabulate}). So,
 contrary to \texttt{ParArrays}, \texttt{FlowArrays} are able to start subsequent
 calculations partially, even if not all the elements of the original
 array have been calculated.
@@ -300,7 +300,7 @@ have been calculated.
 
 
 In other words: to access the element with index $n$ in
-such a hierarchical structure, one has first to check whether the
+such a hierarchical structure, one has to check first whether the
 \texttt{FlowArray} responsible for this index is available (i.e. the \texttt{FlowArray}
 with index $\lfloor \frac nN \rfloor$) and then, whether
 the particular element of this \texttt{FlowArray} is already available
@@ -354,7 +354,7 @@ propagated through dependencies, please refer to
 section~\ref{sec:implementation}.
 
 \subsubsection{Zip}
-When zipping, again we impose a restriction on the size: the size of
+When zipping, again we impose a restriction on the size: 
 the two \texttt{FlowArrays} which are being zipped need to be of the same
 size. This is again to ease scheduling and implementation. However, in
 this case, minor changes in the implementation could easily remove
@@ -390,8 +390,8 @@ dependency tracking, splitting and scheduling:
 
 \begin{description}
   \item[\texttt{depending(newJob: FAJob): Unit}] Submits another \texttt{FAJob} as being
-    dependent on this \texttt{FAJob}. This will schedule the submitted
-    \texttt{FAJob}, once this \texttt{FAJob} is completed.
+    dependent on this \texttt{FAJob}. This will schedule
+    \texttt{newJob}, once this \texttt{FAJob} is completed.
 
     For example, suppose \texttt{j1: FAJob} is responsible to
     calculate some data that \texttt{j2: FAJob} requires. One
