@@ -352,10 +352,17 @@ blocks, i.e. individual elements of inner \texttt{FlowArrays} are always
 assigned to the same calculation blocks. This is acceptable as long as
 the number of inner \texttt{FlowArrays} is relatively high.
 
-There is currently no interface to launch re-alignment of the blocks
+There is currently no way to launch re-alignment of the blocks
 in order to remove the arbitrary splitting imposed by the hierarchy
-introduced by the \texttt{flatMapN}. This is an interface issue; the
-implementation is trivial. For details on how the block splitting is
+introduced by the \texttt{flatMapN}. While all the necessary building
+blocks to do so are available and hence the implementation trivial, it
+is unclear which mechanism should trigger such a
+re-alignment. Exposing it to the programmer through the
+\texttt{FlowArray}'s interface has him bother with issues he shouldn't
+be concerned about, on the other hand finding an appropriate
+heuristics might be far from easy.
+
+For details on how the block splitting is
 propagated through dependencies, please refer to
 section~\ref{sec:implementation}.
 
