@@ -305,6 +305,47 @@
 
 \begin{frame}
   \frametitle{Benchmarks}
+  \framesubtitle{Scalar Product}
+  \begin{alltt} \small
+    \sK{val} \sV x = FlowArray.tabulate(size)(x => x*x)\\
+    \sK{val} \sV y = FlowArray.tabulate(size)(x => x*x)\\
+    \sS
+    \only<1>{(x zip y).map(\_ * \_).fold(0)(\_ + \_).blocking\\}
+    \only<2>{(x zipMap y)(\_ * \_).fold(0)(\_ + \_).blocking\\}
+    \only<3>{(x zipMapFold y)(\_ * \_)(0)(\_ + \_).blocking\\}
+  \end{alltt}
+
+  \vspace{\stretch{1}}
+
+  \begin{columns}[t]
+    \column{.3\textwidth}
+    \visible<1->{
+      \begin{block}{Zip -- Map -- Fold}
+        \vspace{\baselineskip}
+        \includegraphics[page=1]{bench}
+      \end{block}
+    }
+    \column{.3\textwidth}
+    \visible<2->{
+      \begin{block}{ZipMap -- Fold}
+        \vspace{\baselineskip}
+        \includegraphics[page=2]{bench}
+      \end{block}
+    }
+    \column{.3\textwidth}
+    \visible<3->{
+      \begin{block}{ZipMapFold}
+        \vspace{\baselineskip}
+        \includegraphics[page=3]{bench}
+      \end{block}
+    }
+  \end{columns}
+
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Benchmarks}
   \framesubtitle{Scalar Product -- Scaling / Garbage Collection}
 
   %% Hack to use whole frame
