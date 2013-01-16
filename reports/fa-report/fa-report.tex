@@ -404,11 +404,34 @@ dependency tracking, splitting and scheduling:
     method is called when computation of a \texttt{FAJob} starts and
     its size is above the threshold for exponential splitting.
   \item[\texttt{done: Boolean}] Checks whether this \texttt{FAJob} is
-    done. Queries sub jobs if this \texttt{FAJob} is split. This
-    method is used for example in the final aggregation of a
+    done. Queries sub jobs if this \texttt{FAJob} is split.
+
+    This method is used for example in the final aggregation of a 
     \texttt{fold} (see Fig.~\ref{fig:fa-fold-calc} on
     page~\pageref{fig:fa-fold-calc}) to check if the other job is
-    already completed.
+    already completed. Please refer to Fig.~\ref{fig:fa-fold-code} for
+    pseudo code of this aggregation: the method \texttt{jobDone} is
+    called each time a sub job is completed. It checks if both jobs
+    are completed, fetches both results and combines them.
+
+\begin{figure}    
+\begin{alltt}
+{\scriptsize
+def jobDone() \{
+  val (sj1, sj2) = subTasks
+  if (sj1.done && sj2.done) \{
+    this.result = combine(sj1.result, sj2.result)
+  \}
+  
+  // Do other stuff (notification, finalization)
+\}
+}
+\end{alltt}
+\caption{Aggregation of results of different jobs during a
+  \texttt{fold}}
+\label{fig:fa-fold-code}
+\end{figure}
+
   \item[\texttt{sliceJobs(from: Int, to: Int): Option[(Seq[FAJob],
       Boolean)]}] Returns the jobs which are responsible for
     calculating a given slice. In some cases, all the jobs responsible
