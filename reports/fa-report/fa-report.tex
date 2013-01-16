@@ -392,6 +392,12 @@ dependency tracking, splitting and scheduling:
   \item[\texttt{depending(newJob: FAJob): Unit}] Submits another \texttt{FAJob} as being
     dependent on this \texttt{FAJob}. This will schedule the submitted
     \texttt{FAJob}, once this \texttt{FAJob} is completed.
+
+    For example, suppose \texttt{j1: FAJob} is responsible to
+    calculate some data that \texttt{j2: FAJob} requires. One
+    could write \verb|j1.depending(j2)| which will execute a given
+    junk of \texttt{j2} only, once the corresponding junk of
+    \texttt{j1} is completed.
   \item[\texttt{split(): Unit}] Splits this job into two
     sub jobs. Forces dependent tasks to be split too and hands off
     dependency (see next section for details on splitting). This
