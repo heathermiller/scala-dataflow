@@ -54,7 +54,7 @@ logyscale <- function(p, name) {
 }
 
 benchscale <- function(p) {
-  labs <- c("FlowArray","FA (zipMap)","FA (zipMapFold)","ParArray")
+  labs <- c("FlowSeq","FS (zipMap)","FS (zipMapFold)","ParArray")
   p <- p + scale_color_discrete(labels = labs)
   p <- p + scale_shape_discrete(labels = labs)
   p
