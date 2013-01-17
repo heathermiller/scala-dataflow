@@ -494,10 +494,11 @@ done:
 \item Split the job in two smaller sub jobs of (more or less) equal
   size.
 \item Split the dependent jobs and delegate the dependency to the
-  sub jobs: we would like to have dependency tracking on the lowest
-  level that calculation is done in order to start new jobs as soon as
-  possible (otherwise we'll be back at \texttt{ParArrays}).
-  %% TODO reformulate (Heather did not understand at all... :()
+  sub jobs: we would like to have dependency tracking on individual
+  block level, i.e. on the splitting level on which the calculation is 
+  done. This is crucial in order to allow for dependent jobs to start
+  off as soon as possible (otherwise we have a barrier and are back in
+  the ages of \texttt{ParArrays}).
 \end{enumerate}
 
 Point one is easy: divide the range of the \texttt{FAJob} into two
