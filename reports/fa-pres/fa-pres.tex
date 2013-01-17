@@ -450,10 +450,10 @@
   \begin{columns}[t]
     \column{.33\paperwidth}
     \input{../../benchmarks/flowArrays/plots/pres-par-time.tex}
-    \column{.32\paperwidth}
+    \column<2->{.32\paperwidth}
     \input{../../benchmarks/flowArrays/plots/pres-par-gctime.tex}
     \column{.35\paperwidth}
-    \input{../../benchmarks/flowArrays/plots/pres-par-ntime.tex}
+    \visible<3>{\input{../../benchmarks/flowArrays/plots/pres-par-ntime.tex}}
   \end{columns}
 
 \end{frame}
@@ -498,8 +498,7 @@
   \end{block}
 
   \pause
-  \begin{block}{Automated Reduction?}
-    %% TODO better name
+  \begin{block}{Fusion}
     \begin{itemize}
     \item \texttt{zip}, \texttt{map} $\to$ \texttt{zipMap}
     \item Statically / Dynamically?
