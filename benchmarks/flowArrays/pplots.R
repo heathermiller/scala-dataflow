@@ -101,7 +101,9 @@ p <- ggplot(mpardat, aes(x = factor(par),
                          group = bench,
                          color = bench,
                          shape = bench))
-p <- geoms(p)
+
+p <- p + geom_point(size = 1.8)
+p <- p + geom_line(linetype = "dotted")
 p <- p + ggtitle("Normalized Time")
 p <- p + ylab("time [ms]") +
   scale_x_discrete(name = "parallelization level",
@@ -154,7 +156,8 @@ p <- ggplot(mszedat[mszedat$bench != "PAScalProdBench",],
                 group = bench,
                 color = bench,
                 shape = bench))
-p <- geoms(p)
+p <- p + geom_point(size = 1.8)
+p <- p + geom_line(linetype = "dotted")
 p <- p + ggtitle("Normalized Time")
 p <- p + ylab("time [ms]") + 
   scale_x_continuous(name = "vector size",
