@@ -81,7 +81,6 @@ with monadic operations. Contrary to normal arrays (or \texttt{ParArrays}
 monadic operations until the calculation is complete, but doe the
 calculation asynchronously.
 
-%% TODO dataflow here? or parallelism?
 The dataflow in this programming model is implicit: The programmer can
 use the known functional programming abstractions and only has to
 make a special call when retrieving concrete results.
@@ -195,7 +194,6 @@ have their correct value and all references to calculating jobs may be
 freed, since no dependency tracking has to be done for this block
 anymore.
 
-%% TODO block chain comment? Don't understand.
 \begin{figure}
   \centering
   \includegraphics{dependency-tracking}
