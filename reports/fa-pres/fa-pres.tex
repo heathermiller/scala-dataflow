@@ -255,9 +255,9 @@
   \framesubtitle{ParSeq --- \texttt{map}}
 
   \begin{alltt} \small
-    \sK{val} \sV{pa1} = ParSeq.tabulate(100)(x => x * x)\\
-    \uncover<1,11->{\sK{val} \sV{pa2} = pa1.map(\_ * 2)}\\
-    \uncover<1,14->{\sK{val} \sV{el}\sH{xx}= pa2(35)}
+    \sK{val} \sV{ps1} = ParSeq.tabulate(100)(x => x * x)\\
+    \uncover<1,11->{\sK{val} \sV{ps2} = ps1.map(\_ * 2)}\\
+    \uncover<1,14->{\sK{val} \sV{el}\sH{xx}= ps2(35)}
   \end{alltt}
 
   \vspace{\stretch{1}}
