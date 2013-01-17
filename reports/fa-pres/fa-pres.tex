@@ -41,7 +41,7 @@
 \graphicspath{{figs/}}
 
 \title{FlowSeqs}
-\subtitle{Barrier-Free ParVectors}
+\subtitle{Barrier-Free ParSeqs}
 
 \author{Tobias Schlatter}
 \date{January 17, 2012}
@@ -100,7 +100,7 @@
   \begin{columns}[t]
     \column{.5\textwidth}
 
-    FlowSeq: Barrier-Free, asynchronous ParVector
+    FlowSeq: Barrier-Free, asynchronous ParSeq
 
     \vspace{\baselineskip}
 
@@ -248,14 +248,14 @@
 \end{frame}
 
 
-\section{Task Scheduling}
+\section{The Flow}
 
 \begin{frame}
-  \frametitle{Task Scheduling}
-  \framesubtitle{ParVector --- \texttt{map}}
+  \frametitle{The Flow}
+  \framesubtitle{ParSeq --- \texttt{map}}
 
   \begin{alltt} \small
-    \sK{val} \sV{pa1} = ParVector.tabulate(100)(x => x * x)\\
+    \sK{val} \sV{pa1} = ParSeq.tabulate(100)(x => x * x)\\
     \uncover<1,11->{\sK{val} \sV{pa2} = pa1.map(\_ * 2)}\\
     \uncover<1,14->{\sK{val} \sV{el}\sH{xx}= pa2(35)}
   \end{alltt}
