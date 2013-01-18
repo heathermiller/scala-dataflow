@@ -487,6 +487,41 @@ def jobDone() \{
     \texttt{FlowArray}.
 \end{description}
 
+\subsubsection{State Machine}
+You can find the state machine of an \texttt{FAJob} in
+Fig.~\ref{fig:fajob-state}. We give a description of each state: 
+
+\begin{description}
+\item[Pend] Initial state. Execution of this \texttt{FAJob} is
+  \emph{pending}, no dependencies have been recorded.
+\item[PNext] Execution of this \texttt{FAJob} is
+  \emph{pending}, the \emph{next}, depending \texttt{FAJob} has been
+  submitted.
+\item[Split] This \texttt{FAJob} is \emph{split}. Execution is
+  delegated to two smaller sub jobs. This \texttt{FAJob} aggregates
+  their completion state.
+\item[Spl'ing] This \texttt{FAJob} is being split. Splitting of this
+  job is completed, \emph{splitting} of depending jobs is still
+  pending.
+\item[Calc] This \texttt{FAJob} is being \emph{calculated}. This state
+  is internally represented with either \textbf{Pend} or
+  \textbf{PNext}. A job that started execution cannot be split
+  anymore.
+\item[Deleg] This \texttt{FAJob} has started calculation but is
+  currently \emph{delegated} other \texttt{FAJobs} and is waiting for
+  their completion.
+\item[Done] Calculation of this \texttt{FAJob} is
+  \emph{done}. Possible depending jobs are scheduled for execution
+  once this state is reached.
+\end{description}
+
+\begin{figure}
+  \centering
+  \includegraphics{fajob-state}
+  \caption{State machine of \texttt{FAJob}}
+  \label{fig:fajob-state}
+\end{figure}
+
 \subsubsection{Splitting}
 When calling \texttt{split} on a \texttt{FAJob}, two things have to be
 done:
@@ -524,8 +559,6 @@ set to these newly created sub jobs. Finally the state of this
   \caption{Step-by-step illustration of splitting with dependencies}
   \label{fig:split-ill}
 \end{figure}
-
-%% TODO state machine
 
 \begin{figure}
 \begin{minipage}[t]{7cm}
