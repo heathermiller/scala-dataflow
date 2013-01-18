@@ -400,9 +400,7 @@ This section describes in some more detail, how the requirements
 explained in section~\ref{sec:overview} are implemented. Note that
 this is a simplified view and some interfaces may not be described
 with all methods or all arguments of the methods. Further, methods may
-be simplified (e.g. not tail-recursive for easier
-understanding). Please refer to ScalaDoc for an API documentation.
-%% TODO reference the code.
+be simplified (e.g. not tail-recursive for easier understanding).
 
 \subsection{FlowArray Jobs}
 The class \texttt{FAJob} is the center-piece of the whole \texttt{FlowArray}
@@ -798,8 +796,7 @@ to have the same size for that matter). Thanks to hierarchical
 
 To retain evidences about the types inside the current \texttt{FlowArray} when
 flatting, implicit arguments are used together with the
-\texttt{CanFlatten} type. The reader is referred to the ScalaDoc and
-the code for details.
+\texttt{CanFlatten} type (defined in the package object).
 
 \subsubsection{Transpose}
 This operation has specifically been written to implement matrix
