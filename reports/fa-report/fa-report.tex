@@ -124,7 +124,7 @@ Let's consider the following code for \texttt{ParSeqs} and
 illustration of what is going on.
 
 \noindent
-\begin{minipage}[t]{.5\textwidth}
+\begin{minipage}[t]{.49\textwidth}
 \begin{alltt}
 {\scriptsize
 val ps1 = ParSeq.tabulate(n)(x => x*x)
@@ -132,7 +132,7 @@ val ps2 = ps1.map(_ * 2)
 }
 \end{alltt}
 \end{minipage}
-\begin{minipage}[t]{.5\textwidth}
+\begin{minipage}[t]{.49\textwidth}
 \begin{alltt}
 {\scriptsize
 val fs1 = FlowSeq.tabulate(n)(x => x*x)
@@ -456,8 +456,9 @@ def jobDone() \{
 \label{fig:fa-fold-code}
 \end{figure}
 
-  \item[\texttt{sliceJobs(from: Int, to: Int): Option[(Seq[FSJob],
-      Boolean)]}] Returns the jobs which are responsible for
+  \item[\texttt{sliceJobs(from: Int,to: Int):
+      Option[(Seq[FSJob],Bool)]}] Returns the jobs which are
+    responsible for
     calculating a given slice. In some cases, all the jobs responsible 
     for the slice might not be known yet (for example when doing
     double-dependency tracking after a \texttt{flatMapN}, see
@@ -511,8 +512,8 @@ Fig.~\ref{fig:fajob-state}. We give a description of each state:
   \textbf{PNext}. A job that started execution cannot be split
   anymore.
 \item[Deleg] This \texttt{FSJob} has started calculation but is
-  currently \emph{delegated} other \texttt{FSJobs} and is waiting for
-  their completion.
+  currently \emph{delegated} to other \texttt{FSJobs} and is waiting
+  for their completion.
 \item[Done] Calculation of this \texttt{FSJob} is
   \emph{done}. Possible depending jobs are scheduled for execution
   once this state is reached.
@@ -660,7 +661,7 @@ def dispatch(
 }
 \end{alltt}
 \end{minipage}
-\begin{minipage}[t]{7cm}
+\begin{minipage}[t]{6cm}
 \begin{alltt}
 {\scriptsize
 trait JobGen[A] \{
@@ -730,7 +731,7 @@ then just returns a reference to the internal array.
 \subsubsection{Slice Views}
 \label{sssec:slice-views}
 \texttt{FlowSeqSliceViews} wrap around a \texttt{ConcreteFlowSeq}
-(i.e. a \texttt{FlatFlowSeq} or a \texttt{HierFlowSeq})
+(that is a \texttt{FlatFlowSeq} or a \texttt{HierFlowSeq})
 and expose a given part of it. The \texttt{dispatch} method adjusts 
 offset and length and proxies the call to the \texttt{dispatch} method
 of the inner
@@ -776,7 +777,7 @@ entirely into the \texttt{FSJob} framework or require some extensions
 to it.
 
 \subsubsection{Flatten}
-For the same reasons as \texttt{flatMapN} requires the size of the
+For simliar reasons as \texttt{flatMapN} requires the size of the
 inner \texttt{FlowSeqs}, the \texttt{flatten} operation on
 \texttt{FlowSeqs} requires the size of the inner \texttt{FlowSeq} to
 be given (and all inner \texttt{FlowSeqs} to have the same size for
@@ -792,8 +793,9 @@ implementation of \texttt{flatten} is easy:
   should and can easily be improved in the future.
 \item[\texttt{HierFlowSeqs}] push the flatten call down to their
   inner \texttt{FlowSeqs} (which might in turn push it down to their
-  inner \texttt{FlowSeqs}), until they reach a \texttt{FlatFlowSeq},
-  which will then be converted into a \texttt{HierFlowSeq}.
+  inner \texttt{FlowSeqs}), until the hierarchy ends with a
+  \texttt{FlatFlowSeq}, which will then be converted into a
+  \texttt{HierFlowSeq}.
 \end{description}
 
 To retain evidences about the types inside the current \texttt{FlowSeq} when
@@ -884,7 +886,6 @@ x.zipMapFold(y)(f)(z)(g)   <-->  x.zip(y).map(f.tupled).fold(z)(g)}
 \end{figure}
 
 \begin{figure}
-\begin{minipage}[t]{6cm}
 \begin{alltt}
 {\scriptsize
 val x = FlowSeq.tabulate(size)(x => x*x)
@@ -897,7 +898,6 @@ val y = FlowSeq.tabulate(size)(x => x*x)
 (x zipMapFold y)(_ * _)(0)(_ + _).blocking
 }
 \end{alltt}
-\end{minipage}
 \caption{Implementation of scalar product with \texttt{FlowSeqs}}
 \label{fig:scalar-product}
 \end{figure}
@@ -912,9 +912,11 @@ garbage collection time (sum of all non-final GC runtimes).
 The benchmarks have been executed on a Intel i7-2620M with java
 version 1.7.0\_04, Java(TM) SE Runtime Environment (build
 1.7.0\_04-b20), Java HotSpot(TM) 64-Bit Server VM (build 23.0-b21,
-mixed mode). The exact java command used is \texttt{java -Xmx2048m
-  -Xms2048m -XX:+UseCondCardMark -verbose:gc -XX:+PrintGCDetails
-  -server <classname>}.
+mixed mode). The exact java command used is
+\begin{alltt}
+ java -Xmx2048m -Xms2048m -XX:+UseCondCardMark
+      -verbose:gc -XX:+PrintGCDetails -server <classname>
+\end{alltt}
 
 \subsection{Results}
 
