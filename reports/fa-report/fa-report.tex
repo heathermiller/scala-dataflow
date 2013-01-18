@@ -73,17 +73,21 @@ In an earlier paper \cite{FP12} we proposed \texttt{FlowPools}, a
 deterministic, dataflow abstraction. Since they're unordered,
 \texttt{FlowPools} have been
 shown to be somewhat limited when it comes to implementing concrete
-applications. This
-report presents \texttt{FlowArrays}, a dataflow structure very much like arrays
-with monadic operations. Contrary to normal arrays (or \texttt{ParArrays}
+applications. This report presents \texttt{FlowArrays}, an immutable
+dataflow structure very much like sequences with monadic
+operations. Contrary to normal \texttt{Seqs} (or \texttt{ParArrays}
 \cite{collect11}), \texttt{FlowArrays} have the characteristics of a
 \emph{dataflow collection} -- i.e. they do not block in between
-monadic operations until the calculation is complete, but doe the
+monadic operations until the calculation is complete, but do the
 calculation asynchronously.
 
 The dataflow in this programming model is implicit: The programmer can
 use the known functional programming abstractions and only has to
 make a special call when retrieving concrete results.
+
+\texttt{FlowArrays} have been designed with the use case of linear
+algebra operations in mind; hence, they are fixed-size and support
+operations like \texttt{transpose} and \texttt{slice}.
 
 First we give an overview of the general idea behind \texttt{FlowArrays} and
 how exactly they try to improve on \texttt{ParArrays}. The section outlines the
@@ -612,7 +616,6 @@ support the following common monadic operations \texttt{map},
   \texttt{flatMapN}}, \texttt{zip}, \texttt{slice}, \texttt{flatten}
 and the generator \texttt{tabulate}.
 
-%% TODO motivation for matrix multiplication?
 Additionally, the slightly strange operation \texttt{transpose} is
 supported
 to allow for matrix multiplication. For a more detailed view on 
