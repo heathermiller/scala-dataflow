@@ -741,7 +741,8 @@ then copies the required elements to a new array. Note that this
 behavior might cause a calling thread to block for longer than
 actually required.
 
-%% TODO Example for slice views? Matrix multiplication???
+\texttt{FlowArraySliceViews} are used when \texttt{slice} is called on
+a \texttt{FlowArray}, which is useful for matrix multiplication.
 
 \subsubsection{Hierarchical FlowArrays}
 \texttt{HierFlowArrays} are the result of \texttt{flatMapN} operations
