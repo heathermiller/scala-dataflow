@@ -864,9 +864,19 @@ Fig.~\ref{fig:scalar-product} for the implementation of the
 benchmark. You'll notice the operations \texttt{zipMap} and
 \texttt{zipMapFold}: These are consolidated operations that use the
 \texttt{FAJob} structure but do not store intermediate results. As we
-will see, they greatly improve performance.
+will see, they greatly improve performance. Refer to
+Fig.~\ref{fig:zipmapfold-semeq} for semantic equivalences of these
+operations. 
 
-%% TODO "define" zipMap
+\begin{figure}
+\begin{alltt}{\scriptsize
+x.zipMap(y)(f)             <-->  x.zip(y).map(f.tupled)
+x.zipMapFold(y)(f)(z)(g)   <-->  x.zip(y).map(f.tupled).fold(z)(g)}
+\end{alltt}
+\caption{Semantic equivalences for \texttt{zipMap} and
+  \texttt{zipMapFold}}
+\label{fig:zipmapfold-semeq}
+\end{figure}
 
 \begin{figure}
 \begin{minipage}[t]{6cm}
